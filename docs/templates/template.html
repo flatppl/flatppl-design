@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"$if(lang)$ lang="$lang$" xml:lang="$lang$"$endif$$if(dir)$ dir="$dir$"$endif$>
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+$for(author-meta)$
+  <meta name="author" content="$author-meta$" />
+$endfor$
+$if(date-meta)$
+  <meta name="dcterms.date" content="$date-meta$" />
+$endif$
+$if(keywords)$
+  <meta name="keywords" content="$for(keywords)$$keywords$$sep$, $endfor$" />
+$endif$
+$if(description-meta)$
+  <meta name="description" content="$description-meta$" />
+$endif$
+  <title>$if(title-prefix)$$title-prefix$ – $endif$$pagetitle$</title>
+  <style>
+    $styles.html()$
+  </style>
+$for(css)$
+  <link rel="stylesheet" href="$css$" />
+$endfor$
+$for(header-includes)$
+  $header-includes$
+$endfor$
+$if(math)$
+  $math$
+$endif$
+</head>
+<body>
+<nav id="sidebar" role="navigation" aria-label="Section navigation">
+  <div id="sidebar-title">$pagetitle$</div>
+  <ul id="sidebar-nav"></ul>
+</nav>
+<button id="sidebar-toggle" aria-label="Toggle navigation">&#9776;</button>
+<div id="content">
+$for(include-before)$
+$include-before$
+$endfor$
+$if(title)$
+<header id="title-block-header">
+<h1 class="title">$title$</h1>
+$if(subtitle)$
+<p class="subtitle">$subtitle$</p>
+$endif$
+$for(author)$
+<div class="author">
+$if(author.name)$
+<span class="author-name">$author.name$</span>
+$if(author.affiliation)$
+<br><span class="author-affiliation">$author.affiliation$</span>
+$endif$
+$if(author.email)$
+<br><span class="author-email"><a href="mailto:$author.email$">$author.email$</a></span>
+$endif$
+$else$
+$author$
+$endif$
+</div>
+$endfor$
+$if(date)$
+<p class="date">$date$</p>
+$endif$
+$if(abstract)$
+<div class="abstract">
+<div class="abstract-title">$abstract-title$</div>
+$abstract$
+</div>
+$endif$
+</header>
+$endif$
+$if(toc)$
+<details id="full-toc" open>
+<summary><strong>Table of Contents</strong></summary>
+<nav id="$idprefix$TOC" role="doc-toc">
+$table-of-contents$
+</nav>
+</details>
+$endif$
+$body$
+$for(include-after)$
+$include-after$
+$endfor$
+</div>
+<script>
+// Build sidebar nav from section headings, with expandable subsections
+(function() {
+  var nav = document.getElementById('sidebar-nav');
+
+  // Collect top-level sections (h1 with single-number data-number)
+  var sections = document.querySelectorAll('#content h1[data-number]');
+  var sectionItems = []; // {li, id, subIds}
+
+  sections.forEach(function(h) {
+    if (!h.id) return;
+    var num = h.getAttribute('data-number');
+    if (num.indexOf('.') !== -1) return;
+
+    var li = document.createElement('li');
+    var a = document.createElement('a');
+    a.textContent = h.textContent.replace(/^[\d.]+\s+/, '').trim();
+    a.href = '#' + h.id;
+    li.appendChild(a);
+
+    // Find subsections (h2 with data-number starting with this section's number + ".")
+    var prefix = num + '.';
+    var subHeadings = document.querySelectorAll('#content h2[data-number]');
+    var subUl = null;
+    var subIds = [];
+    subHeadings.forEach(function(sh) {
+      var snum = sh.getAttribute('data-number');
+      if (!sh.id || !snum || !snum.startsWith(prefix)) return;
+      // Only direct children (e.g. "2.1" not "2.1.1")
+      var rest = snum.slice(prefix.length);
+      if (rest.indexOf('.') !== -1) return;
+      if (!subUl) {
+        subUl = document.createElement('ul');
+        subUl.className = 'sidebar-subsections';
+      }
+      var sli = document.createElement('li');
+      var sa = document.createElement('a');
+      sa.textContent = sh.textContent.replace(/^[\d.]+\s+/, '').trim();
+      sa.href = '#' + sh.id;
+      sli.appendChild(sa);
+      subUl.appendChild(sli);
+      subIds.push(sh.id);
+    });
+    if (subUl) li.appendChild(subUl);
+
+    nav.appendChild(li);
+    sectionItems.push({ li: li, id: h.id, subIds: subIds });
+  });
+
+  // Collect all trackable ids for scroll spy
+  var allIds = [];
+  sectionItems.forEach(function(s) {
+    allIds.push(s.id);
+    s.subIds.forEach(function(sid) { allIds.push(sid); });
+  });
+
+  function updateActive() {
+    var scrollY = window.scrollY || window.pageYOffset;
+    var current = '';
+    allIds.forEach(function(id) {
+      var el = document.getElementById(id);
+      if (el && el.offsetTop <= scrollY + 80) {
+        current = id;
+      }
+    });
+
+    sectionItems.forEach(function(s) {
+      var sectionLink = s.li.querySelector(':scope > a');
+      var isActive = current === s.id || s.subIds.indexOf(current) !== -1;
+
+      // Expand/collapse subsections
+      s.li.classList.toggle('expanded', isActive);
+
+      // Highlight section link
+      sectionLink.classList.toggle('active', isActive);
+
+      // Highlight subsection link
+      var subLinks = s.li.querySelectorAll('.sidebar-subsections a');
+      subLinks.forEach(function(sa) {
+        sa.classList.toggle('active', sa.getAttribute('href') === '#' + current);
+      });
+    });
+  }
+  window.addEventListener('scroll', updateActive);
+  updateActive();
+
+  // Toggle sidebar on mobile
+  var toggle = document.getElementById('sidebar-toggle');
+  var sidebar = document.getElementById('sidebar');
+  toggle.addEventListener('click', function() {
+    sidebar.classList.toggle('open');
+  });
+  nav.addEventListener('click', function() {
+    sidebar.classList.remove('open');
+  });
+})();
+</script>
+</body>
+</html>
