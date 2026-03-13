@@ -1,0 +1,18 @@
+[workspace]
+channels = ["conda-forge"]
+platforms = ["linux-64", "osx-64", "osx-arm64"]
+
+[dependencies]
+pandoc = ">=3.9,<4"
+typst = ">=0.14,<1"
+
+[tasks]
+_mkdir = "mkdir -p build"
+_copy-assets = { cmd = "cp docs/templates/style.css build/ && cp docs/favicon.ico build/ 2>/dev/null || true && cp -r docs/diagrams build/ 2>/dev/null || true", depends-on = ["_mkdir"] }
+_src-files = "docs/0[0-9]-*.md docs/1[0-9]-*.md"
+build-html = { cmd = "pandoc docs/0[0-9]-*.md docs/1[0-9]-*.md -o build/index.html --standalone --template=docs/templates/template.html --toc --toc-depth=2 --number-sections --shift-heading-level-by=-1 --syntax-highlighting=tango --css=style.css -B docs/templates/header.html --lua-filter=docs/templates/strip-file-refs.lua --lua-filter=docs/templates/html-anchors.lua", depends-on = ["_copy-assets"] }
+build-pdf = { cmd = "typst compile build/flatppl-design.typ build/flatppl-design.pdf", depends-on = ["build-typst"] }
+build-md = { cmd = "pandoc docs/0[0-9]-*.md docs/1[0-9]-*.md -t markdown -o build/flatppl-design.md --standalone --lua-filter=docs/templates/strip-file-refs.lua --lua-filter=docs/templates/html-anchors.lua && sed -i 's/^``` /```/g' build/flatppl-design.md", depends-on = ["_mkdir"] }
+build-typst = { cmd = "pandoc build/flatppl-design.md -t typst -o build/flatppl-design.typ --standalone --toc --toc-depth=2 --number-sections --shift-heading-level-by=-1 --lua-filter=docs/templates/typst-code-blocks.lua --include-in-header=docs/templates/typst-header.typ", depends-on = ["build-md"] }
+build = { depends-on = ["build-html", "build-pdf", "build-md", "build-typst"] }
+clean = "rm -rf build"

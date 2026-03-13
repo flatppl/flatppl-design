@@ -1,0 +1,20 @@
+# Build output
+build/
+
+# Pixi
+.pixi/
+pixi.lock
+*.egg-info/
+
+# Editor files
+*~
+*.swp
+*.swo
+.vscode/
+.idea/
+.claude/
+
+
+# OS files
+.DS_Store
+Thumbs.db

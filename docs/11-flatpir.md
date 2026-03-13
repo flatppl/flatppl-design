@@ -1,0 +1,504 @@
+## Intermediate Representation
+
+This section defines **FlatPIR**, the intermediate representation of FlatPPL.
+FlatPPL engines may ingest either FlatPPL or FlatPIR, depending on their design.
+
+**Note:** The design of FlatPIR is preliminary and subject to change. It is not part
+of FlatPPL semantic versioning yet.
+
+FlatPIR is FlatPPL with operators, field access and indexing lowered to function calls. FlatPIR also supports optional type/phase inference metadata annotations.
+FlatPPL maps directly to FlatPIR and FlatPIR maps back directly to FlatPPL.
+Metadata is dropped when converting FlatPIR to FlatPPL.
+
+Like FlatPPL, FlatPIR comes with a canonical syntax. The canonical FlatPIR syntax
+uses standard S-expressions (compatible with Lisp/Scheme readers), including
+`;` line comments. Initial FlatPPL to FlatPIR lowering should preserve comments,
+though subsequent FlatPIR code transformations will often drop them.
+FlatPIR source files in this canonical syntax use the filename extension
+`.flatpir`; alternative representations must use different filename extensions.
+
+FlatPIR is designed to support term-rewriting, with two main use cases:
+
+- Restricting FlatPPL/FlatPIR code to a specific subset that maps directly to a target
+  probabilistic language
+  (see [Profiles and interoperability](12-profiles.md#sec:profiles)).
+- Optimizing FlatPPL/FlatPIR code before handing it off to host-language implementations
+  (which then can do further optimization within their own language stack).
+
+Term-rewriting can require both value type and value phase
+(see [Phases](04-design.md#phases)) information at intermediate nodes, so FlatPIR
+allows type and phase annotations on every call. This lets generic rewrite tools
+consume typed/phased terms directly, without re-implementing FlatPPL inference.
+
+The semantics of FlatPIR are identical to the semantics of FlatPPL, with the
+addition of metadata. They are independent of the canonical S-expression
+representation. Additional representations (e.g. binary) are expected for some use
+cases but are not yet specified.
+
+### Naming convention
+
+FlatPIR structural keywords are prefixed with `%` (e.g. `%module`, `%bind`, `%ref`,
+`%meta`). FlatPPL built-in names (`Normal`, `add`, `record`, `vector`, `real`,
+`integer`, ...) and user-defined names appear bare. The `%` prefix is invalid in
+FlatPPL syntax (not Python/Julia AST compatible), so FlatPIR structural keywords
+cannot collide with FlatPPL built-in and binding names.
+
+### Module structure
+
+Each surface FlatPPL module (file or embedded code block) maps to one FlatPIR
+`(%module ...)`; modules are not flattened in FlatPIR, though tooling
+may flatten them internally (e.g. for cross-module optimization before code evaluation).
+A FlatPIR file contains exactly one `(%module ...)` form with these elements:
+
+- `(%public <name1> <name2> ...)` — the module's public interface. Bindings listed here
+  are the root set for rewriting passes; unlisted bindings may be elided during term-rewriting.
+- `(%bind <name> <expression>)` — pairs a name with an expression. Type and
+  phase live on the RHS expression when the RHS is a call (see
+  [Type and phase annotations](#type-and-phase-annotations)).
+  Module loads are ordinary bindings whose right-hand side is a `(load_module ...)`
+  or `(standard_module ...)` call; engines must resolve such bindings before
+  resolving references that depend on them.
+
+Top-level declarations may appear in any order: bindings are resolved by reference,
+not by textual position.
+
+FlatPIR versioning is tied to FlatPPL versioning, so like in FlatPPL, the language
+version compatibility of a module is optional and is encoded via the value of the binding `flatppl_compat`:
+
+```lisp
+(%bind flatppl_compat "0.6")
+```
+
+A parameterized load is an ordinary binding whose right-hand side calls
+`load_module` with substitution arguments:
+
+```lisp
+(%bind helpers (load_module "helpers.flatppl" (%assign center (%ref self a))))
+```
+
+A standard-module dependency uses `standard_module` with the module name and a
+compatibility version string (same grammar as `flatppl_compat`):
+
+```lisp
+(%bind hepphys
+  (standard_module "particle-physics" "0.1"))
+```
+
+Each substitution takes the form `(%assign <input-name> <expression>)`. The
+expression is resolved in the loading module's namespace.
+
+### <a id="type-and-phase-annotations"></a>Type and phase annotations
+
+A **call** in FlatPIR is a built-in operation or a `(%call ...)` form invoking
+a user-defined callable. Literals, references (`%ref`), and FlatPIR structural
+wrappers (`%kwarg`, `%field`, `%assign`, `%params`) are not calls.
+
+Calls (and only calls) may carry an optional positional `(%meta <type> <phase>)`
+annotation describing the return value, placed immediately after the head. For
+example:
+
+```lisp
+(add (%meta (%scalar real) %parameterized) (%ref self x) (%ref self y))
+```
+
+For each slot, three states are recognized:
+
+- **`%deferred`** — not yet inferred. Equivalent to omitting the entire `%meta`
+  block.
+- **Concrete value** — the inferred type or phase (e.g. `(%scalar real)`,
+  `%parameterized`).
+- **`(%failed "<reason>")`** — diagnostic marker indicating inference attempted
+  to resolve the slot but could not. A module containing any `%failed` marker is
+  ill-formed.
+
+Phase values are `%fixed`, `%parameterized`, or `%stochastic` (see
+[Phases](04-design.md#phases)). Phase computation is cheaper than type inference
+(an ancestor walk over the binding graph) and the two passes may run
+independently.
+
+A missing call annotation is equivalent to
+`(%meta %deferred %deferred)`. The explicit form is useful as an intermediate
+state (not yet visited) before type and/or phase inference or to mark
+inference of a call as blocked by upstream failure.
+
+**Type inference is required to succeed on well-formed modules.** If inference
+fails — for example, an unresolvable reference or a type error in an expression —
+the module is ill-formed and the engine should report a static error. As a
+diagnostic aid, the engine may write `(%failed "reason")` into the affected
+type slot of `%meta` so that downstream tooling and users can see the cause and
+location of the failure inline.
+
+The "type" terminology refers to the **structural category** of a value — scalar,
+array, record, table, measure, kernel, likelihood, function — not to a type system in
+the traditional programming-language sense.
+
+**Sets and types are distinct.** Set membership information attached via `elementof`
+(e.g. `(elementof posreals)`) is preserved structurally in the expression itself, not
+encoded into the type annotation. The type annotation records structural category
+(e.g. `(%scalar real)`); the `elementof` expression records set membership
+(e.g. `posreals` as a subset of `reals`).
+
+#### Type categories
+
+- `%deferred` — explicit "not yet resolved" marker; semantically equivalent to
+  omitting the entire `%meta` block when both slots would be `%deferred`.
+- `(%failed "<reason>")` — diagnostic marker written into the type slot of
+  `%meta` when inference attempted to resolve it but could not. The reason
+  string is for human and tooling consumption. A module containing any `%failed`
+  marker is ill-formed.
+- `%any` — used where no concrete-type constraint is applicable, e.g. for the input
+  of `fn(sum(_))`. Counterpart of the value-level set `anything`.
+- `(%scalar real)`, `(%scalar integer)`, `(%scalar boolean)`, `(%scalar complex)` — the
+  four scalar value types.
+- `(%array <rank> <shape> <element-type>)` — arrays. `<rank>` is a positive integer
+  literal (not `%dynamic`). Each entry in `<shape>` is a positive integer dimension
+  size, or the placeholder `%dynamic` for a dimension whose size is determined at load
+  or runtime rather than statically (e.g. `(%array 2 (%dynamic 3) (%scalar real))` is a
+  2D real array with three columns and a dynamic row count).
+- `(%record (<field> <type>) ...)` — records with named fields.
+- `(%table (%columns (<name> <type>) ...) (%nrows <N>))` — tables with named columns
+  and row count. `<N>` is a positive integer or `%dynamic`; tables loaded via
+  `load_data` are a common source of dynamic row counts.
+- `(%tuple <type1> <type2> ...)` — tuples with at least two elements.
+- `(%measure (%domain <type>))` — closed measures. `<type>` is the type of values that
+  sampling generates and on which density evaluation is defined.
+- `(%kernel (%inputs <name> ...))` — user-defined transition kernels. 
+- `(%function (%inputs <name> ...))` — user-defined functions.
+- `(%likelihood (%inputs <name> ...) (%obstype <type>))` — likelihood objects.
+  `<type>` is the type of the observed data.
+- `%module` — a module reference, produced only by `load_module` or
+  `standard_module`. A `%module`-typed binding's name serves as the `<alias>` in
+  `(%ref <alias> <name>)` lookups of the module's public bindings. Not a value: cannot be
+  passed as a function argument or stored in containers.
+
+### Expressions
+
+Expressions in FlatPIR come in structurally distinct shapes for built-in
+operations, references, and calls to user-defined callables. Rewriting rules can pattern-match
+on expression category without name-based dispatch.
+
+**Built-in operations** are bare-headed forms with the operation name as the head symbol:
+
+```lisp
+(add x y)
+(Normal (%kwarg mu 0.0) (%kwarg sigma 1.0))
+(draw (Normal ...))
+(elementof reals)
+(load_data (%kwarg source "...") (%kwarg valueset ...))
+```
+
+Most built-in callables support both positional arguments and `%kwarg` entries,
+matching the surface FlatPPL form. `draw` and `elementof` are positional-only;
+user-defined callables reified without explicit boundary declarations are keyword-only
+(see [calling conventions](04-design.md#sec:calling-convention)).
+
+Some FlatPPL forms have FlatPIR shapes distinct from ordinary calls and have
+variadic keyword arguments which are syntactically the same or ordinary keyword
+arguments in surface FlatPPL, but structurally different since their order
+carries semantic meaning. Some of these forms also have a single leading
+positional argument:
+
+- `functionof` and `kernelof` take variadic kwargs that define parameters of the reified
+  callable. FlatPIR uses `(%params ...)` for the parameter list.
+- `record`, `table`, `cartprod`, `joint`, `jointchain` take variadic kwargs that label
+  components of the output. FlatPIR uses `(%field ...)` entries (see below).
+- `load_module` takes optional substitution kwargs for load-time binding of the
+  loaded module's free inputs. FlatPIR uses `(%assign ...)` entries for these
+  substitutions (see [Module structure](#module-structure)).
+
+**Built-in constants** appear as bare symbols in argument positions:
+
+```
+reals  posreals  integers  booleans  pi  inf  im
+```
+
+**References to named bindings** use `(%ref <namespace> <name>)`:
+
+- `(%ref self <name>)` — reference to a binding in the current module.
+- `(%ref %local <name>)` — reference to a parameter inside `functionof` or `kernelof`.
+- `(%ref <module> <name>)` — reference to a binding in a loaded module.
+
+**Calls to user-defined callables** use `(%call <ref-head> <args>...)`:
+
+```lisp
+(%call (%ref self helper_fn) x y)
+(%call (%ref helpers obs_kernel) row)
+```
+
+User bindings always use `(%ref ...)` while built-ins use bare symbols. The surface
+form `base.foo` (explicit built-in reference; see
+[name resolution](04-design.md#sec:binding-names)) also lowers to the bare form
+in FlatPIR, not to `(%ref base ...)`.
+A rewriter pattern on `(%call ?head ?args...)` fires only on a user-defined callable
+while a pattern on `(add ?x ?y)` fires only on the built-in.
+
+**Positional and keyword call forms.** Built-in operations and user-defined calls may use
+positional arguments or `%kwarg` entries, matching the surface FlatPPL form. Both are
+valid FlatPIR with identical semantics for a given callable. `%kwarg` entries are
+unordered: `(Normal (%kwarg sigma 1.0) (%kwarg mu 0.0))` is the same call
+as `(Normal (%kwarg mu 0.0) (%kwarg sigma 1.0))`.
+
+**Structural named entries** use two dedicated heads distinct from `%kwarg`:
+
+- `(%field <name> <value>)` — named entries in data constructors (e.g., `record`,
+  `cartprod`, `joint`, `table`). Order is part of the structure.
+- `(%assign <name> <value>)` — substitutions and interface bindings (e.g., the
+  substitution arguments of `load_module` and `standard_module`). Unordered
+  (matched by name).
+
+**Literal values.** Primitive scalar literals are bare atoms; their type is
+determined by lexical form (integer vs. real digit pattern, quoted string,
+`true`/`false`):
+
+```lisp
+3            ; integer
+1.0          ; real
+"inputs.csv" ; string
+true         ; boolean
+```
+
+Composite literal values use FlatPPL
+[scalar restriction and constructor](07-functions.md#scalar-restrictions-and-constructors)
+function names as heads:
+
+```lisp
+(complex 0.5 2.0)
+(vector 1.0 2.0 3.0)
+(record (%field mu 0.0) (%field sigma 1.0))
+```
+
+The `vector` form is `(vector <expr>...)`. Each element is a full expression
+(bare scalar literal, composite literal, reference, or call):
+
+```lisp
+(vector 1.0 (%ref self a) 2.0)        ; mixes literal and reference
+(vector (%ref self a) (%ref self b))  ; pre-inference; elements are expressions
+```
+
+Vectors of vectors:
+
+```lisp
+(vector
+  (vector 1.0 2.0 3.0)
+  (vector 4.0 5.0))
+```
+
+Complex elements:
+
+```lisp
+(vector (complex 0.5 2.0) (complex 1.0 0.0))
+```
+
+The `tuple` form is `(tuple <expr>...)` with at least two elements. Unlike `vector`,
+component types may differ and may include non-value objects (functions, measures,
+kernels, likelihoods):
+
+```lisp
+(tuple (%ref self forward_kernel) (%ref self prior))
+```
+
+Tuple decomposition on the surface (`a, b = expr`) lowers to successive `(get ...)`
+projections with integer indices.
+
+**Function parameter lists.** `functionof` and `kernelof` introduce explicit parameter
+lists via `(%params ...)`:
+
+```lisp
+(functionof (%params (center spread _x_))
+  (Normal (%kwarg mu (add (%ref %local center) (%ref %local _x_)))
+          (%kwarg sigma (%ref %local spread))))
+```
+
+Inside the body, parameter references use `(%ref %local <name>)`. Parameter names
+preserve the surface trailing-underscore placeholder convention (e.g. `_x_`), keeping
+the round-trip to surface FlatPPL trivial.
+
+**Normalization.** Bare FlatPIR preserves the surface calling convention for round-trip
+fidelity. Optional normalization passes can convert keyword arguments to positional
+where the argument order is known (built-ins, explicitly-ordered user callables) and
+sort remaining keyword arguments into canonical order. Normalized FlatPIR is easier for
+term-rewriting systems to pattern-match and deduplicate.
+
+### Cross-module type inference
+
+Each module is annotated independently: types are computed from its own perspective
+(using `self` for current-module references). When module B loads module A, B's
+inference proceeds as follows:
+
+1. For each binding whose RHS is `(load_module "..." ...)`, locate A's
+   `.flatpir` file.
+2. If A is not yet annotated, run inference on it first (with cycle detection).
+3. Read A's public bindings and their type annotations.
+4. Translate A's `self` references: each `(%ref self X)` becomes `(%ref <module> X)`
+   (using the binding's alias as the module name), unless the load supplies a
+   substitution for `X`, in which case the substitution expression replaces the
+   reference entirely.
+5. Use A's translated annotations when resolving cross-module references in B.
+   For `%function` and `%kernel` values, the signature carries category and
+   input names only; B's inference traverses A's body — flowing B's concrete
+   argument types through it — to determine the concrete result type at each
+   call site.
+
+### Example
+
+A two-module example showing lowering and annotation.
+
+#### Surface FlatPPL
+
+`helpers.flatppl`:
+
+```flatppl
+center = elementof(reals)
+spread = elementof(posreals)
+
+obs_kernel = functionof(
+    Normal(mu = center + _x_, sigma = spread),
+    center = center, spread = spread, x = _x_)
+
+shifted_value = center + 1.0
+```
+
+`model.flatppl`:
+
+```flatppl
+a = elementof(reals)
+helpers = load_module("helpers.flatppl", center = a)
+
+b = draw(Normal(mu = 0.0, sigma = 2.0))
+_combined = a + b
+
+input_data = load_data(
+  source = "inputs.csv",
+  valueset = cartprod(x = reals)
+)
+
+L = likelihoodof(helpers.obs_kernel, input_data)
+```
+
+#### Bare FlatPIR
+
+`helpers.flatpir`:
+
+```lisp
+(%module
+  (%public center spread obs_kernel shifted_value)
+
+  (%bind center (elementof reals))
+
+  (%bind spread (elementof posreals))
+
+  (%bind obs_kernel
+    (functionof (%params (center spread _x_))
+      (Normal
+        (%kwarg mu (add (%ref %local center) (%ref %local _x_)))
+        (%kwarg sigma (%ref %local spread)))))
+
+  (%bind shifted_value (add (%ref self center) 1.0)))
+```
+
+`model.flatpir`:
+
+```lisp
+(%module
+  (%public a b input_data L)
+
+  (%bind helpers
+    (load_module "helpers.flatppl" (%assign center (%ref self a))))
+
+  (%bind a (elementof reals))
+
+  (%bind b (draw (Normal (%kwarg mu 0.0) (%kwarg sigma 2.0))))
+
+  (%bind _combined (add (%ref self a) (%ref self b)))
+
+  (%bind input_data
+    (load_data
+      (%kwarg source "inputs.csv")
+      (%kwarg valueset (cartprod (%field x reals)))))
+
+  (%bind L (likelihoodof (%ref helpers obs_kernel) (%ref self input_data))))
+```
+
+Calls carry no annotations in the bare form. This is the canonical pre-inference
+shape.
+
+#### Annotated FlatPIR
+
+`helpers.flatpir` after type inference:
+
+```lisp
+(%module
+  (%public center spread obs_kernel shifted_value)
+
+  (%bind center
+    (elementof (%meta (%scalar real) %parameterized) reals))
+
+  (%bind spread
+    (elementof (%meta (%scalar real) %parameterized) posreals))
+
+  (%bind obs_kernel
+    (functionof
+      (%meta (%kernel (%inputs center spread _x_)) %fixed)
+      (%params (center spread _x_))
+      (Normal (%meta (%measure (%domain (%scalar real))) %parameterized)
+        (%kwarg mu (add (%meta (%scalar real) %parameterized)
+                        (%ref %local center) (%ref %local _x_)))
+        (%kwarg sigma (%ref %local spread)))))
+
+  (%bind shifted_value
+    (add (%meta (%scalar real) %parameterized)
+         (%ref self center) 1.0)))
+```
+
+`model.flatpir` after type inference:
+
+```lisp
+(%module
+  (%public a b input_data L)
+
+  (%bind helpers
+    (load_module (%meta %module %fixed)
+                 "helpers.flatppl" (%assign center (%ref self a))))
+
+  (%bind a
+    (elementof (%meta (%scalar real) %parameterized) reals))
+
+  (%bind b
+    (draw (%meta (%scalar real) %stochastic)
+          (Normal (%meta (%measure (%domain (%scalar real))) %fixed)
+                  (%kwarg mu 0.0) (%kwarg sigma 2.0))))
+
+  (%bind _combined
+    (add (%meta (%scalar real) %stochastic)
+         (%ref self a) (%ref self b)))
+
+  (%bind input_data
+    (load_data
+      (%meta (%table (%columns (x (%scalar real)))
+                     (%nrows %dynamic))
+             %fixed)
+      (%kwarg source "inputs.csv")
+      (%kwarg valueset (cartprod (%field x reals)))))
+
+  (%bind L
+    (likelihoodof
+      (%meta (%likelihood (%inputs center spread _x_)
+                          (%obstype (%table (%columns (x (%scalar real)))
+                                            (%nrows %dynamic))))
+             %fixed)
+      (%ref helpers obs_kernel) (%ref self input_data))))
+```
+
+Inside `obs_kernel`'s `functionof` body, phase analysis treats the reified
+parameters (`center`, `spread`, `_x_`) as `%parameterized` inputs, so inner
+calls depending on them are themselves `%parameterized`; the function value
+itself is `%fixed` (the function definition does not change). Annotations on
+inner calls are optional in the canonical form: a tool may annotate every call
+(as shown for `obs_kernel`) or only the outermost call of each binding's RHS
+(as shown for `_combined`); both are valid annotated FlatPIR.
+
+The likelihood `L` inherits its `%inputs` list from `obs_kernel`'s reified parameters —
+local names `center`, `spread`, and `_x_`, decoupled from any same-named module-level
+binding. A downstream tool walks the list and supplies a value for each parameter at
+the call site, with the matching done by name. `input_data`'s type was derived from
+the `valueset` argument of `load_data` without reading the file.
