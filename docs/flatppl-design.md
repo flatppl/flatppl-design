@@ -527,7 +527,7 @@ bern = bernstein(coefficients = [c0, c1, c2], x = _)
 smooth_shape = normalize(weighted(bern, Lebesgue(support = interval(lo, hi))))
 ```
 
-#### Anonymous functions via holes
+#### Anonymous functions
 
 The `_` token creates anonymous functions with positional parameters:
 
