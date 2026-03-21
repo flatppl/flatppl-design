@@ -101,7 +101,7 @@ $endfor$
 
     var li = document.createElement('li');
     var a = document.createElement('a');
-    a.textContent = h.textContent.replace(/^[\d.]+\s+/, '').trim();
+    a.textContent = h.textContent.replace(/^[\d.]+\s+/, '').replace(/\s*#$$/, '').trim();
     a.href = '#' + h.id;
     li.appendChild(a);
 
@@ -122,7 +122,7 @@ $endfor$
       }
       var sli = document.createElement('li');
       var sa = document.createElement('a');
-      sa.textContent = sh.textContent.replace(/^[\d.]+\s+/, '').trim();
+      sa.textContent = sh.textContent.replace(/^[\d.]+\s+/, '').replace(/\s*#$$/, '').trim();
       sa.href = '#' + sh.id;
       sli.appendChild(sa);
       subUl.appendChild(sli);

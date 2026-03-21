@@ -241,9 +241,21 @@ local function extract_metadata(doc)
   return doc
 end
 
--- Return a filter list: metadata extraction first, then headers, then inlines.
+-- Phase 3: add permalink anchor links to headings (HTML only).
+local function heading_permalink(el)
+  if FORMAT:match("html") and el.identifier ~= "" then
+    local link = pandoc.RawInline("html",
+      ' <a class="heading-anchor" href="#' .. el.identifier .. '">#</a>')
+    el.content:insert(link)
+  end
+  return el
+end
+
+-- Return a filter list: metadata extraction first, then headers, then inlines,
+-- then heading permalinks.
 return {
   { Pandoc = extract_metadata },
   { Header = header_filter },
   { Inlines = inlines_filter },
+  { Header = heading_permalink },
 }

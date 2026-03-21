@@ -209,6 +209,35 @@ hr { border: none; border-top: 1px solid #ddd; margin: 2em 0; }
 
 .pdf-download:hover { background: #0250a3; }
 
+/* Heading anchor links (permalink on hover) */
+.heading-anchor {
+    visibility: hidden;
+    text-decoration: none;
+    color: #aaa;
+    margin-left: 0.3em;
+    font-weight: 400;
+}
+
+h1:hover .heading-anchor,
+h2:hover .heading-anchor,
+h3:hover .heading-anchor,
+h4:hover .heading-anchor,
+h5:hover .heading-anchor,
+h6:hover .heading-anchor {
+    visibility: visible;
+}
+
+.heading-anchor:hover {
+    color: #0366d6;
+}
+
+/* Hide anchors when copied into TOC/sidebar */
+#sidebar .heading-anchor,
+#TOC .heading-anchor,
+#full-toc .heading-anchor {
+    display: none;
+}
+
 header { margin-bottom: 1em; }
 
 .author { margin: 0.3em 0; }
