@@ -11,7 +11,8 @@ FlatPPL, a Flat Portable Probabilistic Language <br />
 </h1>
 
 **Abstract.** FlatPPL is a declarative, inference-agnostic probabilistic language designed for
-authoring, sharing, and preserving statistical models across scientific domains. Its design
+authoring, sharing, and preserving statistical models across scientific domains. It is
+intended both as a directly writable source language and as a portable intermediate representation that higher-level modeling frontends may emit. The design
 is still under development; this document presents the current proposal. FlatPPL describes
 models as static directed acyclic graphs (DAGs) of named mathematical objects — variates,
 measures, functions, and likelihoods — in a single global namespace with no block
@@ -237,6 +238,14 @@ and valid Julia — but the semantics stand on their own.
 **FlatPPL as a design tool.** Beyond its role as a model description language, FlatPPL can serve as a reasoning aid: it is easier to write down, review, and discuss prospective
 features in FlatPPL syntax than in JSON or C++, this can also contribute to the further evolution of standards and tools like HS³ and RooFit.
 
+**Creating FlatPPL models.** FlatPPL is intended both for direct authoring and as a target
+representation for models defined elsewhere. Writing FlatPPL documents directly may be quite
+practical for smaller models, and so for didactic settings. But FlatPPL can also serve as a portable
+intermediate representation (IR) emitted by higher-level modeling frontends. FlatPPL contains its
+own lowered linear SSA-like form, and so is very suitable as an IR. This dual role is deliberate.
+It allows for lowering and raising stochastic code via stable transformations within one single
+portable modeling language.
+
 ---
 
 ## <a id="sec:overview"></a>Language overview
@@ -264,7 +273,9 @@ natural path to accelerator-oriented execution via MLIR/StableHLO.
 **Julia.** There is only a prototype HS³ implementation in Julia (HS3.jl). Julia has a rich ecosystem of statistics packages like Distributions.jl and MeasureBase.jl that provide an excellent basis for an inference-agnostic implementation of FlatPPL, orthogonal to inference packages like ProfileLikelihood.jl, BAT.jl and others. FlatPPL and HS³ models could be supported in Julia via the same graph engine. The Julia equivalent to JAX is Reactant.jl, it also targets accelerators via MLIR/StableHLO.
 
 **Host-language embedding.** Because the source syntax parses as valid Python and Julia,
-`.flatppl` files can also serve as valid host-language programs. In Python, a file beginning
+`.flatppl` files can also serve as valid host-language source text. Conversely, higher-level
+host-language frontends may emit FlatPPL, or a lowered FlatPPL-derived form, as a portable
+model representation. In Python, a file beginning
 with `from flatppl import *` provides all predefined names (`draw`, `Normal`, `lawof`,
 `true`, `false`, `inf`, etc.) and can be executed to produce a model graph via tracing. In
 Julia, the equivalent is `using FlatPPL`. This is a practical convenience for engine
