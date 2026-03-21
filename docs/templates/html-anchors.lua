@@ -138,9 +138,112 @@ local function title_from_h1(doc)
   return doc
 end
 
--- Return a filter list: title extraction first, then headers, then inlines.
+-- Phase 0b: extract abstract from body.
+-- Looks for a Para whose text starts with "Abstract:" (with or without
+-- bold/emphasis formatting) before the first Header.  Collects that
+-- paragraph (and any following non-Header blocks before the next heading)
+-- into meta.abstract, stripping the "Abstract:" label.  Only runs if
+-- meta.abstract is not already set (YAML takes precedence).
+local function abstract_from_body(doc)
+  if doc.meta.abstract then return doc end
+
+  for i, el in ipairs(doc.blocks) do
+    -- Stop at first heading — abstract must come before any heading
+    if el.tag == "Header" then return doc end
+
+    if el.tag == "Para" then
+      -- Extract plain text from the first few inlines to check for "Abstract:"
+      -- We need to look inside Strong/Emph wrappers too
+      local inlines = el.content
+      local first_text = nil
+      local label_end = nil  -- index after the "Abstract:" label
+
+      for j = 1, #inlines do
+        local node = inlines[j]
+        local text = nil
+        if node.tag == "Str" then
+          text = node.text
+        elseif node.tag == "Strong" or node.tag == "Emph" then
+          -- Check first Str inside the wrapper
+          for _, child in ipairs(node.content) do
+            if child.tag == "Str" then
+              text = child.text
+              break
+            end
+          end
+        end
+        if text then
+          if text:match("^[Aa]bstract[:.]$") then
+            -- "Abstract:" or "Abstract." is a single token
+            label_end = j + 1
+            break
+          elseif text:match("^[Aa]bstract[:.]") then
+            -- "Abstract:..." or "Abstract...." merged with next word
+            local rest = text:gsub("^[Aa]bstract[:.]", "")
+            if node.tag == "Str" then
+              inlines[j] = pandoc.Str(rest)
+            end
+            label_end = j
+            break
+          else
+            -- First text token is not "Abstract:" — not an abstract para
+            break
+          end
+        elseif node.tag == "Space" or node.tag == "SoftBreak" then
+          -- Skip leading whitespace
+        else
+          break
+        end
+      end
+
+      if label_end then
+        -- Build abstract inlines: everything after the label
+        local abs_inlines = pandoc.List()
+        for j = label_end, #inlines do
+          abs_inlines:insert(inlines[j])
+        end
+        -- Trim leading spaces
+        while #abs_inlines > 0
+            and (abs_inlines[1].tag == "Space"
+              or abs_inlines[1].tag == "SoftBreak") do
+          abs_inlines:remove(1)
+        end
+
+        -- Collect additional paragraphs until the next Header
+        local abs_blocks = pandoc.List()
+        if #abs_inlines > 0 then
+          abs_blocks:insert(pandoc.Para(abs_inlines))
+        end
+        local remove_count = 1
+        for j = i + 1, #doc.blocks do
+          if doc.blocks[j].tag == "Header" then break end
+          abs_blocks:insert(doc.blocks[j])
+          remove_count = remove_count + 1
+        end
+
+        doc.meta.abstract = pandoc.MetaBlocks(abs_blocks)
+
+        -- Remove the abstract blocks from the body
+        for _ = 1, remove_count do
+          doc.blocks:remove(i)
+        end
+        return doc
+      end
+    end
+  end
+  return doc
+end
+
+-- Combined Phase 0: title then abstract extraction
+local function extract_metadata(doc)
+  doc = title_from_h1(doc)
+  doc = abstract_from_body(doc)
+  return doc
+end
+
+-- Return a filter list: metadata extraction first, then headers, then inlines.
 return {
-  { Pandoc = title_from_h1 },
+  { Pandoc = extract_metadata },
   { Header = header_filter },
   { Inlines = inlines_filter },
 }
