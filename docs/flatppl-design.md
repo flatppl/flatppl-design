@@ -22,7 +22,11 @@ abstract: |
   large class of models with tractable densities or likelihoods is a design goal.
 ---
 
-# FlatPPL: A Probabilistic Modeling Language (Draft)
+<h1>
+FlatPPL, a Flat Portable Probabilistic Language <br />
+<em>Expert-Level Proposal/Motivation and Design Draft</em>
+</h1>
+
 ## <a id="sec:context"></a>Context and motivation
 
 ### Goals and target audience
