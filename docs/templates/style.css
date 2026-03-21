@@ -196,7 +196,7 @@ hr { border: none; border-top: 1px solid #ddd; margin: 2em 0; }
 #TOC ul { list-style: none; padding-left: 1.2em; }
 #TOC > ul { padding-left: 0; }
 
-.pdf-download {
+.download-link {
     display: inline-block;
     background: #0366d6;
     color: #fff !important;
@@ -205,9 +205,10 @@ hr { border: none; border-top: 1px solid #ddd; margin: 2em 0; }
     text-decoration: none;
     font-weight: 500;
     margin-bottom: 1.5em;
+    margin-right: 0.5em;
 }
 
-.pdf-download:hover { background: #0250a3; }
+.download-link:hover { background: #0250a3; }
 
 /* Heading anchor links (permalink on hover) */
 .heading-anchor {
