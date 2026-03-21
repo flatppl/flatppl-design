@@ -10,7 +10,7 @@ FlatPPL, a Flat Portable Probabilistic Language <br />
 <em>Expert-Level Proposal/Motivation and Design Draft</em>
 </h1>
 
-**Abstract.** FlatPPL is a declarative, inference-agnostic probabilistic programming language designed for
+**Abstract.** FlatPPL is a declarative, inference-agnostic probabilistic language designed for
 authoring, sharing, and preserving statistical models across scientific domains. Its design
 is still under development; this document presents the current proposal. FlatPPL describes
 models as static directed acyclic graphs (DAGs) of named mathematical objects — variates,
@@ -106,24 +106,34 @@ RooFit compatibility. There is an active effort to evolve both HS³ and RooFit t
 expressiveness; bidirectional compatibility with them, for a large
 class of models, is a design goal of FlatPPL.
 
-### <a id="sec:why-ppl"></a>Probabilistic programming languages
+### <a id="sec:probabilistic-languages"></a>Probabilistic languages
 
-A probabilistic programming language (PPL) is a language for declaring generative
+A probabilistic language is a formal language for declaring generative
 models — descriptions of how data could have been produced by a stochastic process.
-Most PPLs bundle model specification with automatic inference. FlatPPL sits at the
-declarative end of the spectrum: it describes models, not inference procedures. The
+The literature partially distinguishes between probabilistic modeling languages and
+probabilistic programming languages, though the distinction is not always sharp. A probabilistic
+programming language is often understood to provide both model specification
+and automatic inference, though not all do. The term probabilistic modeling language
+is less common, but clearly expresses that inference is not part of the feature set.
+
+FlatPPL is primarily declarative: it describes models, not inference procedures. The
 scientist writes a model that reads like a simulation recipe: start with a set of
 parameter values, compute derived quantities, and describe how observations arise from
-distributions that depend on those parameters. The model itself is a static mathematical
-object. It does not "run", but different algorithms use it in different ways (see below).
-Density evaluation — which defines the semantics of likelihood objects and is useful for
-density-based computations within models — is part of FlatPPL, but algorithms are
-not.
+distributions that depend on those parameters. The source model is not an inference
+procedure or control-flow program. It denotes a static mathematical object that
+different algorithms can traverse or evaluate in different ways (see below).
 
-Algorithms can use such a model in two fundamental ways, which we will refer to as
-**generative mode** and **scoring mode** throughout this document:
+FlatPPL does, however, also support likelihood object declarations and density evaluation.
+Density evaluation defines the semantics of likelihood objects and is also useful for
+density-based computations within deterministic parts of models. This goes beyond what
+most probabilistic modeling languages offer, which often have a purely Bayesian focus,
+but is important for a language that aims to mesh well with formats and frameworks
+like HS³ and RooFit and to equally support both frequentist and Bayesian settings.
 
-- **Generative mode** (simulation): traverses the declared model graph forward and draws random numbers from probability distributions to simulate observed values.
+Algorithms can use a probabilistic model in two fundamental ways, commonly called
+**generative mode** and **scoring mode**:
+
+- **Generative mode** (simulation): traverses the declared model graph forward and draws random values from probability distributions to produce synthetic data.
 - **Scoring mode** (density evaluation): given parameters and observed values,
   calculate log-likelihood or log-posterior density values for
   frequentist and Bayesian inference methods.
@@ -143,16 +153,18 @@ The key design requirements here are:
    enough to outlast current software and hardware ecosystems.
 5. **Expressively sufficient.** Must allow us to express a wide corpus of models across many scientific domains.
 
-**Accelerator compatibility.** A PPL that is based on a static DAG of bindings — with value shapes that can be inferred at compile time, no loops, no dynamic control flow, no
-data-dependent shapes, but with explicit support for elementwise operations — maps naturally
+**Accelerator compatibility.** Models that are expressed as a static DAG of bindings — with
+value shapes that can be inferred at compile time, no loops, no dynamic control flow, no
+data-dependent shapes, but with explicit support for elementwise operations — map naturally
 to accelerator-oriented IRs such as MLIR/StableHLO/XLA. Engines targeting high-performance
-backends (e.g., via JAX in Python or Reactant.jl in Julia) can lower PPL programs to these
-IRs without fundamental impedance mismatches for the large class of common models with
-static topology and statically known shapes.
+backends (e.g., via JAX in Python or Reactant.jl in Julia) can lower operations on a model,
+like sampling or density/likelihood evaluation, to these IRs — without fundamental impedance
+mismatches for the large class of common models with static topology and statically known
+shapes.
 
-### The case for a new PPL
+### The case for a new probabilistic language
 
-We surveyed the landscape of probabilistic programming languages, but no current PPL covers all of our requirements. Some relevant examples are:
+We surveyed the landscape of probabilistic languages, but no currently available language covers all of our requirements. Some relevant examples are:
 
 **Stan** ([Carpenter et al., 2017](#carpenter2017)) is the strongest candidate for longevity: it has a large and active user and developer community, bindings for multiple languages (R, Python, Julia and others), and solid funding. However:
 
@@ -160,8 +172,8 @@ We surveyed the landscape of probabilistic programming languages, but no current
 - The Stan language is tightly coupled to a specific compiler and runtime (stanc → C++);
   there is no independent second implementation of the language specification, making it
   difficult to adopt as a language-independent interchange format.
-- Stan is a full programming language with rich syntax, not a serialization format, and
-  there is no export path to one.
+- Stan is a full probabilistic programming language with rich syntax, it cannot function as a
+  serialization format, and there is no export path to one.
 
 **SlicStan** ([Gorinova et al., 2019](#gorinova2019)) introduced compositional, blockless Stan with an information-flow type system
 for automatic variable classification. The "shredding" approach is relevant to our design.
@@ -329,7 +341,7 @@ Measures, likelihood objects, and functions are first-class in the sense that th
 bound to names, passed to their respective combinators and operations, and referenced by
 other bindings. However, they may not appear inside arrays, records, or tables.
 
-**Modules** represent whole FlatPPL PPL documents, each FlatPPL source file is a module.
+**Modules** represent whole FlatPPL documents, each FlatPPL source file is a module.
 FlatPPL code can load modules (via `load(module_filename)`) and access objects in loaded
 modules via dot-syntax scoping (`loaded_module.some_object`). Module objects give access
 to another namespace, but are not themselves first-class objects in the computational graph:
@@ -363,7 +375,8 @@ The table below provides a compact overview of the language. Each family name li
 ### A tour of FlatPPL
 
 The following code blocks illustrate the main language features. Each construct
-is explained in detail in later sections. These snippets are independent and do not form a single program.
+is explained in detail in later sections. These snippets are independent and do not form a single
+model.
 
 #### Values and collections
 
@@ -948,7 +961,7 @@ events = draw(PoissonProcess(intensity = rate))
 ```
 
 Without `lawof`, there would be no way to obtain the distributional object from a
-sub-computation built in PPL style. Similarly, without `functionof`, there would be no way
+sub-computation built in FlatPPL style. Similarly, without `functionof`, there would be no way
 to extract a deterministic computation as a reusable function object for `broadcast` and
 other higher-order operations.
 
@@ -1273,7 +1286,7 @@ are unaffected — `rebind` is purely structural.
 ### Free parameters and Markov kernels
 
 In HS³, any distribution parameter bound to a name rather than a concrete value becomes a
-free parameter of the model. The same semantics carry over to the PPL: any name referenced
+free parameter of the model. The same semantics carry over to FlatPPL: any name referenced
 in a sub-DAG that is not bound within that sub-DAG is a free parameter. Unlike standard
 Python or Julia, where an unbound name raises a `NameError`, FlatPPL intentionally captures
 unbound names as the free parameters of the resulting statistical model. Such a sub-DAG
@@ -1305,7 +1318,7 @@ to discover a kernel's parameter interface.
 
 ### <a id="sec:inference-agnostic"></a>The model does not dictate inference
 
-The PPL describes the **joint generative model** — the full probabilistic story of how all
+A FlatPPL document describes the **joint generative model** — the full probabilistic story of how all
 quantities (parameters, latent variables, observables) are related. It does NOT specify:
 
 - What is observed and what is latent (that's in the data/likelihood specification).
@@ -1323,9 +1336,9 @@ Language?" section, this same model specification seamlessly supports both gener
 
 ### <a id="sec:namespaces"></a>Naming and namespaces
 
-All **top-level bindings** in a PPL program (or module — see [multi-file models](#sec:modules)) live in a
-**single flat namespace**. Every binding has a unique name, whether it refers to a variate,
-a measure, a function, a likelihood object, or a data value. This matches both RooFit
+All **top-level bindings** in a FlatPPL document (or module — see [multi-file models](#sec:modules)) live in a
+**single flat namespace**. Every binding has a unique name, whether it refers to an abstract value,
+a measure, a function, or a likelihood object. This matches both RooFit
 workspace semantics (where all `RooAbsArg` objects share a single namespace with enforced
 uniqueness) and the HS³ standard (where all objects must have unique names).
 
@@ -1550,7 +1563,7 @@ it binds the remaining positional arguments to the function's parameters in orde
 - `A[:, j]` — extracts data: `get(A, all, j)` (see [array slicing](#array-slicing))
 
 **`_` may NOT appear on the left side of a binding** — it is not a discard pattern. Every
-binding in the PPL produces a named top-level value.
+binding in FlatPPL produces a named top-level value.
 
 **Design note: `_` vs `functionof`.** The two mechanisms are complementary:
 
@@ -1564,7 +1577,7 @@ binding in the PPL produces a named top-level value.
 ### <a id="sec:modules"></a>Multi-file models
 
 Each FlatPPL file is a **module** — a flat namespace of named bindings. This corresponds
-directly to a RooFit workspace and to an HS³ document. When PPL code is embedded in Julia or
+directly to a RooFit workspace and to an HS³ document. When FlatPPL code is embedded in Julia or
 Python via macros/decorators, each embedded block is a separate module.
 
 **`load("path/to/file.flatppl")`** loads a FlatPPL file and returns a module reference. Members are
@@ -1604,7 +1617,7 @@ be refined in future versions.
 
 ## <a id="sec:syntax"></a>Syntax and parsing rules
 
-This section specifies the FlatPPL source syntax — the *surface form* in programming
+This section specifies the FlatPPL syntax — the *surface form* in formal
 language terminology — and its parsing rules. FlatPPL's semantics do not depend on having
 a host-language interpreter; in Python and Julia, host AST parsers provide convenient
 parsing, but a standalone FlatPPL parser is straightforward to implement given the
@@ -1642,7 +1655,7 @@ The practical benefits are:
   implement given the intentionally small grammar.
 
 **Embedding in host languages.** The Python/Julia-compatible AST design also enables direct
-embedding of PPL code in both languages, allowing engine implementations to accept PPL code
+embedding of FlatPPL code in both languages, allowing engine implementations to accept FlatPPL code
 inline without a separate parsing step.
 
 In **Julia**, the natural mechanism is a macro:
@@ -1657,7 +1670,7 @@ pplobj.m isa AbstractMeasure
 ```
 
 The macro receives the parsed Julia AST of the block, walks it to build the internal DAG
-representation, and returns a runtime object whose fields are typed PPL objects.
+representation, and returns a runtime object whose fields are typed FlatPPL objects.
 
 In **Python**, the established pattern is a decorator with source inspection:
 
@@ -1673,12 +1686,12 @@ The decorator calls `inspect.getsource(model)`, feeds the text to `ast.parse`, w
 AST, and builds the DAG. The function body is never executed as Python — it is a container
 for source text that the Python parser already knows how to parse.
 
-Both embedding mechanisms require a convention for distinguishing PPL names from
-host-language names. The recommended approach: bare names not bound within the PPL block are
-treated as free parameters (matching the PPL's existing free-variable semantics). Injecting
+Both embedding mechanisms require a convention for distinguishing FlatPPL names from
+host-language names. The recommended approach: bare names not bound within the FlatPPL block are
+treated as free parameters (matching FlatPPL's existing free-variable semantics). Injecting
 host-language values requires an explicit interpolation mechanism (e.g., `$mu` in Julia, or
 a `data=dict(mu=0.5)` argument in Python). This is a design decision for the engine API,
-not part of the PPL specification itself.
+not part of the FlatPPL specification itself.
 
 #### Excluded syntax
 
@@ -1775,10 +1788,10 @@ different array semantics to the same operators.
 
 ### Lowered linear form
 
-FlatPPL source programs admit a stable lowering to a linear SSA-style core form in
+FlatPPL source documents admit a stable lowering to a linear SSA-style core form in
 which every non-atomic subexpression is bound to a fresh name. This lowering is
 administrative: it preserves graph structure and sharing and does not change the
-program's semantics. The two-stage process (hole abstraction followed by subexpression
+model semantics. The two-stage process (hole abstraction followed by subexpression
 naming) is described in [calling conventions and anonymous functions](#sec:calling-convention).
 
 In the resulting lowered form, every line matches one of a small family of statement
@@ -1798,7 +1811,7 @@ locally alongside the constructs they define.
 ### Measure-theoretic foundations
 
 The language's semantics are defined in terms of measure theory, following the [Giry (1982)](#giry1982)
-measure monad tradition in probabilistic programming semantics.
+measure monad tradition in probabilistic modeling/programming semantics.
 
 A **measurable space** is a pair $(X, \Sigma_X)$ of a set X and a $\sigma$-algebra $\Sigma_X$ on $X$. We omit the
 $\sigma$-algebra when it is clear from context.
@@ -1806,7 +1819,7 @@ $\sigma$-algebra when it is clear from context.
 A **measure** on X is a $\sigma$-additive function $\mu: \Sigma_X \to [0, \infty]$. A **probability measure** is a
 measure with $\mu(X) = 1$. A **$\sigma$-finite measure** is one for which $X$ admits a countable cover
 $\{X_n\}$ with $\mu(X_n) < \infty$ for each $n$. We work with $\sigma$-finite measures throughout, following
-the convention in modern PPL semantics ([Staton, 2017](#staton2017)).
+the convention in modern probabilistic language semantics ([Staton, 2017](#staton2017)).
 
 A note on the monad structure: the classical Giry monad operates on probability measures.
 Our language works with $\sigma$-finite measures to accommodate unnormalized densities and rate
@@ -1849,7 +1862,7 @@ In our language:
   point-mass measure.
 - `lawof(x)` reads the **denotation** of an ancestor-closed sub-DAG as a measure. It is
   not a monadic operation per se — it is a meta-operation that extracts the marginal measure
-  that the program fragment rooted at x denotes.
+  that the model fragment rooted at x denotes.
 - `functionof(x)` extracts a deterministic function from a sub-DAG. A deterministic
   function $f: X \to Y$ embeds canonically into the Kleisli category via $x \mapsto \mathrm{Dirac}(f(x))$,
   so `functionof` can be understood as extracting the pre-Dirac function that `lawof` would
@@ -2333,7 +2346,7 @@ Engines interact with likelihood objects primarily through log-density evaluatio
 standard uses the interface terminology `logdensityof(L, theta)` and `densityof(L, theta)`,
 following the conventions established in DensityInterface.jl and similar libraries. These
 are interface names for evaluation of the likelihood object; they do not imply that the
-likelihood is itself a probability measure on parameter space. The PPL declares the
+likelihood is itself a probability measure on parameter space. FlatPPL declares the
 likelihood object, and the engine decides how to work with it.
 
 **Evaluation semantics.** `likelihoodof` always performs a single density evaluation:
@@ -2439,7 +2452,7 @@ prior = lawof(record(mu_sig = mu_sig_prior, raw_eff_syst = raw_eff_syst_prior))
 posterior = logweighted(L, prior)
 ```
 
-For correlated priors, the dependency is expressed naturally through the PPL sub-graph.
+For correlated priors, the dependency is expressed naturally through the FlatPPL sub-graph.
 
 **Conditioning and disintegration.** FlatPPL does not provide a formal `disintegrate`
 operator that decomposes an opaque joint measure into marginal and conditional parts. In
@@ -2873,7 +2886,7 @@ ensure the backend observable range matches this declared support.
 
 Piecewise-constant step function. `bin_edges` is a vector of bin edge positions;
 `bin_values` is a vector of non-negative values (one per bin); `x` is the evaluation point
-(real). PPL semantics are strictly piecewise constant (no implicit interpolation). The
+(real). FlatPPL semantics are strictly piecewise constant (no implicit interpolation). The
 Lebesgue support **must** match the range spanned by the bin edges (first edge to last
 edge); a mismatch is a static error.
 
@@ -3019,7 +3032,7 @@ record-valued, depending on the distribution.
   variate name comes from the `draw` binding or `pushfwd`. This is a clean break from
   current HS³ convention, where each distribution carries variate names via fields like
   `"x"`.
-- **One canonical parameterization per distribution.** The PPL does not perform hidden
+- **One canonical parameterization per distribution.** FlatPPL does not perform hidden
   algebraic conversions. Users who work with an alternative convention (e.g. Gamma
   shape/scale instead of shape/rate) write the conversion explicitly.
 
@@ -3046,10 +3059,10 @@ distribution uses `rate` instead: `Poisson(rate = 5.3)`.
 
 Gaussian distribution with mean `mu` (real) and standard deviation `sigma` (positive real).
 
-**HS³:** `gaussian_dist` (also `normal_dist`). Parameter mapping: PPL `mu` = HS³ `mean`,
-PPL `sigma` = HS³ `sigma`.
+**HS³:** `gaussian_dist` (also `normal_dist`). Parameter mapping: FlatPPL `mu` = HS³ `mean`,
+FlatPPL `sigma` = HS³ `sigma`.
 
-**RooFit:** `RooGaussian`. Parameter mapping: PPL `mu` = RooFit `mean`, PPL `sigma` =
+**RooFit:** `RooGaussian`. Parameter mapping: FlatPPL `mu` = RooFit `mean`, FlatPPL `sigma` =
 RooFit `sigma`.
 
 #### `Exponential(rate=)`
@@ -3057,9 +3070,9 @@ RooFit `sigma`.
 Exponential distribution with decay rate `rate` (positive real). Density proportional to
 exp(−rate · x) for x ≥ 0.
 
-**HS³:** `exponential_dist`. Parameter mapping: PPL `rate` = HS³ `c`.
+**HS³:** `exponential_dist`. Parameter mapping: FlatPPL `rate` = HS³ `c`.
 
-**RooFit:** `RooExponential`. Caution: RooFit uses exp(c · x), so RooFit `c` = −PPL `rate`
+**RooFit:** `RooExponential`. Caution: RooFit uses exp(c · x), so RooFit `c` = −FlatPPL `rate`
 (the translator must negate the sign).
 
 #### `LogNormal(mu=, sigma=)`
@@ -3067,7 +3080,7 @@ exp(−rate · x) for x ≥ 0.
 Log-normal distribution. If X ~ LogNormal(mu, sigma), then log(X) ~ Normal(mu, sigma).
 Parameters: `mu` (real, log-space mean) and `sigma` (positive real, log-space std dev).
 
-**HS³:** `lognormal_dist`. Parameter mapping: PPL `mu` = HS³ `mu`, PPL `sigma` = HS³
+**HS³:** `lognormal_dist`. Parameter mapping: FlatPPL `mu` = HS³ `mu`, FlatPPL `sigma` = HS³
 `sigma`.
 
 **RooFit:** `RooLognormal`. Caution: RooFit parameterizes via `m0` and `k`, where m0 =
@@ -3080,7 +3093,7 @@ Gamma distribution with shape parameter `shape` (positive real) and rate paramet
 
 **HS³:** Not currently in the HS³ standard.
 
-**RooFit:** `RooGamma`. Parameter mapping: PPL `shape` = RooFit `gamma`, PPL `rate` =
+**RooFit:** `RooGamma`. Parameter mapping: FlatPPL `shape` = RooFit `gamma`, FlatPPL `rate` =
 1/RooFit `beta` (RooFit uses scale = 1/rate), RooFit `mu` = 0.
 
 **Design note.** The canonical parameterization is shape/rate, not shape/scale. Users who
@@ -3111,9 +3124,9 @@ Semantically equivalent to `normalize(Lebesgue(support = interval(a, b)))`.
 Poisson distribution with expected count `rate` (non-negative real). Uses the name `rate`
 to avoid the Python `lambda` keyword collision.
 
-**HS³:** `poisson_dist`. Parameter mapping: PPL `rate` = HS³ `mean` = $\lambda$.
+**HS³:** `poisson_dist`. Parameter mapping: FlatPPL `rate` = HS³ `mean` = $\lambda$.
 
-**RooFit:** `RooPoisson`. Parameter mapping: PPL `rate` = RooFit `mean`.
+**RooFit:** `RooPoisson`. Parameter mapping: FlatPPL `rate` = RooFit `mean`.
 
 #### `ContinuedPoisson(rate=)`
 
@@ -3152,10 +3165,10 @@ Multivariate normal distribution. Parameters: `mu` (array of reals, mean vector)
 covariances define valid measures but do not have densities with respect to the ambient
 Lebesgue measure and are not supported by the standard `likelihoodof` evaluation.
 
-**HS³:** `multivariate_normal_dist`. Parameter mapping: PPL `mu` = HS³ `mean`, PPL `cov` =
+**HS³:** `multivariate_normal_dist`. Parameter mapping: FlatPPL `mu` = HS³ `mean`, FlatPPL `cov` =
 HS³ `covariances`.
 
-**RooFit:** `RooMultiVarGaussian`. Parameter mapping: PPL `mu` = RooFit `mu`, PPL `cov` =
+**RooFit:** `RooMultiVarGaussian`. Parameter mapping: FlatPPL `mu` = RooFit `mu`, FlatPPL `cov` =
 RooFit `cov`.
 
 **Design note.** Variate components are unnamed by default. Named components are obtained
@@ -3255,7 +3268,7 @@ Crystal Ball function: Gaussian core with a power-law tail on one side. Paramete
 position `m0` (real), width `sigma` (positive real), transition point `alpha` (positive
 real), and power-law exponent `n` (positive real).
 
-**HS³:** `crystalball_dist`. Parameter mapping: PPL names match HS³ names directly (`m0`,
+**HS³:** `crystalball_dist`. Parameter mapping: FlatPPL names match HS³ names directly (`m0`,
 `sigma`, `alpha`, `n`).
 
 **RooFit:** `RooCBShape`.
@@ -3267,8 +3280,8 @@ Parameters: peak position `m0` (real), left/right widths `sigmaL`, `sigmaR` (pos
 reals), left/right transition points `alphaL`, `alphaR` (positive reals), and left/right
 power-law exponents `nL`, `nR` (positive reals).
 
-**HS³:** `crystalball_dist` (the double-sided variant). Parameter mapping: PPL `sigmaL` =
-HS³ `sigma_L`, PPL `sigmaR` = HS³ `sigma_R`, etc.
+**HS³:** `crystalball_dist` (the double-sided variant). Parameter mapping: FlatPPL `sigmaL` =
+HS³ `sigma_L`, FlatPPL `sigmaR` = HS³ `sigma_R`, etc.
 
 **RooFit:** `RooCrystalBall`.
 
@@ -3277,11 +3290,11 @@ HS³ `sigma_L`, PPL `sigmaR` = HS³ `sigma_R`, etc.
 ARGUS background function. Parameters: kinematic endpoint `resonance` (positive real),
 slope parameter `slope` (real), and power parameter `power` (positive real, typically 0.5).
 
-**HS³:** `argus_dist`. Parameter mapping: PPL names match HS³ names directly (`resonance`,
+**HS³:** `argus_dist`. Parameter mapping: FlatPPL names match HS³ names directly (`resonance`,
 `slope`, `power`).
 
-**RooFit:** `RooArgusBG`. Parameter mapping: PPL `resonance` = RooFit `m0`, PPL `slope` =
-RooFit `c`, PPL `power` = RooFit `p`.
+**RooFit:** `RooArgusBG`. Parameter mapping: FlatPPL `resonance` = RooFit `m0`, FlatPPL `slope` =
+RooFit `c`, FlatPPL `power` = RooFit `p`.
 
 #### `BreitWigner(mean=, width=)`
 
@@ -3300,8 +3313,8 @@ distributions and have separate constructors.
 Relativistic Breit-Wigner distribution. Parameters: resonance mass `mean` (positive real)
 and full width `width` (positive real, $\Gamma$).
 
-**HS³:** `relativistic_breit_wigner_dist`. Parameter mapping: PPL `mean` = HS³ `mean`,
-PPL `width` = HS³ `width`.
+**HS³:** `relativistic_breit_wigner_dist`. Parameter mapping: FlatPPL `mean` = HS³ `mean`,
+FlatPPL `width` = HS³ `width`.
 
 **RooFit:** Not currently in RooFit as a dedicated class.
 
@@ -3331,7 +3344,7 @@ Generalized normal distribution. Parameters: location `mean` (real), scale `alph
 (positive real), and shape `beta` (positive real). Reduces to the normal distribution
 when beta = 2.
 
-**HS³:** `generalized_normal_dist`. Parameter mapping: PPL names match HS³ names directly
+**HS³:** `generalized_normal_dist`. Parameter mapping: FlatPPL names match HS³ names directly
 (`mean`, `alpha`, `beta`).
 
 **RooFit:** Not currently in RooFit as a dedicated class.
@@ -3366,7 +3379,7 @@ objects. For generic functions defined as function graphs, HS³'s `density_funct
 `log_density_function_dist` are closer semantic matches than `generic_dist`, because they
 accept named function objects rather than opaque expression strings. On the RooFit
 side, wrapper-based fallbacks such as `RooWrapperPdf` are backend conveniences; they may
-silently clip negative density values to zero, which is not semantics-preserving — the PPL
+silently clip negative density values to zero, which is not semantics-preserving — FlatPPL
 treats negative densities as invalid (a semantic error), not as values to be rescued.
 
 
@@ -3580,7 +3593,7 @@ normalized graph, not on raw source text.
 
 **HS³ evolution.** The next version of HS³ should resemble the current standard as closely
 as possible without compromising semantic clarity. Rather than literally serializing the
-PPL's AST to JSON, the evolved HS³ should extend the current JSON structure with the new
+FlatPPL's AST to JSON, the evolved HS³ should extend the current JSON structure with the new
 concepts (measure algebra, structured variates, hierarchical dependencies, explicit
 interfaces) while preserving backward compatibility where feasible.
 
@@ -3605,7 +3618,7 @@ are intentionally excluded — this is a design choice that prevents a class of
 context-dependent operations that are not semantically stable as a modeling-language
 foundation.
 
-**Correspondence points.** The PPL's DAG reference structure maps to RooFit's server/client
+**Correspondence points.** FlatPPL's DAG reference structure maps to RooFit's server/client
 dependency graph; `likelihoodof` maps to `createNLL`;
 `pushfwd`/`lawof(record(...))` maps to named `RooAbsPdf` objects; `load` provides module
 loading with qualified dot access; and `rebind` provides explicit interface adaptation for
@@ -4069,7 +4082,7 @@ instead, it informs the design of a cleaner HS³ that natively supports the new 
 (structured variates, hierarchical dependencies, measure algebra, additive
 superposition).
 
-### Q: Is the PPL fully backward-compatible with HS³?
+### Q: Is FlatPPL fully backward-compatible with HS³?
 
 Every current HS³ model can be mechanically translated to FlatPPL. In the reverse direction,
 we aim to achieve full mapping from FlatPPL to HS³ for the large class of models with
@@ -4224,7 +4237,7 @@ keeps their namespaces separate.
 RooFit determines parameter/observable roles from usage context, which allows treating a
 likelihood as a probability density by normalizing over parameters. This is mathematically
 unsound in general (the likelihood is not a probability density in parameter space). The
-PPL's generative DAG determines roles by construction: `draw` introduces a variate, and
+FlatPPL's generative DAG determines roles by construction: `draw` introduces a variate, and
 free variables become parameters. This prevents a class of subtle statistical errors.
 
 ### Q: What are generative mode and scoring mode?
@@ -4333,7 +4346,7 @@ is the uniform distribution on [0, 1]. `Dirac(value = v)` is already a probabili
 | Model composition via `load` + `rebind` | Modules export kernels; `rebind` adapts interfaces; combining document shares parameters via flat namespace. |
 | Giry-style (not classical Giry) semantics | $\sigma$-finite measure monad variant for unnormalized densities and rate measures. |
 | Explicit kernel/function interfaces in JSON | Self-describing serialization; tools don't need graph traversal. |
-| Embedding via Julia macros / Python decorators | Payoff of Python/Julia-compatible AST design; engine API, not PPL spec. |
+| Embedding via Julia macros / Python decorators | Payoff of Python/Julia-compatible AST design; engine API, not FlatPPL spec. |
 | Interpolation functions: `interp_p{1,2,6}{lin,exp}` | Three-point interpolation for systematic variations; 3×2 grid over smoothing (linear, quadratic, polynomial) × extrapolation (linear, exponential). Value-level functions, not measure combinators. |
 | HistFactory modifiers as composition, not primitives | pyhf/HistFactory modifiers decompose into interpolation + arithmetic + constraint draws. No modifier objects needed; the deterministic and probabilistic parts are separated explicitly. |
 | `_` holes: positional-only anonymous functions | Expression with holes = anonymous function. Each `_` is a distinct positional parameter, left-to-right. No inherited keyword names. Two-stage lowering: hole abstraction first, then ANF. |

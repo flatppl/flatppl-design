@@ -1,6 +1,6 @@
 # FlatPPL Design Document
 
-Design proposal for a lightweight probabilistic programming language.
+Design proposal for a lightweight probabilistic language.
 
 ## Published version
 
