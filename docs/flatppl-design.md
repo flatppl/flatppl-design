@@ -263,7 +263,7 @@ the flavor of the FlatPPL language. This high energy physics model describes a s
 measurement where the observed spectrum is a superposition of signal and background
 events, with a systematic uncertainty on the signal resolution:
 
-```
+```flatppl
 # Systematic: uncertain detector resolution
 raw_syst = draw(Normal(mu = 0.0, sigma = 1.0))
 resolution = 2.5 + 0.3 * raw_syst
@@ -382,7 +382,7 @@ model.
 
 Scalars, arrays, nested arrays, matrices, records, and basic operations:
 
-```
+```flatppl
 # Scalars
 x = 3.14
 n = 42
@@ -417,7 +417,7 @@ joined = cat(array1, array2)
 
 Calling conventions:
 
-```
+```flatppl
 Normal(mu = 0, sigma = 1)           # keyword
 Normal(record(mu = 0, sigma = 1))   # record auto-splatting
 exp(x)                              # positional
@@ -427,7 +427,7 @@ exp(x)                              # positional
 
 Constructing and calculating with complex values:
 
-```
+```flatppl
 # Complex construction
 z1 = complex(3.0, 2.0)
 z2 = 3.0 + 2.0 * im               # equivalent
@@ -449,7 +449,7 @@ z_bar = conj(z1)
 
 `draw`, `lawof`, and `functionof` bridge between values, measures, and functions:
 
-```
+```flatppl
 # Random draw from a distribution
 a = draw(Normal(mu = mu, sigma = sigma))
 
@@ -472,7 +472,7 @@ K = lawof(c)
 
 `broadcast` applies functions or kernels elementwise over arrays and tables:
 
-```
+```flatppl
 # Function over array (keyword binding)
 C = broadcast(f_named, x = A)
 
@@ -487,7 +487,7 @@ D = draw(broadcast(K, a = A))
 
 Accessing and renaming values, and transforming measures based on that:
 
-```
+```flatppl
 # Element and subset access
 field_a = get(some_record, "a")
 sub = get(some_record, ["a", "c"])
@@ -511,7 +511,7 @@ marginal_ac = pushfwd(get(_, ["a", "c"]), mvmodel)
 
 Combining, reweighting, and transforming measures some more:
 
-```
+```flatppl
 # IID draws
 xs = draw(iid(Normal(mu = 0, sigma = 1), 100))
 
@@ -547,7 +547,7 @@ smooth_shape = normalize(weighted(bern, Lebesgue(support = interval(lo, hi))))
 
 The `_` token creates anonymous functions with positional parameters:
 
-```
+```flatppl
 # Single hole — one-argument function
 poly = polynomial(coefficients = [a0, a1, a2], x = _)
 squared = pow(_, 2)
@@ -560,7 +560,7 @@ ratio_sq = pow(_ / _, 2)
 
 Constructors for binned models and HistFactory-style yield arithmetic:
 
-```
+```flatppl
 edges = linspace(0.0, 10.0, 5)
 counts = bincounts(edges, event_data)
 
@@ -577,7 +577,7 @@ morphed = interp_p6lin(tmpl_dn, nominal, tmpl_up, alpha)
 
 Data is represented by ordinary values — no special data type:
 
-```
+```flatppl
 observed_counts = [5, 12, 8, 3]
 data_table = table(a = [1.1, 1.2], b = [2.1, 2.2])
 ```
@@ -586,7 +586,7 @@ data_table = table(a = [1.1, 1.2], b = [2.1, 2.2])
 
 Likelihood construction, combination, and posterior construction:
 
-```
+```flatppl
 L = likelihoodof(lawof(obs), data)
 L_sub = likelihoodof(lawof(obs), data,
     restrict = window(a = interval(2.0, 8.0)))
@@ -603,7 +603,7 @@ pipeline = fchain(calc_kinematics, apply_cuts)
 
 Module loading and parameter renaming:
 
-```
+```flatppl
 # Load a module and access its members
 sig = load("signal_channel.flatppl")
 sig_model = sig.model
@@ -642,7 +642,7 @@ boolean arguments; integer 0 and 1 are not implicitly converted to booleans.
 **Complex.** A pair of real numbers (real part, imaginary part), representing a complex
 number. Constructed via `complex(re, im)` or via arithmetic with the imaginary unit `im`:
 
-```
+```flatppl
 z1 = complex(3.0, 2.0)
 z2 = 3.0 + 2.0 * im           # equivalent
 phase = cis(3 * pi / 4)       # unit-modulus complex from angle
@@ -696,7 +696,7 @@ A plain record of arrays is just a record of arrays — only the `table(...)` co
 introduces the equal-length invariant and therefore row access and row-wise broadcast
 semantics.
 
-```
+```flatppl
 events = table(mass = [1.1, 1.2, 1.3], pt = [45.2, 32.1, 67.8])
 ```
 
@@ -746,7 +746,7 @@ A **matrix** is a first-class rectangular 2D value type, constructed explicitly 
 `rowstack` or `colstack`. Distinct from nested arrays: a matrix is guaranteed rectangular
 and is the type accepted by future linear algebra operations.
 
-```
+```flatppl
 M = rowstack([1, 2, 3], [4, 5, 6])
 get(M, i, j)       # element access
 get(M, i, all)     # row i → 1D array
@@ -866,7 +866,7 @@ middle of a larger generative model without rewriting the model with dummy varia
 
 Example — extracting both a prior and a forward observation kernel from one model:
 
-```
+```flatppl
 # Generative model with prior and forward computation
 theta1 = draw(Normal(mu = 0.0, sigma = 1.0))
 theta2 = draw(Exponential(rate = 1.0))
@@ -893,7 +893,7 @@ from the same graph. The relationship:
 **Interface ordering.** When keyword arguments are provided, they establish both the names
 and the order of the kernel's input interface, enabling positional calling:
 
-```
+```flatppl
 K = lawof(c, mu = my_mu, sigma = my_sigma)
 # K can be called as K(0.0, 1.0) or K(mu = 0.0, sigma = 1.0)
 ```
@@ -908,7 +908,7 @@ when the measure is eventually consumed.
 **Marginalization vs. product-likelihood structure.** The choice of whether to provide
 boundary inputs to `lawof` determines how upstream stochastic nodes are treated:
 
-```
+```flatppl
 # Setup: a constrained nuisance parameter affects the observation model
 gamma = draw(Normal(mu = 1.0, sigma = 0.1))
 obs = draw(Poisson(rate = expected * gamma))
@@ -943,7 +943,7 @@ types of the free parameters — is explicit in the serialized form.
 
 Consider:
 
-```
+```flatppl
 a = draw(Normal(mu = mu_param, sigma = sigma_param))
 b = 2 * a + 1
 ```
@@ -955,7 +955,7 @@ $x \mapsto 2x + 1$.
 If we want to use this measure as a rate density for a Poisson process, we need to extract
 it as a measure object:
 
-```
+```flatppl
 rate = weighted(mu_sig, lawof(b))
 events = draw(PoissonProcess(intensity = rate))
 ```
@@ -1082,7 +1082,7 @@ all bound names, factored according to the dependency DAG.
 
 Given bindings:
 
-```
+```flatppl
 x₁ = draw(M₁)
 x₂ = f(x₁)                  # deterministic: equivalent to draw(Dirac(f(x₁)))
 x₃ = draw(M₃(x₁, x₂))     # M₃ parameterized by x₁, x₂
@@ -1105,7 +1105,7 @@ object**. This is the deterministic counterpart of `lawof`: where `lawof` extrac
 measure (or kernel) from a sub-DAG that may contain stochastic nodes, `functionof` extracts
 a plain function from a sub-DAG that contains no `draw` nodes.
 
-```
+```flatppl
 # Deterministic sub-DAG: a is free, b depends on a deterministically
 b = 2 * a + 1
 f = functionof(b)              # f: {a: Real} → Real
@@ -1117,7 +1117,7 @@ declaration is provided (see below), the declared external names and their order
 the raw free variable names. The function's **output** is the value of the variate passed to
 `functionof`. The output type matches the variate type of the argument:
 
-```
+```flatppl
 f = functionof(b)                                    # scalar output
 f = functionof(record(x = something, y = other))     # record output
 f = functionof([something, other])                    # array output
@@ -1126,7 +1126,7 @@ f = functionof([something, other])                    # array output
 **Input renaming, ordering, and boundary inputs.** An optional keyword-argument form
 declares an external interface that maps user-facing names to internal variables:
 
-```
+```flatppl
 f = functionof(myadd_a + myadd_b, a = myadd_a, b = myadd_b)
 ```
 
@@ -1140,7 +1140,7 @@ same **boundary input** mechanism described in the [`lawof` in detail](#lawof-in
 define where the sub-DAG boundary lies. For `lawof`, the result is a kernel; for
 `functionof`, the result is a function (the sub-DAG must be purely deterministic).
 
-```
+```flatppl
 theta = draw(Normal(mu = 0, sigma = 1))
 a = 5.0 * theta
 b = abs(theta) + a
@@ -1197,7 +1197,7 @@ are purely structural — they do not change the computation graph or density.
 - **`relabel(value, names)`** — structural renaming. Converts an array or scalar value into
   a record by assigning positional names. The list length must match the value's dimension.
 
-  ```
+  ```flatppl
   relabel(v, ["a", "b", "c"])     # array of length 3 → record(a=, b=, c=)
   relabel(x, ["mass"])            # scalar → record(mass=)
   ```
@@ -1228,7 +1228,7 @@ measure on Record{a, b, c} from a sequence-valued measure $\mu$ of matching dime
   under their original names. This is the key ergonomic property — if an object has 20
   inputs and you need to rename 2, you write only the 2 mappings.
 
-  ```
+  ```flatppl
   # K has interface {signal_strength, lumi_unc, resolution}
   K2 = rebind(K, mu_sig = signal_strength, theta_lumi = lumi_unc)
   # K2 has interface {mu_sig, theta_lumi, resolution}
@@ -1254,7 +1254,7 @@ measure on Record{a, b, c} from a sequence-valued measure $\mu$ of matching dime
   **Model composition example.** A key use of `rebind` is adapting separately
   authored modules that use different parameter names for the same physical quantities:
 
-  ```
+  ```flatppl
   chan1 = load("channel_electron.flatppl")
   chan2 = load("channel_muon.flatppl")
 
@@ -1293,7 +1293,7 @@ unbound names as the free parameters of the resulting statistical model. Such a 
 defines a Markov kernel (a function from the free parameters to measures) rather than a
 concrete measure.
 
-```
+```flatppl
 # mu is unbound → this sub-DAG is a kernel R → Measure[R]
 a = draw(Normal(mu = mu, sigma = 1.0))
 b = 2 * a
@@ -1387,7 +1387,7 @@ deduplication) may be refined in future versions.
 with keyword arguments binding free variables to input arrays. If the callable supports
 positional arguments (see [calling conventions and anonymous functions](#sec:calling-convention)), positional binding is also permitted.
 
-```
+```flatppl
 # Deterministic broadcast: function over array → array variate
 b = 2 * a + 1
 f = functionof(b, a = a)             # declares input name "a" with order
@@ -1438,7 +1438,7 @@ no length constraint.
 created by a hole expression, arguments are matched positionally — each array (or scalar)
 corresponds to the next hole in left-to-right order:
 
-```
+```flatppl
 broadcast(pow(_ / _, 2), bkg_nominal, bkg_uncrt)
 # hole 1 ← bkg_nominal, hole 2 ← bkg_uncrt
 ```
@@ -1464,7 +1464,7 @@ same length and zips them elementwise.
 All callables — built-in functions, user-defined functions, and built-in or user-defined
 measure/kernel/model constructors — accept exactly these calling forms:
 
-```
+```flatppl
 f(x, y)                       # positional — only if argument order is defined
 f(a = x, b = y)               # keyword
 f(record(a = x, b = y))       # shallow auto-splatting
@@ -1510,7 +1510,7 @@ Each `_` introduces a **distinct positional parameter** with an auto-generated n
 Holes do not inherit keyword names from enclosing call positions. If named parameters
 are needed, use `functionof` with an explicit interface declaration instead.
 
-```
+```flatppl
 # Single hole — one-argument function
 neg = sub(0, _)                         # x → sub(0, x)
 poly = polynomial(coefficients = cs, x = _)  # x → polynomial(cs, x)
@@ -1524,7 +1524,7 @@ h = pow(_ / _, 2)                       # (x, y) → pow(x / y, 2)
 operators. The anonymous function abstracts over all holes in the entire expression,
 not just the immediately enclosing call:
 
-```
+```flatppl
 pow(_ / _, 2)                           # (a, b) → pow(a / b, 2)
 Normal(mu = _, sigma = pow(_, 2))       # (a, b) → Normal(mu = a, sigma = pow(b, 2))
 pow(_, pow(_, 2))                       # (a, b) → pow(a, pow(b, 2))
@@ -1548,7 +1548,7 @@ ensures holes never masquerade as value nodes.
 
 **The `broadcast` + hole pattern** is the idiomatic way to write elementwise arithmetic:
 
-```
+```flatppl
 broadcast(pow(_ / _, 2), bkg_nominal, bkg_uncrt)
 # equivalent to:
 broadcast(functionof(pow(a / b, 2), a = a, b = b), a = bkg_nominal, b = bkg_uncrt)
@@ -1583,7 +1583,7 @@ Python via macros/decorators, each embedded block is a separate module.
 **`load("path/to/file.flatppl")`** loads a FlatPPL file and returns a module reference. Members are
 accessed via dot syntax:
 
-```
+```flatppl
 sig = load("signal_channel.flatppl")
 bkg = load("background_channel.flatppl")
 
@@ -1726,7 +1726,7 @@ arrays, records, tables, matrices, intervals, and windows — is defined in the
 The left side of an assignment may be a comma-separated list of names, decomposing an
 array or record into its components:
 
-```
+```flatppl
 a, b, c = draw(MvNormal(mu = mean_vector, cov = cov_matrix))
 x, y = some_record
 ```
@@ -1761,7 +1761,7 @@ syntax `A[:, j]` selects all elements along the first axis at fixed index `j`. T
 lowers to `get(A, all, j)`, where `all` is a predefined selector sentinel meaning
 "entire axis."
 
-```
+```flatppl
 A[:, j]          # → get(A, all, j)   — all elements along axis 0, fixed j
 A[i, :]          # → get(A, i, all)   — fixed i, all elements along axis 1
 T[:, :, k]       # → get(T, all, all, k)  — fix third index of a 3D array
@@ -1992,7 +1992,7 @@ which has total mass equal to the evidence $Z = \int L(\theta)\, d\pi(\theta)$. 
   Normalized finite mixtures are expressed explicitly:
   `normalize(superpose(weighted(w1, M1), weighted(w2, M2)))`.
 
-  ```
+  ```flatppl
   # HEP signal + background rate superposition:
   rate = superpose(weighted(mu_sig * eff, signal_shape), bkg_shape)
   events = draw(PoissonProcess(intensity = rate))
@@ -2025,7 +2025,7 @@ variate type and dimension.
   `cat(record1, record2)`). Mixed shape classes are not combined automatically — use
   `relabel` to harmonize first.
 
-  ```
+  ```flatppl
   joint(pushfwd(relabel(_, ["a"]), M1), pushfwd(relabel(_, ["b"]), M2))  # record(a=, b=)
   joint(M1, M2)                                   # array, if M1 and M2 are scalar/array
   ```
@@ -2041,7 +2041,7 @@ variate type and dimension.
   names as columns), consistent with the table-as-repeated-records convention described in
   [tables](#tables). `iid` is a special case of variadic `joint` with identical components.
 
-  ```
+  ```flatppl
   obs = draw(iid(Normal(mu = a, sigma = b), 100))    # 100 IID draws
   ```
 
@@ -2096,7 +2096,7 @@ variate type and dimension.
   is a kernel whose interface is the remaining free inputs not bound by the chain
   (Kleisli composition — a reusable hierarchical template):
 
-  ```
+  ```flatppl
   # Base is a measure → result is a measure
   model = jointchain(pushfwd(relabel(_, ["a"]), M), K_b, K_c)
 
@@ -2109,7 +2109,7 @@ variate type and dimension.
 
   **Equivalence with stochastic nodes:**
 
-  ```
+  ```flatppl
   # Stochastic-node form (scientist writes):
   a = draw(M)
   b = draw(K1(a))
@@ -2148,7 +2148,7 @@ variate type and dimension.
   variates, use `pushfwd` with `jointchain` instead — relabeling the components into a
   record so the projection is well-typed:
 
-  ```
+  ```flatppl
   pushfwd(get(_, ["c"]), jointchain(
       pushfwd(relabel(_, ["a"]), M),
       pushfwd(relabel(_, ["b"]), K1),
@@ -2163,7 +2163,7 @@ variate type and dimension.
   The first argument may be a kernel, in which case the result is a kernel (Kleisli
   composition without retained history).
 
-  ```
+  ```flatppl
   # Prior predictive: marginalizes over the prior
   prior_predictive = chain(prior, forward_kernel)
 
@@ -2175,7 +2175,7 @@ variate type and dimension.
 
   **Relationship between the composition operations:**
 
-  ```
+  ```flatppl
   joint(M1, M2)        # independent:    p(a,b) = p(a) · p(b)
   jointchain(M, K)      # dep., retained: p(a,b) = p(a) · p(b|a)
   chain(M, K)           # dep., marginal: p(b)   = ∫ p(a) · p(b|a) da
@@ -2221,7 +2221,7 @@ $\mathrm{chain}(\mu, \kappa) \equiv \mathrm{pushfwd}(\pi_Y, \mathrm{jointchain}(
   The region R is an `interval(lo, hi)` for scalar measures or a
   `window(name1=interval(...), ...)` for record-valued measures.
 
-  ```
+  ```flatppl
   positive_sigma = draw(truncate(Normal(mu = 1.0, sigma = 0.5), interval(0, inf)))
   ```
 
@@ -2237,7 +2237,7 @@ $\mathrm{chain}(\mu, \kappa) \equiv \mathrm{pushfwd}(\pi_Y, \mathrm{jointchain}(
   forms — projection and relabeling are expressed by passing value-level functions
   (`get`, `relabel`) via hole expressions:
 
-  ```
+  ```flatppl
   # Bijective variable transformation:
   pushfwd(functionof(exp(x), x = x), Normal(mu = 0, sigma = 1))  # → LogNormal
 
@@ -2290,7 +2290,7 @@ for both sides of a callable's interface:
 **Formal relationships (informative).** The following equivalences illustrate how the
 fundamental measures, measure algebra, and built-in distributions relate:
 
-```
+```flatppl
 Uniform(support = interval(a, b))
     ≡ normalize(Lebesgue(support = interval(a, b)))
 
@@ -2369,7 +2369,7 @@ must explicitly produce the right variate type:
 **Range restriction:** An optional `restrict` argument specifies a region to which the
 likelihood is restricted:
 
-```
+```flatppl
 L = likelihoodof(model, data, restrict = window(a = interval(2.0, 8.0)))
 ```
 
@@ -2413,7 +2413,7 @@ mechanism.
 
 The unnormalized posterior measure is constructed via the measure algebra:
 
-```
+```flatppl
 posterior = logweighted(L, prior)
 ```
 
@@ -2445,7 +2445,7 @@ multiple parameters, the prior is typically a record-valued measure whose field 
 correspond to the likelihood's free parameter names. A structural mismatch is a static
 error. In practice, priors are constructed using `lawof` on a record of drawn variates:
 
-```
+```flatppl
 mu_sig_prior = draw(Uniform(support = interval(0, 20)))
 raw_eff_syst_prior = draw(Normal(mu = 0, sigma = 1))
 prior = lawof(record(mu_sig = mu_sig_prior, raw_eff_syst = raw_eff_syst_prior))
@@ -2478,14 +2478,14 @@ section.
 - **`get(container, selector)`** — unified element access and subset selection.
 
   **Element access** (single selection — returns a single element):
-  ```
+  ```flatppl
   get(r, "a")        # record element access: record → element
   get(v, 3)          # array element access: array → element
   get(v, 2, 3)       # multi-dimensional array element access
   ```
 
   **Subset selection** (multi-selection — returns a sub-container of the same kind):
-  ```
+  ```flatppl
   get(r, ["a", "c"])     # record subset selection: record → sub-record
   get(v, [1, 3, 4])     # array subset selection: array → sub-array
   ```
@@ -2515,7 +2515,7 @@ returns a sub-container of the same kind.
 - **`linspace(from, to, n)`** — returns an endpoint-inclusive vector of `n` real numbers,
   evenly spaced from `from` to `to` (both included). Semantically just a vector of reals.
 
-  ```
+  ```flatppl
   linspace(0.0, 10.0, 5)     # → [0.0, 2.5, 5.0, 7.5, 10.0]
   ```
 
@@ -2525,7 +2525,7 @@ returns a sub-container of the same kind.
   `cat([-inf], linspace(from, to, n), [inf])`, producing n+2 edge points and n+1 bins
   (n-1 finite bins plus 2 overflow bins).
 
-  ```
+  ```flatppl
   extlinspace(0.0, 10.0, 5)  # → [-inf, 0.0, 2.5, 5.0, 7.5, 10.0, inf]
   ```
 
@@ -2542,7 +2542,7 @@ returns a sub-container of the same kind.
   may be an explicit array, or produced by `linspace` or `extlinspace` — these are all
   semantically just vectors of reals.
 
-  ```
+  ```flatppl
   bincounts([0.0, 2.5, 5.0, 7.5, 10.0], data)        # 4 bins, explicit edges
   bincounts(linspace(0.0, 10.0, 5), data)              # 4 bins, equivalent
   bincounts(extlinspace(0.0, 10.0, 5), data)           # 6 bins (4 finite + 2 overflow)
@@ -2553,7 +2553,7 @@ returns a sub-container of the same kind.
   multi-dimensional array of counts whose axis order follows the field order of the `bins`
   record.
 
-  ```
+  ```flatppl
   bincounts(
       record(mass = linspace(100, 140, 5), pt = linspace(0, 100, 4)),
       data
@@ -2583,7 +2583,7 @@ that use case. See [pyhf and HistFactory compatibility](#sec:histfactory) for tr
 
 All six functions share the same signature:
 
-```
+```flatppl
 interp_*(left, center, right, alpha)
 ```
 
@@ -2699,7 +2699,7 @@ compose with ordinary arithmetic. Template morphing (HistFactory `histosys`) use
 `interp_p6lin` to interpolate between bin-count arrays; normalization scaling
 (HistFactory `normsys`) uses `interp_p6exp` to interpolate between scalar factors:
 
-```
+```flatppl
 # Template morphing: center = nominal bin-count array
 morphed = interp_p6lin(template_down, nominal_bins, template_up, alpha_jes)
 
@@ -2773,7 +2773,7 @@ constructor and data-level details.
 **`table(name = [...], ...)`** constructs a table from keyword arguments or by wrapping a
 record:
 
-```
+```flatppl
 events = table(mass = [1.1, 1.2, 1.3], pt = [45.2, 32.1, 67.8])
 events = table(record(mass = [1.1, 1.2, 1.3], pt = [45.2, 32.1, 67.8]))  # equivalent
 ```
@@ -2812,7 +2812,7 @@ All vectors must have the same length.
 
 Both produce a `matrix` value — they differ only in how they interpret the input vectors.
 
-```
+```flatppl
 M = rowstack([1, 2, 3], [4, 5, 6])    # rows are [1,2,3] and [4,5,6]
 M = colstack([1, 2, 3], [4, 5, 6])    # columns are [1,2,3] and [4,5,6]
 ```
@@ -2827,7 +2827,7 @@ measure-level dependent composition.
 under ordinary FlatPPL calling semantics. In particular, if `f1` returns a record,
 its fields auto-splat into `f2`'s keyword parameters.
 
-```
+```flatppl
 # Scalar pipeline
 pipeline = fchain(calc_kinematics, apply_acceptance)
 # equivalent to: x → apply_acceptance(calc_kinematics(x))
@@ -3011,7 +3011,7 @@ The canonical definitions of all predefined constants are in the
 Distribution/measure constructors follow the calling convention described in [calling conventions](#sec:calling-convention): they use
 **keyword-only arguments** (no positional calling convention is defined for them):
 
-```
+```flatppl
 Normal(mu = 0, sigma = 1)
 Poisson(rate = 5.3)
 Gamma(shape = 2.0, rate = 0.5)
@@ -3214,7 +3214,7 @@ treat kernels.
 **Binned observation model.** The foundational construction for binned Poisson processes
 uses pushforward:
 
-```
+```flatppl
 binned_model = pushfwd(bincounts(edges, _), PoissonProcess(intensity = M))
 ```
 
@@ -3228,7 +3228,7 @@ For natively binned models (e.g., pyhf/HistFactory-style) where the expected cou
 are computed directly, there is a derived convenience form that expresses the binned
 observation model without `PoissonProcess`:
 
-```
+```flatppl
 model = broadcast(Poisson(rate = _), expected_counts)
 ```
 
@@ -3355,7 +3355,7 @@ when beta = 2.
 Density-defined distributions are constructed compositionally rather than via dedicated
 constructors:
 
-```
+```flatppl
 normalize(weighted(f, Lebesgue(support = S)))
 ```
 
@@ -3368,7 +3368,7 @@ The shape functions `polynomial`, `bernstein`, and `stepwise` are documented in 
 
 #### Density-defined distribution example
 
-```
+```flatppl
 bern = bernstein(coefficients = [c0, c1, c2, c3], x = _)
 dist = normalize(weighted(bern, Lebesgue(support = interval(lo, hi))))
 ```
@@ -3395,7 +3395,7 @@ This example walks through a realistic HEP model step by step.
 **Signal and background model.** We begin with a systematic uncertainty on the signal
 efficiency, modeled as a unit-normal nuisance parameter:
 
-```
+```flatppl
 raw_eff_syst = draw(Normal(mu = 0.0, sigma = 1.0))
 efficiency = 0.9 + 0.05 * raw_eff_syst
 ```
@@ -3403,7 +3403,7 @@ efficiency = 0.9 + 0.05 * raw_eff_syst
 Signal and background shapes are defined as step-function densities, normalized over the
 analysis region:
 
-```
+```flatppl
 sig_shape = stepwise(bin_edges = bin_edges, bin_values = signal_bins, x = _)
 bkg_shape = stepwise(bin_edges = bin_edges, bin_values = bkg_bins, x = _)
 signal_template = normalize(weighted(sig_shape, Lebesgue(support = interval(lo, hi))))
@@ -3414,7 +3414,7 @@ bkg_template = normalize(weighted(bkg_shape, Lebesgue(support = interval(lo, hi)
 and efficiency) with background. The free parameter `mu_sig` is an unbound name — it
 becomes the model's parameter of interest. Events are drawn from a Poisson point process:
 
-```
+```flatppl
 rate = superpose(
     weighted(mu_sig * efficiency, signal_template),
     bkg_template
@@ -3430,7 +3430,7 @@ constraint term represents the auxiliary measurement that pins the nuisance para
 combined likelihood `L` is a likelihood object on the parameter space
 {`mu_sig`, `raw_eff_syst`}:
 
-```
+```flatppl
 # Observation likelihood: boundary input keeps raw_eff_syst as a parameter
 L_obs = likelihoodof(
     lawof(events, raw_eff_syst = raw_eff_syst),
@@ -3454,7 +3454,7 @@ the constraint is a likelihood term, not a prior.)
 A frequentist engine can maximize `L` or compute profile likelihood ratios. A
 range-restricted likelihood for a sideband fit is also straightforward:
 
-```
+```flatppl
 L_obs_sideband = likelihoodof(
     lawof(events, raw_eff_syst = raw_eff_syst),
     [3.1, 5.7, 2.4, 8.9, 4.2],
@@ -3464,7 +3464,7 @@ L_sideband = joint_likelihood(L_obs_sideband, L_constr)
 
 **Bayesian analysis (optional).** To construct a posterior, define priors and reweight:
 
-```
+```flatppl
 mu_sig_prior = draw(Uniform(support = interval(0, 20)))
 raw_eff_syst_prior = draw(Normal(mu = 0, sigma = 1))
 prior = lawof(record(mu_sig = mu_sig_prior, raw_eff_syst = raw_eff_syst_prior))
@@ -3476,7 +3476,7 @@ posterior = logweighted(L, prior)
 context of the same analysis style — variate naming, variable transformations, broadcast,
 truncation, density-defined distributions, module loading, and hypothesis testing:
 
-```
+```flatppl
 # Variate naming with pushfwd
 mvmodel = pushfwd(relabel(_, ["a", "b", "c"]), MvNormal(mu = some_mean, cov = some_cov))
 L_mv = likelihoodof(mvmodel, record(a = 1.1, b = 2.1, c = 3.1))
@@ -3546,7 +3546,7 @@ current HS³ JSON, illustrating the conceptual correspondence:
 
 FlatPPL source:
 
-```
+```flatppl
 mu_param = 5.28
 sigma_param = 0.003
 mass = draw(Normal(mu = mu_param, sigma = sigma_param))
@@ -3730,7 +3730,7 @@ this is expressed using `lawof` with boundary inputs (to keep nuisance parameter
 kernel inputs rather than marginalizing them) and `joint_likelihood` (to multiply the
 factors).
 
-```
+```flatppl
 # ===== Nominal templates and uncertainties =====
 sig_nominal = [12.0, 11.0, 8.0, 5.0]
 sig_jes_down = [10.0, 9.5, 7.0, 4.0]
@@ -3831,7 +3831,7 @@ A scalar multiplicative factor interpolated from $\pm 1\sigma$ scale factors. Gi
 $\kappa_{+1}$ and down-factor $\kappa_{-1}$ (e.g. 1.05 and 0.95), the modifier computes
 $\kappa(\alpha)$ via interpolation with center = 1. In FlatPPL:
 
-```
+```flatppl
 alpha = draw(Normal(mu = 0, sigma = 1))
 kappa = interp_p6exp(kappa_down, 1.0, kappa_up, alpha)
 modified = broadcast(_ * _, nominal, kappa)
@@ -3845,7 +3845,7 @@ Models may use `interp_p1exp` for code1 or other variants as specified.
 Template interpolation: the full bin-count array is morphed between a down-template and
 an up-template as a function of a nuisance parameter. In FlatPPL:
 
-```
+```flatppl
 alpha = draw(Normal(mu = 0, sigma = 1))
 morphed = interp_p6lin(template_down, nominal, template_up, alpha)
 ```
@@ -3868,7 +3868,7 @@ Constrained per-bin multiplicative factors. Each bin has its own nuisance parame
 constrained by a Poisson term derived from the sample's relative uncertainty. In
 FlatPPL:
 
-```
+```flatppl
 tau = broadcast(pow(_ / _, 2), nominal, sigma)
 gamma = draw(broadcast(Poisson(rate = _), tau))
 modified = broadcast(_ * _ / _, nominal, gamma, tau)
@@ -3887,7 +3887,7 @@ Constrained per-bin multiplicative factors representing the finite Monte Carlo s
 size. Unlike `shapesys`, the uncertainty is computed from the quadrature sum of all
 samples carrying a `staterror` modifier in the channel, not per-sample. In FlatPPL:
 
-```
+```flatppl
 delta = sqrt(sum_of_squared_mc_errors) / sum_of_nominal_rates
 gamma = draw(broadcast(Normal(mu = _, sigma = _),
     [1.0, 1.0, ...], delta))
@@ -3909,7 +3909,7 @@ worked example above for a fully expanded model.
 
 **Constrained scalar nuisance (normsys / OverallSys):**
 
-```
+```flatppl
 alpha = draw(Normal(mu = 0.0, sigma = 1.0))
 kappa = interp_p6exp(kappa_down, 1.0, kappa_up, alpha)
 modified = broadcast(_ * _, nominal, kappa)
@@ -3920,7 +3920,7 @@ L_constr = likelihoodof(lawof(aux_alpha, alpha = alpha), 0.0)
 
 **Constrained shape systematic (histosys / HistoSys):**
 
-```
+```flatppl
 alpha = draw(Normal(mu = 0.0, sigma = 1.0))
 morphed = interp_p6lin(tmpl_down, nominal, tmpl_up, alpha)
 
@@ -3930,7 +3930,7 @@ L_constr = likelihoodof(lawof(aux_alpha, alpha = alpha), 0.0)
 
 **Poisson-constrained per-bin factor (shapesys / ShapeSys):**
 
-```
+```flatppl
 tau = broadcast(pow(_ / _, 2), nominal, sigma)
 gamma = draw(broadcast(Poisson(rate = _), tau))
 modified = broadcast(_ * _ / _, nominal, gamma, tau)
@@ -3943,7 +3943,7 @@ L_constr = likelihoodof(
 
 **Gaussian-constrained per-bin factor (staterror / StatError):**
 
-```
+```flatppl
 delta = sqrt(sum_of_squared_mc_errors) / sum_of_nominal_rates
 gamma = draw(broadcast(Normal(mu = _, sigma = _),
     [1.0, 1.0, ...], delta))
@@ -3957,14 +3957,14 @@ L_constr = likelihoodof(
 
 **Free scalar multiplier (normfactor / NormFactor):**
 
-```
+```flatppl
 modified = broadcast(_ * _, nominal, mu)
 # mu is unbound — no constraint term
 ```
 
 **Assembly (single channel):**
 
-```
+```flatppl
 expected = broadcast(_ + _, sample1_modified, sample2_modified)
 obs = draw(broadcast(Poisson(rate = _), expected))
 L_obs = likelihoodof(
@@ -4135,7 +4135,7 @@ record-valued measure.
 
 For independent components, use `joint` with output relabeling:
 
-```
+```flatppl
 M_abc = pushfwd(relabel(_, ["a", "b", "c"]), MvNormal(mu = mean1, cov = cov1))
 M_de = pushfwd(relabel(_, ["d", "e"]), MvNormal(mu = mean2, cov = cov2))
 model = joint(M_abc, M_de)    # record(a=, b=, c=, d=, e=)
@@ -4143,7 +4143,7 @@ model = joint(M_abc, M_de)    # record(a=, b=, c=, d=, e=)
 
 For dependent (hierarchical) components, use `jointchain`:
 
-```
+```flatppl
 K_de = lawof(draw(MvNormal(mu = f(a, b, c), cov = cov2)), a = a, b = b, c = c)
 model = jointchain(M_abc, pushfwd(relabel(_, ["d", "e"]), K_de))
 ```
