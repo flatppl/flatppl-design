@@ -26,6 +26,24 @@ without auxiliary variables. FlatPPL is designed for substantial compatibility w
 HEP Statistics Serialization Standard (HS³) and RooFit; bidirectional translation for a
 large class of models with tractable densities or likelihoods is a design goal.
 
+**Scope and status of this document.**
+
+This document is a design draft. It is intended for collaborators and technical experts.
+It is not a tutorial, user or reference manual, or a complete language specification.
+
+The aim is to motivate FlatPPL and make the proposed semantics, syntax, and features concrete
+enough to discuss feasibility of implementation and interoperability, and to present concepts
+that might also be transferred to existing standards and frameworks. The document also aims
+to provide enough detail that domain scientists with a strong statistical background can
+evaluate how models from their disciplines would map to FlatPPL, identify
+abstractions and features still missing, and contribute to a design
+with wide scope.
+
+This is a living document and the design is not frozen. Some details should be read as
+current proposals rather than final decisions. Readers are encouraged to test
+the language against realistic use cases and to treat areas where the draft falls short
+as useful feedback for the next iteration.
+
 ## <a id="sec:context"></a>Context and motivation
 
 ### Goals and target audience
