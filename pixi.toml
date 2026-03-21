@@ -11,7 +11,7 @@ _mkdir = "mkdir -p build"
 _copy-css = { cmd = "cp docs/templates/style.css build/", depends-on = ["_mkdir"] }
 build-html = { cmd = "pandoc docs/flatppl-design.md -o build/index.html --standalone --template=docs/templates/template.html --toc --toc-depth=2 --number-sections --shift-heading-level-by=-1 --syntax-highlighting=tango --css=style.css -B docs/templates/header.html --lua-filter=docs/templates/html-anchors.lua", depends-on = ["_copy-css"] }
 build-pdf = { cmd = "typst compile build/flatppl-design.typ build/flatppl-design.pdf", depends-on = ["build-typst"] }
-build-md = { cmd = "pandoc docs/flatppl-design.md -t markdown -o build/flatppl-design.md --standalone --lua-filter=docs/templates/html-anchors.lua", depends-on = ["_mkdir"] }
+build-md = { cmd = "pandoc docs/flatppl-design.md -t markdown -o build/flatppl-design.md --standalone --lua-filter=docs/templates/html-anchors.lua && sed -i 's/^``` /```/g' build/flatppl-design.md", depends-on = ["_mkdir"] }
 build-typst = { cmd = "pandoc build/flatppl-design.md -t typst -o build/flatppl-design.typ --standalone --toc --toc-depth=2 --number-sections --shift-heading-level-by=-1 --lua-filter=docs/templates/typst-code-blocks.lua --include-in-header=docs/templates/typst-header.typ", depends-on = ["build-md"] }
 build = { depends-on = ["build-html", "build-pdf", "build-md", "build-typst"] }
 clean = "rm -rf build"

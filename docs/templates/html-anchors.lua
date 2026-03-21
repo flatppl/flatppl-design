@@ -252,10 +252,10 @@ local function heading_permalink(el)
 end
 
 -- Phase 4: rewrite "flatppl" code-block class to "python" for syntax highlighting.
--- This lets the source Markdown use a semantic label while all output formats
--- receive standard Python highlighting.
+-- Only applies to HTML output; Markdown output keeps "flatppl" labels (useful for
+-- AI chats), and Typst handles the alias via a show rule in typst-header.typ.
 local function flatppl_to_python(el)
-  if el.classes[1] == "flatppl" then
+  if FORMAT:match("html") and el.classes[1] == "flatppl" then
     el.classes[1] = "python"
   end
   return el

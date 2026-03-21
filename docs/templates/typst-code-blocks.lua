@@ -6,6 +6,8 @@ function CodeBlock(el)
   local lang = ""
   if el.classes and #el.classes > 0 then
     lang = el.classes[1]
+    -- Use Python highlighting for FlatPPL code blocks
+    if lang == "flatppl" then lang = "python" end
   end
   if lang ~= "" then
     return pandoc.RawBlock("typst", "```" .. lang .. "\n" .. el.text .. "\n```")
