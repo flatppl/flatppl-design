@@ -216,8 +216,15 @@ local function abstract_from_body(doc)
         end
         local remove_count = 1
         for j = i + 1, #doc.blocks do
-          if doc.blocks[j].tag == "Header" then break end
-          abs_blocks:insert(doc.blocks[j])
+          local blk = doc.blocks[j]
+          -- Stop at headings
+          if blk.tag == "Header" then break end
+          -- Stop at bold paragraph titles (e.g. "**Scope and status.**")
+          if blk.tag == "Para" and blk.content[1]
+              and blk.content[1].tag == "Strong" then
+            break
+          end
+          abs_blocks:insert(blk)
           remove_count = remove_count + 1
         end
 
