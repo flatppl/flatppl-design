@@ -15,6 +15,7 @@ pixi run build        # Build all formats into build/
 pixi run build-html   # HTML only
 pixi run build-pdf    # PDF only
 pixi run build-md     # Markdown with YAML frontmatter
+pixi run build-typst  # Typst source
 pixi run clean        # Remove build output
 ```
 
