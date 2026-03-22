@@ -511,22 +511,6 @@ engineering.
 | `lxor` | `a`, `b` | Logical exclusive or |
 | `ifelse` | `condition`, `then`, `else` | Branch-selecting conditional (see Conditional expressions above) |
 
-### Constants and selectors
-
-The canonical definitions of all predefined constants are in the
-[value types](03-value-types.md#sec:valuetypes) section. The following table provides a quick reference.
-
-| Name | Description |
-|---|---|
-| `true`, `false` | Boolean constants |
-| `inf` | Positive infinity ($+\infty$) |
-| `pi` | The mathematical constant $\pi$ |
-| `im` | The imaginary unit $i$ ($i^2 = -1$) |
-| `reals` | The set of all real numbers (support for `Lebesgue`) |
-| `integers` | The set of all integers (support for `Counting`) |
-| `all` | Axis selector: "entire axis" in `get(A, all, j)` (surface form: `A[:, j]`) |
-| `_` | Hole: creates an anonymous function (see [calling conventions](04-design.md#sec:calling-convention)) |
-
 ### Intervals and windows
 
 | Function | Arguments | Description |
