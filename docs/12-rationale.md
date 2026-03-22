@@ -45,7 +45,8 @@
 | `truncate(M, region)` for model physics | Uses `interval`/`window` region objects, consistent with `restrict`. |
 | `restrict = window(...)` for analysis ranges | Atomic model truncation + data filtering in `likelihoodof`. |
 | `interval`, `window` as distinguished JSON keys | Structural identification without function-name parsing. |
-| `table` as first-class columnar dataset type | Record of equal-length arrays with dual access (column by name, row by index). Auto-splats by column; broadcasts row-wise. PoissonProcess over records produces tables. |
+| `table` as first-class dataset type | Named columns of equal length with dual access (column by name, row by index). Auto-splats by column; broadcasts row-wise. PoissonProcess over records produces tables. |
+| Table columns must be 1D | Allowing matrix- or tensor-valued columns would force a leading-axis convention for row-iteration and broadcasting, which FlatPPL intentionally avoids. |
 | Explicit binning only; no `binned`/`axis` constructors | Binning is a model operation via `bincounts` + `pushfwd`, not a data-wrapper property. Plain count arrays are valid observed data. |
 | `likelihoodof` always single evaluation | No implicit IID or implicit binning. PoissonProcess handles extended likelihood; `iid(M, n)` handles non-extended. |
 | Column-oriented tables in JSON | Matches Arrow/ROOT conventions; row-oriented accepted for HS³ backward compat. |
