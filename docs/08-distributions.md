@@ -373,8 +373,3 @@ accept named function objects rather than opaque expression strings. On the RooF
 side, wrapper-based fallbacks such as `RooWrapperPdf` are backend conveniences; they may
 silently clip negative density values to zero, which is not semantics-preserving — FlatPPL
 treats negative densities as invalid (a semantic error), not as values to be rescued.
-
-
-
----
-

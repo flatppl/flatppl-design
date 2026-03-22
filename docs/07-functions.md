@@ -533,7 +533,3 @@ The canonical definitions of all predefined constants are in the
 |---|---|---|
 | `interval` | `a`, `b` | Closed interval [a, b] |
 | `window` | `name = interval(...)`, ... | Multi-dimensional region for `restrict` |
-
-
----
-

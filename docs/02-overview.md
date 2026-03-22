@@ -393,7 +393,3 @@ K_adapted = rebind(sig.model,
     mu = signal_strength,
     theta = nuisance)
 ```
-
-
----
-

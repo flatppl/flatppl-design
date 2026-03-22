@@ -314,8 +314,24 @@ local function sanitize_raw_inline(el)
   return el
 end
 
+-- Phase 6: insert horizontal rules before top-level (##) sections.
+-- When source files are split per-section, the separators between major
+-- sections are injected here rather than stored in the source files.
+local function inject_section_rules(doc)
+  local out = pandoc.List()
+  for _, el in ipairs(doc.blocks) do
+    if el.tag == "Header" and el.level == 2 then
+      out:insert(pandoc.HorizontalRule())
+    end
+    out:insert(el)
+  end
+  doc.blocks = out
+  return doc
+end
+
 -- Return a filter list: sanitization first, then metadata extraction,
--- then headers, then inlines, then heading permalinks, then code-block class rewriting.
+-- then headers, then inlines, then heading permalinks, then code-block
+-- class rewriting, then section rule injection.
 return {
   { RawBlock = sanitize_raw_block, RawInline = sanitize_raw_inline },
   { Pandoc = extract_metadata },
@@ -323,4 +339,5 @@ return {
   { Inlines = inlines_filter },
   { Header = heading_permalink },
   { CodeBlock = flatppl_to_python },
+  { Pandoc = inject_section_rules },
 }

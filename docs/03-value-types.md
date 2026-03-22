@@ -167,7 +167,3 @@ combinators, and referenced by other bindings. However, they are **not storable 
 records, or tables** — they exist only as standalone top-level bindings. This keeps the
 type system simple and avoids complex container-of-measures semantics. See
 [core concepts](02-overview.md#core-concepts) for the definitions of these four kinds of objects.
-
-
----
-

@@ -659,7 +659,3 @@ construction, and `lawof` boundary inputs for model splitting, covers the practi
 cases that disintegration would serve. A more general first-class `disintegrate` mechanism
 (operating on opaque measures without visible internal structure) may be considered in a
 future version of the standard.
-
-
----
-

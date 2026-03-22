@@ -44,4 +44,3 @@ This is a living document and the design is not frozen. Some details should be r
 current proposals rather than final decisions. Readers are encouraged to test
 the language against realistic use cases and to treat areas where the draft falls short
 as useful feedback for the next iteration.
-

@@ -134,6 +134,3 @@ mass_data = [90.1, 91.8, 124.5, 125.2]
 L_H0 = likelihoodof(model_H0, mass_data)
 L_H1 = likelihoodof(model_H1, mass_data)
 ```
-
----
-

@@ -237,6 +237,3 @@ distributions. These two are $\sigma$-finite measures, not probability distribut
 probability distributions via `normalize`: `normalize(Lebesgue(support = interval(0, 1)))`
 is the uniform distribution on [0, 1]. `Dirac(value = v)` is already a probability measure
 (total mass 1).
-
----
-

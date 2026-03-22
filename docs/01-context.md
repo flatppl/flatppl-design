@@ -198,6 +198,3 @@ intermediate representation (IR) emitted by higher-level modeling frontends. Fla
 own lowered linear SSA-like form, and so is very suitable as an IR. This dual role is deliberate.
 It allows for lowering and raising stochastic code via stable transformations within one single
 portable modeling language.
-
----
-

@@ -818,7 +818,3 @@ document uses `rebind` to align mismatched parameter names, then connects them t
 parameters via the flat namespace. See the `rebind` model-composition example in the
 [interface adaptation](#interface-adaptation-with-rebind) section. Richer conventions for large-scale combined analyses may
 be refined in future versions.
-
-
----
-

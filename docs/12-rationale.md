@@ -76,6 +76,3 @@
 | `cis(theta)` for polar form | $e^{i\theta}$ from a real angle. Standard mathematical shorthand; cleaner than `exp(complex(0, theta))`. |
 | `pi` and `im` as lowercase constants | Mathematical constants follow the existing lowercase convention (`true`, `false`, `inf`). Reads like mathematics, not macros. |
 | Value types as a standalone section | Value types are core semantics, not surface syntax. Promoted from a subsection of Surface Form to a top-level section. |
-
----
-

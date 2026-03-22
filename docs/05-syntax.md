@@ -181,7 +181,3 @@ In the resulting lowered form, every line matches one of a small family of state
 shapes (`name = literal`, `name = name op name`, `name = name(name, ...)`, etc.),
 making each line recognizable without recursive parsing. This is the natural
 serialization target for binary or JSON interchange formats.
-
-
----
-

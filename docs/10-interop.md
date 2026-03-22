@@ -508,7 +508,3 @@ these by specifying alternative codes in HS³ (via the `interpolation` field on
 HistFactory modifiers) or pyhf (via `modifier_settings`). The translator maps each
 code to the corresponding FlatPPL interpolation function using the correspondence
 table in the [interpolation functions](07-functions.md#interpolation-functions) section.
-
-
----
-

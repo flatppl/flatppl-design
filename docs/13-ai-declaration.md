@@ -6,4 +6,3 @@ and copyediting. The underlying concepts and ideas presented in this document, a
 original content drafts, are the work of the human authors. The authors reviewed and edited
 all AI-assisted output and take full responsibility for the final content, accuracy, and
 integrity of the document.
-
