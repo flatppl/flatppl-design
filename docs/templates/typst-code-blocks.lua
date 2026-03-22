@@ -8,10 +8,14 @@ function CodeBlock(el)
     lang = el.classes[1]
     -- Use Python highlighting for FlatPPL code blocks
     if lang == "flatppl" then lang = "python" end
+    -- Sanitize lang to alphanumeric only (prevent injection via class names)
+    lang = lang:gsub("[^%w]", "")
   end
+  -- Escape any backtick sequences in code content that could close the code block
+  local text = el.text:gsub("```", "`` `")
   if lang ~= "" then
-    return pandoc.RawBlock("typst", "```" .. lang .. "\n" .. el.text .. "\n```")
+    return pandoc.RawBlock("typst", "```" .. lang .. "\n" .. text .. "\n```")
   else
-    return pandoc.RawBlock("typst", "```\n" .. el.text .. "\n```")
+    return pandoc.RawBlock("typst", "```\n" .. text .. "\n```")
   end
 end

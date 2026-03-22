@@ -268,9 +268,56 @@ local function flatppl_to_python(el)
   return el
 end
 
--- Return a filter list: metadata extraction first, then headers, then inlines,
--- then heading permalinks, then code-block class rewriting.
+-- Phase 5: sanitize raw HTML blocks and inlines.
+-- Strip <script>, <iframe>, <object>, <embed>, <form>, <link>, <meta> tags
+-- and on* event handler attributes to prevent code injection via malicious
+-- pull requests. Allows safe structural HTML (<a id="...">, <br />, <h1>, <em>).
+local dangerous_tags = {
+  "script", "iframe", "object", "embed", "form", "link", "meta", "base",
+  "applet", "style",
+}
+
+local function is_dangerous_html(text)
+  local lower = text:lower()
+  for _, tag in ipairs(dangerous_tags) do
+    if lower:match("<" .. tag .. "[%s>]") or lower:match("<" .. tag .. "$")
+        or lower:match("</" .. tag .. "%s*>") then
+      return true
+    end
+  end
+  -- Block on* event handlers (onclick, onerror, onload, etc.)
+  if lower:match("%son%w+%s*=") then
+    return true
+  end
+  -- Block javascript: URLs
+  if lower:match("javascript%s*:") then
+    return true
+  end
+  return false
+end
+
+local function sanitize_raw_block(el)
+  if el.format == "html" and is_dangerous_html(el.text) then
+    io.stderr:write("WARNING: stripped dangerous raw HTML block: "
+      .. el.text:sub(1, 80) .. "\n")
+    return pandoc.Null()
+  end
+  return el
+end
+
+local function sanitize_raw_inline(el)
+  if el.format == "html" and is_dangerous_html(el.text) then
+    io.stderr:write("WARNING: stripped dangerous raw HTML inline: "
+      .. el.text:sub(1, 80) .. "\n")
+    return pandoc.Str("")
+  end
+  return el
+end
+
+-- Return a filter list: sanitization first, then metadata extraction,
+-- then headers, then inlines, then heading permalinks, then code-block class rewriting.
 return {
+  { RawBlock = sanitize_raw_block, RawInline = sanitize_raw_inline },
   { Pandoc = extract_metadata },
   { Header = header_filter },
   { Inlines = inlines_filter },
