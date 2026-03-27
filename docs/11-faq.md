@@ -138,7 +138,7 @@ some ancestor a is already expressible as the measure constructor parameterized 
 variate a (e.g., `Normal(mu=a, sigma=1)` is the conditional distribution of x given a).
 For extracting conditional kernels from the middle of a larger model, use the boundary-input
 form `lawof(expr, name = node)`, which cuts the graph at the specified node and promotes it
-to a kernel input (see [`lawof` in detail](04-design.md#lawof-in-detail)).
+to a kernel input (see [kernels, measures and `lawof`](04-design.md#kernels-measures-and-lawof)).
 
 ### Q: How are posterior parameters matched to likelihood parameters?
 

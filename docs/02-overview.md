@@ -95,14 +95,12 @@ results of ordinary functions, data, free parameters) or stochastic (variates in
 `draw(...)`). In generative mode, each abstract value evaluates to a single concrete value;
 for stochastic abstract values, that concrete value is generated randomly once.
 
-**Measures** are $\sigma$-finite measures in FlatPPL. They may be normalized probability
-distributions or non-normalized, e.g. when used as intensity measures. A measure
-parameterized by free (unbound) names is technically a Markov
-kernel (more generally a transition kernel, if not normalized) — a function from parameter values
-to measures. (See [free parameters and Markov kernels](04-design.md#free-parameters-and-markov-kernels)
-for a detailed discussion of the kernel/measure distinction.) Variates can be reified as measures
-via `lawof(...)`, and measures can be combined and transformed via measure algebra
-functions (see [measure algebra](06-measure-algebra.md#sec:measure-algebra)).
+**Kernels, measures and distributions.** Transition kernels are mappings from an input space to ($\sigma$-finite) measures.
+FlatPPL does not distinguish between a kernel with an empty interface and a measure: in FlatPPL, such a kernel *is* a measure (see [variates and measures](04-design.md#sec:variate-measure)).
+Normalized measures (kernels) are probability measures (Markov kernels), also called probability distributions.
+Variates can only be drawn from probability measures.
+Otherwise, FlatPPL treats measures and kernels uniformly in measure algebra (see [measure algebra](06-measure-algebra.md#sec:measure-algebra)).
+Variates can be reified as Markov kernels, or probability measures, via `lawof(...)` (see [kernels, measures and `lawof`](04-design.md#kernels-measures-and-lawof)).
 
 **Likelihood objects** represent the density of a model
 evaluated at observed data, as a function of the model's free parameters. The observed data
@@ -133,7 +131,7 @@ The table below provides a compact overview of the language. Each family name li
 
 | Family | Constructs |
 |---|---|
-| [Boundary operations](04-design.md#sec:design) | `draw`, `lawof`, `functionof` |
+| [Application and reification](04-design.md#sec:design) | `draw`, `lawof`, `functionof` |
 | [Interface adaptation](04-design.md#sec:design) | `rebind` |
 | [Measure combinators](06-measure-algebra.md#sec:measure-algebra) | `weighted`, `logweighted`, `normalize`, `totalmass`, `superpose`, `joint`, `jointchain`, `chain`, `iid`, `truncate`, `pushfwd` |
 | [Analysis operations](06-measure-algebra.md#sec:measure-algebra) | `likelihoodof`, `joint_likelihood` |

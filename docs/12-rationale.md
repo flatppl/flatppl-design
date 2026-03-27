@@ -7,6 +7,7 @@
 | Semantics defined independently | Decouples the durable mathematical specification from any syntax that might need to change. |
 | HS³ as interoperability target | HS³ is important prior art and a major preservation/export target. Bidirectional mapping for the interoperable fragment is a design goal. FlatPPL is not defined as the source syntax of HS³. |
 | Accelerator-compatible structure | Static DAG, fixed shapes, no dynamic control flow — maps to MLIR/StableHLO/XLA. |
+| Variates and measures are distinct types | In measure theory, $2 \cdot \mu$ scales total mass; in random-variable notation, `2 * X` is pushforward. Both operations are needed, so FlatPPL keeps them separate: arithmetic on variates means pushforward, measure scaling uses `weighted`. |
 | Explicit `draw` / `lawof` / `functionof` | Reification of sub-DAGs as measures, kernels, or functions. Avoids ambiguity. |
 | `lawof` as pushforward-along-projection | Ancestor-closed sub-DAG, marginal by default; conditional via parameterized constructors. |
 | `functionof` for deterministic sub-DAGs | Parallel to `lawof`; explicit reification avoids implicit function semantics. |
@@ -20,7 +21,7 @@
 | `relabel(value, names)` as value-level operation | Structural bijection, no density correction. Composes with `pushfwd` via hole expressions for measure-level relabeling. |
 | `rebind(obj, new = old, ...)` for input-interface adaptation | Input-side counterpart to `relabel`. Partial: unmentioned inputs pass through. Works on functions, kernels, likelihoods. Key tool for combined analyses. |
 | No implicit auto-connection | Dependencies only via explicit composition (`draw`, `jointchain`, etc.) and explicit interface adaptation (`rebind`); no ambient same-name matching. Contrast with RooFit. |
-| Semantic unification, surface separation | A measure is semantically a kernel with empty interface; surface syntax keeps them distinct. `draw(M)` not `draw(M())`. |
+| Measure = kernel with empty interface | Kernels are the general concept; measures are the closed case. Application is only for non-empty interfaces; nullary calls (`f()`, `K()`) are not surface syntax. |
 | Keyword-only distribution constructors | `Normal(mu=0, sigma=1)`. Self-documenting; one canonical parameterization per distribution. |
 | All parameters required (no defaults) | Parameterization via free variables or `_` hole expressions, not missing arguments. |
 | `rate` for Poisson (not `lambda`) | Avoids Python keyword collision; matches physical intuition. |

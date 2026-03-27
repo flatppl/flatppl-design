@@ -95,9 +95,8 @@ spaces thereof); the `support` specifies where the measure is nonzero. Outside t
 density is zero. This ensures composability: any two measures on the same underlying space
 can be combined via the measure algebra.
 
-**Uniform kernel extension.** All measure algebra operations accept both measures and
-kernels. A closed measure is semantically a kernel with empty input interface. When an
-operation is applied to a kernel $\kappa: \Theta \to M(X)$, it acts **pointwise** on the parameter
+**Uniform kernel extension.** A measure is a kernel with empty input interface. All
+measure algebra operations accept both uniformly. When an operation is applied to a kernel $\kappa: \Theta \to M(X)$, it acts **pointwise** on the parameter
 space: the result is a kernel that applies the operation at each parameter point, with the
 same input interface. For example, `pushfwd(f, K)` denotes the kernel $\theta \mapsto \mathrm{pushfwd}(f, \kappa(\theta))$,
 `weighted(w, K)` denotes $\theta \mapsto \mathrm{weighted}(w(\theta), \kappa(\theta))$, and so on. This principle applies
@@ -507,8 +506,9 @@ normalize(superpose(weighted(w1, M1), weighted(w2, M2)))   # convex mixture
 
 #### Likelihood construction
 
-**`likelihoodof(M, data, ...)`** takes a measure M (which is typically a kernel — a measure
-with free parameters) and observed data, and produces a **likelihood object**.
+**`likelihoodof(M, data, ...)`** takes a measure or kernel M and observed data, and produces
+a **likelihood object**. If M has an open input interface (i.e. is a kernel), the likelihood
+domain is that interface.
 
 The likelihood is defined directly from the model and the data, without reference to any
 prior or posterior:
