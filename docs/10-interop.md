@@ -178,7 +178,7 @@ translator selects the corresponding `interp_p*` function.
 HistFactory's `HistoFactor` modifier is the same deterministic operation as `HistoSys`
 (template interpolation via `interp_*`) but with a free rather than constrained
 controlling parameter. In FlatPPL this distinction is simply whether the parameter
-appears in a `draw` statement or as an unbound name — no separate function is needed.
+appears in a `draw` statement or as a module input — no separate function is needed.
 
 #### Worked example: a HistFactory-style channel
 
@@ -330,8 +330,8 @@ parameter is free (no `draw` constraint).
 
 ##### Uncorrelated shape factor (`shapefactor` / `ShapeFactor`)
 
-Free, unconstrained per-bin multiplicative factors. Each bin has its own free parameter.
-In FlatPPL: `expected * gamma`, where `gamma` is an array of free (unbound) names.
+Explicit array-valued input: unconstrained per-bin multiplicative factors. Each bin has its own input.
+In FlatPPL: `expected * gamma`, where `gamma = elementof(cartpow(reals, n_bins))` is an explicit array-valued input.
 Used for data-driven background estimates where the per-bin rates are entirely
 determined by the fit.
 
@@ -459,7 +459,7 @@ decomposes into explicit components:
 | `samples[].modifiers[type=normfactor]` | Free parameter, multiply |
 | `samples[].modifiers[type=normsys]` | `draw(Normal(...))` + `interp_*exp(...)` + multiply |
 | `samples[].modifiers[type=histosys]` | `draw(Normal(...))` + `interp_*lin(...)` |
-| `samples[].modifiers[type=shapefactor]` | Array of free parameters, multiply |
+| `samples[].modifiers[type=shapefactor]` | Array-valued explicit input, multiply |
 | `samples[].modifiers[type=shapesys]` | `draw(broadcast(Poisson(...)))`, multiply |
 | `samples[].modifiers[type=staterror]` | `draw(broadcast(Normal(...)))`, multiply |
 | `samples[].modifiers[].interpolation` | Choice of `interp_p*` function |

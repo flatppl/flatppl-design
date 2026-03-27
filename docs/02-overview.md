@@ -43,6 +43,10 @@ measurement where the observed spectrum is a superposition of signal and backgro
 events, with a systematic uncertainty on the signal resolution:
 
 ```flatppl
+# Inputs: expected signal and background event counts
+n_sig = elementof(reals)
+n_bkg = elementof(reals)
+
 # Systematic: uncertain detector resolution
 raw_syst = draw(Normal(mu = 0.0, sigma = 1.0))
 resolution = 2.5 + 0.3 * raw_syst
@@ -69,7 +73,7 @@ events = draw(PoissonProcess(intensity = intensity))
 L = likelihoodof(lawof(events), observed_data)
 ```
 
-Reading top to bottom, this is a generative recipe: draw a systematic shift, compute the
+Reading top to bottom, this is a generative recipe: declare inputs, draw a systematic shift, compute the
 resolution, define signal and background shapes, combine them as an unnormalized
 superposition (where the weights encode expected event counts), and draw events from the
 resulting Poisson process. Since the event space is scalar (mass values), the
@@ -77,12 +81,11 @@ resulting Poisson process. Since the event space is scalar (mass values), the
 values. (This top-to-bottom reading is for intuition only; semantically the bindings form a
 dependency graph and may be resolved in any topological order.) The same specification
 supports generative mode (engines draw synthetic events) and scoring mode (engines compute
-the log-likelihood at given parameter values). The free variables `n_sig` and `n_bkg` are
-identified automatically as unbound names in the DAG — they become the model's parameters.
+the log-likelihood at given parameter values).
 
 **Note.** From a Bayesian perspective, the same model can be read as having a prior
-`Normal(mu = 0.0, sigma = 1.0)` on `raw_syst` with `n_sig` and `n_bkg` as hyperparameters
-to be fixed or given priors externally. This illustrates FlatPPL's
+`Normal(mu = 0.0, sigma = 1.0)` on `raw_syst`, with `n_sig` and `n_bkg` as externally
+supplied hyperparameters or model parameters. This illustrates FlatPPL's
 inference-agnostic design.
 
 ### Core concepts
@@ -91,7 +94,7 @@ FlatPPL has four kinds of first-class objects.
 
 **Abstract values** denote real numbers, integers, booleans, complex numbers,
 fixed-size arrays, and records. They may be deterministic (literal constants,
-results of ordinary functions, data, free parameters) or stochastic (variates introduced by
+results of ordinary functions, data, external inputs) or stochastic (variates introduced by
 `draw(...)`). In generative mode, each abstract value evaluates to a single concrete value;
 for stochastic abstract values, that concrete value is generated randomly once.
 
@@ -103,7 +106,7 @@ Otherwise, FlatPPL treats measures and kernels uniformly in measure algebra (see
 Variates can be reified as Markov kernels, or probability measures, via `lawof(...)` (see [kernels, measures and `lawof`](04-design.md#kernels-measures-and-lawof)).
 
 **Likelihood objects** represent the density of a model
-evaluated at observed data, as a function of the model's free parameters. The observed data
+evaluated at observed data, as a function of the model's input parameters. The observed data
 is bound to the likelihood object when it is constructed. To prevent a mix-up of likelihood
 and log-likelihood values, FlatPPL does not treat a likelihood object as a function that
 returns the one or the other. Instead, (log-)likelihood values are computed via
@@ -131,13 +134,13 @@ The table below provides a compact overview of the language. Each family name li
 
 | Family | Constructs |
 |---|---|
-| [Application and reification](04-design.md#sec:design) | `draw`, `lawof`, `functionof` |
-| [Interface adaptation](04-design.md#sec:design) | `rebind` |
+| [Special forms](04-design.md#sec:design) | `draw`, `lawof`, `functionof`, `elementof`, `valueset` |
+| [Interface adaptation](04-design.md#sec:design) | `rebind`, `relabel` |
 | [Measure combinators](06-measure-algebra.md#sec:measure-algebra) | `weighted`, `logweighted`, `normalize`, `totalmass`, `superpose`, `joint`, `jointchain`, `chain`, `iid`, `truncate`, `pushfwd` |
 | [Analysis operations](06-measure-algebra.md#sec:measure-algebra) | `likelihoodof`, `joint_likelihood` |
 | [Higher-order operations](07-functions.md#sec:functions) | `broadcast`, `fchain` |
-| [Data access and reshaping](07-functions.md#sec:functions) | `get`, `cat`, `relabel`, `record`, `all` |
-| [Constructors](07-functions.md#sec:functions) | `table`, `rowstack`, `colstack`, `linspace`, `extlinspace`, `interval`, `window` |
+| [Data access and reshaping](07-functions.md#sec:functions) | `get`, `cat`, `record`, `all` |
+| [Constructors](07-functions.md#sec:functions) | `table`, `rowstack`, `colstack`, `linspace`, `extlinspace`, `interval`, `window`, `recordset`, `cartpow` |
 | [Binning and interpolation](07-functions.md#sec:functions) | `bincounts`, `interp_p*lin`, `interp_p*exp` |
 | [Shape functions](07-functions.md#sec:functions) | `polynomial`, `bernstein`, `stepwise` |
 | [Math and logic](07-functions.md#sec:functions) | `exp`, `log`, `pow`, `sqrt`, `abs`, `sin`, `cos`, `min`, `max`, `ifelse`, `land`, `lor`, `lnot`, `lxor` |
@@ -146,7 +149,8 @@ The table below provides a compact overview of the language. Each family name li
 | [Distributions](08-distributions.md#sec:catalog) | `Normal`, `Poisson`, `PoissonProcess`, `Exponential`, ... |
 | [Fundamental measures](06-measure-algebra.md#sec:measure-algebra) | `Lebesgue`, `Counting`, `Dirac` |
 | [Module operations](04-design.md#sec:modules) | `load` |
-| [Constants](03-value-types.md#sec:valuetypes) | `true`, `false`, `inf`, `pi`, `im`, `reals`, `integers` |
+| [Constants](03-value-types.md#sec:valuetypes) | `true`, `false`, `inf`, `pi`, `im` |
+| [Predefined sets](03-value-types.md#sec:valuetypes) | `reals`, `integers`, `complexes`, `anything` |
 | [Selectors](04-design.md#sec:calling-convention) | `_` (holes), `all` (slicing) |
 
 ### A tour of FlatPPL
@@ -227,6 +231,10 @@ z_bar = conj(z1)
 `draw`, `lawof`, and `functionof` bridge between values, measures, and functions:
 
 ```flatppl
+# Inputs
+mu = elementof(reals)
+sigma = elementof(interval(0.0, inf))
+
 # Random draw from a distribution
 a = draw(Normal(mu = mu, sigma = sigma))
 
@@ -273,8 +281,7 @@ sub = get(some_record, ["a", "c"])
 named = relabel(some_array, ["a", "b", "c"])
 
 # Structural relabeling of a measure
-mvmodel = pushfwd(relabel(_, ["a", "b", "c"]),
-    MvNormal(mu = some_mean, cov = some_cov))
+mvmodel = relabel(MvNormal(mu = some_mean, cov = some_cov), ["a", "b", "c"])
 
 # Variable transformation
 log_normal = pushfwd(functionof(exp(x), x = x),
@@ -381,13 +388,9 @@ pipeline = fchain(calc_kinematics, apply_cuts)
 Module loading and parameter renaming:
 
 ```flatppl
-# Load a module and access its members
-sig = load("signal_channel.flatppl")
+# Load a module and optionally bind some of its inputs
+sig = load("signal_channel.flatppl", mu = signal_strength, theta = nuisance)
+
 sig_model = sig.model
 L_sig = likelihoodof(sig.model, sig.data)
-
-# Adapt a module's parameter interface
-K_adapted = rebind(sig.model,
-    mu = signal_strength,
-    theta = nuisance)
 ```

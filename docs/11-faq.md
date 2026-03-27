@@ -143,7 +143,7 @@ to a kernel input (see [kernels, measures and `lawof`](04-design.md#kernels-meas
 ### Q: How are posterior parameters matched to likelihood parameters?
 
 Posteriors are constructed via `logweighted(L, prior)`. Alignment is by **parameter name**.
-The prior must be a measure on a record type whose field names match the likelihood's free
+The prior must be a measure on a record type whose field names match the likelihood's input
 parameter names. The `lawof(record(...))` pattern makes this explicit. A mismatch is a
 static error.
 
@@ -197,7 +197,7 @@ RooFit determines parameter/observable roles from usage context, which allows tr
 likelihood as a probability density by normalizing over parameters. This is mathematically
 unsound in general (the likelihood is not a probability density in parameter space). The
 FlatPPL's generative DAG determines roles by construction: `draw` introduces a variate, and
-free variables become parameters. This prevents a class of subtle statistical errors.
+module input nodes become parameters. This prevents a class of subtle statistical errors.
 
 ### Q: What are generative mode and scoring mode?
 

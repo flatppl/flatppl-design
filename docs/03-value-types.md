@@ -102,8 +102,17 @@ row treated as a record passed to the function used in the broadcast.
 
 ### Sets
 
-FlatPPL has a limited notion of sets. The predefined sets `reals` and `integers` denote $\mathbb{R}$ and
-$\mathbb{Z}$. User-constructed sets are:
+FlatPPL has a limited notion of sets, used to specify input domains, supports, truncation
+regions, and analysis regions. The predefined sets are:
+
+- `reals` — $\mathbb{R}$, the set of all real numbers.
+- `integers` — $\mathbb{Z}$, the set of all integers.
+- `complexes` — $\mathbb{C}$, the set of all complex numbers.
+- `anything` — a broad placeholder set for generic interfaces (e.g., anonymous functions
+  via holes). Not formally the union of all other sets; it signals that no specific type
+  constraint is imposed.
+
+User-constructed sets are:
 
 **Interval.** `interval(lo, hi)` denotes the closed interval $[lo, hi]$. For continuous
 measures, endpoint open/closed status is measure-theoretically irrelevant. For discrete
@@ -115,7 +124,21 @@ bin ownership rule (see [binning](07-functions.md#binning)).
 multi-dimensional region for `truncate` on record-valued measures and `restrict` on
 `likelihoodof`.
 
-Sets are primarily intended to specify supports, truncation regions, and analysis regions.
+**Record set.** `recordset(name1 = S1, name2 = S2, ...)` specifies the set of
+record-valued inputs whose fields range over the given sets.
+
+**Cartesian power.** `cartpow(S, n)` specifies the set of length-`n` arrays whose
+entries lie in `S`. Nested uses express higher-rank shapes:
+`cartpow(reals, m, n)` describes the set of real-valued $n \times m$ matrices.
+
+**`valueset(x)`.** Returns the canonical value set associated with node `x`:
+
+- For `x = elementof(S)`, `valueset(x)` is `S`.
+- For `x = draw(M)`, `valueset(x)` is the measurable set of `M`.
+- For deterministically computed nodes, `valueset(x)` returns a conservative superset
+  of the values that `x` can take (since the exact set is often not tractable).
+
+Note: `valueset` is a low-level language construct used when lowering `functionof` or `lawof` with boundary inputs. User-level code should typically use `elementof(...)`.
 
 ### Beyond values
 

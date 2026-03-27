@@ -1,6 +1,6 @@
 ## <a id="sec:design"></a>Language design
 
-This section details the semantics of FlatPPL's core constructs: namespaces, variates, measures and stochastic graphs, application and reification,
+This section details the semantics of FlatPPL's core constructs: namespaces, inputs, variates, measures and stochastic graphs, application and reification,
 an inference-agnostic design, calling conventions, broadcasting, and modules.
 
 ### <a id="sec:namespaces"></a>Names and namespaces
@@ -12,9 +12,7 @@ Record field names and table column names are local to their object and not
 part of the global namespace, nor are the argument names of functions
 and kernels.
 
-### <a id="sec:calling-convention"></a>Calling conventions and anonymous functions
-
-#### Calling forms
+### <a id="sec:calling-convention"></a>Calling conventions
 
 All callables — built-in functions, user-defined functions, and built-in or user-defined
 measure and kernel constructors — accept exactly these calling forms:
@@ -38,6 +36,8 @@ f(record(a = x, b = y))       # shallow auto-splatting
 - **User-defined callables** from `functionof` / `lawof` support positional calling only
   when an explicit interface declaration has been provided. Otherwise they are
   keyword-only.
+- **Special forms** such as `draw(...)` and `elementof(...)` are not ordinary callables
+  and follow their own construct-specific rules.
 
 **Shallow auto-splatting:** When a record is passed to a callable that expects individual
 named arguments, the record's top-level fields are matched by name to the callable's
@@ -75,18 +75,20 @@ a cross-system intermediate representation (IR).
 
 ### Module inputs
 
-Any name that appears in a FlatPPL module without being bound to a variable
-is a module input. Unlike many other languages, where an unbound name would be an
-error, FlatPPL intentionally captures unbound names as inputs.
-Their role — as fit parameters, hyperparameters or otherwise — is determined
-by how the module is used, not by the module itself.
+FlatPPL modules declare their external inputs by binding variables to `elementof(...)`:
 
 ```flatppl
-x = draw(Normal(mu = mu, sigma = 1.0))
+mu = elementof(reals)
+sigma = elementof(interval(0.0, inf))
+
+x = draw(Normal(mu = mu, sigma = sigma))
 y = 2 * x
 ```
 
-Here `mu` is unbound — it is a module input.
+Here `mu` and `sigma` are module inputs. The special form `elementof(S)` declares that their values are restricted to the given sets. To evaluate a subgraph of a module, whether in generative or scoring mode, the application must supply concrete values for all inputs that are part of the subgraph.
+
+The role of module inputs — as fit parameters, hyperparameters, or fixed constants — is determined by
+how the FlatPPL module is used by an application, not by the module itself.
 
 ### Application and reification
 
@@ -107,7 +109,7 @@ In the other direction, `m = lawof(x)` reifies the ancestor subgraph of a given 
 as a probability measure or Markov kernel, depending on whether there are free inputs.
 
 By default, `lawof` and `functionof` trace the full ancestor subgraph back
-to the free inputs. They can be called with additional keyword-arguments
+to the module inputs. They can be called with additional keyword-arguments
 to designate and label boundary nodes, stopping the trace there, so that
 these nodes become the inputs of the kernel or function under their new names.
 
@@ -139,6 +141,7 @@ The sub-DAG must be fully deterministic and so must not contain any `draw` nodes
 The argument names of the resulting function are the names of the free variables of the sub-DAG,
 but decoupled from those variables. As the graph nodes are
 not ordered, the function only supports keyword arguments, not positional arguments.
+
 Nullary calls (`f()`, `K()`) are not part of the surface syntax — a binding with no
 free inputs is a value or a measure, not a callable.
 
@@ -166,6 +169,8 @@ which become the inputs of `g` under the new names `p` and `q`. The computation 
 
 If boundary inputs are specified, the reified function supports positional arguments
 in addition to keyword arguments. Either all boundary inputs must be given, or none. This ensures that a boundary input specification, if present, covers all inputs of the function and thereby introduces an explicit argument order.
+Technically, a specified boundary node `a` is replaced by a new node, generated via
+`elementof(valueset(a))`, in the reified graph.
 
 The function argument names do not have to differ from the boundary node names:
 
@@ -226,14 +231,12 @@ symbolically when the measure is consumed.
 
 ### Interface adaptation
 
-FlatPPL provides complementary operations for renaming:
+FlatPPL provides complementary operations for structural renaming:
 
-- **`relabel`** assigns or renames field names on ordered objects (arrays, records, tables).
 - **`rebind`** renames the input parameters of a function, kernel, or likelihood object.
+- **`relabel`** renames the elements of values and lifts to sets, functions, measures, and kernels.
 
-Both are purely structural and do not change the computation or density.
-
-`relabel` turns an array into a named record:
+At the value level, `relabel` turns an array into a named record:
 
 ```flatppl
 v = relabel([1.0, 2.0, 3.0], ["x", "y", "z"])
@@ -241,7 +244,7 @@ v = relabel([1.0, 2.0, 3.0], ["x", "y", "z"])
 v = record(x = 1.0, y = 2.0, z = 3.0)
 ```
 
-or renames record fields (or table columns):
+or renames record fields and table columns:
 
 ```flatppl
 v = relabel(record(a = 1.0, b = 2.0, c = 3.0), ["x", "y", "z"])
@@ -249,11 +252,17 @@ v = relabel(record(a = 1.0, b = 2.0, c = 3.0), ["x", "y", "z"])
 v = record(x = 1.0, y = 2.0, z = 3.0)
 ```
 
-Together, `relabel` and `pushfwd` can rename the components of a measure's variate:
+The same output-side renaming lifts directly to sets, functions, measures, and kernels:
 
 ```flatppl
-named_M = pushfwd(relabel(_, ["x", "y", "z"]), M)
+named_S = relabel(cartpow(reals, 3), ["x", "y", "z"])
+named_f = relabel(f, ["x", "y", "z"])
+named_M = relabel(M, ["x", "y", "z"])
+named_K = relabel(K, ["x", "y", "z"])
 ```
+
+For functions, `relabel(f, names)` is post-composition with `relabel` on the function
+result; for measures it is equivalent to `pushfwd(relabel(_, names), M)`; for kernels it acts pointwise on the output measure.
 
 `rebind` renames the inputs of a function or kernel:
 
@@ -263,7 +272,7 @@ K2 = rebind(K, alpha = x, beta = y)
 ```
 
 `rebind` is partial: unmentioned inputs pass through unchanged. This makes it a convenient
-and valuable tool for aligning parameter names when combining models from different sources
+tool for aligning parameter names when combining models from different sources
 (see [multi-file models](#sec:modules)).
 
 See [built-in functions](07-functions.md#sec:functions) for full reference documentation
@@ -308,6 +317,8 @@ For repeated arguments, use `functionof` explicitly:
    intermediates. The body `pow(_a / _b, 2)` becomes `_t1 = _a / _b; _t2 = pow(_t1, 2)`.
 
 Hole abstraction happens before ANF lowering so that holes never masquerade as value nodes.
+The lowered form of a hole expression uses `_a = elementof(anything)` for each hole
+parameter, preserving the generic nature of the original function.
 
 `_` may **not** appear on the left-hand side of a variable binding.
 
@@ -388,6 +399,18 @@ bkg = load("background_channel.flatppl")
 sig_model = sig.model
 bkg_model = bkg.model
 ```
+
+**Load-time substitution.** `load` may also be called with keyword arguments to substitute
+explicit input nodes of the loaded module:
+
+```flatppl
+sig = load("signal_channel.flatppl", mu = signal_strength, theta = nuisance)
+```
+
+The left-hand side of these bindings must refer to an input of the loaded module, while
+the right-hand side may be any value node in the loading module. The value set of
+both must be compatible, so the the computational structure of the loaded module
+is not modified.
 
 **Path resolution.** Relative paths in `load(...)` are resolved relative to the directory
 of the FlatPPL file containing that `load(...)` call, not the host process's working

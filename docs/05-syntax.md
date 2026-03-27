@@ -69,13 +69,6 @@ The decorator calls `inspect.getsource(model)`, feeds the text to `ast.parse`, w
 AST, and builds the DAG. The function body is never executed as Python — it is a container
 for source text that the Python parser already knows how to parse.
 
-Both embedding mechanisms require a convention for distinguishing FlatPPL names from
-host-language names. The recommended approach: bare names not bound within the FlatPPL block are
-treated as free parameters (matching FlatPPL's existing free-variable semantics). Injecting
-host-language values requires an explicit interpolation mechanism (e.g., `$mu` in Julia, or
-a `data=dict(mu=0.5)` argument in Python). This is a design decision for the engine API,
-not part of the FlatPPL specification itself.
-
 #### Excluded syntax
 
 - **No `~` operator.** Binary `~` works in Julia but is unary bitwise NOT in Python. We use

@@ -148,21 +148,16 @@ log-densities).
 
 #### Normalization and mass
 
-- **`normalize(M)`** — given a $\sigma$-finite measure M with finite total mass, produces the
-  probability measure M / totalmass(M).
+- **`normalize(MK)`** — given a $\sigma$-finite measure or kernel `MK` with finite total mass, returns the normalized probability measure or kernel:
+  $\nu = M / M(\Omega)$, where $M(\Omega) = \mathrm{totalmass}(M)$.
 
-  Measure math: $\nu = M / M(\Omega)$, where $M(\Omega) = \mathrm{totalmass}(M)$.
-
-- **`totalmass(M)`** — returns the total mass of M as a real-valued variate (which may
-  depend on free parameters). Available for use in expressions, e.g. evidence ratios.
-
-  Measure math: $\mathrm{totalmass}(M) = \int dM(x) = M(\Omega)$.
+- **`totalmass(M)`** — returns the total mass of measure of measure `M`:
+  $\mathrm{totalmass}(M) = \int dM(x) = M(\Omega)$.
 
 **Formal semantics.** Given a $\sigma$-finite measure $\mu$ with finite total mass $Z = \int d\mu > 0$, `normalize(M)` denotes
 the probability measure $\mu/Z$. If Z = 0 or Z = ∞, the normalized measure is undefined.
 
-`totalmass(M)` denotes the scalar $Z = \int d\mu$. When $\mu$ depends on free parameters,
-`totalmass(M)` is a function of those parameters.
+`totalmass(M)` denotes the scalar $Z = \int d\mu$.
 
 The unnormalized posterior measure for a likelihood $L$ and prior $\pi$ is `logweighted(L, prior)`,
 which has total mass equal to the evidence $Z = \int L(\theta)\, d\pi(\theta)$. The normalized posterior is
@@ -444,23 +439,13 @@ $\mathrm{chain}(\mu, \kappa) \equiv \mathrm{pushfwd}(\pi_Y, \mathrm{jointchain}(
   pushfwd(get(_, [0, 3]), model)       # model has Array[5] → keeps elements 0, 3
   ```
 
-  Engines can pattern-match on the function argument: `pushfwd(relabel(...), M)` is always
-  a structural bijection with no density change; `pushfwd(get(...), M)` with a subset
-  selector is a projection that may require marginalization; a general `functionof` may
-  require Jacobian correction or numerical treatment.
-
-  This design keeps `pushfwd` as the single general measure-transformation primitive, while
-  data-reshaping logic (`relabel`, `get`) lives at the value level and composes freely.
-
-
 ---
 
 **Formal semantics.** Given a measure $\mu$ on $X$ and a function $f: X \to Y$, `pushfwd(f, M)` denotes the pushforward
 measure $f_* \mu$ on $Y$, defined by $(f_* \mu)(B) = \mu(f^{-1}(B))$ for measurable $B \subseteq Y$.
 
 When the second argument is a kernel $\kappa: \Theta \to M(X)$ rather than a closed measure, `pushfwd`
-acts pointwise: `pushfwd(f, K)` denotes the kernel $\theta \mapsto f_*(\kappa(\theta))$ from $\Theta$ to $M(Y)$. This
-ensures that `pushfwd` works transparently on measures with free parameters.
+acts pointwise: `pushfwd(f, K)` denotes the kernel $\theta \mapsto f_*(\kappa(\theta))$ from $\Theta$ to $M(Y)$.
 
 Projection and relabeling are expressed through `pushfwd` with value-level functions:
 `pushfwd(get(_, ["a", "c"]), M)` denotes the pushforward through the projection that
@@ -532,7 +517,7 @@ forward-generative structure alone.
 A likelihood object is not merely a function $\Theta \to \mathbb{R}_{\geq 0}$. It is a semantic object that
 carries:
 
-- The **free parameter interface**: an ordered list of the free parameter names and their
+- The **input parameter interface**: an ordered list of the input parameter names and their
   types (the domain of the likelihood).
 - The **reference measure** with respect to which the density is defined (inherited from the
   constituent distributions).
@@ -638,7 +623,7 @@ directly.
 **Prior–likelihood alignment.** The prior's variate structure must match the likelihood's
 parameter interface. For a single-parameter likelihood, a scalar prior suffices. For
 multiple parameters, the prior is typically a record-valued measure whose field names
-correspond to the likelihood's free parameter names. A structural mismatch is a static
+correspond to the likelihood's input parameter names. A structural mismatch is a static
 error. In practice, priors are constructed using `lawof` on a record of drawn variates:
 
 ```flatppl

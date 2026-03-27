@@ -23,8 +23,8 @@ bkg_template = normalize(weighted(bkg_shape, Lebesgue(support = interval(lo, hi)
 ```
 
 **Observation model.** The rate measure superposes signal (scaled by signal strength `mu_sig`
-and efficiency) with background. The free parameter `mu_sig` is an unbound name — it
-becomes the model's parameter of interest. Events are drawn from a Poisson point process:
+and efficiency) with background. The module input `mu_sig = elementof(reals)` plays the role of the model's
+parameter of interest. Events are drawn from a Poisson point process:
 
 ```flatppl
 rate = superpose(

@@ -16,10 +16,10 @@ record-valued, depending on the distribution.
 **Design principles:**
 
 - **All parameters must be supplied.** Omitting a parameter is a static error. There are no
-  default values. Use free variables to form kernels, or use hole expressions via `_` to
+  default values. Use input nodes to form kernels, or use hole expressions via `_` to
   create anonymous functions.
-- **Parameterization via free variables.** Bind some parameters to unbound names,
-  then reify with `lawof`. The kernel's input interface is exactly the set of unbound names.
+- **Parameterization via explicit inputs.** Bind some parameters to input nodes declared with `elementof(...)`,
+  then reify with `lawof`. The kernel's input interface is exactly the set of reached input nodes.
 - **Distribution constructors take only distribution parameters, never variate names.** The
   variate name comes from the `draw` binding or `pushfwd`. This is a clean break from
   current HS³ convention, where each distribution carries variate names via fields like
