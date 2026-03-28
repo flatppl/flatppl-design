@@ -38,6 +38,8 @@ f(record(a = x, b = y))       # shallow auto-splatting
   keyword-only.
 - **Special forms** such as `draw(...)` and `elementof(...)` are not ordinary callables
   and follow their own construct-specific rules.
+- **No nullary calls.** `f()` and `K()` are not valid syntax. A binding with no inputs
+  is a value or a measure, not a callable.
 
 **Shallow auto-splatting:** When a record is passed to a callable that expects individual
 named arguments, the record's top-level fields are matched by name to the callable's
@@ -141,9 +143,6 @@ The sub-DAG must be fully deterministic and so must not contain any `draw` nodes
 The argument names of the resulting function are the names of the free variables of the sub-DAG,
 but decoupled from those variables. As the graph nodes are
 not ordered, the function only supports keyword arguments, not positional arguments.
-
-Nullary calls (`f()`, `K()`) are not part of the surface syntax — a binding with no
-free inputs is a value or a measure, not a callable.
 
 The output type of the reified function matches the type of the argument of `functionof`:
 
