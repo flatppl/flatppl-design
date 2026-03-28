@@ -12,6 +12,13 @@ Record field names and table column names are local to their object and not
 part of the global namespace, nor are the argument names of functions
 and kernels.
 
+The order of bindings in a module is semantically irrelevant; the dependency graph is
+determined by name references. Implementations may evaluate bindings in any valid
+topological order, in series or in parallel.
+
+Numerical precision (e.g., 32-bit vs. 64-bit floating point) is not specified by
+FlatPPL, the choice if left to implementations and their users.
+
 ### <a id="sec:calling-convention"></a>Calling conventions
 
 All callables — built-in functions, user-defined functions, and built-in or user-defined
