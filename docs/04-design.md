@@ -278,7 +278,50 @@ tool for aligning parameter names when combining models from different sources
 See [built-in functions](07-functions.md#sec:functions) for full reference documentation
 on `relabel` and `rebind`.
 
-### Anonymous functions
+### Placeholders and holes
+
+#### Placeholder variables
+
+Creating functions and kernels with boundary inputs via `functionof` and `lawof`
+requires the creation of unique global variable names. Placeholder variables are
+special variable names of the form `_name_` (leading and trailing underscore)
+that are local to a `functionof(...)` and `lawof(...)` and can be thought of
+as creating unique global input of `elementof(anything)` implicitly. All
+placeholders must appear both in the expression to be reified and the boundary
+input keyword arguments.
+
+For example
+
+```flatppl
+f = functionof(_a_ * b + _c_, a = _a_, c = _c_)
+```
+
+is equivalent to:
+
+```flatppl
+_tmp1 = elementof(anything)
+_tmp2 = elementof(anything)
+f = functionof(_tmp1 * b + _tmp2, a = _tmp1, c = _tmp2)
+```
+
+Placeholders are **not** holes (see below). An expression with placeholders like
+`_a_ * b + _c_` must *not* appear outside of a `functionof(...)` or `lawof(...)`.
+
+**Scoping rule.** The scope of a placeholder is the nearest enclosing `functionof` or
+`lawof`. The same placeholder name may appear in different scopes without conflict:
+
+```flatppl
+functionof(functionof(_a_ * b, a = _a_)(some_value) + _a_, a = _a_)
+```
+
+A placeholder in an inner `functionof` or `lawof` **must** be bound there, so this code is invalid:
+
+```flatppl
+# DISALLOWED:
+functionof(functionof(_a_ * b + _c_, a = _a_)(some_value) + _d_, c = _c_, d = _d_)
+```
+
+#### Holes
 
 The reserved name `_` denotes a **hole** — a position in a deterministic expression where
 an argument is not yet supplied. An expression containing holes is not a value expression;
@@ -286,14 +329,18 @@ it denotes an anonymous function whose parameters are the holes, in strict
 left-to-right reading order. This is analogous to the $f(\cdot, b)$ notation used in
 mathematics to denote a function with a free argument.
 
-Each `_` introduces a distinct positional parameter with an internal auto-generated name.
-Holes do not inherit keyword names from enclosing call positions. If named parameters are
-needed, use `functionof` with an explicit interface declaration instead.
+Each `_` introduces a distinct positional parameter. Holes do not inherit keyword names
+from enclosing call positions. For named parameters, use placeholder variables or
+`functionof` with an explicit interface declaration.
+
+Note: Holes are different from placeholders (see above). Placeholders are a convenience
+to more easily create functions and kernels via `functionof` and `lawof`. Holes turn
+expressions into functions and kernels directly.
 
 A single hole, resulting in a one-argument function:
 
 ```flatppl
-neg = sub(0, _)
+neg = 0 - _
 poly = polynomial(coefficients = cs, x = _)
 ```
 
@@ -305,20 +352,28 @@ h = pow(_ / _, 2)
 ```
 
 Each `_` is distinct: `_ * _` multiplies two different inputs rather than squaring one.
-For repeated arguments, use `functionof` explicitly:
-`functionof(x * x, x = x)`.
+Use placeholders if arguments need to appear in the expression more than once, e.g. `functionof(_x_ * _x_, x = _x_)`.
 
-**Treatment of holes during lowering to ANF.** Code with holes is lowered in two stages:
+**Lowering.** An expression with holes lowers to a `functionof` with placeholder
+variables. For example
 
-1. **Hole abstraction.** Expressions with holes are wrapped in anonymous `functionof`
-   calls with positional parameters. `pow(_ / _, 2)` becomes
-   `functionof(pow(_a / _b, 2), _a = _a, _b = _b)`.
-2. **Administrative lowering (ANF).** Function bodies are flattened into named
-   intermediates. The body `pow(_a / _b, 2)` becomes `_t1 = _a / _b; _t2 = pow(_t1, 2)`.
+```flatppl
+g = f(_, b, _)
+```
 
-Hole abstraction happens before ANF lowering so that holes never masquerade as value nodes.
-The lowered form of a hole expression uses `_a = elementof(anything)` for each hole
-parameter, preserving the generic nature of the original function.
+lowers to something like (naming is an implementation detail and not normative)
+
+```flatppl
+g = functionof(f(_arg1_, b, _arg2_), arg1 = _arg1_, arg2 = _arg2_)
+```
+
+which in turn lowers to
+
+```flatppl
+_tmp1 = elementof(anything)
+_tmp2 = elementof(anything)
+g = functionof(f(_tmp1, b, _tmp2), arg1 = _tmp1, arg2 = _tmp2)
+```
 
 `_` may **not** appear on the left-hand side of a variable binding.
 

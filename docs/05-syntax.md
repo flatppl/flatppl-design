@@ -84,6 +84,9 @@ for source text that the Python parser already knows how to parse.
   is flat SSA; all computations are inlined. `functionof` provides first-class functions
   without a definition syntax (see [calling conventions and anonymous functions](04-design.md#sec:calling-convention)).
 - **No lambda expressions.** Not in the intersection, and not needed given `functionof`.
+- **`_name_` placeholders** (leading and trailing underscore) are reserved for use inside
+  `functionof` and `lawof` bodies (see [placeholder variables](04-design.md#placeholder-variables)).
+  They are not valid as ordinary variable names.
 - **No tuples as a value type.** Arrays and records cover all use cases. Parenthesized
   comma-separated names appear only on the left side of decomposition assignments
   (see [decomposition syntax](#decomposition-syntax)).
