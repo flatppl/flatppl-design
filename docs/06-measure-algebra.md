@@ -439,6 +439,43 @@ $\mathrm{chain}(\mu, \kappa) \equiv \mathrm{pushfwd}(\pi_Y, \mathrm{jointchain}(
   pushfwd(get(_, [0, 3]), model)       # model has Array[5] → keeps elements 0, 3
   ```
 
+  **`bijection(f, f_inv, logvolume)`** annotates a function `f` with its inverse `f_inv`
+  and the log-volume-element `logvolume` of the forward map. The result is a function that is semantically `f`.
+  
+  FlatPPL engines will often need the inverse
+  of `f` and the volume element when computing densities of pushforward measures. Function inverses are hard to derive automatically and the computation of Jacobian determinant via automatic differentiation can be very inefficient, while the user or system that authors/generates FlatPPL may
+  have access to both in closed form.
+
+  `logvolume` is the generalized log-volume-element of the forward function — it
+  generalizes the log-absolute-determinant of the Jacobian to mappings between spaces of
+  different dimension. It may be a function or a scalar value (`logvolume = 0` for volume-preserving bijections). The convention is that
+  `logvolume` describes the forward map.
+
+  The user asserts that `f_inv` is the inverse of `f` and that `logvolume` is correct with respect to how `f` is used in the FlatPPL module.
+  FlatPPL implementations are not required to verify this.
+
+  For standard cases like `exp`, FlatPPL engines can be expected to know the inverse and volume element, but it would be written in FlatPPL as
+
+  ```flatppl
+  exp_bijection = bijection(exp, log, identity)
+  ```
+
+  A more interesting example that includes an explicit definition of domain and codomain of the function is squaring on the positive reals:
+
+  ```flatppl
+  pos_x = elementof(interval(0, inf))
+  sq = bijection(
+      functionof(pow(pos_x, 2), x = pos_x),
+      functionof(sqrt(pos_x), x = pos_x),
+      log(2 * _)
+  )
+  ```
+
+  ```flatppl
+  # Half-normal from a standard normal
+  half_normal = pushfwd(sq, truncate(Normal(mu = 0, sigma = 1), interval(0, inf)))
+  ```
+
 ---
 
 **Formal semantics.** Given a measure $\mu$ on $X$ and a function $f: X \to Y$, `pushfwd(f, M)` denotes the pushforward

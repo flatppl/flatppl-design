@@ -379,6 +379,16 @@ Stochastic composition uses `chain` (marginalizing) or `jointchain` (retaining).
 | Direction | Left-to-right | Left-to-right | Left-to-right |
 
 
+### Function annotations
+
+- **`bijection(f, f_inv, logvolume)`** — annotates a function `f` with its inverse
+  `f_inv` and the log-volume-element `logvolume` of the forward map. Returns a function
+  that is semantically identical to `f`, but FlatPPL engines can take advantage of the
+  inverse and volume element when computing densities of pushforward measures.
+  `logvolume` may be a function or a scalar (use `0` for volume-preserving maps).
+  See [pushfwd](06-measure-algebra.md#sec:measure-algebra) for the full semantics and
+  examples.
+
 ### Shape functions
 
 Shape functions are deterministic functions that define common density shapes. They are
