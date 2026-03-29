@@ -124,12 +124,14 @@ bin ownership rule (see [binning](07-functions.md#binning)).
 multi-dimensional region for `truncate` on record-valued measures and `restrict` on
 `likelihoodof`.
 
-**Record set.** `recordset(name1 = S1, name2 = S2, ...)` specifies the set of
-record-valued inputs whose fields range over the given sets.
-
 **Cartesian power.** `cartpow(S, n)` specifies the set of length-`n` arrays whose
 entries lie in `S`. Nested uses express higher-rank shapes:
 `cartpow(reals, m, n)` describes the set of real-valued $n \times m$ matrices.
+
+**Collections of sets.** Arrays and records of sets are interpreted as Cartesian products:
+`[S1, S2, S3]` is the set of 3-element arrays whose elements lie in `S1`, `S2`, `S3`
+respectively, and `record(a = S1, b = S2)` is the set of records with field `a` in `S1`
+and field `b` in `S2`.
 
 **`valueset(x)`.** Returns the canonical value set associated with node `x`:
 

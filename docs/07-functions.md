@@ -538,8 +538,6 @@ engineering.
   declared set for `elementof(...)`, the support carried by `draw(M)`, or the broadest
   set consistent with the type and shape of a deterministic computed node.
 
-- **`recordset(name = S, ...)`** — constructs a record-valued set from named field sets.
-
 - **`cartpow(S, n)`** — constructs the set of length-`n` arrays whose entries lie in `S`.
 
 - **`relabel(x, names)`** — output-side structural renaming. For values, it assigns or

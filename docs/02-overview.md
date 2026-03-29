@@ -140,7 +140,7 @@ The table below provides a compact overview of the language. Each family name li
 | [Analysis operations](06-measure-algebra.md#sec:measure-algebra) | `likelihoodof`, `joint_likelihood` |
 | [Higher-order operations](07-functions.md#sec:functions) | `broadcast`, `fchain`, `bijection` |
 | [Data access and reshaping](07-functions.md#sec:functions) | `get`, `cat`, `record`, `all` |
-| [Constructors](07-functions.md#sec:functions) | `table`, `rowstack`, `colstack`, `linspace`, `extlinspace`, `interval`, `window`, `recordset`, `cartpow` |
+| [Constructors](07-functions.md#sec:functions) | `table`, `rowstack`, `colstack`, `linspace`, `extlinspace`, `interval`, `window`, `cartpow` |
 | [Binning and interpolation](07-functions.md#sec:functions) | `bincounts`, `interp_p*lin`, `interp_p*exp` |
 | [Shape functions](07-functions.md#sec:functions) | `polynomial`, `bernstein`, `stepwise` |
 | [Math and logic](07-functions.md#sec:functions) | `exp`, `log`, `pow`, `sqrt`, `abs`, `sin`, `cos`, `min`, `max`, `ifelse`, `land`, `lor`, `lnot`, `lxor` |
