@@ -17,7 +17,7 @@ determined by name references. Implementations may evaluate bindings in any vali
 topological order, in series or in parallel.
 
 Numerical precision (e.g., 32-bit vs. 64-bit floating point) is not specified by
-FlatPPL, the choice if left to implementations and their users.
+FlatPPL, the choice is left to implementations and their users.
 
 ### <a id="sec:calling-convention"></a>Calling conventions
 
@@ -454,7 +454,7 @@ sig = load_module("signal_channel.flatppl", mu = signal_strength, theta = nuisan
 
 The left-hand side of these bindings must refer to an input of the loaded module, while
 the right-hand side may be any value node in the loading module. The value set of
-both must be compatible, so the the computational structure of the loaded module
+both must be compatible, so the computational structure of the loaded module
 is not modified.
 
 **Path resolution.** Relative paths in `load_module(...)` are resolved relative to the directory

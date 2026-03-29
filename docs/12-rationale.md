@@ -73,7 +73,7 @@
 | Elementwise arithmetic is always explicit | Infix `+`, `-`, `*`, `/` are not implicitly elementwise on arrays. Use `broadcast(...)`. Avoids NumPy-style hidden semantics. |
 | `all` as axis selector | `A[:, j]` lowers to `get(A, all, j)`. `:` is surface syntax only; `all` is a predefined sentinel. |
 | Complex numbers in the deterministic layer | Complex values flow freely through deterministic computation; measure-algebra weights and densities are inherently real. `abs2` bridges complex amplitudes to real intensities. |
-| `abs2(z)` as dedicated function | Squared modulus $\|z\|^2$ is ubiquitous in amplitude models; avoids the unnecessary square root in `pow(abs(z), 2)`. |
+| `abs2(z)` as dedicated function | Squared modulus $\vert z\vert^2$ is ubiquitous in amplitude models; avoids the unnecessary square root in `pow(abs(z), 2)`. |
 | `cis(theta)` for polar form | $e^{i\theta}$ from a real angle. Standard mathematical shorthand; cleaner than `exp(complex(0, theta))`. |
 | `pi` and `im` as lowercase constants | Mathematical constants follow the existing lowercase convention (`true`, `false`, `inf`). Reads like mathematics, not macros. |
 | Value types as a standalone section | Value types are core semantics, not surface syntax. Promoted from a subsection of Surface Form to a top-level section. |

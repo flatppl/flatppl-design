@@ -448,7 +448,7 @@ order.
 | `log` | `x` | Natural logarithm (principal branch for complex) | Yes |
 | `log10` | `x` | Base-10 logarithm | Real only |
 | `sqrt` | `x` | Square root (principal branch for complex) | Yes |
-| `abs` | `x` | Absolute value; complex modulus $\|z\|$ for complex | Yes (returns real) |
+| `abs` | `x` | Absolute value; complex modulus $\vert z\vert$ for complex | Yes (returns real) |
 | `sin`, `cos` | `x` | Trigonometric functions | Yes |
 | `pow` | `base`, `exponent` | Exponentiation (principal branch for complex) | Yes |
 | `min`, `max` | `a`, `b` | Minimum, maximum | Real only |

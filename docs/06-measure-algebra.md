@@ -26,10 +26,11 @@ semantics throughout; readers interested in the categorical details should consu
 all measures arising from the language's constructs are both $\sigma$-finite and s-finite;
 Staton's s-finite monad provides the formal basis for commutativity of independent draws.
 
-A **Markov kernel** from X to Y is a measurable function $\kappa: X \to M(Y)$, where M(Y) is the
+A **transition kernel** (or **kernel**) from X to Y is a measurable function $\kappa: X \to M(Y)$, where M(Y) is the
 space of measures on Y. Equivalently, for each $x \in X$, $\kappa(x, \cdot)$ is a measure on $Y$,
 and for each measurable $B \subseteq Y$, the map $x \mapsto \kappa(x, B)$ is measurable. This is the
-standard notion from categorical probability.
+standard notion from categorical probability. When each $\kappa(x, \cdot)$ is a probability measure,
+the kernel is called a **Markov kernel**.
 
 **Density convention.** All density formulas in this section are stated with respect to a
 common reference measure implied by the constituent distribution types: the Lebesgue
@@ -151,11 +152,11 @@ log-densities).
 - **`normalize(MK)`** — given a $\sigma$-finite measure or kernel `MK` with finite total mass, returns the normalized probability measure or kernel:
   $\nu = M / M(\Omega)$, where $M(\Omega) = \mathrm{totalmass}(M)$.
 
-- **`totalmass(M)`** — returns the total mass of measure of measure `M`:
+- **`totalmass(M)`** — returns the total mass of measure `M`:
   $\mathrm{totalmass}(M) = \int dM(x) = M(\Omega)$.
 
 **Formal semantics.** Given a $\sigma$-finite measure $\mu$ with finite total mass $Z = \int d\mu > 0$, `normalize(M)` denotes
-the probability measure $\mu/Z$. If Z = 0 or Z = ∞, the normalized measure is undefined.
+the probability measure $\mu/Z$. If $Z = 0$ or $Z = \infty$, the normalized measure is undefined.
 
 `totalmass(M)` denotes the scalar $Z = \int d\mu$.
 
@@ -651,7 +652,7 @@ The `logweighted(L, prior)` form produces the **unnormalized** posterior — evi
 computation is expensive and not always needed. To obtain a proper probability measure,
 wrap in `normalize(...)`. The evidence is then available as `totalmass(logweighted(L, prior))`.
 
-If Z = 0 or Z = ∞, the normalized posterior is undefined.
+If $Z = 0$ or $Z = \infty$, the normalized posterior is undefined.
 
 A frequentist user simply never constructs a posterior — they work with the likelihood
 directly.
