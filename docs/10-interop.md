@@ -94,9 +94,7 @@ foundation.
 **Correspondence points.** FlatPPL's DAG reference structure maps to RooFit's server/client
 dependency graph; `likelihoodof` maps to `createNLL`;
 `pushfwd`/`lawof(record(...))` maps to named `RooAbsPdf` objects; `load_module` provides module
-loading with qualified dot access; and `rebind` provides explicit interface adaptation for
-parameter sharing across modules, replacing RooFit-style import-time renaming with a
-declarative, object-level mechanism.
+loading with qualified dot access and load-time input substitution for parameter sharing across modules.
 
 **Stochastic nodes and RooFit.** FlatPPL's explicit stochastic nodes (via `draw`) represent
 a fundamental capability that RooFit's variable model does not directly express. In RooFit,

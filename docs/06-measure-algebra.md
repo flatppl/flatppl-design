@@ -501,8 +501,7 @@ for both sides of a callable's interface:
 - **Output side:** `pushfwd(relabel(_, ...), M)` names variate components;
   `pushfwd(get(_, ...), M)` projects/marginalizes; `pushfwd(f, M)` transforms.
 - **Input side:** `lawof`/`functionof` keyword arguments declare and name the input
-  interface (potentially cutting the graph); `rebind` renames inputs of an already-reified
-  object.
+  interface (potentially cutting the graph).
 
 **Formal relationships (informative).** The following equivalences illustrate how the
 fundamental measures, measure algebra, and built-in distributions relate:

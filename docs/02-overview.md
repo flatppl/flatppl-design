@@ -135,7 +135,7 @@ The table below provides a compact overview of the language. Each family name li
 | Family | Constructs |
 |---|---|
 | [Special forms](04-design.md#sec:design) | `draw`, `lawof`, `functionof`, `elementof`, `valueset` |
-| [Interface adaptation](04-design.md#sec:design) | `rebind`, `relabel` |
+| [Interface adaptation](04-design.md#sec:design) | `relabel` |
 | [Measure combinators](06-measure-algebra.md#sec:measure-algebra) | `weighted`, `logweighted`, `normalize`, `totalmass`, `superpose`, `joint`, `jointchain`, `chain`, `iid`, `truncate`, `pushfwd` |
 | [Analysis operations](06-measure-algebra.md#sec:measure-algebra) | `likelihoodof`, `joint_likelihood` |
 | [Higher-order operations](07-functions.md#sec:functions) | `broadcast`, `fchain`, `bijection` |

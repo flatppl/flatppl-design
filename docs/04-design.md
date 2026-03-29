@@ -237,12 +237,7 @@ symbolically when the measure is consumed.
 
 ### Interface adaptation
 
-FlatPPL provides complementary operations for structural renaming:
-
-- **`rebind`** renames the input parameters of a function, kernel, or likelihood object.
-- **`relabel`** renames the elements of values and lifts to sets, functions, measures, and kernels.
-
-At the value level, `relabel` turns an array into a named record:
+FlatPPL provides `relabel` for structural renaming of outputs. At the value level, `relabel` turns an array into a named record:
 
 ```flatppl
 v = relabel([1.0, 2.0, 3.0], ["x", "y", "z"])
@@ -270,19 +265,8 @@ named_K = relabel(K, ["x", "y", "z"])
 For functions, `relabel(f, names)` is post-composition with `relabel` on the function
 result; for measures it is equivalent to `pushfwd(relabel(_, names), M)`; for kernels it acts pointwise on the output measure.
 
-`rebind` renames the inputs of a function or kernel:
-
-```flatppl
-g = rebind(f, p = a, q = b)
-K2 = rebind(K, alpha = x, beta = y)
-```
-
-`rebind` is partial: unmentioned inputs pass through unchanged. This makes it a convenient
-tool for aligning parameter names when combining models from different sources
-(see [multi-file models](#sec:modules)).
-
 See [built-in functions](07-functions.md#sec:functions) for full reference documentation
-on `relabel` and `rebind`.
+on `relabel`.
 
 ### Placeholders and holes
 
@@ -502,8 +486,4 @@ events = load_table("observed_events.csv")
 Path resolution follows the same rules as `load_module`: relative to the directory of
 the FlatPPL file containing the call.
 
-**Model composition.** The module system provides namespace isolation through `load_module`,
-while `rebind` aligns mismatched parameter interfaces and `joint_likelihood` combines
-channels. Modules intended for composition should therefore export kernels with declared
-interfaces where appropriate. Richer conventions for large-scale combined analyses may be
-refined in future versions.
+**Model composition.** The module system provides namespace isolation through `load_module`, with load-time keyword arguments available to substitute inputs across module boundaries, and `joint_likelihood` combines channels. Modules intended for composition should therefore export kernels with declared interfaces where appropriate. Richer conventions for large-scale combined analyses may be refined in future versions.
