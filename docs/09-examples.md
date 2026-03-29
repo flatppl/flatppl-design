@@ -80,7 +80,7 @@ L_sideband = joint_likelihood(L_obs_sideband, L_constr)
 mu_sig_prior = draw(Uniform(support = interval(0, 20)))
 raw_eff_syst_prior = draw(Normal(mu = 0, sigma = 1))
 prior = lawof(record(mu_sig = mu_sig_prior, raw_eff_syst = raw_eff_syst_prior))
-posterior = logweighted(L, prior)
+posterior = bayesupdate(L, prior)
 # posterior is unnormalized; wrap in normalize(...) if needed
 ```
 

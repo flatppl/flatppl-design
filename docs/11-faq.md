@@ -142,7 +142,7 @@ to a kernel input (see [kernels, measures and `lawof`](04-design.md#kernels-meas
 
 ### Q: How are posterior parameters matched to likelihood parameters?
 
-Posteriors are constructed via `logweighted(L, prior)`. Alignment is by **parameter name**.
+Posteriors are constructed via `bayesupdate(L, prior)`. Alignment is by **parameter name**.
 The prior must be a measure on a record type whose field names match the likelihood's input
 parameter names. The `lawof(record(...))` pattern makes this explicit. A mismatch is a
 static error.
@@ -211,7 +211,7 @@ the FlatPPL document "runs" in.
 
 These are subsumed by the more general `weighted` and `logweighted` combinators:
 `scale(r, M)` $\equiv$ `weighted(r, M)`, `log_rescale(log_r, M)` $\equiv$ `logweighted(log_r, M)`,
-`posteriorof(L, prior)` $\equiv$ `logweighted(L, prior)`, and
+`posteriorof(L, prior)` $\equiv$ `bayesupdate(L, prior)`, and
 `DensityMeasure(density = f, support = S)` $\equiv$
 `normalize(weighted(f, Lebesgue(support = S)))`. The unified combinators are more
 compositional and make the underlying measure-theoretic operations explicit.

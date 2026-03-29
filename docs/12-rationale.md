@@ -27,10 +27,10 @@
 | Likelihood defined prior-free | Serves both Bayesian and frequentist users. |
 | Likelihood as object (not function) | Carries domain, reference measure, data; engines evaluate via `logdensityof`/`densityof`. |
 | `joint_likelihood`: multiplicative under independence | Standard combination of independent likelihood contributions. |
-| Posteriors via `logweighted(L, prior)` | Unnormalized by default; explicit `normalize(...)` when needed. No hidden evidence computation. |
+| Posteriors via `bayesupdate(L, prior)` | Unnormalized by default; explicit `normalize(...)` when needed. No hidden evidence computation. |
 | Fundamental measures: `Lebesgue`, `Counting`, `Dirac` | Reference measures made explicit; `Uniform` $\equiv$ `normalize(Lebesgue(support=...))`. |
 | `weighted(f, M)` and `logweighted(logf, M)` | General measure reweighting; subsumes `scale`, `log_rescale`, `posteriorof`, `DensityMeasure`. |
-| `logweighted` accepts likelihoods; `weighted` does not | Prevents confusing densities and log-densities at the type level. |
+| `bayesupdate` for likelihood-prior combination | Dedicated operation; `weighted`/`logweighted` accept only numeric weights. |
 | `normalize(M)` and `totalmass(M)` | Explicit normalization; no hidden normalization in constructors. |
 | Shape functions: `polynomial`, `bernstein`, `stepwise` | Density shapes as functions; fed to `weighted` + `Lebesgue` + `normalize`. |
 | `reals`, `integers` as predefined set constants | Explicit supports for `Lebesgue` and `Counting`; no default arguments. |

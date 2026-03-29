@@ -78,22 +78,19 @@ closed measures (i.e. nullary kernels) as inputs. `densityof(M, x)` and
 
 #### Density reweighting
 
-- **`weighted(weight, base)`** — density reweighting. Produces the measure $\nu$ with
-  $d\nu = f \cdot dM$ (where $f$ is the weight and $M$ the base measure). The weight must be non-negative (a non-negative constant or a
-  non-negative-valued function). When weight is a constant, this scales the total mass.
-  When weight is a function, this reweights the density pointwise.
-
-  Measure math: $\nu(A) = \int_A f(x)\, dM(x)$, equivalently $d\nu = f \cdot dM$.
-
+- **`weighted(weight, base)`** — produces the measure $\nu$ with
+  $d\nu = f \cdot dM$, where $f$ is the weight and $M$ the base measure. The weight
+  must be non-negative (constant or function).
   `normalize(weighted(f, Lebesgue(support = S)))` produces a probability distribution
   whose density w.r.t. Lebesgue on $S$ is proportional to $f$.
 
-- **`logweighted(logweight, base)`** — log-density reweighting: $d\nu = \exp(g) \cdot dM$
-  (where $g$ is the logweight and $M$ the base), computed in log-space for numerical
-  stability. Accepts a log-valued function, a constant log-factor, or a **likelihood
-  object** (the log-density is extracted implicitly). The primary use case is constructing
-  unnormalized posteriors: `logweighted(L, prior)`. `weighted` does NOT accept likelihood
-  objects — this prevents confusing densities with log-densities.
+- **`logweighted(logweight, base)`** — like `weighted`, but the weight is given in
+  log-space: $d\nu = \exp(g) \cdot dM$.
+
+- **`bayesupdate(L, prior)`** — reweights a prior measure by a likelihood object,
+  producing the unnormalized posterior: $d\nu(\theta) = L(\theta) \cdot d\pi(\theta)$.
+  Lowers to `logweighted(logdensityof(L, _), prior)`. See
+  [posterior construction](#posterior-construction) for details.
 
 #### Normalization and mass
 
@@ -474,31 +471,27 @@ mechanism.
 
 #### Posterior construction
 
-The unnormalized posterior measure is constructed via the measure algebra:
+**`bayesupdate(L, prior)`** produces the **unnormalized** posterior measure
+$d\nu(\theta) = L(\theta) \cdot d\pi(\theta)$. It lowers to
+`logweighted(logdensityof(L, _), prior)`. The result is not normalized —
+`normalize(bayesupdate(L, prior))` gives the normalized posterior, and
+`totalmass(bayesupdate(L, prior))` gives the evidence.
 
 ```flatppl
-posterior = logweighted(L, prior)
+posterior = bayesupdate(L, prior)
 ```
-
-This produces the measure $d\nu(\theta) = L(\theta) \cdot d\pi(\theta)$, where `logweighted`
-extracts the log-density from the likelihood object and reweights the prior in log-space.
-The result is **unnormalized**. The normalized posterior is
-`normalize(logweighted(L, prior))`, and the evidence is
-`totalmass(logweighted(L, prior))`.
 
 A frequentist user works with the likelihood directly and does not construct a posterior.
 
 **Prior–likelihood alignment.** The prior's variate structure must match the likelihood's
-parameter interface. For a single-parameter likelihood, a scalar prior suffices. For
-multiple parameters, the prior is typically a record-valued measure whose field names
-correspond to the likelihood's input parameter names. A structural mismatch is a static
-error. In practice, priors are constructed using `lawof` on a record of drawn variates:
+parameter interface. A structural mismatch is a static error. In practice, priors are
+constructed using `lawof` on a record of drawn variates:
 
 ```flatppl
 mu_sig_prior = draw(Uniform(support = interval(0, 20)))
 raw_eff_syst_prior = draw(Normal(mu = 0, sigma = 1))
 prior = lawof(record(mu_sig = mu_sig_prior, raw_eff_syst = raw_eff_syst_prior))
-posterior = logweighted(L, prior)
+posterior = bayesupdate(L, prior)
 ```
 
 For correlated priors, the dependency is expressed naturally through the FlatPPL sub-graph.

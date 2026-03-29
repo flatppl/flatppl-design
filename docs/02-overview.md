@@ -137,7 +137,7 @@ The table below provides a compact overview of the language. Each family name li
 | [Special forms](04-design.md#sec:design) | `draw`, `lawof`, `functionof`, `elementof`, `valueset` |
 | [Interface adaptation](04-design.md#sec:design) | `relabel` |
 | [Measure combinators](06-measure-algebra.md#sec:measure-algebra) | `weighted`, `logweighted`, `normalize`, `totalmass`, `superpose`, `joint`, `jointchain`, `chain`, `iid`, `truncate`, `pushfwd` |
-| [Analysis operations](06-measure-algebra.md#sec:measure-algebra) | `likelihoodof`, `joint_likelihood`, `densityof`, `logdensityof` |
+| [Analysis operations](06-measure-algebra.md#sec:measure-algebra) | `likelihoodof`, `joint_likelihood`, `densityof`, `logdensityof`, `bayesupdate` |
 | [Higher-order operations](07-functions.md#sec:functions) | `broadcast`, `fchain`, `bijection` |
 | [Data access and reshaping](07-functions.md#sec:functions) | `get`, `cat`, `record`, `all` |
 | [Constructors](07-functions.md#sec:functions) | `table`, `rowstack`, `colstack`, `linspace`, `extlinspace`, `interval`, `window`, `fill` |
@@ -377,7 +377,7 @@ L_sub = likelihoodof(lawof(obs), data,
 L_total = joint_likelihood(L1, L2)
 
 # Unnormalized posterior
-posterior = logweighted(L, prior)
+posterior = bayesupdate(L, prior)
 
 # Deterministic function composition
 pipeline = fchain(calc_kinematics, apply_cuts)
