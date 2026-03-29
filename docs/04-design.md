@@ -261,7 +261,7 @@ v = record(x = 1.0, y = 2.0, z = 3.0)
 The same output-side renaming lifts directly to sets, functions, measures, and kernels:
 
 ```flatppl
-named_S = relabel(cartpow(reals, 3), ["x", "y", "z"])
+named_S = relabel(fill(reals, 3), ["x", "y", "z"])
 named_f = relabel(f, ["x", "y", "z"])
 named_M = relabel(M, ["x", "y", "z"])
 named_K = relabel(K, ["x", "y", "z"])

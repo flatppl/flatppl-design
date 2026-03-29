@@ -538,7 +538,10 @@ engineering.
   declared set for `elementof(...)`, the support carried by `draw(M)`, or the broadest
   set consistent with the type and shape of a deterministic computed node.
 
-- **`cartpow(S, n)`** — constructs the set of length-`n` arrays whose entries lie in `S`.
+- **`fill(x, n, m, ...)`** — creates an array filled with `x`. When `x` is a set,
+  produces the Cartesian power (e.g., `fill(reals, 3)` is $\mathbb{R}^3$). When `x` is
+  a value, produces a constant array (e.g., `fill(0.0, 10)`). Multiple dimensions
+  produce higher-rank arrays.
 
 - **`relabel(x, names)`** — output-side structural renaming. For values, it assigns or
   renames fields as before. It also lifts to sets, functions, measures, and kernels

@@ -124,9 +124,9 @@ bin ownership rule (see [binning](07-functions.md#binning)).
 multi-dimensional region for `truncate` on record-valued measures and `restrict` on
 `likelihoodof`.
 
-**Cartesian power.** `cartpow(S, n)` specifies the set of length-`n` arrays whose
-entries lie in `S`. Nested uses express higher-rank shapes:
-`cartpow(reals, m, n)` describes the set of real-valued $n \times m$ matrices.
+**Cartesian power.** `fill(S, m, n, ...)` applied to a set `S` produces the Cartesian power
+$S^n$ — the set of $m \times n \times \ldots$ arrays whose entries lie in `S`.
+So `fill(reals, 3)` represents $\mathbb{R}^3$.
 
 **Collections of sets.** Arrays and records of sets are interpreted as Cartesian products:
 `[S1, S2, S3]` is the set of 3-element arrays whose elements lie in `S1`, `S2`, `S3`
