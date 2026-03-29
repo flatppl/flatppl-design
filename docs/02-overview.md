@@ -122,7 +122,7 @@ bound to names, passed to their respective combinators and operations, and refer
 other bindings. However, they may not appear inside arrays, records, or tables.
 
 **Modules** represent whole FlatPPL documents, each FlatPPL source file is a module.
-FlatPPL code can load modules (via `load(module_filename)`) and access objects in loaded
+FlatPPL code can load modules (via `load_module(module_filename)`) and access objects in loaded
 modules via dot-syntax scoping (`loaded_module.some_object`). Module objects give access
 to another namespace, but are not themselves first-class objects in the computational graph:
 they may not be passed to functions or appear inside data structures.
@@ -148,7 +148,7 @@ The table below provides a compact overview of the language. Each family name li
 | [Reductions](07-functions.md#sec:functions) | `sum`, `product`, `length` |
 | [Distributions](08-distributions.md#sec:catalog) | `Normal`, `Poisson`, `PoissonProcess`, `Exponential`, ... |
 | [Fundamental measures](06-measure-algebra.md#sec:measure-algebra) | `Lebesgue`, `Counting`, `Dirac` |
-| [Module operations](04-design.md#sec:modules) | `load` |
+| [Module operations](04-design.md#sec:modules) | `load_module`, `load_table` |
 | [Constants](03-value-types.md#sec:valuetypes) | `true`, `false`, `inf`, `pi`, `im` |
 | [Predefined sets](03-value-types.md#sec:valuetypes) | `reals`, `integers`, `complexes`, `anything` |
 | [Selectors](04-design.md#sec:calling-convention) | `_` (holes), `all` (slicing) |
@@ -389,7 +389,7 @@ Module loading and parameter renaming:
 
 ```flatppl
 # Load a module and optionally bind some of its inputs
-sig = load("signal_channel.flatppl", mu = signal_strength, theta = nuisance)
+sig = load_module("signal_channel.flatppl", mu = signal_strength, theta = nuisance)
 
 sig_model = sig.model
 L_sig = likelihoodof(sig.model, sig.data)

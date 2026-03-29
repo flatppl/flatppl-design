@@ -55,14 +55,14 @@
 | Semantic bridge (not identity) to RooFit | Only the semantically disciplined subset of RooFit patterns maps; context-dependent role reinterpretation is intentionally excluded. |
 | HS³ naming alignment | Current HS³ uses flat named-tuple variates with globally unique entry names. FlatPPL additionally supports structured variates; translators flatten for HS³ serialization. |
 | Unified calling convention | Positional (if ordered), keyword, or record auto-splatting. No mixing. Constructors are keyword/record only. |
-| Modules via `load` | Each FlatPPL file is a module; dot syntax for access; assignment for renaming. `merge`/`combine` deferred. |
+| Modules via `load_module` | Each FlatPPL file is a module; dot syntax for access; assignment for renaming. `merge`/`combine` deferred. |
 | Parameter/observable roles by construction | Generative DAG determines roles; RooFit's context-dependent swapping not preserved (intentional). |
 | Generative and scoring modes | Same model specification supports forward sampling and density evaluation. |
 | FlatPPL as standalone language | Standalone specification with substantial HS³/RooFit/pyhf compatibility. Not subordinate to any single serialization format. |
 | Distribution catalog in four groups | Standard, composite, HEP-specific, density-defined. Fundamental measures as separate category. |
 | One canonical parameterization per distribution | Alternatives documented but exceptional; `Gamma` shape/rate vs shape/scale is the paradigmatic case. |
 | `superpose` for additive rate superposition | Measure addition; normalized mixtures via `normalize(superpose(weighted(...), ...))`. No hidden normalization. |
-| Model composition via `load` + `rebind` | Modules export kernels; `rebind` adapts interfaces; combining document shares parameters via flat namespace. |
+| Model composition via `load_module` + `rebind` | Modules export kernels; `rebind` adapts interfaces; combining document shares parameters via flat namespace. |
 | Giry-style (not classical Giry) semantics | $\sigma$-finite measure monad variant for unnormalized densities and rate measures. |
 | Explicit kernel/function interfaces in JSON | Self-describing serialization; tools don't need graph traversal. |
 | Embedding via Julia macros / Python decorators | Payoff of Python/Julia-compatible AST design; engine API, not FlatPPL spec. |

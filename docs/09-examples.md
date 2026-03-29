@@ -120,8 +120,8 @@ bern = bernstein(coefficients = [c0, c1, c2, c3], x = _)
 smooth_bkg = normalize(weighted(bern, Lebesgue(support = interval(lo, hi))))
 
 # Module loading and composition
-sig = load("signal_channel.flatppl")
-bkg = load("background_channel.flatppl")
+sig = load_module("signal_channel.flatppl")
+bkg = load_module("background_channel.flatppl")
 L_combined = joint_likelihood(
     likelihoodof(sig.model, sig.data),
     likelihoodof(bkg.model, bkg.data)

@@ -93,7 +93,7 @@ foundation.
 
 **Correspondence points.** FlatPPL's DAG reference structure maps to RooFit's server/client
 dependency graph; `likelihoodof` maps to `createNLL`;
-`pushfwd`/`lawof(record(...))` maps to named `RooAbsPdf` objects; `load` provides module
+`pushfwd`/`lawof(record(...))` maps to named `RooAbsPdf` objects; `load_module` provides module
 loading with qualified dot access; and `rebind` provides explicit interface adaptation for
 parameter sharing across modules, replacing RooFit-style import-time renaming with a
 declarative, object-level mechanism.

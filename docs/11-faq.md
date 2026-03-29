@@ -185,7 +185,7 @@ output with field names a, b, c. `relabel` is guaranteed bijective with no densi
 
 ### Q: How do modules and loading work?
 
-Each FlatPPL file is a module — a flat namespace of named bindings. `load("filename.flatppl")`
+Each FlatPPL file is a module — a flat namespace of named bindings. `load_module("filename.flatppl")`
 returns a module reference; members are accessed via dot syntax (`sig.model`, `bkg.data`).
 Assignment renames imported names into the current namespace: `signal_model = sig.model`.
 Multiple modules can coexist without name conflicts because qualified access (dot syntax)

@@ -6,7 +6,7 @@ an inference-agnostic design, calling conventions, broadcasting, and modules.
 ### <a id="sec:namespaces"></a>Names and namespaces
 
 Each FlatPPL code file, or embedded code block, represents a FlatPPL module.
-All variable bindings in a FlatPPL module share a single flat namespace, so all variable names must be unique across the module. Variables may be bound to any FlatPPL object type. This matches both HS³ (object names must be unique across a document) and RooFit (all `RooAbsArg` object names must be unique across a RooFit workspace). For multi-file FlatPPL models, `load(filename)` provides namespace isolation. See section [Modules](#sec:modules) for details.
+All variable bindings in a FlatPPL module share a single flat namespace, so all variable names must be unique across the module. Variables may be bound to any FlatPPL object type. This matches both HS³ (object names must be unique across a document) and RooFit (all `RooAbsArg` object names must be unique across a RooFit workspace). For multi-file FlatPPL models, `load_module(filename)` provides namespace isolation. See section [Modules](#sec:modules) for details.
 
 Record field names and table column names are local to their object and not
 part of the global namespace, nor are the argument names of functions
@@ -450,22 +450,22 @@ Each FlatPPL file is a **module**: a flat namespace of named bindings. This corr
 directly to a RooFit workspace and to an HS³ document. When FlatPPL code is embedded in
 Julia or Python via macros or decorators, each embedded block is a separate module.
 
-**`load("path/to/file.flatppl")`** loads a FlatPPL file and returns a module reference.
+**`load_module("path/to/file.flatppl")`** loads a FlatPPL file and returns a module reference.
 Members are accessed via dot syntax:
 
 ```flatppl
-sig = load("signal_channel.flatppl")
-bkg = load("background_channel.flatppl")
+sig = load_module("signal_channel.flatppl")
+bkg = load_module("background_channel.flatppl")
 
 sig_model = sig.model
 bkg_model = bkg.model
 ```
 
-**Load-time substitution.** `load` may also be called with keyword arguments to substitute
+**Load-time substitution.** `load_module` may also be called with keyword arguments to substitute
 explicit input nodes of the loaded module:
 
 ```flatppl
-sig = load("signal_channel.flatppl", mu = signal_strength, theta = nuisance)
+sig = load_module("signal_channel.flatppl", mu = signal_strength, theta = nuisance)
 ```
 
 The left-hand side of these bindings must refer to an input of the loaded module, while
@@ -473,8 +473,8 @@ the right-hand side may be any value node in the loading module. The value set o
 both must be compatible, so the the computational structure of the loaded module
 is not modified.
 
-**Path resolution.** Relative paths in `load(...)` are resolved relative to the directory
-of the FlatPPL file containing that `load(...)` call, not the host process's working
+**Path resolution.** Relative paths in `load_module(...)` are resolved relative to the directory
+of the FlatPPL file containing that `load_module(...)` call, not the host process's working
 directory. This keeps model directories relocatable. The forward slash `/` is the
 mandatory path separator on all platforms. Parent-directory traversal via `..` is allowed.
 Absolute paths are permitted but discouraged, as they prevent relocatable model
@@ -483,7 +483,26 @@ repositories and may be rejected by archival tools.
 **Aliasing** is just assignment: `sig_model = sig.model` creates a local alias — a
 reference to the same underlying object in the loaded module's DAG, not a clone.
 
-**Model composition.** The module system provides namespace isolation through `load`,
+### Loading tabular data
+
+**`load_table("path/to/file.ext")`** loads a tabular data file and returns a `table`
+value. The file format is inferred from the extension. All FlatPPL engines must support
+at least:
+
+- **CSV and WSV** (`.csv`, `.wsv`) — comma- or whitespace-separated values with column
+  names in the first row.
+- **JSON** (`.json`) — containing either an array of objects (array-of-structs) or an
+  object of arrays (struct-of-arrays).
+- **Arrow IPC** (`.arrow`, `.arrows`) — Apache Arrow Stream and File formats.
+
+```flatppl
+events = load_table("observed_events.csv")
+```
+
+Path resolution follows the same rules as `load_module`: relative to the directory of
+the FlatPPL file containing the call.
+
+**Model composition.** The module system provides namespace isolation through `load_module`,
 while `rebind` aligns mismatched parameter interfaces and `joint_likelihood` combines
 channels. Modules intended for composition should therefore export kernels with declared
 interfaces where appropriate. Richer conventions for large-scale combined analyses may be
