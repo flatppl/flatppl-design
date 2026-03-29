@@ -36,6 +36,8 @@ When a real and a complex value meet in arithmetic, the real is promoted to comp
 | `im` | Complex | The imaginary unit $i$ ($i^2 = -1$). Equivalent to `complex(0.0, 1.0)` |
 | `reals` | Set | The set of all real numbers ($\mathbb{R}$). Default support for `Lebesgue` |
 | `integers` | Set | The set of all integers ($\mathbb{Z}$). Default support for `Counting` |
+| `complexes` | Set | The set of all complex numbers ($\mathbb{C}$) |
+| `anything` | Set | Generic placeholder set for untyped interfaces (see [sets](#sets)) |
 
 The selector `all` and the hole token `_` are syntactic elements, not value constants;
 they are documented in [calling conventions and anonymous functions](04-design.md#sec:calling-convention).

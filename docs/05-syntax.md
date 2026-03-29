@@ -38,8 +38,8 @@ flatppl_module = @flatppl begin
 end
 ```
 
-Note: These examples just show possible ways to embed FlatPPL and are not normative,
-design choices in regard to embedding are left to specific FlatPPL implementations.
+Note: These examples illustrate possible embedding approaches and are not normative;
+design choices regarding embedding are left to specific FlatPPL implementations.
 
 ### Excluded and reserved syntax
 
@@ -52,7 +52,7 @@ FlatPPL has a very lean syntax:
 - **No type annotations.** Types are inferred from the semantic rules.
 - **No loops or conditionals.** Use `ifelse(cond, a, b)` for piecewise definitions
   (see [conditional expressions](07-functions.md#conditional-expressions)).
-- **No function definition blocks** Use `functionof`
+- **No function definition blocks.** Use `functionof`
   (see [language design](04-design.md#sec:functionof)).
 - **No tuples.** Arrays and records cover all use cases. Comma-separated names appear
   only in decomposition assignments (see below).

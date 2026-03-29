@@ -110,7 +110,7 @@ since total mass is a scalar value, not a measure.
 #### Density reweighting
 
 - **`weighted(weight, base)`** — density reweighting. Produces the measure $\nu$ with
-  $d\nu = f \cdot dM$. The weight must be non-negative (a non-negative constant or a
+  $d\nu = f \cdot dM$ (where $f$ is the weight and $M$ the base measure). The weight must be non-negative (a non-negative constant or a
   non-negative-valued function). When weight is a constant, this scales the total mass.
   When weight is a function, this reweights the density pointwise.
 
@@ -449,8 +449,9 @@ $\mathrm{chain}(\mu, \kappa) \equiv \mathrm{pushfwd}(\pi_Y, \mathrm{jointchain}(
 
   `logvolume` is the generalized log-volume-element of the forward function — it
   generalizes the log-absolute-determinant of the Jacobian to mappings between spaces of
-  different dimension. It may be a function or a scalar value (`logvolume = 0` for volume-preserving bijections). The convention is that
-  `logvolume` describes the forward map.
+  different dimension. It is evaluated at the source-space point $x$: in the standard
+  case, $\mathrm{logvolume}(x) = \log|\det J_f(x)|$. It may be a function or a scalar
+  value (`logvolume = 0` for volume-preserving bijections).
 
   The user asserts that `f_inv` is the inverse of `f` and that `logvolume` is correct with respect to how `f` is used in the FlatPPL module.
   FlatPPL implementations are not required to verify this.
