@@ -67,10 +67,10 @@ A frequentist engine can maximize `L` or compute profile likelihood ratios. A
 range-restricted likelihood for a sideband fit is also straightforward:
 
 ```flatppl
-L_obs_sideband = likelihoodof(
-    lawof(events, raw_eff_syst = raw_eff_syst),
-    [3.1, 5.7, 2.4, 8.9, 4.2],
-    restrict = interval(0.0, 3.0))
+sideband = interval(0.0, 3.0)
+sideband_data = filter(_ in sideband, [3.1, 5.7, 2.4, 8.9, 4.2])
+sideband_model = normalize(truncate(lawof(events, raw_eff_syst = raw_eff_syst), sideband))
+L_obs_sideband = likelihoodof(sideband_model, sideband_data)
 L_sideband = joint_likelihood(L_obs_sideband, L_constr)
 ```
 
@@ -113,7 +113,7 @@ K = lawof(noisy)
 noisy_array = draw(broadcast(K, a = A))  # independent Normal draws at each element
 
 # Truncated distribution (model physics)
-positive_sigma = draw(truncate(Normal(mu = 1.0, sigma = 0.5), interval(0, inf)))
+positive_sigma = draw(normalize(truncate(Normal(mu = 1.0, sigma = 0.5), interval(0, inf))))
 
 # Density-defined distribution (Bernstein polynomial)
 bern = bernstein(coefficients = [c0, c1, c2, c3], x = _)

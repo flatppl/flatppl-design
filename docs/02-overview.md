@@ -139,7 +139,7 @@ The table below provides a compact overview of the language. Each family name li
 | [Measure combinators](06-measure-algebra.md#sec:measure-algebra) | `weighted`, `logweighted`, `normalize`, `totalmass`, `superpose`, `joint`, `jointchain`, `chain`, `iid`, `truncate`, `pushfwd` |
 | [Analysis operations](06-measure-algebra.md#sec:measure-algebra) | `likelihoodof`, `joint_likelihood`, `densityof`, `logdensityof`, `bayesupdate` |
 | [Higher-order operations](07-functions.md#sec:functions) | `broadcast`, `fchain`, `bijection` |
-| [Data access and reshaping](07-functions.md#sec:functions) | `get`, `cat`, `record`, `all` |
+| [Data access and reshaping](07-functions.md#sec:functions) | `get`, `cat`, `record`, `all`, `filter`, `selectbins` |
 | [Constructors](07-functions.md#sec:functions) | `table`, `rowstack`, `colstack`, `linspace`, `extlinspace`, `interval`, `window`, `fill` |
 | [Binning and interpolation](07-functions.md#sec:functions) | `bincounts`, `interp_p*lin`, `interp_p*exp` |
 | [Shape functions](07-functions.md#sec:functions) | `polynomial`, `bernstein`, `stepwise` |
@@ -151,7 +151,7 @@ The table below provides a compact overview of the language. Each family name li
 | [Module operations](04-design.md#sec:modules) | `load_module`, `load_table` |
 | [Constants](03-value-types.md#sec:valuetypes) | `true`, `false`, `inf`, `pi`, `im` |
 | [Predefined sets](03-value-types.md#sec:valuetypes) | `reals`, `integers`, `complexes`, `anything` |
-| [Selectors](04-design.md#sec:calling-convention) | `_` (holes), `all` (slicing) |
+| [Selectors and operators](04-design.md#sec:calling-convention) | `_` (holes), `all` (slicing), `in` (membership) |
 
 ### A tour of FlatPPL
 
@@ -317,8 +317,8 @@ hj = jointchain(
     pushfwd(relabel(_, ["a"]), M1),
     pushfwd(relabel(_, ["b"]), K_b))
 
-# Truncated distribution
-halfnorm = truncate(Normal(mu = 0, sigma = 1),
+# Truncated (unnormalized) measure
+positive_normal = truncate(Normal(mu = 0, sigma = 1),
     interval(0, inf))
 
 # Fundamental measures and density-defined distributions
@@ -372,8 +372,8 @@ Likelihood construction, combination, and posterior construction:
 
 ```flatppl
 L = likelihoodof(lawof(obs), data)
-L_sub = likelihoodof(lawof(obs), data,
-    restrict = window(a = interval(2.0, 8.0)))
+R = interval(2.0, 8.0)
+L_sub = likelihoodof(normalize(truncate(lawof(obs), R)), filter(_ in R, data))
 L_total = joint_likelihood(L1, L2)
 
 # Unnormalized posterior

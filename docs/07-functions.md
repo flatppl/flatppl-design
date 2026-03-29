@@ -526,7 +526,28 @@ engineering.
 | Function | Arguments | Description |
 |---|---|---|
 | `interval` | `a`, `b` | Closed interval [a, b] |
-| `window` | `name = interval(...)`, ... | Multi-dimensional region for `restrict` |
+| `window` | `name = interval(...)`, ... | Multi-dimensional region (named intervals) |
+
+### Membership, filtering, and bin selection
+
+- **`x in S`** — boolean membership predicate. Returns `true` if `x` lies in set `S`.
+  Works for scalar values with `interval(...)` and record-valued observations with
+  `window(...)`. Valid infix syntax in both Python and Julia.
+
+- **`filter(pred, data)`** — filters an array or table by a boolean predicate, returning
+  a shorter array or table containing only elements/rows for which `pred` returns `true`.
+
+  ```flatppl
+  data_in_range = filter(_ in interval(2.0, 8.0), data)
+  ```
+
+- **`selectbins(edges, region, counts)`** — selects whole-bin counts for bins whose
+  intervals intersect `region`. Returns a shorter count array. No fractional-bin clipping
+  or rebinning — bins are either fully included or excluded.
+
+  ```flatppl
+  restricted_counts = selectbins(edges, interval(2.0, 8.0), observed_counts)
+  ```
 
 ### Inputs, value sets, and structural renaming
 

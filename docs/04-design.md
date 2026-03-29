@@ -113,7 +113,8 @@ node `y` into the graph. `functionof(y)` goes in the opposite direction:
 it reifies the ancestor subgraph of a given value `y` as a first-class function.
 
 Conversely, a probability measure represents a reified stochastic DAG, either an implicit (built-in) or explicit one.
-`x = draw(m)` introduces a stochastic node `x` from a probability measure `m`.
+`x = draw(m)` introduces a stochastic node `x` by drawing a variate from a normalized
+measure (i.e. a probability measure) `m`.
 In the other direction, `m = lawof(x)` reifies the ancestor subgraph of a given value `x`
 as a probability measure or Markov kernel, depending on whether there are free inputs.
 

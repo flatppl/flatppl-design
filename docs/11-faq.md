@@ -53,18 +53,19 @@ may require specialized backends such as simulation-based inference.
 
 ### Q: How does truncation and range restriction work?
 
-There are two distinct mechanisms:
+**`truncate(M, S)`** restricts the support of a measure to set `S` without normalizing.
+For model-physics truncation (e.g., a physically positive parameter), wrap in
+`normalize`: `draw(normalize(truncate(Normal(...), interval(0, inf))))`.
 
-- **`truncate(M, region)`** — intrinsic truncation of a distribution. Part of the model
-  physics. "This parameter is physically positive." The region is `interval(lo, hi)` for
-  scalar measures or `window(...)` for record-valued measures. The truncated distribution is
-  a proper probability measure, renormalized over the region.
-- **`restrict = window(...)`** on `likelihoodof` — analysis-level range restriction.
-  "I'm fitting in this window." Atomically truncates the model AND filters the data.
-  Provides a clean semantic bridge to RooFit's `createNLL(data, Range(...))`.
+For analysis-level range restriction (fitting in a subrange), explicitly restrict the
+model and filter the data:
 
-The model and data remain unmodified in both cases; the restriction is a property of the
-likelihood object being constructed.
+```flatppl
+R = interval(2.0, 8.0)
+L_R = likelihoodof(normalize(truncate(model, R)), filter(_ in R, data))
+```
+
+For binned models, use `selectbins` instead of `filter`.
 
 ### Q: How does `likelihoodof` handle different data formats?
 

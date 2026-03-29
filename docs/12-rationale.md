@@ -31,7 +31,7 @@
 | Fundamental measures: `Lebesgue`, `Counting`, `Dirac` | Reference measures made explicit; `Uniform` $\equiv$ `normalize(Lebesgue(support=...))`. |
 | `weighted(f, M)` and `logweighted(logf, M)` | General measure reweighting; subsumes `scale`, `log_rescale`, `posteriorof`, `DensityMeasure`. |
 | `bayesupdate` for likelihood-prior combination | Dedicated operation; `weighted`/`logweighted` accept only numeric weights. |
-| `normalize(M)` and `totalmass(M)` | Explicit normalization; no hidden normalization in constructors. |
+| `normalize(M)` and `totalmass(M)` | Normalization is always explicit; no hidden normalization in constructors or measure algebra. This allows term-rewriting engines to defer, combine and elide some normalization steps. |
 | Shape functions: `polynomial`, `bernstein`, `stepwise` | Density shapes as functions; fed to `weighted` + `Lebesgue` + `normalize`. |
 | `reals`, `integers` as predefined set constants | Explicit supports for `Lebesgue` and `Counting`; no default arguments. |
 | Prior–likelihood alignment by variate structure | The prior's variate structure must match the likelihood's parameter interface; field names provide unambiguous matching. |
@@ -42,8 +42,8 @@
 | `cat`: same-kind concat, duplicate fields = error | Well-defined, unambiguous concatenation. |
 | Single flat namespace (top-level bindings only) | Record fields / table columns are field names, not top-level bindings. |
 | Measures/likelihoods/functions not storable in containers | Top-level bindings only; keeps type system simple. |
-| `truncate(M, region)` for model physics | Uses `interval`/`window` region objects, consistent with `restrict`. |
-| `restrict = window(...)` for analysis ranges | Atomic model truncation + data filtering in `likelihoodof`. |
+| `truncate(M, S)` for support restriction | Pure support restriction, no normalization. Uses `interval`/`window` region objects. |
+| Range restriction via `truncate` + `filter` | Explicit model restriction and data filtering; no magic in `likelihoodof`. `selectbins` for binned models. |
 | `interval`, `window` as distinguished JSON keys | Structural identification without function-name parsing. |
 | `table` as first-class dataset type | Named columns of equal length with dual access (column by name, row by index). Auto-splats by column; broadcasts row-wise. PoissonProcess over records produces tables. |
 | Table columns must be 1D | Allowing matrix- or tensor-valued columns would force a leading-axis convention for row-iteration and broadcasting, which FlatPPL intentionally avoids. |
