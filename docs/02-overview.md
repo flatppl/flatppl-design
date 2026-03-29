@@ -98,7 +98,7 @@ results of ordinary functions, data, external inputs) or stochastic (variates in
 `draw(...)`). In generative mode, each abstract value evaluates to a single concrete value;
 for stochastic abstract values, that concrete value is generated randomly once.
 
-**Kernels, measures and distributions.** Transition kernels are mappings from an input space to ($\sigma$-finite) measures.
+**Kernels, measures and distributions.** Transition kernels are mappings from an input space to measures.
 FlatPPL does not distinguish between a kernel with an empty interface and a measure: in FlatPPL, such a kernel *is* a measure (see [variates and measures](04-design.md#sec:variate-measure)).
 Normalized measures (kernels) are probability measures (Markov kernels), also called probability distributions.
 Variates can only be drawn from probability measures.

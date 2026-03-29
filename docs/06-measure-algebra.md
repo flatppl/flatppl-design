@@ -1,111 +1,80 @@
 ## <a id="sec:measure-algebra"></a>Measure algebra and analysis
 
 This section documents the measure-level operations that form the compositional core of
-FlatPPL. FlatPPL has a rigorous measure-theoretic semantics; formal definitions are given
-locally alongside the constructs they define.
+FlatPPL.
 
 ### Measure-theoretic foundations
 
-The language's semantics are defined in terms of measure theory, following the [Giry (1982)](14-references.md#giry1982)
-measure monad tradition in probabilistic modeling/programming semantics.
+A **measurable space** is a pair $(X, \Sigma_X)$ of a set and a $\sigma$-algebra. All
+spaces arising in FlatPPL are standard Borel spaces ($\mathbb{R}$, $\mathbb{Z}$, and
+finite products thereof), where the $\sigma$-algebra is the standard Borel
+$\sigma$-algebra and can be left implicit. A **measure** on $X$ is a $\sigma$-additive
+function $\mu: \Sigma_X \to [0, \infty]$. A **probability measure** has $\mu(X) = 1$.
+All measures in FlatPPL are **$\sigma$-finite** (admitting a countable cover of
+finite-measure sets), which ensures that densities (Radon-Nikodym derivatives) exist
+and that product and marginalization operations are well-defined
+([Staton, 2017](14-references.md#staton2017)). In the rest of this document, "measure"
+means "$\sigma$-finite measure."
 
-A **measurable space** is a pair $(X, \Sigma_X)$ of a set X and a $\sigma$-algebra $\Sigma_X$ on $X$. We omit the
-$\sigma$-algebra when it is clear from context.
+A **transition kernel** (or **kernel**) from $X$ to $Y$ is a measurable function
+$\kappa: X \to M(Y)$, where $M(Y)$ is the space of measures on $Y$. When each
+$\kappa(x, \cdot)$ is a probability measure, the kernel is called a **Markov kernel**.
+In FlatPPL, kernels are represented as functions that map value points to measures.
 
-A **measure** on X is a $\sigma$-additive function $\mu: \Sigma_X \to [0, \infty]$. A **probability measure** is a
-measure with $\mu(X) = 1$. A **$\sigma$-finite measure** is one for which $X$ admits a countable cover
-$\{X_n\}$ with $\mu(X_n) < \infty$ for each $n$. We work with $\sigma$-finite measures throughout, following
-the convention in modern probabilistic language semantics ([Staton, 2017](14-references.md#staton2017)).
+The classical Giry monad operates on probability measures, which are normalized. FlatPPL extends this to $\sigma$-finite measures in general, e.g. to represent non-normalized posteriors and intensity measures. The
+algebraic structure carries over to this
+setting; [Staton (2017)](14-references.md#staton2017) provides the formal basis.
 
-A note on the monad structure: the classical Giry monad operates on probability measures.
-Our language works with $\sigma$-finite measures to accommodate unnormalized densities and rate
-measures (as needed for Poisson point processes and likelihood objects). The algebraic
-structure we use — unit (Dirac), bind (draw), and the associated laws — extends naturally to
-the $\sigma$-finite setting, forming a measure monad variant. We refer to this as "Giry-style"
-semantics throughout; readers interested in the categorical details should consult [Staton (2017)](14-references.md#staton2017) for the s-finite generalization and its commutative structure. In practice,
-all measures arising from the language's constructs are both $\sigma$-finite and s-finite;
-Staton's s-finite monad provides the formal basis for commutativity of independent draws.
+**Density convention.** All density formulas in this section are with respect to a
+reference measure implied by the constituent distribution types: Lebesgue for continuous
+variates, counting measure for discrete variates. When a kernel $\kappa(\theta)$ is
+parameterized by $\theta$, the family is assumed dominated by a single
+$\theta$-independent reference measure.
 
-A **transition kernel** (or **kernel**) from X to Y is a measurable function $\kappa: X \to M(Y)$, where M(Y) is the
-space of measures on Y. Equivalently, for each $x \in X$, $\kappa(x, \cdot)$ is a measure on $Y$,
-and for each measurable $B \subseteq Y$, the map $x \mapsto \kappa(x, B)$ is measurable. This is the
-standard notion from categorical probability. When each $\kappa(x, \cdot)$ is a probability measure,
-the kernel is called a **Markov kernel**.
+### The measure monad
 
-**Density convention.** All density formulas in this section are stated with respect to a
-common reference measure implied by the constituent distribution types: the Lebesgue
-measure for continuous variates and the counting measure for discrete variates, as
-specified per distribution in the catalog. When a family of measures $\kappa(\theta)$ is
-parameterized by $\theta$, we assume the family is dominated by a single reference measure
-that does not depend on $\theta$, so that densities (Radon-Nikodym derivatives) are
-well-defined and comparable across parameter values.
+The Giry-style measure monad is defined by two operations:
 
-### The measure monad and its operations
-
-The Giry-style measure monad has three core operations:
-
-- **Unit (return)**: $\eta_X: X \to M(X)$ defined by $\eta_X(x) = \delta_x$ (the Dirac measure at x).
-- **Multiplication (join)**: $\mu_X: M(M(X)) \to M(X)$ defined by integrating measures.
-- **Bind**: Given a measure $\nu \in M(X)$ and a kernel $\kappa: X \to M(Y)$, the bind $\nu \mathbin{\texttt{>>=}} \kappa$ produces
-  a measure in M(Y) defined by $(\nu \mathbin{\texttt{>>=}} \kappa)(B) = \int_X \kappa(x)(B)\, d\nu(x)$.
-
-In our language:
-
-- `draw(M)` is the syntactic form for introducing a stochastic variable from a measure M.
-  In the denotational semantics, a sequence of `draw` statements builds a measure by
-  iterated monadic bind (Kleisli composition of kernels). The explicit bind operation is
-  `chain(M, K)`, which takes a measure and a kernel and produces the marginalized result.
-- `Dirac(value = v)` corresponds to **return/unit** — it wraps a concrete value into a
-  point-mass measure.
-- `lawof(x)` reads the **denotation** of an ancestor-closed sub-DAG as a measure. It is
-  not a monadic operation per se — it is a meta-operation that extracts the marginal measure
-  that the model fragment rooted at x denotes.
-- `functionof(x)` extracts a deterministic function from a sub-DAG. A deterministic
-  function $f: X \to Y$ embeds canonically into the Kleisli category via $x \mapsto \mathrm{Dirac}(f(x))$,
-  so `functionof` can be understood as extracting the pre-Dirac function that `lawof` would
-  wrap.
+- **Unit**: $\eta_X(x) = \delta_x$ (Dirac measure at $x$). In FlatPPL: `Dirac(value = v)`.
+- **Bind**: $(\nu \mathbin{\texttt{>>=}} \kappa)(B) = \int_X \kappa(x)(B)\, d\nu(x)$. In FlatPPL: `chain(M, K)`.
 
 ### Fundamental measures and measure algebra
 
 #### Fundamental measures
 
-The language provides three foundational measures — the mathematical atoms from which all
-probability distributions are built. These include $\sigma$-finite reference measures (`Lebesgue`,
-`Counting`) and the point-mass probability measure (`Dirac`).
+FlatPPL provides three fundamental measures: the reference measures `Lebesgue` and
+`Counting`, and the point-mass measure `Dirac`.
 
-- `Lebesgue(support = reals)` — the Lebesgue measure on $\mathbb{R}$, concentrated on the given
-  support. `Lebesgue(support = reals)` has density 1 everywhere.
-  `Lebesgue(support = interval(0, inf))` has density 1 on $\mathbb{R}^+$ and density 0 elsewhere.
-  `iid(Lebesgue(support = reals), n)` yields the Lebesgue measure on $\mathbb{R}^n$. This is the
-  reference measure for all continuous probability distributions in the standard.
-- `Counting(support = integers)` — the counting measure on $\mathbb{Z}$, concentrated on the given
-  support. `Counting(support = integers)` has mass 1 at every integer.
-  `Counting(support = interval(0, inf))` gives the counting measure on $\mathbb{N}_0$. The effective
-  support is the intersection of the supplied set with $\mathbb{Z}$ — so `interval(0, inf)` means
-  the non-negative integers, not a continuous half-line. This is the reference measure for
-  all discrete probability distributions.
-- `Dirac(value = v)` — the point-mass (probability) measure at value v (of any variate
-  type: scalar, array, or record). Unlike `Lebesgue` and `Counting`, `Dirac` is already a
-  probability measure (total mass 1). Used in spike-and-slab priors and for injecting known
-  constants into measure-level expressions.
+- `Lebesgue(support = S)` — the Lebesgue measure on $\mathbb{R}$, restricted to support
+  `S`. Density is 1 inside `S`, 0 outside. Reference measure for all continuous
+  distributions. `iid(Lebesgue(support = reals), n)` yields the Lebesgue measure on
+  $\mathbb{R}^n$.
+- `Counting(support = S)` — the counting measure on $\mathbb{Z}$, restricted to support
+  `S`. Mass 1 at every integer in `S`. Reference measure for all discrete distributions.
+- `Dirac(value = v)` — point-mass probability measure at `v` for any variate type.
 
 The predefined constants `reals` (equivalent to `interval(-inf, inf)`) and `integers`
 (the set of all integers) serve as the default supports for the Lebesgue and counting
-measures respectively. All measures live on a common underlying space ($\mathbb{R}$, $\mathbb{Z}$, or product
-spaces thereof); the `support` specifies where the measure is nonzero. Outside the support,
-density is zero. This ensures composability: any two measures on the same underlying space
-can be combined via the measure algebra.
+measures respectively. The `support` parameter specifies where the measure is nonzero; density is zero outside.
+Measure algebra operations require their operands to share the same variate space
+(same type and dimension).
 
-**Uniform kernel extension.** A measure is a kernel with empty input interface. All
-measure algebra operations accept both uniformly. When an operation is applied to a kernel $\kappa: \Theta \to M(X)$, it acts **pointwise** on the parameter
-space: the result is a kernel that applies the operation at each parameter point, with the
-same input interface. For example, `pushfwd(f, K)` denotes the kernel $\theta \mapsto \mathrm{pushfwd}(f, \kappa(\theta))$,
-`weighted(w, K)` denotes $\theta \mapsto \mathrm{weighted}(w(\theta), \kappa(\theta))$, and so on. This principle applies
-uniformly to `weighted`, `logweighted`, `normalize`, `totalmass`, `superpose`, `joint`,
-`iid`, `truncate`, `pushfwd`, and `PoissonProcess`. For `jointchain` and `chain`, the
-kernel story involves interface binding rather than simple pointwise application (see the
-Dependent Composition section). `totalmass` on a kernel returns a function (not a kernel),
-since total mass is a scalar value, not a measure.
+**Uniform kernel extension.** Mathematically, a measure is equivalent to a
+transition kernel with an empty first argument. So in FlatPPL, we unify measures
+and kernels and identify measures with nullary kernels. Measure algebra operations
+accept both kernels in general and measures as a (very important) special case
+of kernels. On a kernel, the operation applies to the output measure at each input point:
+
+- `pushfwd(f, K)` denotes $\theta \mapsto \mathrm{pushfwd}(f, \kappa(\theta))$
+- `weighted(w, K)` denotes $\theta \mapsto \mathrm{weighted}(w(\theta), \kappa(\theta))$
+
+This applies to all measure-to-measure operations except `jointchain` and `chain`, which
+require non-nullary kernels in all but the first argument
+(see [dependent composition](#dependent-composition)).
+
+**Operations that map measures to values** like `totalmass`, `densityof` and `logdensityof` require
+closed measures (i.e. nullary kernels) as inputs. `densityof(M, x)` and
+`logdensityof(M, x)` evaluate the density of a measure at a point with respect to an implicit reference measure.
 
 #### Density reweighting
 
@@ -116,53 +85,24 @@ since total mass is a scalar value, not a measure.
 
   Measure math: $\nu(A) = \int_A f(x)\, dM(x)$, equivalently $d\nu = f \cdot dM$.
 
-  This is the fundamental operation for constructing density-defined distributions:
   `normalize(weighted(f, Lebesgue(support = S)))` produces a probability distribution
-  whose density w.r.t. the Lebesgue measure on S is proportional to f.
-  Keyword form: `weighted(weight=, base=)`. Positional calling also permitted.
+  whose density w.r.t. Lebesgue on $S$ is proportional to $f$.
 
-- **`logweighted(logweight, base)`** — log-density reweighting. Produces the measure $\nu$
-  with $d\nu = \exp(g) \cdot dM$, computed in log-space for numerical stability.
-
-  Measure math: $d\nu = e^g \cdot dM$.
-
-  Accepts a function producing log-values, a constant log-factor, or a **likelihood
-  object** (from which the log-density is implicitly extracted via the likelihood's
-  `logdensityof` interface — this is a special case, not a general weakening of the
-  "likelihoods are objects, not functions" principle). The primary use case is constructing
-  unnormalized posteriors: `logweighted(L, prior)`. The lin/log safety rule: `logweighted`
-  may accept a likelihood object; `weighted` may NOT.
-  Keyword form: `logweighted(logweight=, base=)`. Positional calling also permitted.
-
-**Formal semantics.** Given a measure $\mu$ on $X$ and a measurable non-negative function $f: X \to \mathbb{R}_{\geq 0}$,
-`weighted(f, M)` denotes the measure $\nu$ defined by $d\nu = f \cdot d\mu$. When $f$ is a constant $c$,
-this is ordinary mass scaling: $\nu = c \cdot \mu$.
-
-`logweighted(g, M)` denotes the measure $\nu$ defined by $d\nu = \exp(g) \cdot d\mu$, computed in
-log-space for numerical stability.
-
-When the first argument of `logweighted` is a likelihood object L with domain $\Theta$,
-`logweighted(L, M)` denotes the measure $\nu$ with $d\nu(\theta) = L(\theta) \cdot d\mu(\theta)$, where $L(\theta)$ is the
-likelihood density evaluated at $\theta$. The log-density of L is extracted implicitly;
-`weighted` does NOT accept likelihood objects (this prevents confusing densities with
-log-densities).
+- **`logweighted(logweight, base)`** — log-density reweighting: $d\nu = \exp(g) \cdot dM$
+  (where $g$ is the logweight and $M$ the base), computed in log-space for numerical
+  stability. Accepts a log-valued function, a constant log-factor, or a **likelihood
+  object** (the log-density is extracted implicitly). The primary use case is constructing
+  unnormalized posteriors: `logweighted(L, prior)`. `weighted` does NOT accept likelihood
+  objects — this prevents confusing densities with log-densities.
 
 #### Normalization and mass
 
-- **`normalize(MK)`** — given a $\sigma$-finite measure or kernel `MK` with finite total mass, returns the normalized probability measure or kernel:
-  $\nu = M / M(\Omega)$, where $M(\Omega) = \mathrm{totalmass}(M)$.
+- **`normalize(M)`** — given a measure $M$ with finite total mass
+  $Z = \mathrm{totalmass}(M) > 0$, returns the probability measure $M / Z$.
+  If $Z = 0$ or $Z = \infty$, the result is undefined. Works on kernels pointwise.
 
-- **`totalmass(M)`** — returns the total mass of measure `M`:
-  $\mathrm{totalmass}(M) = \int dM(x) = M(\Omega)$.
-
-**Formal semantics.** Given a $\sigma$-finite measure $\mu$ with finite total mass $Z = \int d\mu > 0$, `normalize(M)` denotes
-the probability measure $\mu/Z$. If $Z = 0$ or $Z = \infty$, the normalized measure is undefined.
-
-`totalmass(M)` denotes the scalar $Z = \int d\mu$.
-
-The unnormalized posterior measure for a likelihood $L$ and prior $\pi$ is `logweighted(L, prior)`,
-which has total mass equal to the evidence $Z = \int L(\theta)\, d\pi(\theta)$. The normalized posterior is
-`normalize(logweighted(L, prior))`.
+- **`totalmass(M)`** — returns the total mass $Z = \int dM(x)$ as a scalar value.
+  Requires a closed measure (not a non-nullary kernel).
 
 #### Additive superposition
 
@@ -192,13 +132,7 @@ which has total mass equal to the evidence $Z = \int L(\theta)\, d\pi(\theta)$. 
   mix = normalize(superpose(weighted(f_sig, signal), weighted(1 - f_sig, background)))
   ```
 
-  Maps to `RooAddPdf` in extended mode (coefficients are expected counts) in RooFit.
-  Works on kernels pointwise.
-
-**Formal semantics.** Given measures $\mu_1, \ldots, \mu_n$ on the same space $X$, `superpose(M1, ..., Mn)` denotes the
-measure $\nu = \mu_1 + \ldots + \mu_n$, i.e. $\nu(A) = \mu_1(A) + \ldots + \mu_n(A)$. The density is the sum of
-the component densities: $p_\nu(x) = p_1(x) + \ldots + p_n(x)$. All components must have the same
-variate type and dimension.
+  Maps to `RooAddPdf` in extended mode in RooFit. Works on kernels pointwise.
 
 #### Independent composition
 
@@ -375,31 +309,6 @@ variate type and dimension.
   $\mathrm{chain}(M, K) \equiv \mathrm{pushfwd}(\pi_Y, \mathrm{jointchain}(M, K))$ where $\pi_Y$ projects onto $K$'s output space.
   `joint` is a special case of `jointchain` with constant kernels (no dependence).
 
-**Formal semantics.** Given a measure $\mu$ on $X$ and a kernel $\kappa: X \to M(Y)$, `jointchain(M, K)` denotes the dependent
-joint measure on $X \times Y$ with density $p(x, y) = p_\mu(x) \cdot p_\kappa(y|x)$. This is the kernel
-product (sometimes called the semi-direct product of measures):
-$(\mu \otimes \kappa)(C) = \int (\delta_x \otimes \kappa(x))(C)\, d\mu(x)$.
-
-The variadic form `jointchain(M, K1, K2, ...)` is measure-theoretically left-associative:
-$\mathrm{jointchain}(M, K_1, K_2) \equiv \mathrm{jointchain}(\mathrm{jointchain}(M, K_1), K_2)$.
-(This equivalence is at the density/measure level; the variadic form processes all arguments
-simultaneously for the shape-class rule.)
-
-When the first argument is a kernel $\lambda: \Theta \to M(X)$ rather than a closed measure, the result
-is a kernel $\Theta \to M(X \times Y)$ — Kleisli composition with retained history.
-
-**Formal semantics.** Given a measure $\mu$ on $X$ and a kernel $\kappa: X \to M(Y)$, `chain(M, K)` denotes the marginal
-measure on $Y$ obtained by integrating out $X$: $\nu(B) = \int \kappa(x, B)\, d\mu(x)$. This is the
-standard monadic bind. Density: $p(y) = \int p_\mu(x) \cdot p_\kappa(y|x)\, dx$.
-
-The variadic form `chain(M, K1, K2, ...)` is left-associative:
-$\mathrm{chain}(M, K_1, K_2) \equiv \mathrm{chain}(\mathrm{chain}(M, K_1), K_2)$.
-
-When the first argument is a kernel $\lambda: \Theta \to M(X)$, the result is a kernel $\Theta \to M(Y)$ —
-standard Kleisli composition (without retained history).
-
-$\mathrm{chain}(\mu, \kappa) \equiv \mathrm{pushfwd}(\pi_Y, \mathrm{jointchain}(\mu, \kappa))$ where $\pi_Y$ is the projection onto $Y$.
-
 #### Restriction
 
 - **`truncate(M, region)`** — truncated distribution: restricts a measure to a region and
@@ -440,89 +349,37 @@ $\mathrm{chain}(\mu, \kappa) \equiv \mathrm{pushfwd}(\pi_Y, \mathrm{jointchain}(
   pushfwd(get(_, [0, 3]), model)       # model has Array[5] → keeps elements 0, 3
   ```
 
-  **`bijection(f, f_inv, logvolume)`** annotates a function `f` with its inverse `f_inv`
-  and the log-volume-element `logvolume` of the forward map. The result is a function that is semantically `f`.
-  
-  FlatPPL engines will often need the inverse
-  of `f` and the volume element when computing densities of pushforward measures. Function inverses are hard to derive automatically and the computation of Jacobian determinant via automatic differentiation can be very inefficient, while the user or system that authors/generates FlatPPL may
-  have access to both in closed form.
+  On kernels, `pushfwd` acts pointwise: `pushfwd(f, K)` denotes the kernel
+  $\theta \mapsto f_*(\kappa(\theta))$.
 
-  `logvolume` is the generalized log-volume-element of the forward function — it
-  generalizes the log-absolute-determinant of the Jacobian to mappings between spaces of
-  different dimension. It is evaluated at the source-space point $x$: in the standard
-  case, $\mathrm{logvolume}(x) = \log|\det J_f(x)|$. It may be a function or a scalar
-  value (`logvolume = 0` for volume-preserving bijections).
+#### Bijection annotation
 
-  The user asserts that `f_inv` is the inverse of `f` and that `logvolume` is correct with respect to how `f` is used in the FlatPPL module.
-  FlatPPL implementations are not required to verify this.
+**`bijection(f, f_inv, logvolume)`** annotates a function `f` with its inverse `f_inv`
+and the log-volume-element `logvolume` of the forward map. The result is a function
+that is semantically identical to `f`. The annotation is consumed by `pushfwd` when
+computing densities, avoiding the need for symbolic inversion or automatic
+differentiation of Jacobians.
 
-  For standard cases like `exp`, FlatPPL engines can be expected to know the inverse and volume element, but it would be written in FlatPPL as
+`logvolume` is the generalized log-volume-element of the forward function, evaluated at
+the source-space point $x$: in the standard case,
+$\mathrm{logvolume}(x) = \log|\det J_f(x)|$. It generalizes the log-absolute-determinant
+of the Jacobian to mappings between spaces of different dimension. It may be a function
+or a scalar (`logvolume = 0` for volume-preserving bijections).
 
-  ```flatppl
-  exp_bijection = bijection(exp, log, identity)
-  ```
-
-  A more interesting example that includes an explicit definition of domain and codomain of the function is squaring on the positive reals:
-
-  ```flatppl
-  pos_x = elementof(interval(0, inf))
-  sq = bijection(
-      functionof(pow(pos_x, 2), x = pos_x),
-      functionof(sqrt(pos_x), x = pos_x),
-      log(2 * _)
-  )
-  ```
-
-  ```flatppl
-  # Half-normal from a standard normal
-  half_normal = pushfwd(sq, truncate(Normal(mu = 0, sigma = 1), interval(0, inf)))
-  ```
-
----
-
-**Formal semantics.** Given a measure $\mu$ on $X$ and a function $f: X \to Y$, `pushfwd(f, M)` denotes the pushforward
-measure $f_* \mu$ on $Y$, defined by $(f_* \mu)(B) = \mu(f^{-1}(B))$ for measurable $B \subseteq Y$.
-
-When the second argument is a kernel $\kappa: \Theta \to M(X)$ rather than a closed measure, `pushfwd`
-acts pointwise: `pushfwd(f, K)` denotes the kernel $\theta \mapsto f_*(\kappa(\theta))$ from $\Theta$ to $M(Y)$.
-
-Projection and relabeling are expressed through `pushfwd` with value-level functions:
-`pushfwd(get(_, ["a", "c"]), M)` denotes the pushforward through the projection that
-selects named fields, marginalizing over omitted fields. `pushfwd(relabel(_, ["a", "b"]),
-M)` denotes the pushforward through structural renaming.
-
-These operations are named explicitly (rather than using `*` and `+`) to avoid the
-ambiguity with variate arithmetic described in [core concepts](02-overview.md#core-concepts). The naming
-convention separates value-level operations (plain English: `sum`, `product`, `cat`,
-`get`, `relabel`) from measure-level operations (distributional concepts: `joint`,
-`jointchain`, `chain`, `weighted`, `superpose`, `iid`, `truncate`).
-
-**Input vs. output interface operations.** The language provides complementary mechanisms
-for both sides of a callable's interface:
-
-- **Output side:** `pushfwd(relabel(_, ...), M)` names variate components;
-  `pushfwd(get(_, ...), M)` projects/marginalizes; `pushfwd(f, M)` transforms.
-- **Input side:** `lawof`/`functionof` keyword arguments declare and name the input
-  interface (potentially cutting the graph).
-
-**Formal relationships (informative).** The following equivalences illustrate how the
-fundamental measures, measure algebra, and built-in distributions relate:
+The user asserts correctness of `f_inv` and `logvolume`. FlatPPL implementations are
+not required to verify these properties.
 
 ```flatppl
-Uniform(support = interval(a, b))
-    ≡ normalize(Lebesgue(support = interval(a, b)))
+# Squaring on the positive reals
+pos_x = elementof(interval(0, inf))
+sq = bijection(
+    functionof(pow(pos_x, 2), x = pos_x),
+    functionof(sqrt(pos_x), x = pos_x),
+    log(2 * _)
+)
 
-truncate(M, region)
-    ≡ normalize(weighted(indicator(region), M))
-
-unnormalized_posterior
-    = logweighted(L, prior)
-
-joint(M1, M2)        # independent:    p(a,b) = p(a) · p(b)
-jointchain(M, K)      # dep., retained: p(a,b) = p(a) · p(b|a)
-chain(M, K)           # dep., marginal: p(b)   = ∫ p(a) · p(b|a) da
-
-normalize(superpose(weighted(w1, M1), weighted(w2, M2)))   # convex mixture
+# Half-normal from a standard normal
+half_normal = pushfwd(sq, truncate(Normal(mu = 0, sigma = 1), interval(0, inf)))
 ```
 
 ### Analysis operations
@@ -543,17 +400,10 @@ prior or posterior:
 > requires the model family to admit a parameter-independent dominating measure; outside
 > that dominated setting, likelihood construction is not automatic.
 
-This is a prior-free definition. The likelihood exists and is meaningful without any
-Bayesian apparatus. It can be maximized (MLE), profiled, used to construct test statistics
-(likelihood ratios), or combined with a prior to form a posterior.
+This is a prior-free definition. The likelihood can be maximized (MLE), profiled, used
+to construct test statistics, or combined with a prior to form a posterior.
 
-It is sometimes noted that under Bayes' theorem, the Radon-Nikodym derivative of the
-posterior with respect to the prior is proportional to the likelihood. This proportionality
-is a consequence, not the definition. The likelihood is defined from the model's
-forward-generative structure alone.
-
-A likelihood object is not merely a function $\Theta \to \mathbb{R}_{\geq 0}$. It is a semantic object that
-carries:
+A likelihood object carries:
 
 - The **input parameter interface**: an ordered list of the input parameter names and their
   types (the domain of the likelihood).
@@ -611,13 +461,7 @@ points are excluded from the likelihood sum. For extended models, RooFit similar
 restricts the expected count to the sub-range without renormalization.
 
 For use cases where truncation is part of the model physics rather than the analysis setup,
-use `truncate(M, region)` directly on the distribution (see [measure algebra and analysis](#sec:measure-algebra)).
-
-**Formal semantics.** Given a kernel $\kappa: \Theta \to M(X)$ and observed data $x \in X$, the likelihood
-object L is defined by $L(\theta) = \mathrm{pdf}(\kappa(\theta), x)$, where pdf denotes the density with respect to
-the reference measure implied by the distribution type. The result is a semantic entity
-carrying the parameter domain $\Theta$, the density function $\theta \mapsto \mathrm{pdf}(\kappa(\theta), x)$ (evaluable via
-`logdensityof(L, theta)`), the inherited reference measure, and the bound data x.
+use `truncate(M, region)` directly on the distribution.
 
 #### Combining likelihoods
 
@@ -636,27 +480,13 @@ The unnormalized posterior measure is constructed via the measure algebra:
 posterior = logweighted(L, prior)
 ```
 
-This produces the measure $\nu$ with $d\nu = L(\theta) \cdot d\pi(\theta)$, where $L$ is a likelihood object and
-$\pi$ is the prior measure. The `logweighted` combinator implicitly extracts the log-density
-from the likelihood object and reweights the prior in log-space for numerical stability.
+This produces the measure $d\nu(\theta) = L(\theta) \cdot d\pi(\theta)$, where `logweighted`
+extracts the log-density from the likelihood object and reweights the prior in log-space.
+The result is **unnormalized**. The normalized posterior is
+`normalize(logweighted(L, prior))`, and the evidence is
+`totalmass(logweighted(L, prior))`.
 
-The normative mathematical definition is by **conditioning**: the posterior is the
-conditional distribution of $\theta$ given the observed data $x$, under the joint measure on $(\theta, x)$
-induced by the prior and the model. In the dominated case (which covers all standard
-parametric models), this reduces to the familiar product formula:
-
-> $\mathrm{posterior}(d\theta) = (1/Z) \cdot L(\theta) \cdot \pi(d\theta)$
-
-where $Z = \int L(\theta)\, \pi(d\theta)$ is the evidence (marginal likelihood).
-
-The `logweighted(L, prior)` form produces the **unnormalized** posterior — evidence
-computation is expensive and not always needed. To obtain a proper probability measure,
-wrap in `normalize(...)`. The evidence is then available as `totalmass(logweighted(L, prior))`.
-
-If $Z = 0$ or $Z = \infty$, the normalized posterior is undefined.
-
-A frequentist user simply never constructs a posterior — they work with the likelihood
-directly.
+A frequentist user works with the likelihood directly and does not construct a posterior.
 
 **Prior–likelihood alignment.** The prior's variate structure must match the likelihood's
 parameter interface. For a single-parameter likelihood, a scalar prior suffices. For
@@ -672,13 +502,3 @@ posterior = logweighted(L, prior)
 ```
 
 For correlated priors, the dependency is expressed naturally through the FlatPPL sub-graph.
-
-**Conditioning and disintegration.** FlatPPL does not provide a formal `disintegrate`
-operator that decomposes an opaque joint measure into marginal and conditional parts. In
-practice, this is not needed: models built from `draw` statements already have an explicit
-factorization structure, and `lawof` with boundary inputs can extract conditional kernels
-from any point in the graph. The combination of `likelihoodof` + `logweighted` for posterior
-construction, and `lawof` boundary inputs for model splitting, covers the practical use
-cases that disintegration would serve. A more general first-class `disintegrate` mechanism
-(operating on opaque measures without visible internal structure) may be considered in a
-future version of the standard.
