@@ -111,7 +111,7 @@ is bound to the likelihood object when it is constructed. To prevent a mix-up of
 and log-likelihood values, FlatPPL does not treat a likelihood object as a function that
 returns the one or the other. Instead, (log-)likelihood values are computed via
 `densityof(L, theta)` and `logdensityof(L, theta)` to make the choice explicit.
-(See [analysis operations](06-measure-algebra.md#analysis-operations) for the full treatment.)
+(See [likelihoods and posteriors](06-measure-algebra.md#likelihoods-and-posteriors) for the full treatment.)
 
 **Functions** compute result values from input values in a deterministic fashion.
 See [calling conventions and anonymous functions](04-design.md#sec:calling-convention) for details.
@@ -137,7 +137,7 @@ The table below provides a compact overview of the language. Each family name li
 | [Special forms](04-design.md#sec:design) | `draw`, `lawof`, `functionof`, `fn`, `elementof`, `valueset` |
 | [Interface adaptation](04-design.md#sec:design) | `relabel` |
 | [Measure combinators](06-measure-algebra.md#sec:measure-algebra) | `weighted`, `logweighted`, `normalize`, `totalmass`, `superpose`, `joint`, `jointchain`, `chain`, `iid`, `truncate`, `pushfwd` |
-| [Analysis operations](06-measure-algebra.md#sec:measure-algebra) | `likelihoodof`, `joint_likelihood`, `densityof`, `logdensityof`, `bayesupdate` |
+| [Likelihoods and posteriors](06-measure-algebra.md#likelihoods-and-posteriors) | `likelihoodof`, `joint_likelihood`, `densityof`, `logdensityof`, `bayesupdate` |
 | [Higher-order operations](07-functions.md#sec:functions) | `broadcast`, `fchain`, `bijection` |
 | [Data access and reshaping](07-functions.md#sec:functions) | `get`, `cat`, `record`, `all`, `filter`, `selectbins` |
 | [Constructors](07-functions.md#sec:functions) | `table`, `rowstack`, `colstack`, `linspace`, `extlinspace`, `interval`, `window`, `fill` |

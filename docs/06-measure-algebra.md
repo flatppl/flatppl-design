@@ -317,7 +317,7 @@ closed measures (i.e. nullary kernels) as inputs. `densityof(M, x)` and
   )
   ```
 
-### Analysis operations
+### Likelihoods and posteriors
 
 #### Likelihood construction
 
