@@ -16,8 +16,8 @@ Signal and background shapes are defined as step-function densities, normalized 
 analysis region:
 
 ```flatppl
-sig_shape = stepwise(bin_edges = bin_edges, bin_values = signal_bins, x = _)
-bkg_shape = stepwise(bin_edges = bin_edges, bin_values = bkg_bins, x = _)
+sig_shape = fn(stepwise(bin_edges = bin_edges, bin_values = signal_bins, x = _))
+bkg_shape = fn(stepwise(bin_edges = bin_edges, bin_values = bkg_bins, x = _))
 signal_template = normalize(weighted(sig_shape, Lebesgue(support = interval(lo, hi))))
 bkg_template = normalize(weighted(bkg_shape, Lebesgue(support = interval(lo, hi))))
 ```
@@ -68,7 +68,7 @@ range-restricted likelihood for a sideband fit is also straightforward:
 
 ```flatppl
 sideband = interval(0.0, 3.0)
-sideband_data = filter(_ in sideband, [3.1, 5.7, 2.4, 8.9, 4.2])
+sideband_data = filter(fn(_ in sideband), [3.1, 5.7, 2.4, 8.9, 4.2])
 sideband_model = normalize(truncate(lawof(events, raw_eff_syst = raw_eff_syst), sideband))
 L_obs_sideband = likelihoodof(sideband_model, sideband_data)
 L_sideband = joint_likelihood(L_obs_sideband, L_constr)
@@ -90,7 +90,7 @@ truncation, density-defined distributions, module loading, and hypothesis testin
 
 ```flatppl
 # Variate naming with pushfwd
-mvmodel = pushfwd(relabel(_, ["a", "b", "c"]), MvNormal(mu = some_mean, cov = some_cov))
+mvmodel = pushfwd(fn(relabel(_, ["a", "b", "c"])), MvNormal(mu = some_mean, cov = some_cov))
 L_mv = likelihoodof(mvmodel, record(a = 1.1, b = 2.1, c = 3.1))
 
 # Expanded form (when intermediate variates are needed)
@@ -116,7 +116,7 @@ noisy_array = draw(broadcast(K, a = A))  # independent Normal draws at each elem
 positive_sigma = draw(normalize(truncate(Normal(mu = 1.0, sigma = 0.5), interval(0, inf))))
 
 # Density-defined distribution (Bernstein polynomial)
-bern = bernstein(coefficients = [c0, c1, c2, c3], x = _)
+bern = fn(bernstein(coefficients = [c0, c1, c2, c3], x = _))
 smooth_bkg = normalize(weighted(bern, Lebesgue(support = interval(lo, hi))))
 
 # Module loading and composition

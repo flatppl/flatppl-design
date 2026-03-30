@@ -16,8 +16,7 @@ record-valued, depending on the distribution.
 **Design principles:**
 
 - **All parameters must be supplied.** Omitting a parameter is a static error. There are no
-  default values. Use input nodes to form kernels, or use hole expressions via `_` to
-  create anonymous functions.
+  default values. Use input nodes to form kernels.
 - **Parameterization via explicit inputs.** Bind some parameters to input nodes declared with `elementof(...)`,
   then reify with `lawof`. The kernel's input interface is exactly the set of reached input nodes.
 - **Distribution constructors take only distribution parameters, never variate names.** The
@@ -164,7 +163,7 @@ HS³ `covariances`.
 RooFit `cov`.
 
 **Design note.** Variate components are unnamed by default. Named components are obtained
-via `pushfwd(relabel(_, ["a","b","c"]), MvNormal(...))` or the expanded form using `draw` +
+via `pushfwd(fn(relabel(_, ["a","b","c"])), MvNormal(...))` or the expanded form using `draw` +
 `lawof(record(...))`.
 
 ### Composite distributions
@@ -207,7 +206,7 @@ treat kernels.
 uses pushforward:
 
 ```flatppl
-binned_model = pushfwd(bincounts(edges, _), PoissonProcess(intensity = M))
+binned_model = pushfwd(fn(bincounts(edges, _)), PoissonProcess(intensity = M))
 ```
 
 This produces a measure over integer count arrays. The expected count in each bin is the
@@ -221,7 +220,7 @@ are computed directly, there is a derived convenience form that expresses the bi
 observation model without `PoissonProcess`:
 
 ```flatppl
-model = broadcast(Poisson(rate = _), expected_counts)
+model = broadcast(fn(Poisson(rate = _)), expected_counts)
 ```
 
 This is semantically equivalent to the process-based construction for the case of
@@ -361,7 +360,7 @@ The shape functions `polynomial`, `bernstein`, and `stepwise` are documented in 
 #### Density-defined distribution example
 
 ```flatppl
-bern = bernstein(coefficients = [c0, c1, c2, c3], x = _)
+bern = fn(bernstein(coefficients = [c0, c1, c2, c3], x = _))
 dist = normalize(weighted(bern, Lebesgue(support = interval(lo, hi))))
 ```
 

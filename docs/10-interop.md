@@ -140,7 +140,7 @@ FlatPPL separates these cleanly. The deterministic effects are expressed using t
 interpolation functions from the [interpolation functions](07-functions.md#interpolation-functions) section and ordinary arithmetic.
 The probabilistic constraints are expressed using standard `draw` statements. The final
 observation model wraps the total expected counts in independent Poisson terms via
-`broadcast(Poisson(rate = _), expected)`.
+`broadcast(fn(Poisson(rate = _)), expected)`.
 
 #### Modifier translation overview
 
@@ -163,7 +163,7 @@ the deterministic effect and constraint fully reproduce the modifier's behavior.
 
 **Note:** The formulas in the table above use mathematical shorthand. In actual FlatPPL
 code, elementwise bin-level arithmetic requires explicit `broadcast`: for example,
-`expected * gamma` becomes `broadcast(_ * _, expected, gamma)`. See the worked example
+`expected * gamma` becomes `broadcast(fn(_ * _), expected, gamma)`. See the worked example
 below for complete, valid FlatPPL code.
 
 The `normsys` and `histosys` rows show `interp_*` because the specific interpolation
@@ -188,7 +188,7 @@ parameter.
 **Idiomatic bin arithmetic.** FlatPPL does not implicitly vectorize infix operators
 (`*`, `+`) over arrays — this avoids ambiguity with matrix algebra and stays within the
 Python/Julia-compatible AST. To perform elementwise bin arithmetic, the idiomatic
-pattern is a multi-hole expression under `broadcast`: `broadcast(_ * _ + _, a, b, c)`
+pattern is a multi-hole expression under `broadcast`: `broadcast(fn(_ * _ + _), a, b, c)`
 creates an anonymous scalar function and applies it elementwise. The equivalent verbose
 form `broadcast(functionof(...), kw = ...)` may be preferred when named parameters
 improve readability.
@@ -212,18 +212,18 @@ delta_mc = [0.05, 0.04, 0.06, 0.08]
 # ===== Nuisance parameters (probabilistic constraints) =====
 alpha_jes = draw(Normal(mu = 0.0, sigma = 1.0))
 alpha_xsec = draw(Normal(mu = 0.0, sigma = 1.0))
-gamma_stat = draw(broadcast(Normal(mu = _, sigma = _),
+gamma_stat = draw(broadcast(fn(Normal(mu = _, sigma = _)),
     [1.0, 1.0, 1.0, 1.0], delta_mc))
 
 # ===== Expected counts (deterministic, using idiomatic bin arithmetic) =====
 sig_morphed = interp_p6lin(sig_jes_down, sig_nominal, sig_jes_up, alpha_jes)
 kappa_xsec = interp_p6exp(0.9, 1.0, 1.1, alpha_xsec)
 
-expected = broadcast(_ * _ * _ + _ * _,
+expected = broadcast(fn(_ * _ * _ + _ * _),
     mu_sig, sig_morphed, kappa_xsec, bkg_nominal, gamma_stat)
 
 # ===== Observation model =====
-obs = draw(broadcast(Poisson(rate = _), expected))
+obs = draw(broadcast(fn(Poisson(rate = _)), expected))
 
 # ===== Likelihood: separate constraint and observation factors =====
 L_obs = likelihoodof(
@@ -234,7 +234,7 @@ L_obs = likelihoodof(
 # ===== Constraint terms: auxiliary observation models =====
 aux_jes = draw(Normal(mu = alpha_jes, sigma = 1.0))
 aux_xsec = draw(Normal(mu = alpha_xsec, sigma = 1.0))
-aux_stat = draw(broadcast(Normal(mu = _, sigma = _),
+aux_stat = draw(broadcast(fn(Normal(mu = _, sigma = _)),
     gamma_stat, delta_mc))
 
 L_constr_jes = likelihoodof(
@@ -269,7 +269,7 @@ bottom. Each line does one clear thing. Key points:
   matching HistFactory's product structure.
 - **Plain array `[51, 48, 55, 42]`** as observed data — no wrapper constructor needed,
   since the model variate (from `broadcast(Poisson(...))`) is already an array.
-- **`broadcast(_ * _ * _ + _ * _, ...)`** for bin-level arithmetic — the multi-hole
+- **`broadcast(fn(_ * _ * _ + _ * _), ...)`** for bin-level arithmetic — the multi-hole
   expression creates an anonymous function, and `broadcast` applies it elementwise.
   Equivalent to the verbose `broadcast(functionof(...), kw=...)` form but more concise.
   FlatPPL does not implicitly vectorize infix operators on arrays; `broadcast` is always
@@ -305,7 +305,7 @@ $\kappa(\alpha)$ via interpolation with center = 1. In FlatPPL:
 ```flatppl
 alpha = draw(Normal(mu = 0, sigma = 1))
 kappa = interp_p6exp(kappa_down, 1.0, kappa_up, alpha)
-modified = broadcast(_ * _, nominal, kappa)
+modified = broadcast(fn(_ * _), nominal, kappa)
 ```
 
 The default interpolation is `interp_p6exp` (exponential extrapolation ensures $\kappa$ > 0).
@@ -340,9 +340,9 @@ constrained by a Poisson term derived from the sample's relative uncertainty. In
 FlatPPL:
 
 ```flatppl
-tau = broadcast(pow(_ / _, 2), nominal, sigma)
-gamma = draw(broadcast(Poisson(rate = _), tau))
-modified = broadcast(_ * _ / _, nominal, gamma, tau)
+tau = broadcast(fn(pow(_ / _, 2)), nominal, sigma)
+gamma = draw(broadcast(fn(Poisson(rate = _)), tau))
+modified = broadcast(fn(_ * _ / _), nominal, gamma, tau)
 ```
 
 where `sigma` is the per-bin absolute uncertainty and `tau` encodes the constraint
@@ -360,9 +360,9 @@ samples carrying a `staterror` modifier in the channel, not per-sample. In FlatP
 
 ```flatppl
 delta = sqrt(sum_of_squared_mc_errors) / sum_of_nominal_rates
-gamma = draw(broadcast(Normal(mu = _, sigma = _),
+gamma = draw(broadcast(fn(Normal(mu = _, sigma = _)),
     [1.0, 1.0, ...], delta))
-total_modified = broadcast(_ * _, total_nominal, gamma)
+total_modified = broadcast(fn(_ * _), total_nominal, gamma)
 ```
 
 The `delta` computation aggregates MC uncertainties across samples, following the
@@ -383,7 +383,7 @@ worked example above for a fully expanded model.
 ```flatppl
 alpha = draw(Normal(mu = 0.0, sigma = 1.0))
 kappa = interp_p6exp(kappa_down, 1.0, kappa_up, alpha)
-modified = broadcast(_ * _, nominal, kappa)
+modified = broadcast(fn(_ * _), nominal, kappa)
 
 aux_alpha = draw(Normal(mu = alpha, sigma = 1.0))
 L_constr = likelihoodof(lawof(aux_alpha, alpha = alpha), 0.0)
@@ -402,12 +402,12 @@ L_constr = likelihoodof(lawof(aux_alpha, alpha = alpha), 0.0)
 **Poisson-constrained per-bin factor (shapesys / ShapeSys):**
 
 ```flatppl
-tau = broadcast(pow(_ / _, 2), nominal, sigma)
-gamma = draw(broadcast(Poisson(rate = _), tau))
-modified = broadcast(_ * _ / _, nominal, gamma, tau)
+tau = broadcast(fn(pow(_ / _, 2)), nominal, sigma)
+gamma = draw(broadcast(fn(Poisson(rate = _)), tau))
+modified = broadcast(fn(_ * _ / _), nominal, gamma, tau)
 
-aux_gamma = draw(broadcast(Poisson(rate = _),
-    broadcast(_ * _, gamma, tau)))
+aux_gamma = draw(broadcast(fn(Poisson(rate = _)),
+    broadcast(fn(_ * _), gamma, tau)))
 L_constr = likelihoodof(
     lawof(aux_gamma, gamma = gamma), tau)
 ```
@@ -416,11 +416,11 @@ L_constr = likelihoodof(
 
 ```flatppl
 delta = sqrt(sum_of_squared_mc_errors) / sum_of_nominal_rates
-gamma = draw(broadcast(Normal(mu = _, sigma = _),
+gamma = draw(broadcast(fn(Normal(mu = _, sigma = _)),
     [1.0, 1.0, ...], delta))
-modified = broadcast(_ * _, total_nominal, gamma)
+modified = broadcast(fn(_ * _), total_nominal, gamma)
 
-aux_gamma = draw(broadcast(Normal(mu = _, sigma = _), gamma, delta))
+aux_gamma = draw(broadcast(fn(Normal(mu = _, sigma = _)), gamma, delta))
 L_constr = likelihoodof(
     lawof(aux_gamma, gamma = gamma),
     [1.0, 1.0, ...])
@@ -429,15 +429,15 @@ L_constr = likelihoodof(
 **Free scalar multiplier (normfactor / NormFactor):**
 
 ```flatppl
-modified = broadcast(_ * _, nominal, mu)
+modified = broadcast(fn(_ * _), nominal, mu)
 # mu is unbound — no constraint term
 ```
 
 **Assembly (single channel):**
 
 ```flatppl
-expected = broadcast(_ + _, sample1_modified, sample2_modified)
-obs = draw(broadcast(Poisson(rate = _), expected))
+expected = broadcast(fn(_ + _), sample1_modified, sample2_modified)
+obs = draw(broadcast(fn(Poisson(rate = _)), expected))
 L_obs = likelihoodof(
     lawof(obs, alpha1 = alpha1, alpha2 = alpha2, ...),
     observed_counts)

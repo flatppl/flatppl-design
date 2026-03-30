@@ -28,7 +28,7 @@ section.
 
   `get` with a subset selector and a hole expression produces the projection functions
   used in `pushfwd` for marginalization:
-  `pushfwd(get(_, ["a", "c"]), M)` marginalizes M over all fields except "a" and "c".
+  `pushfwd(fn(get(_, ["a", "c"])), M)` marginalizes M over all fields except "a" and "c".
 
   Note: module member access via dot syntax (`sig.model` where `sig` is a loaded module) is a separate syntactic category — modules are namespace references, not record values, and module dot access does not lower to `get`.
 
@@ -236,7 +236,7 @@ morphed = interp_p6lin(template_down, nominal_bins, template_up, alpha_jes)
 
 # Normalization factor: center = 1.0 (identity)
 kappa = interp_p6exp(0.9, 1.0, 1.1, alpha_xsec)
-modified = broadcast(_ * _, nominal_bins, kappa)
+modified = broadcast(fn(_ * _), nominal_bins, kappa)
 ```
 
 The same function serves both uses; the distinction between "shape systematic" and
@@ -402,11 +402,11 @@ Power-series polynomial $\sum a_i x^i$. `coefficients` is an array of real-value
 `x` is the evaluation point (real). Non-negativity of the resulting function over the
 intended support is the user's responsibility.
 
-Used via a hole expression: `polynomial(coefficients = [...], x = _)` produces a
+Used via a hole expression: `fn(polynomial(coefficients = [...], x = _))` produces a
 function.
 
 **HS³ / RooFit:** No dedicated distribution type; the composed form
-`normalize(weighted(polynomial(..., x=_), Lebesgue(...)))` maps to a generic density-defined
+`normalize(weighted(fn(polynomial(..., x=_)), Lebesgue(...)))` maps to a generic density-defined
 distribution.
 
 #### `bernstein(coefficients=, x=)`
@@ -538,7 +538,7 @@ engineering.
   a shorter array or table containing only elements/rows for which `pred` returns `true`.
 
   ```flatppl
-  data_in_range = filter(_ in interval(2.0, 8.0), data)
+  data_in_range = filter(fn(_ in interval(2.0, 8.0)), data)
   ```
 
 - **`selectbins(edges, region, counts)`** — selects whole-bin counts for bins whose
@@ -567,9 +567,9 @@ engineering.
 - **`relabel(x, names)`** — output-side structural renaming. For values, it assigns or
   renames fields as before. It also lifts to sets, functions, measures, and kernels
   whenever their output can be viewed as an ordered array, record, or table. For measures,
-  `relabel(M, names)` is equivalent to `pushfwd(relabel(_, names), M)`. For kernels it
+  `relabel(M, names)` is equivalent to `pushfwd(fn(relabel(_, names)), M)`. For kernels it
   acts pointwise on the output measure, and for functions by post-composition. It is
   undefined on likelihood objects.
 
 `relabel` is intentionally broader than `get`. Projection and marginalization remain
-explicit via `pushfwd(get(_, ...), ...)` — only structural renaming lifts automatically.
+explicit via `pushfwd(fn(get(_, ...)), ...)` — only structural renaming lifts automatically.

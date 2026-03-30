@@ -92,13 +92,9 @@ T[:, :, k]       # → get(T, all, all, k)
 T[i, :, k]       # → get(T, i, all, k)
 ```
 
-**Note:** `:` (slicing) and `_` (holes) have entirely different semantics:
-`A[:, j]` extracts data; `A[_, j]` creates a function
-(see [placeholders and holes](04-design.md#placeholders-and-holes)).
-
 ### Special forms
 
-`elementof(S)`, `valueset(x)`, `draw(M)`, `lawof(...)`, and `functionof(...)` are
+`elementof(S)`, `valueset(x)`, `draw(M)`, `lawof(...)`, `functionof(...)`, and `fn(...)` are
 special forms with their own syntax rules — they are not ordinary function calls.
 Their semantics are defined in [language design](04-design.md#sec:design).
 `load_module(...)` and `load_table(...)` are module-level operations documented in

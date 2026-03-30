@@ -134,7 +134,7 @@ The table below provides a compact overview of the language. Each family name li
 
 | Family | Constructs |
 |---|---|
-| [Special forms](04-design.md#sec:design) | `draw`, `lawof`, `functionof`, `elementof`, `valueset` |
+| [Special forms](04-design.md#sec:design) | `draw`, `lawof`, `functionof`, `fn`, `elementof`, `valueset` |
 | [Interface adaptation](04-design.md#sec:design) | `relabel` |
 | [Measure combinators](06-measure-algebra.md#sec:measure-algebra) | `weighted`, `logweighted`, `normalize`, `totalmass`, `superpose`, `joint`, `jointchain`, `chain`, `iid`, `truncate`, `pushfwd` |
 | [Analysis operations](06-measure-algebra.md#sec:measure-algebra) | `likelihoodof`, `joint_likelihood`, `densityof`, `logdensityof`, `bayesupdate` |
@@ -151,7 +151,7 @@ The table below provides a compact overview of the language. Each family name li
 | [Module operations](04-design.md#sec:modules) | `load_module`, `load_table` |
 | [Constants](03-value-types.md#sec:valuetypes) | `true`, `false`, `inf`, `pi`, `im` |
 | [Predefined sets](03-value-types.md#sec:valuetypes) | `reals`, `integers`, `complexes`, `anything` |
-| [Selectors and operators](04-design.md#sec:calling-convention) | `_` (holes), `all` (slicing), `in` (membership) |
+| [Selectors and operators](04-design.md#sec:calling-convention) | `all` (slicing), `in` (membership) |
 
 ### A tour of FlatPPL
 
@@ -288,7 +288,7 @@ log_normal = pushfwd(functionof(exp(x), x = x),
     Normal(mu = 0, sigma = 1))
 
 # Projection (marginalizes out b)
-marginal_ac = pushfwd(get(_, ["a", "c"]), mvmodel)
+marginal_ac = pushfwd(fn(get(_, ["a", "c"])), mvmodel)
 ```
 
 #### Measure algebra and composition
@@ -314,8 +314,8 @@ pp = chain(prior, forward_kernel)
 
 # Hierarchical joint (retains both variates)
 hj = jointchain(
-    pushfwd(relabel(_, ["a"]), M1),
-    pushfwd(relabel(_, ["b"]), K_b))
+    pushfwd(fn(relabel(_, ["a"])), M1),
+    pushfwd(fn(relabel(_, ["b"])), K_b))
 
 # Truncated (unnormalized) measure
 positive_normal = truncate(Normal(mu = 0, sigma = 1),
@@ -323,21 +323,21 @@ positive_normal = truncate(Normal(mu = 0, sigma = 1),
 
 # Fundamental measures and density-defined distributions
 leb = Lebesgue(support = reals)
-bern = bernstein(coefficients = [c0, c1, c2], x = _)
+bern = fn(bernstein(coefficients = [c0, c1, c2], x = _))
 smooth_shape = normalize(weighted(bern, Lebesgue(support = interval(lo, hi))))
 ```
 
 #### Anonymous functions
 
-The `_` token creates anonymous functions with positional parameters:
+The `fn(...)` form wraps a hole expression — an expression containing `_` — to create an anonymous function with positional parameters:
 
 ```flatppl
 # Single hole — one-argument function
-poly = polynomial(coefficients = [a0, a1, a2], x = _)
-squared = pow(_, 2)
+poly = fn(polynomial(coefficients = [a0, a1, a2], x = _))
+squared = fn(pow(_, 2))
 
 # Multi-hole: two-argument anonymous function
-ratio_sq = pow(_ / _, 2)
+ratio_sq = fn(pow(_ / _, 2))
 ```
 
 #### Interpolation, binning, and systematic variations
@@ -349,7 +349,7 @@ edges = linspace(0.0, 10.0, 5)
 counts = bincounts(edges, event_data)
 
 # Binned observation model via pushforward
-binned_model = pushfwd(bincounts(edges, _),
+binned_model = pushfwd(fn(bincounts(edges, _)),
     PoissonProcess(intensity = M_intensity))
 
 # Interpolation for systematic variations
@@ -373,7 +373,7 @@ Likelihood construction, combination, and posterior construction:
 ```flatppl
 L = likelihoodof(lawof(obs), data)
 R = interval(2.0, 8.0)
-L_sub = likelihoodof(normalize(truncate(lawof(obs), R)), filter(_ in R, data))
+L_sub = likelihoodof(normalize(truncate(lawof(obs), R)), filter(fn(_ in R), data))
 L_total = joint_likelihood(L1, L2)
 
 # Unnormalized posterior

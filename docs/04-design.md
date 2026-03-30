@@ -264,7 +264,7 @@ named_K = relabel(K, ["x", "y", "z"])
 ```
 
 For functions, `relabel(f, names)` is post-composition with `relabel` on the function
-result; for measures it is equivalent to `pushfwd(relabel(_, names), M)`; for kernels it acts pointwise on the output measure.
+result; for measures it is equivalent to `pushfwd(fn(relabel(_, names)), M)`; for kernels it acts on the output measures.
 
 See [built-in functions](07-functions.md#sec:functions) for full reference documentation
 on `relabel`.
@@ -312,44 +312,42 @@ A placeholder in an inner `functionof` or `lawof` **must** be bound there, so th
 functionof(functionof(_a_ * b + _c_, a = _a_)(some_value) + _d_, c = _c_, d = _d_)
 ```
 
-#### Holes
+#### Holes and `fn`
 
 The reserved name `_` denotes a **hole** — a position in a deterministic expression where
-an argument is not yet supplied. An expression containing holes is not a value expression;
-it denotes an anonymous function whose parameters are the holes, in strict
-left-to-right reading order. This is analogous to the $f(\cdot, b)$ notation used in
-mathematics to denote a function with a free argument.
+an argument is not yet supplied. Holes are only valid inside the special form `fn(...)`, which delimits the
+scope of hole lowering. The form `fn(expr)` wraps a hole expression and produces an
+anonymous function whose parameters are the holes in `expr`, in strict left-to-right
+reading order. This is analogous to the $f(\cdot, b)$ notation used in mathematics to
+denote a function with a free argument.
 
 Each `_` introduces a distinct positional parameter. Holes do not inherit keyword names
 from enclosing call positions. For named parameters, use placeholder variables or
 `functionof` with an explicit interface declaration.
 
-Note: Holes are different from placeholders (see above). Placeholders are a convenience
-to more easily create functions and kernels via `functionof` and `lawof`. Holes turn
-expressions into functions and kernels directly.
+Note: Holes work differenty than placeholders (see above).
 
 A single hole, resulting in a one-argument function:
 
 ```flatppl
-neg = 0 - _
-poly = polynomial(coefficients = cs, x = _)
+neg = fn(0 - _)
+poly = fn(polynomial(coefficients = cs, x = _))
 ```
 
 Multiple holes — left-to-right positional order:
 
 ```flatppl
-g = f(_, b, _)
-h = pow(_ / _, 2)
+g = fn(f(_, b, _))
+h = fn(pow(_ / _, 2))
 ```
 
-Each `_` is distinct: `_ * _` multiplies two different inputs rather than squaring one.
+Each `_` is distinct: `fn(_ * _)` multiplies two different inputs rather than squaring one.
 Use placeholders if arguments need to appear in the expression more than once, e.g. `functionof(_x_ * _x_, x = _x_)`.
 
-**Lowering.** An expression with holes lowers to a `functionof` with placeholder
-variables. For example
+**Lowering.** `fn(expr)` lowers to a `functionof` with placeholder variables. For example
 
 ```flatppl
-g = f(_, b, _)
+g = fn(f(_, b, _))
 ```
 
 lowers to something like (naming is an implementation detail and not normative)
@@ -366,7 +364,8 @@ _tmp2 = elementof(anything)
 g = functionof(f(_tmp1, b, _tmp2), arg1 = _tmp1, arg2 = _tmp2)
 ```
 
-`_` may **not** appear on the left-hand side of a variable binding.
+`_` may **not** appear on the left-hand side of a variable binding, and may **not** appear
+outside of `fn(...)`.
 
 ### <a id="sec:broadcast"></a>Broadcasting
 
@@ -392,7 +391,7 @@ C = broadcast(f, A)
 Using an anonymous function:
 
 ```flatppl
-C = broadcast(2 * _ + 1, A)
+C = broadcast(fn(2 * _ + 1), A)
 ```
 
 Multi-input broadcast:

@@ -12,7 +12,7 @@
 | `lawof` as pushforward-along-projection | Ancestor-closed sub-DAG, marginal by default; conditional via parameterized constructors. |
 | `functionof` for deterministic sub-DAGs | Parallel to `lawof`; explicit reification avoids implicit function semantics. |
 | `broadcast` with keyword arguments | Maps functions/kernels over arrays. Stochastic broadcast produces measures (needs `draw`). |
-| `pushfwd(f, M)` as the single measure-transform primitive | Always takes a function. Projection via `pushfwd(get(_, ...), M)`; relabeling via `pushfwd(relabel(_, ...), M)`; general transforms via `pushfwd(functionof(...), M)`. |
+| `pushfwd(f, M)` as the single measure-transform primitive | Always takes a function. Projection via `pushfwd(fn(get(_, ...)), M)`; relabeling via `pushfwd(fn(relabel(_, ...)), M)`; general transforms via `pushfwd(functionof(...), M)`. |
 | `get` and `relabel` as value-level operations | `get` for element access and subset selection; `relabel` for structural renaming. Both compose with `pushfwd` via hole expressions. No special list syntax in `pushfwd`. |
 | Input vs. output interface operations | `relabel` names outputs; `pushfwd` transforms/projects outputs; `lawof`/`functionof` keywords declare input boundaries. |
 | Named measure/value operations | `weighted`/`logweighted`/`superpose`/`joint`/`jointchain`/`chain` for measures; `sum`/`product`/`cat` for values. No ambiguous overloading. |
@@ -22,7 +22,7 @@
 | No implicit auto-connection | Dependencies only via explicit composition (`draw`, `jointchain`, etc.); no ambient same-name matching. Contrast with RooFit. |
 | Measure = kernel with empty interface | Kernels are the general concept; measures are the closed case. Application is only for non-empty interfaces; nullary calls (`f()`, `K()`) are not surface syntax. |
 | Keyword-only distribution constructors | `Normal(mu=0, sigma=1)`. Self-documenting; one canonical parameterization per distribution. |
-| All parameters required (no defaults) | Parameterization via module inputs or `_` hole expressions, not missing arguments. |
+| All parameters required (no defaults) | Parameterization via module inputs or `fn(...)` hole expressions, not missing arguments. |
 | `rate` for Poisson (not `lambda`) | Avoids Python keyword collision; matches physical intuition. |
 | Likelihood defined prior-free | Serves both Bayesian and frequentist users. |
 | Likelihood as object (not function) | Carries domain, reference measure, data; engines evaluate via `logdensityof`/`densityof`. |
@@ -67,7 +67,7 @@
 | Embedding via Julia macros / Python decorators | Payoff of Python/Julia-compatible AST design; engine API, not FlatPPL spec. |
 | Interpolation functions: `interp_p{1,2,6}{lin,exp}` | Three-point interpolation for systematic variations; 3×2 grid over smoothing (linear, quadratic, polynomial) × extrapolation (linear, exponential). Value-level functions, not measure combinators. |
 | HistFactory modifiers as composition, not primitives | pyhf/HistFactory modifiers decompose into interpolation + arithmetic + constraint draws. No modifier objects needed; the deterministic and probabilistic parts are separated explicitly. |
-| `_` holes: positional-only anonymous functions | Expression with holes = anonymous function. Each `_` is a distinct positional parameter, left-to-right. No inherited keyword names. Two-stage lowering: hole abstraction first, then ANF. |
+| `fn(...)` with `_` holes: positional-only anonymous functions | `fn(expr)` wraps a hole expression into an anonymous function. Each `_` inside `fn(...)` is a distinct positional parameter, left-to-right. No inherited keyword names. `fn(expr)` lowers to `functionof(...)`. Two-stage lowering: hole abstraction first, then ANF. |
 | Nested arrays allowed; matrices are a separate type | Nested array literals are arrays of arrays (may be ragged). Matrices are first-class rectangular 2D values, constructed via `rowstack`/`colstack`. No implicit row/column convention on nested literals. |
 | `fchain` for deterministic composition | Left-to-right function composition. Deterministic analogue of `chain`/`jointchain`. Uses ordinary call/splatting semantics. |
 | Elementwise arithmetic is always explicit | Infix `+`, `-`, `*`, `/` are not implicitly elementwise on arrays. Use `broadcast(...)`. Avoids NumPy-style hidden semantics. |

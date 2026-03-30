@@ -62,7 +62,7 @@ model and filter the data:
 
 ```flatppl
 R = interval(2.0, 8.0)
-L_R = likelihoodof(normalize(truncate(model, R)), filter(_ in R, data))
+L_R = likelihoodof(normalize(truncate(model, R)), filter(fn(_ in R), data))
 ```
 
 For binned models, use `selectbins` instead of `filter`.
@@ -72,7 +72,7 @@ For binned models, use `selectbins` instead of `filter`.
 `likelihoodof` always performs a single density evaluation — the data must match the
 model's variate shape. For extended unbinned models (`PoissonProcess`), the data is a
 plain array for scalar event spaces or a table for record-valued event spaces. For binned
-count models (`broadcast(Poisson(rate=_), expected)`), the data is a plain count
+count models (`broadcast(fn(Poisson(rate=_)), expected)`), the data is a plain count
 array. For non-extended IID models, use `iid(M, n)` to make the model explicitly produce
 collection-valued variates. FlatPPL does not perform implicit IID or implicit binning
 inside `likelihoodof`.
@@ -82,13 +82,13 @@ inside `likelihoodof`.
 The variate shape depends on the **shape-class rule**: if all components are scalar-valued,
 the result is an array; if all are array-valued, the result is a concatenated array; if all
 are record-valued, the result is a merged record (duplicate field names are a static error).
-Mixed shape classes are not combined automatically — use `pushfwd(relabel(_, ...), M)` to
+Mixed shape classes are not combined automatically — use `pushfwd(fn(relabel(_, ...)), M)` to
 harmonize first.
 
 For example, `draw(joint(Normal(mu=0, sigma=1), MvNormal(mu=m, cov=c)))` where the
 MvNormal is 3-dimensional returns a 4-element array. For named fields, use `relabel` via
 `pushfwd` on the components first:
-`joint(pushfwd(relabel(_, ["a"]), M1), pushfwd(relabel(_, ["b", "c"]), M2))` produces a
+`joint(pushfwd(fn(relabel(_, ["a"])), M1), pushfwd(fn(relabel(_, ["b", "c"])), M2))` produces a
 record-valued measure.
 
 ### Q: How are joint measures of variates from different distributions constructed?
@@ -96,8 +96,8 @@ record-valued measure.
 For independent components, use `joint` with output relabeling:
 
 ```flatppl
-M_abc = pushfwd(relabel(_, ["a", "b", "c"]), MvNormal(mu = mean1, cov = cov1))
-M_de = pushfwd(relabel(_, ["d", "e"]), MvNormal(mu = mean2, cov = cov2))
+M_abc = pushfwd(fn(relabel(_, ["a", "b", "c"])), MvNormal(mu = mean1, cov = cov1))
+M_de = pushfwd(fn(relabel(_, ["d", "e"])), MvNormal(mu = mean2, cov = cov2))
 model = joint(M_abc, M_de)    # record(a=, b=, c=, d=, e=)
 ```
 
@@ -105,7 +105,7 @@ For dependent (hierarchical) components, use `jointchain`:
 
 ```flatppl
 K_de = lawof(draw(MvNormal(mu = f(a, b, c), cov = cov2)), a = a, b = b, c = c)
-model = jointchain(M_abc, pushfwd(relabel(_, ["d", "e"]), K_de))
+model = jointchain(M_abc, pushfwd(fn(relabel(_, ["d", "e"])), K_de))
 ```
 
 ### Q: What is `jointchain` and how does it differ from `joint`?
@@ -178,9 +178,9 @@ consistent with `draw` being the sole point where randomness enters the model.
 measure. It always takes a function as its first argument — there are no special list-syntax
 forms. For bijective variable transformations, pass an explicit `functionof`. For
 projection/marginalization, use `get` with a hole expression:
-`pushfwd(get(_, ["a", "c"]), model)` keeps fields a and c, marginalizing the rest. For
+`pushfwd(fn(get(_, ["a", "c"])), model)` keeps fields a and c, marginalizing the rest. For
 pure structural renaming, use `relabel` with a hole expression:
-`pushfwd(relabel(_, ["a", "b", "c"]), MvNormal(...))` gives the measure record-valued
+`pushfwd(fn(relabel(_, ["a", "b", "c"])), MvNormal(...))` gives the measure record-valued
 output with field names a, b, c. `relabel` is guaranteed bijective with no density change;
 `get` with a subset may require marginalization.
 
@@ -219,15 +219,16 @@ compositional and make the underlying measure-theoretic operations explicit.
 
 ### Q: What is `_` and how do anonymous functions via holes work?
 
-`_` is a reserved hole token. A deterministic expression containing holes is not a value
-— it denotes an anonymous function whose parameters are the holes in left-to-right
-reading order. Each `_` is a distinct positional-only parameter (no inherited keyword
-names). Examples: `pow(_, 2)` is a 1-argument function; `pow(_ / _, 2)` is a 2-argument
-function; `_ * _` is multiplication of two *different* inputs, not squaring. Holes can
-appear in nested expressions: `Normal(mu = _, sigma = pow(_, 2))` creates a 2-argument
-function. For named parameters, use `functionof` instead. The primary use cases are
-`broadcast(pow(_ / _, 2), arr1, arr2)` for elementwise arithmetic and
-`pushfwd(relabel(_, names), M)` for measure transformation.
+`_` is a reserved hole token. It is only valid inside `fn(...)`, which delimits the scope
+of hole lowering. `fn(expr)` wraps a deterministic expression containing holes and produces
+an anonymous function whose parameters are the holes in left-to-right reading order. Each
+`_` is a distinct positional-only parameter (no inherited keyword names). Examples:
+`fn(pow(_, 2))` is a 1-argument function; `fn(pow(_ / _, 2))` is a 2-argument function;
+`fn(_ * _)` is multiplication of two *different* inputs, not squaring. Holes can appear in
+nested expressions: `fn(Normal(mu = _, sigma = pow(_, 2)))` creates a 2-argument function.
+For named parameters, use `functionof` instead. The primary use cases are
+`broadcast(fn(pow(_ / _, 2)), arr1, arr2)` for elementwise arithmetic and
+`pushfwd(fn(relabel(_, names)), M)` for measure transformation.
 
 ### Q: What are `Lebesgue` and `Counting`?
 

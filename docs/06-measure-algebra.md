@@ -89,7 +89,7 @@ closed measures (i.e. nullary kernels) as inputs. `densityof(M, x)` and
 
 - **`bayesupdate(L, prior)`** — reweights a prior measure by a likelihood object,
   producing the unnormalized posterior: $d\nu(\theta) = L(\theta) \cdot d\pi(\theta)$.
-  Lowers to `logweighted(logdensityof(L, _), prior)`. See
+  Lowers to `logweighted(fn(logdensityof(L, _)), prior)`. See
   [posterior construction](#posterior-construction) for details.
 
 #### Normalization and mass
@@ -254,7 +254,7 @@ closed measures (i.e. nullary kernels) as inputs. `densityof(M, x)` and
 
   ```flatppl
   mu = relabel(iid(Normal(mu = 0, sigma = 1), 3), ["a", "b", "c"])
-  pushfwd(get(_, ["a", "c"]), model)   # marginalizes out b
+  pushfwd(fn(get(_, ["a", "c"])), model)   # marginalizes out b
   ```
 
 - **`bijection(f, f_inv, logvolume)`** annotates a function `f` with its
@@ -294,7 +294,7 @@ closed measures (i.e. nullary kernels) as inputs. `densityof(M, x)` and
   sq = bijection(
       functionof(pow(pos_x, 2), x = pos_x),
       functionof(sqrt(pos_x), x = pos_x),
-      log(2 * _)
+      fn(log(2 * _))
   )
   ```
 
@@ -322,7 +322,7 @@ and filtering the data before calling `likelihoodof`. For unbinned models:
 
 ```flatppl
 R = interval(2.0, 8.0)
-data_R = filter(_ in R, data)
+data_R = filter(fn(_ in R), data)
 model_R = normalize(truncate(model, R))    # normalized model
 L_R = likelihoodof(model_R, data_R)
 ```
@@ -331,7 +331,7 @@ For intensity/extended models, omit the normalization:
 
 ```flatppl
 model_R = PoissonProcess(intensity = truncate(intensity, R))
-L_R = likelihoodof(model_R, filter(_ in R, data))
+L_R = likelihoodof(model_R, filter(fn(_ in R), data))
 ```
 
 For binned count models, use `selectbins` to select whole bins:
@@ -339,7 +339,7 @@ For binned count models, use `selectbins` to select whole bins:
 ```flatppl
 data_R = selectbins(edges, R, data)
 expected_R = selectbins(edges, R, expected)
-L_R = likelihoodof(broadcast(Poisson(rate = _), expected_R), data_R)
+L_R = likelihoodof(broadcast(fn(Poisson(rate = _)), expected_R), data_R)
 ```
 
 #### Combining likelihoods
@@ -355,7 +355,7 @@ mechanism.
 
 **`bayesupdate(L, prior)`** produces the **unnormalized** posterior measure
 $d\nu(\theta) = L(\theta) \cdot d\pi(\theta)$. It lowers to
-`logweighted(logdensityof(L, _), prior)`. The result is not normalized —
+`logweighted(fn(logdensityof(L, _)), prior)`. The result is not normalized —
 `normalize(bayesupdate(L, prior))` gives the normalized posterior, and
 `totalmass(bayesupdate(L, prior))` gives the evidence.
 
