@@ -134,6 +134,9 @@ closed measures (i.e. nullary kernels) as inputs. `densityof(M, x)` and
   j = joint(Normal(mu = 0, sigma = 1), Exponential(rate = 1.0))
   ```
 
+  For kernels, `joint(K1, K2, ...)` results in a kernel that fans a single input out
+  to all component kernels, so each of them receives the same input.
+
 - **`iid(M, m, n, ...)`** — the product measure $M^{\otimes (m \cdot n \cdot \ldots)}$,
   producing a measure on arrays of shape `m × n × ...`.
 
