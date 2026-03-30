@@ -238,7 +238,8 @@ symbolically when the measure is consumed.
 
 ### Interface adaptation
 
-FlatPPL provides `relabel` for structural renaming of outputs. At the value level, `relabel` turns an array into a named record:
+FlatPPL provides `relabel` for structural renaming of outputs. At the value level,
+`relabel` renames the fields of an array:
 
 ```flatppl
 v = relabel([1.0, 2.0, 3.0], ["x", "y", "z"])
@@ -246,12 +247,20 @@ v = relabel([1.0, 2.0, 3.0], ["x", "y", "z"])
 v = record(x = 1.0, y = 2.0, z = 3.0)
 ```
 
-or renames record fields and table columns:
+and renames record fields and table columns:
 
 ```flatppl
 v = relabel(record(a = 1.0, b = 2.0, c = 3.0), ["x", "y", "z"])
 # equivalent to:
 v = record(x = 1.0, y = 2.0, z = 3.0)
+```
+
+and wraps a scalar into a single-field record:
+
+```flatppl
+v = relabel(1.0, ["x"])
+# equivalent to:
+v = record(x = 1.0)
 ```
 
 The same output-side renaming lifts directly to sets, functions, measures, and kernels:
