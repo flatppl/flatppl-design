@@ -134,14 +134,14 @@ The table below provides a compact overview of the language. Each family name li
 
 | Family | Constructs |
 |---|---|
-| [Special forms](04-design.md#sec:design) | `draw`, `lawof`, `functionof`, `fn`, `elementof`, `valueset` |
+| [Special forms](04-design.md#sec:design) | `draw`, `lawof`, `functionof`, `fn`, `fchain`, `bijection`, `elementof`, `valueset` |
 | [Interface adaptation](04-design.md#sec:design) | `relabel` |
 | [Measure combinators](06-measure-algebra.md#sec:measure-algebra) | `weighted`, `logweighted`, `normalize`, `totalmass`, `superpose`, `joint`, `jointchain`, `chain`, `iid`, `truncate`, `pushfwd` |
 | [Likelihoods and posteriors](06-measure-algebra.md#likelihoods-and-posteriors) | `likelihoodof`, `joint_likelihood`, `densityof`, `logdensityof`, `bayesupdate` |
-| [Higher-order operations](07-functions.md#sec:functions) | `broadcast`, `fchain`, `bijection` |
+| [Higher-order operations](07-functions.md#sec:functions) | `broadcast` |
 | [Data access and reshaping](07-functions.md#sec:functions) | `get`, `cat`, `record`, `all`, `filter`, `selectbins` |
-| [Constructors](07-functions.md#sec:functions) | `table`, `rowstack`, `colstack`, `linspace`, `extlinspace`, `interval`, `window`, `fill` |
-| [Binning and interpolation](07-functions.md#sec:functions) | `bincounts`, `interp_p*lin`, `interp_p*exp` |
+| [Constructors](07-functions.md#sec:functions) | `table`, `rowstack`, `colstack`, `linspace`, `extlinspace`, `interval`, `fill` |
+| [Binning and interpolation](07-functions.md#sec:functions) | `bincounts`, `interp_pwlin`, `interp_pwexp`, `interp_poly2_lin`, `interp_poly6_lin`, `interp_poly6_exp` |
 | [Shape functions](07-functions.md#sec:functions) | `polynomial`, `bernstein`, `stepwise` |
 | [Math and logic](07-functions.md#sec:functions) | `exp`, `log`, `pow`, `sqrt`, `abs`, `sin`, `cos`, `min`, `max`, `ifelse`, `land`, `lor`, `lnot`, `lxor` |
 | [Complex arithmetic](07-functions.md#sec:functions) | `complex`, `real`, `imag`, `conj`, `abs2`, `cis` |
@@ -150,7 +150,7 @@ The table below provides a compact overview of the language. Each family name li
 | [Fundamental measures](06-measure-algebra.md#sec:measure-algebra) | `Lebesgue`, `Counting`, `Dirac` |
 | [Module operations](04-design.md#sec:modules) | `load_module`, `load_table` |
 | [Constants](03-value-types.md#sec:valuetypes) | `true`, `false`, `inf`, `pi`, `im` |
-| [Predefined sets](03-value-types.md#sec:valuetypes) | `reals`, `integers`, `complexes`, `anything` |
+| [Predefined sets](03-value-types.md#sec:valuetypes) | `reals`, `posreals`, `nonnegreals`, `integers`, `complexes`, `anything` |
 | [Selectors and operators](04-design.md#sec:calling-convention) | `all` (slicing), `in` (membership) |
 
 ### A tour of FlatPPL
@@ -353,8 +353,8 @@ binned_model = pushfwd(fn(bincounts(edges, _)),
     PoissonProcess(intensity = M_intensity))
 
 # Interpolation for systematic variations
-kappa = interp_p6exp(0.95, 1.0, 1.05, alpha)
-morphed = interp_p6lin(tmpl_dn, nominal, tmpl_up, alpha)
+kappa = interp_poly6_exp(0.95, 1.0, 1.05, alpha)
+morphed = interp_poly6_lin(tmpl_dn, nominal, tmpl_up, alpha)
 ```
 
 #### Data

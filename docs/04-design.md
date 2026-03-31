@@ -1,7 +1,8 @@
 ## <a id="sec:design"></a>Language design
 
-This section details the semantics of FlatPPL's core constructs: namespaces, inputs, variates, measures and stochastic graphs, application and reification,
-an inference-agnostic design, calling conventions, broadcasting, and modules.
+This section details the semantics of FlatPPL's core constructs: namespaces, inputs,
+variates, measures and stochastic graphs, application and reification, calling
+conventions, broadcasting, and modules.
 
 ### <a id="sec:namespaces"></a>Names and namespaces
 
@@ -17,7 +18,7 @@ determined by name references. Implementations may evaluate bindings in any vali
 topological order, in series or in parallel.
 
 Numerical precision (e.g., 32-bit vs. 64-bit floating point) is not specified by
-FlatPPL, the choice is left to implementations and their users.
+FlatPPL; the choice is left to implementations and their users.
 
 ### <a id="sec:calling-convention"></a>Calling conventions
 
@@ -94,7 +95,9 @@ x = draw(Normal(mu = mu, sigma = sigma))
 y = 2 * x
 ```
 
-Here `mu` and `sigma` are module inputs. The special form `elementof(S)` declares that their values are restricted to the given sets. To evaluate a subgraph of a module, whether in generative or scoring mode, the application must supply concrete values for all inputs that are part of the subgraph.
+Here `mu` and `sigma` are module inputs. The special form `elementof(S)` declares that
+their values are restricted to the given sets. To evaluate a subgraph of a module, the
+application must supply concrete values for all inputs that are part of the subgraph.
 
 The role of module inputs — as fit parameters, hyperparameters, or fixed constants — is determined by
 how the FlatPPL module is used by an application, not by the module itself.
@@ -175,7 +178,9 @@ which become the inputs of `g` under the new names `p` and `q`. The computation 
 `a` and `b` to `d` is excluded — `g` only contains the path from `a` and `d` to `e`.
 
 If boundary inputs are specified, the reified function supports positional arguments
-in addition to keyword arguments. Either all boundary inputs must be given, or none. This ensures that a boundary input specification, if present, covers all inputs of the function and thereby introduces an explicit argument order.
+in addition to keyword arguments. Either all boundary inputs must be given, or none —
+this ensures the specification covers all inputs and introduces an explicit argument
+order.
 Technically, a specified boundary node `a` is replaced by a new node, generated via
 `elementof(valueset(a))`, in the reified graph.
 
@@ -239,7 +244,7 @@ symbolically when the measure is consumed.
 ### Interface adaptation
 
 FlatPPL provides `relabel` for structural renaming of outputs. At the value level,
-`relabel` renames the fields of an array:
+`relabel` assigns or renames fields on scalars, arrays, records, and tables:
 
 ```flatppl
 v = relabel([1.0, 2.0, 3.0], ["x", "y", "z"])
@@ -277,6 +282,23 @@ result; for measures it is equivalent to `pushfwd(fn(relabel(_, names)), M)`; fo
 
 See [built-in functions](07-functions.md#sec:functions) for full reference documentation
 on `relabel`.
+
+### Function composition and annotation
+
+**`fchain(f1, f2, f3, ...)`** composes deterministic functions left-associatively:
+`fchain(f1, f2, f3)(x)` equals `f3(f2(f1(x)))`.
+
+`fchain` combines well with auto-splatting: if `f1` returns a record and `f2` accepts
+keyword arguments matching the record fields, the two functions compose directly.
+`fchain` is the deterministic analogue of
+[`chain`](06-measure-algebra.md#dependent-composition).
+
+**`bijection(f, f_inv, logvolume)`** annotates a function `f` with its inverse
+`f_inv` and the log-volume-element `logvolume` of the forward map. The result is
+semantically identical to `f`, but engines can use the inverse and volume element when
+computing densities of pushforward measures. `logvolume` may be a function or a scalar
+(`0` for volume-preserving maps). See [pushfwd](06-measure-algebra.md#transformation-and-projection)
+for examples.
 
 ### Placeholders and holes
 
@@ -334,7 +356,7 @@ Each `_` introduces a distinct positional parameter. Holes do not inherit keywor
 from enclosing call positions. For named parameters, use placeholder variables or
 `functionof` with an explicit interface declaration.
 
-Note: Holes work differenty than placeholders (see above).
+Note: Holes work differently than placeholders (see above).
 
 A single hole, resulting in a one-argument function:
 
@@ -494,5 +516,3 @@ events = load_table("observed_events.csv")
 
 Path resolution follows the same rules as `load_module`: relative to the directory of
 the FlatPPL file containing the call.
-
-**Model composition.** The module system provides namespace isolation through `load_module`, with load-time keyword arguments available to substitute inputs across module boundaries, and `joint_likelihood` combines channels. Modules intended for composition should therefore export kernels with declared interfaces where appropriate. Richer conventions for large-scale combined analyses may be refined in future versions.

@@ -55,7 +55,7 @@ FlatPPL has a very lean syntax:
   the functions `land`, `lor`, `lnot`, `lxor`.
 - **No type annotations.** Types are inferred from the semantic rules.
 - **No loops or conditionals.** Use `ifelse(cond, a, b)` for piecewise definitions
-  (see [conditional expressions](07-functions.md#conditional-expressions)).
+  (see [logic and conditionals](07-functions.md#logic-and-conditionals)).
 - **No function definition blocks.** Use `functionof`
   (see [language design](04-design.md#sec:functionof)).
 - **No tuples.** Arrays and records cover all use cases. Comma-separated names appear

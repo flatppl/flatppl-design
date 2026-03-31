@@ -126,7 +126,7 @@ closed measures (i.e. nullary kernels) as inputs. `densityof(M, x)` and
   $(M_1 \otimes M_2)(A \times B) = M_1(A) \cdot M_2(B)$.
 
   The output variate is the `cat` of the component variates
-  (see [concatenation](07-functions.md#concatenation-with-cat)).
+  (see [concatenation](07-functions.md#concatenation-of-collections)).
 
   For example, the measure product of a normal and an exponential probability measure,
   defined over a space of vectors, would be

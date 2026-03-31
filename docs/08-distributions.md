@@ -185,7 +185,7 @@ finite total mass.
 **Sample representation.** A draw from a `PoissonProcess` produces:
 
 - **Scalar event space:** an array of real scalars (the individual events).
-- **Record-valued event space:** a `table` (see [tables and datasets](07-functions.md#tables-and-datasets)).
+- **Record-valued event space:** a `table` (see [tables](03-value-types.md#tables)).
   The array length is the random event count.
 
 The order of events in a `PoissonProcess` array or table is representation-only and has no

@@ -42,9 +42,9 @@
 | `cat`: same-kind concat, duplicate fields = error | Well-defined, unambiguous concatenation. |
 | Single flat namespace (top-level bindings only) | Record fields / table columns are field names, not top-level bindings. |
 | Measures/likelihoods/functions not storable in containers | Top-level bindings only; keeps type system simple. |
-| `truncate(M, S)` for support restriction | Pure support restriction, no normalization. Uses `interval`/`window` region objects. |
+| `truncate(M, S)` for support restriction | Pure support restriction, no normalization. Uses `interval` or records of intervals. |
 | Range restriction via `truncate` + `filter` | Explicit model restriction and data filtering; no magic in `likelihoodof`. `selectbins` for binned models. |
-| `interval`, `window` as distinguished JSON keys | Structural identification without function-name parsing. |
+| `interval` as distinguished JSON key | Structural identification without function-name parsing. |
 | `table` as first-class dataset type | Named columns of equal length with dual access (column by name, row by index). Auto-splats by column; broadcasts row-wise. PoissonProcess over records produces tables. |
 | Table columns must be 1D | Allowing matrix- or tensor-valued columns would force a leading-axis convention for row-iteration and broadcasting, which FlatPPL intentionally avoids. |
 | Explicit binning only; no `binned`/`axis` constructors | Binning is a model operation via `bincounts` + `pushfwd`, not a data-wrapper property. Plain count arrays are valid observed data. |
@@ -65,7 +65,7 @@
 | Giry-style (not classical Giry) semantics | $\sigma$-finite measure monad variant for unnormalized densities and rate measures. |
 | Explicit kernel/function interfaces in JSON | Self-describing serialization; tools don't need graph traversal. |
 | Embedding via Julia macros / Python decorators | Payoff of Python/Julia-compatible AST design; engine API, not FlatPPL spec. |
-| Interpolation functions: `interp_p{1,2,6}{lin,exp}` | Three-point interpolation for systematic variations; 3×2 grid over smoothing (linear, quadratic, polynomial) × extrapolation (linear, exponential). Value-level functions, not measure combinators. |
+| Interpolation functions: `interp_pwlin`, `interp_pwexp`, `interp_poly2_lin`, `interp_poly6_lin`, `interp_poly6_exp` | Three-point interpolation for systematic variations; grid over smoothing (piecewise linear, quadratic, 6th-order polynomial) × extrapolation (linear, exponential). Value-level functions, not measure combinators. |
 | HistFactory modifiers as composition, not primitives | pyhf/HistFactory modifiers decompose into interpolation + arithmetic + constraint draws. No modifier objects needed; the deterministic and probabilistic parts are separated explicitly. |
 | `fn(...)` with `_` holes: positional-only anonymous functions | `fn(expr)` wraps a hole expression into an anonymous function. Each `_` inside `fn(...)` is a distinct positional parameter, left-to-right. No inherited keyword names. `fn(expr)` lowers to `functionof(...)`. Two-stage lowering: hole abstraction first, then ANF. |
 | Nested arrays allowed; matrices are a separate type | Nested array literals are arrays of arrays (may be ragged). Matrices are first-class rectangular 2D values, constructed via `rowstack`/`colstack`. No implicit row/column convention on nested literals. |

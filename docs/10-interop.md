@@ -168,10 +168,10 @@ below for complete, valid FlatPPL code.
 
 The `normsys` and `histosys` rows show `interp_*` because the specific interpolation
 function depends on the model's interpolation code setting. The pyhf/HistFactory defaults
-are `interp_p6exp` for `normsys` (exponential extrapolation keeps scale factors positive)
-and `interp_p6lin` for `histosys` (linear extrapolation allows additive shifts). These
+are `interp_poly6_exp` for `normsys` (exponential extrapolation keeps scale factors positive)
+and `interp_poly6_lin` for `histosys` (linear extrapolation allows additive shifts). These
 are defaults, not mandates — models may specify alternative interpolation codes, and the
-translator selects the corresponding `interp_p*` function.
+translator selects the corresponding `interp_*` function.
 
 HistFactory's `HistoFactor` modifier is the same deterministic operation as `HistoSys`
 (template interpolation via `interp_*`) but with a free rather than constrained
@@ -216,8 +216,8 @@ gamma_stat = draw(broadcast(fn(Normal(mu = _, sigma = _)),
     [1.0, 1.0, 1.0, 1.0], delta_mc))
 
 # ===== Expected counts (deterministic, using idiomatic bin arithmetic) =====
-sig_morphed = interp_p6lin(sig_jes_down, sig_nominal, sig_jes_up, alpha_jes)
-kappa_xsec = interp_p6exp(0.9, 1.0, 1.1, alpha_xsec)
+sig_morphed = interp_poly6_lin(sig_jes_down, sig_nominal, sig_jes_up, alpha_jes)
+kappa_xsec = interp_poly6_exp(0.9, 1.0, 1.1, alpha_xsec)
 
 expected = broadcast(fn(_ * _ * _ + _ * _),
     mu_sig, sig_morphed, kappa_xsec, bkg_nominal, gamma_stat)
@@ -304,12 +304,12 @@ $\kappa(\alpha)$ via interpolation with center = 1. In FlatPPL:
 
 ```flatppl
 alpha = draw(Normal(mu = 0, sigma = 1))
-kappa = interp_p6exp(kappa_down, 1.0, kappa_up, alpha)
+kappa = interp_poly6_exp(kappa_down, 1.0, kappa_up, alpha)
 modified = broadcast(fn(_ * _), nominal, kappa)
 ```
 
-The default interpolation is `interp_p6exp` (exponential extrapolation ensures $\kappa$ > 0).
-Models may use `interp_p1exp` for code1 or other variants as specified.
+The default interpolation is `interp_poly6_exp` (exponential extrapolation ensures $\kappa$ > 0).
+Models may use `interp_pwexp` for code1 or other variants as specified.
 
 ##### Shape systematic (`histosys` / `HistoSys` / `HistoFactor`)
 
@@ -318,10 +318,10 @@ an up-template as a function of a nuisance parameter. In FlatPPL:
 
 ```flatppl
 alpha = draw(Normal(mu = 0, sigma = 1))
-morphed = interp_p6lin(template_down, nominal, template_up, alpha)
+morphed = interp_poly6_lin(template_down, nominal, template_up, alpha)
 ```
 
-The default interpolation is `interp_p6lin` (linear extrapolation, allowing negative
+The default interpolation is `interp_poly6_lin` (linear extrapolation, allowing negative
 shifts). The result replaces the nominal template directly rather than being multiplied
 onto it. For HistFactory's `HistoFactor`, the same interpolation applies but the
 parameter is free (no `draw` constraint).
@@ -382,7 +382,7 @@ worked example above for a fully expanded model.
 
 ```flatppl
 alpha = draw(Normal(mu = 0.0, sigma = 1.0))
-kappa = interp_p6exp(kappa_down, 1.0, kappa_up, alpha)
+kappa = interp_poly6_exp(kappa_down, 1.0, kappa_up, alpha)
 modified = broadcast(fn(_ * _), nominal, kappa)
 
 aux_alpha = draw(Normal(mu = alpha, sigma = 1.0))
@@ -393,7 +393,7 @@ L_constr = likelihoodof(lawof(aux_alpha, alpha = alpha), 0.0)
 
 ```flatppl
 alpha = draw(Normal(mu = 0.0, sigma = 1.0))
-morphed = interp_p6lin(tmpl_down, nominal, tmpl_up, alpha)
+morphed = interp_poly6_lin(tmpl_down, nominal, tmpl_up, alpha)
 
 aux_alpha = draw(Normal(mu = alpha, sigma = 1.0))
 L_constr = likelihoodof(lawof(aux_alpha, alpha = alpha), 0.0)
@@ -460,7 +460,7 @@ decomposes into explicit components:
 | `samples[].modifiers[type=shapefactor]` | Array-valued explicit input, multiply |
 | `samples[].modifiers[type=shapesys]` | `draw(broadcast(Poisson(...)))`, multiply |
 | `samples[].modifiers[type=staterror]` | `draw(broadcast(Normal(...)))`, multiply |
-| `samples[].modifiers[].interpolation` | Choice of `interp_p*` function |
+| `samples[].modifiers[].interpolation` | Choice of `interp_*` function |
 | `samples[].modifiers[].constraint` | `Normal` vs `Poisson` in the `draw` |
 | Sample stacking | Elementwise addition of per-sample expected counts via `broadcast` |
 | Per-bin Poisson observation | `broadcast(Poisson(rate=_), total)` |
@@ -501,7 +501,7 @@ The worked example above follows the conventional order, but the user is free to
 the arithmetic in any order — FlatPPL does not enforce a fixed combination rule.
 
 **Interpolation code selection.** The default interpolation codes for `normsys` and
-`histosys` are `interp_p6exp` and `interp_p6lin` respectively. Models may override
+`histosys` are `interp_poly6_exp` and `interp_poly6_lin` respectively. Models may override
 these by specifying alternative codes in HS³ (via the `interpolation` field on
 HistFactory modifiers) or pyhf (via `modifier_settings`). The translator maps each
 code to the corresponding FlatPPL interpolation function using the correspondence

@@ -35,6 +35,8 @@ When a real and a complex value meet in arithmetic, the real is promoted to comp
 | `pi` | Real | The mathematical constant $\pi \approx 3.14159\ldots$ |
 | `im` | Complex | The imaginary unit $i$ ($i^2 = -1$). Equivalent to `complex(0.0, 1.0)` |
 | `reals` | Set | The set of all real numbers ($\mathbb{R}$). Default support for `Lebesgue` |
+| `posreals` | Set | The positive real numbers $(0, \infty)$ |
+| `nonnegreals` | Set | The non-negative real numbers $[0, \infty)$ |
 | `integers` | Set | The set of all integers ($\mathbb{Z}$). Default support for `Counting` |
 | `complexes` | Set | The set of all complex numbers ($\mathbb{C}$) |
 | `anything` | Set | Generic placeholder set for untyped interfaces (see [sets](#sets)) |
@@ -53,7 +55,7 @@ valid FlatPPL expressions that evaluate to allowed element types (e.g. `[a, b, 2
 One-dimensional arrays of scalars act as vectors for linear algebra
 (see [built-in functions](07-functions.md#sec:functions)). Vectors of vectors are not
 interpreted as matrices implicitly, but can be turned into matrices explicitly
-using `rowstack(...)` or `colstack(...)` (see [matrix functions](07-functions.md#matrices)).
+using `rowstack(...)` or `colstack(...)` (see [concatenation](07-functions.md#concatenation-of-collections)).
 
 FlatPPL supports standard linear algebra operations (addition, multiplication) on
 scalars, vectors, and matrices.
@@ -77,7 +79,8 @@ Tables are constructed from columns via `table(col1 = [...], col2 = [...])`:
 events = table(mass = [1.1, 1.2, 1.3], pt = [45.2, 32.1, 67.8])
 ```
 
-(See [tables and datasets](07-functions.md#tables-and-datasets).)
+Implementations may choose whichever table realization and memory
+layout they prefer, also on a case-by-case basis.
 
 Tables can also be constructed from records of equal-length vectors via `table(r)` and converted
 to such records via `record(t)`, due to FlatPPL [auto-splatting](04-design.md#sec:calling-convention)
@@ -108,6 +111,8 @@ FlatPPL has a limited notion of sets, used to specify input domains, supports, t
 regions, and analysis regions. The predefined sets are:
 
 - `reals` — $\mathbb{R}$, the set of all real numbers.
+- `posreals` — $(0, \infty)$, the positive real numbers.
+- `nonnegreals` — $[0, \infty)$, the non-negative real numbers.
 - `integers` — $\mathbb{Z}$, the set of all integers.
 - `complexes` — $\mathbb{C}$, the set of all complex numbers.
 - `anything` — a broad placeholder set for generic interfaces (e.g., anonymous functions
@@ -122,9 +127,8 @@ measures (w.r.t. `Counting`), both endpoints are included: `interval(0, 5)` cove
 $\{0, 1, 2, 3, 4, 5\}$. The closed-closed convention is separate from `bincounts`'
 bin ownership rule (see [binning](07-functions.md#binning)).
 
-**Window.** `window(name1=interval(...), name2=interval(...))` specifies a named
-multi-dimensional region for `truncate` on record-valued measures and `restrict` on
-`likelihoodof`.
+For record-valued measures, multi-dimensional regions are expressed as records of
+intervals, e.g. `record(a = interval(0, 1), b = interval(-10, 10))`.
 
 **Cartesian power.** `fill(S, m, n, ...)` applied to a set `S` produces the Cartesian power
 $S^n$ — the set of $m \times n \times \ldots$ arrays whose entries lie in `S`.
