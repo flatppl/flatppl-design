@@ -41,6 +41,10 @@ end
 Note: These examples illustrate possible embedding approaches and are not normative;
 design choices regarding embedding are left to specific FlatPPL implementations.
 
+### Comments
+
+Lines beginning with `#` (after optional whitespace) are comments and are ignored. Inline comments (`x = 3.14  # a comment`) supported as well.
+
 ### Excluded and reserved syntax
 
 FlatPPL has a very lean syntax:
