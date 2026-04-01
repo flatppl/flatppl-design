@@ -4,7 +4,7 @@ Design proposal for a lightweight probabilistic language.
 
 ## Published version
 
-The latest rendered version is available on [GitHub Pages](https://democratizing-models.github.io/flatppl-design/).
+The latest rendered version is available on [GitHub Pages](https://flatppl.github.io/flatppl-design/).
 
 ## Locals builds
 
