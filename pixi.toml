@@ -8,7 +8,7 @@ typst = ">=0.14,<1"
 
 [tasks]
 _mkdir = "mkdir -p build"
-_copy-assets = { cmd = "cp docs/templates/style.css build/ && cp -r docs/diagrams build/ 2>/dev/null || true", depends-on = ["_mkdir"] }
+_copy-assets = { cmd = "cp docs/templates/style.css build/ && cp docs/favicon.ico build/ 2>/dev/null || true && cp -r docs/diagrams build/ 2>/dev/null || true", depends-on = ["_mkdir"] }
 _src-files = "docs/0[0-9]-*.md docs/1[0-9]-*.md"
 build-html = { cmd = "pandoc docs/0[0-9]-*.md docs/1[0-9]-*.md -o build/index.html --standalone --template=docs/templates/template.html --toc --toc-depth=2 --number-sections --shift-heading-level-by=-1 --syntax-highlighting=tango --css=style.css -B docs/templates/header.html --lua-filter=docs/templates/strip-file-refs.lua --lua-filter=docs/templates/html-anchors.lua", depends-on = ["_copy-assets"] }
 build-pdf = { cmd = "typst compile build/flatppl-design.typ build/flatppl-design.pdf", depends-on = ["build-typst"] }
