@@ -431,3 +431,71 @@ Z = totalmass(pstr)
 ```
 
 though it is typically not tractable.
+
+#### Structural disintegration
+
+Bayesian models are sometimes expressed by direct construction of the joint probability measure
+over parameters and observations. Stan-like probabilistic languages primarily or exclusively
+express Bayesian models this way. To construct a FlatPPL likelihood and posterior from such a
+joint model, the joint must be split into a forward kernel (observation model), and a marginal
+measure (prior). The forward kernel can then be combined with some observed data to build a
+likelihood.
+
+In measure theory, such a decomposition is known as disintegration. Given a space of
+parameters $\mathcal{A}$ and a space of observations $\mathcal{B}$, and a joint measure
+$\mu$ on the joint measurable space $\mathcal{A} \times \mathcal{B}$, the disintegration
+theorem states that (for standard Borel spaces, which all FlatPPL spaces are) there
+exists a kernel $\kappa: \mathcal{A} \to M(\mathcal{B})$ and a
+marginal measure $\nu$ on $\mathcal{A}$ such that:
+
+$$\mu(A \times B) = \int_A \kappa(a, B)\, d\nu(a)$$
+
+This is the generalization of conditional probability to arbitrary measures.
+
+FlatPPL does not support arbitrary disintegration (the general theorem allows for
+disintegration along arbitrary measurable functions, not just orthogonal projections),
+but it does support **structural disintegration** via `kernelfor` (returning $\kappa$) and
+`kernelbase` (returning $\nu$): they decompose the DAG of a joint measure, given the names
+or indices of the joint variates that correspond to the variates of the forward kernel
+(and so also correspond to the entries of the observed data).
+
+
+For example:
+
+```flatppl
+# Equivalent to a Stan/Pyro/Turing.jl model
+sigma = 1.0
+a = draw(Normal(mu = 0.0, sigma = 2.0))
+b = draw(Normal(mu = a, sigma = sigma))
+joint_model = lawof(record(a = a, b = b))
+
+# Structural disintegration
+forward_kernel = kernelfor(["b"], joint_model)
+prior = kernelbase(["b"], joint_model)
+
+# Now construct likelihood and posterior
+obs = record(b = 2.1)
+L = likelihoodof(forward_kernel, obs)
+posterior = bayesupdate(L, prior)
+```
+
+**`kernelfor(selector, joint_measure)`** extracts the conditional kernel for the selected
+variates.
+
+**`kernelbase(selector, joint_measure)`** extracts the marginal base measure — it
+marginalizes the selected variates out of the joint.
+
+In `kernelfor` and `kernelbase`, selectors work like in `get`: `"b"` selects the
+bare value, `["b"]` selects a `record(b = ...)`.
+
+The following identity holds: `joint_measure` is equivalent to
+
+```flatppl
+jointchain(kernelbase(["b"], joint_measure), kernelfor(["b"], joint_measure))
+```
+
+For the large class of joint models whose factorization structure is explicit in the DAG,
+`kernelfor` and `kernelbase` can be implemented via straightforward graph inspection.
+For models that involve internal marginalization, non-bijective changes of variables,
+or other transformations that destroy explicit factorization structure, the
+decomposition may be intractable and may not be supported.
