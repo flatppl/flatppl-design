@@ -62,13 +62,37 @@ scalars, vectors, and matrices.
 
 ### Records
 
-Records comprise ordered named fields, written as `record(name1=val1, name2=val2)`. Field
+Records comprise ordered named fields, written as `record(name1=val1, name2=val2, ...)`. Field
 values may be scalars or arrays, but not records. Field access uses dot syntax:
 `r.name1` (lowers to `get(r, "name1")`). Field order is part of the record's identity:
 `record(a=1, b=2)` and `record(b=2, a=1)` are distinct values. This is significant
 for alignment with parameter spaces and for deterministic serialization.
 Fields are accessed by name, not by position — `get(r, i)` is not supported to avoid
 ambiguity with row indexing on tables.
+
+### Presets
+
+Presets are records tagged as suitable parameter or input values. Presets are advisory
+and not tied to a particular function, kernel, or likelihood. It is up to users and
+tooling to pair presets with compatible interfaces and decide how to use them, for example
+as reference points, starting values for optimizers, or similar.
+
+Presets are written `preset(name1=val1, name2=val2, ...)`. Presets accept the same field value types as records. However, values may be wrapped in a `fixed(...)` marker to
+indicate that they are intended to be held constant, e.g. during optimization.
+`fixed` may only appear at the top level of a `preset(...)`. Presets may not be nested.
+
+For example
+
+```flatppl
+starting_values = preset(a = 2.0, b = [4, 5, 6], c = fixed(8.0))
+```
+
+informs users and tools that `starting_values` may be a good choice of test point or
+starting point for functions, kernels or likelihoods that take parameters
+`a`, `b`, and `c`, and that if this preset is chosen, `c` should be held
+constant while `a` and `b` are varied.
+
+Within FlatPPL, a `preset` object is semantically equivalent to a record, and converts to a record in any context that expects a record as an input. The `preset` annotation and `fixed` markers are lost at that point, they do not propagate.
 
 ### Tables
 

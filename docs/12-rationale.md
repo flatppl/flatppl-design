@@ -38,6 +38,7 @@
 | `ifelse` with branch-selecting semantics | Avoids evaluating undefined branches. |
 | No tuples (arrays + records suffice) | Simpler type system; clean JSON round-trips; matches RooFit (no tuple concept). |
 | Records are ordered | Deterministic serialization; meaningful field order for parameter spaces. |
+| `preset`/`fixed` for named parameter/input values | Annotated record for starting points, test inputs, benchmark configurations. Semantically equivalent to a record (annotations erased when used as one); `fixed` marks fields intended to be held constant. Parallels `bijection`: engine-visible metadata on an otherwise ordinary object. Covers the role of HS³ `parameter_points` without being restricted to it. |
 | Decomposition is syntactic sugar | `a, b, c = expr` lowers to indexing/field-access; no hidden scopes or sub-namespaces. |
 | `cat`: same-kind concat, duplicate fields = error | Well-defined, unambiguous concatenation. |
 | Single flat namespace (top-level bindings only) | Record fields / table columns are field names, not top-level bindings. |

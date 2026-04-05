@@ -139,7 +139,7 @@ The table below provides a compact overview of the language. Each family name li
 | [Measure combinators](06-measure-algebra.md#sec:measure-algebra) | `weighted`, `logweighted`, `normalize`, `totalmass`, `superpose`, `joint`, `jointchain`, `chain`, `iid`, `truncate`, `pushfwd` |
 | [Likelihoods and posteriors](06-measure-algebra.md#likelihoods-and-posteriors) | `likelihoodof`, `joint_likelihood`, `densityof`, `logdensityof`, `bayesupdate` |
 | [Higher-order operations](07-functions.md#sec:functions) | `broadcast` |
-| [Data access and reshaping](07-functions.md#sec:functions) | `get`, `cat`, `record`, `all`, `filter`, `selectbins` |
+| [Data access and reshaping](07-functions.md#sec:functions) | `get`, `cat`, `record`, `preset`, `fixed`, `all`, `filter`, `selectbins` |
 | [Constructors](07-functions.md#sec:functions) | `table`, `rowstack`, `colstack`, `linspace`, `extlinspace`, `interval`, `fill` |
 | [Binning and interpolation](07-functions.md#sec:functions) | `bincounts`, `interp_pwlin`, `interp_pwexp`, `interp_poly2_lin`, `interp_poly6_lin`, `interp_poly6_exp` |
 | [Shape functions](07-functions.md#sec:functions) | `polynomial`, `bernstein`, `stepwise` |
@@ -364,6 +364,15 @@ Data is represented by ordinary values — no special data type:
 ```flatppl
 observed_counts = [5, 12, 8, 3]
 data_table = table(a = [1.1, 1.2], b = [2.1, 2.2])
+```
+
+#### Presets
+
+Advisory parameter/input values for use with a compatible function, kernel, or likelihood:
+
+```flatppl
+# Parameter starting values (advisory, not part of model semantics)
+starting_values = preset(mu_sig = 1.0, raw_syst = fixed(0.0), n_bkg = 50.0)
 ```
 
 #### Analysis: likelihoods and posteriors
