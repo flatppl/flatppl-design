@@ -27,9 +27,6 @@ record-valued, depending on the distribution.
   algebraic conversions. Users who work with an alternative convention (e.g. Gamma
   shape/scale instead of shape/rate) write the conversion explicitly.
 
-**The `lambda` keyword collision:** Python reserves `lambda` as a keyword. The Poisson
-distribution uses `rate` instead: `Poisson(rate = 5.3)`.
-
 ### Standard distributions
 
 | Distribution | Parameters | HS³ | RooFit |
@@ -112,8 +109,8 @@ Semantically equivalent to `normalize(Lebesgue(support = interval(a, b)))`.
 
 #### `Poisson(rate=)`
 
-Poisson distribution with expected count `rate` (non-negative real). Uses the name `rate`
-to avoid the Python `lambda` keyword collision.
+Poisson distribution with expected count `rate` (non-negative real). The parameter is
+called `rate` rather than `lambda` to avoid the Python keyword collision.
 
 **HS³:** `poisson_dist`. Parameter mapping: FlatPPL `rate` = HS³ `mean` = $\lambda$.
 
@@ -121,12 +118,10 @@ to avoid the Python `lambda` keyword collision.
 
 #### `ContinuedPoisson(rate=)`
 
-Continuous extension of the Poisson distribution to non-integer x, using the gamma function.
-Parameter `rate` (non-negative real). Needed for Asimov datasets with non-integer expected
-counts. This continuous extension is not a probability measure (it does not integrate to 1
-over the reals); it exists primarily to provide well-defined log-density evaluation for
-non-integer data such as Asimov datasets. Engines should not use it in generative mode
-without explicit user acknowledgment.
+Continuous extension of the Poisson distribution to non-negative real $x$ via the gamma
+function. Parameter `rate` (non-negative real). This is not a probability measure; it
+exists to provide well-defined log-density evaluation for non-integer data such as Asimov
+datasets. Engines should not use it in generative mode without explicit user acknowledgment.
 
 **HS³:** `poisson_dist` (same type; the continued extension is implicit).
 
@@ -163,8 +158,7 @@ HS³ `covariances`.
 RooFit `cov`.
 
 **Design note.** Variate components are unnamed by default. Named components are obtained
-via `pushfwd(fn(relabel(_, ["a","b","c"])), MvNormal(...))` or the expanded form using `draw` +
-`lawof(record(...))`.
+via `relabel` (see [interface adaptation](04-design.md#interface-adaptation)).
 
 ### Composite distributions
 
@@ -202,43 +196,16 @@ When the intensity is parameterized (i.e., a kernel), `PoissonProcess` acts poin
 producing a kernel-valued process — consistent with how all measure algebra operations
 treat kernels.
 
-**Binned observation model.** The foundational construction for binned Poisson processes
-uses pushforward:
-
-```flatppl
-binned_model = pushfwd(fn(bincounts(edges, _)), PoissonProcess(intensity = M))
-```
-
-This produces a measure over integer count arrays. The expected count in each bin is the
-intensity measure of that bin; if the intensity is represented by a density, this is the
-integral of that density over the bin. The choice of analytical or numerical integration
-scheme for computing bin expectations is implementation-defined — FlatPPL specifies the
-mathematical semantics only.
-
-For natively binned models (e.g., pyhf/HistFactory-style) where the expected counts per bin
-are computed directly, there is a derived convenience form that expresses the binned
-observation model without `PoissonProcess`:
-
-```flatppl
-model = broadcast(fn(Poisson(rate = _)), expected_counts)
-```
-
-This is semantically equivalent to the process-based construction for the case of
-independent Poisson counts per bin, and is the natural form for pyhf/HistFactory-style
-models where expected counts are computed directly. The `PoissonProcess` + `bincounts` +
-`pushfwd` construction remains the foundational semantics. The interpolation functions
-for HistFactory-style systematic variations are documented in the [interpolation functions](07-functions.md#interpolation-functions)
-section, and the full pyhf/HistFactory compatibility mapping is in the [pyhf and
-HistFactory compatibility](10-interop.md#sec:histfactory) section.
-
-**Superposition and mixtures.** `superpose(M1, M2, ...)` is the additive rate superposition
-combinator. Normalized finite mixtures are written explicitly as
-`normalize(superpose(weighted(w1, M1), weighted(w2, M2), ...))`.
+**Binned observation model.** Binned Poisson processes are constructed via pushforward
+through `bincounts`: `pushfwd(fn(bincounts(edges, _)), PoissonProcess(intensity = M))`.
+For natively binned models where expected counts per bin are computed directly, the
+equivalent form is `broadcast(fn(Poisson(rate = _)), expected_counts)`. See the
+[pyhf and HistFactory compatibility](10-interop.md#sec:histfactory) section for details.
 
 **Design rationale.** The `PoissonProcess(intensity = M)` parameterization takes a single
 intensity measure rather than separate rate and shape parameters. This is the
-mathematically natural form: the intensity measure of a Poisson point process determines
-both the expected count (total mass) and the event distribution (normalized form).
+mathematically natural form: the intensity measure determines both the expected count
+(total mass) and the event distribution (normalized form).
 
 ### HEP-specific distributions
 
@@ -364,11 +331,7 @@ bern = fn(bernstein(coefficients = [c0, c1, c2, c3], x = _))
 dist = normalize(weighted(bern, Lebesgue(support = interval(lo, hi))))
 ```
 
-**Translator caveats for density-defined distributions.** Only the normalized forms
-(`normalize(weighted(...))` / `normalize(logweighted(...))`) correspond to HS³/RooFit PDF
-objects. For generic functions defined as function graphs, HS³'s `density_function_dist` and
-`log_density_function_dist` are closer semantic matches than `generic_dist`, because they
-accept named function objects rather than opaque expression strings. On the RooFit
-side, wrapper-based fallbacks such as `RooWrapperPdf` are backend conveniences; they may
-silently clip negative density values to zero, which is not semantics-preserving — FlatPPL
-treats negative densities as invalid (a semantic error), not as values to be rescued.
+**Note.** Only the normalized forms (`normalize(weighted(...))` / `normalize(logweighted(...))`)
+correspond to HS³/RooFit PDF objects. FlatPPL treats negative density values as a semantic
+error, not as values to be clipped to zero. See the
+[interoperability](10-interop.md#sec:interop) section for translator guidance.
