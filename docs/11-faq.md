@@ -222,11 +222,14 @@ compositional and make the underlying measure-theoretic operations explicit.
 `_` is a reserved hole token. It is only valid inside `fn(...)`, which delimits the scope
 of hole lowering. `fn(expr)` wraps a deterministic expression containing holes and produces
 an anonymous function whose parameters are the holes in left-to-right reading order. Each
-`_` is a distinct positional-only parameter (no inherited keyword names). Examples:
-`fn(pow(_, 2))` is a 1-argument function; `fn(pow(_ / _, 2))` is a 2-argument function;
+`_` is a distinct parameter, named `arg1`, `arg2`, ... — these names are normative and can
+be used as keyword arguments. Holes do not inherit keyword names from enclosing call
+positions. Examples:
+`fn(pow(_, 2))` is a 1-argument function (parameter `arg1`);
+`fn(pow(_ / _, 2))` is a 2-argument function (`arg1`, `arg2`);
 `fn(_ * _)` is multiplication of two *different* inputs, not squaring. Holes can appear in
 nested expressions: `fn(Normal(mu = _, sigma = pow(_, 2)))` creates a 2-argument function.
-For named parameters, use `functionof` instead. The primary use cases are
+The primary use cases are
 `broadcast(fn(pow(_ / _, 2)), arr1, arr2)` for elementwise arithmetic and
 `pushfwd(fn(relabel(_, names)), M)` for measure transformation.
 

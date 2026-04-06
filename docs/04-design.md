@@ -352,9 +352,9 @@ anonymous function whose parameters are the holes in `expr`, in strict left-to-r
 reading order. This is analogous to the $f(\cdot, b)$ notation used in mathematics to
 denote a function with a free argument.
 
-Each `_` introduces a distinct positional parameter. Holes do not inherit keyword names
-from enclosing call positions. For named parameters, use placeholder variables or
-`functionof` with an explicit interface declaration.
+Each `_` introduces a distinct positional parameter, named `arg1`, `arg2`, ... in
+left-to-right reading order. These names are normative and may be used as keyword
+arguments. Holes do not inherit keyword names from enclosing call positions.
 
 Note: Holes work differently than placeholders (see above).
 
@@ -381,7 +381,7 @@ Use placeholders if arguments need to appear in the expression more than once, e
 g = fn(f(_, b, _))
 ```
 
-lowers to something like (naming is an implementation detail and not normative)
+lowers to
 
 ```flatppl
 g = functionof(f(_arg1_, b, _arg2_), arg1 = _arg1_, arg2 = _arg2_)
