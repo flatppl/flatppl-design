@@ -37,7 +37,10 @@ When a real and a complex value meet in arithmetic, the real is promoted to comp
 | `reals` | Set | The set of all real numbers ($\mathbb{R}$). Default support for `Lebesgue` |
 | `posreals` | Set | The positive real numbers $(0, \infty)$ |
 | `nonnegreals` | Set | The non-negative real numbers $[0, \infty)$ |
+| `posintegers` | Set | The positive integers $\{1, 2, 3, \ldots\}$ |
+| `nonnegintegers` | Set | The non-negative integers $\{0, 1, 2, \ldots\}$ |
 | `integers` | Set | The set of all integers ($\mathbb{Z}$). Default support for `Counting` |
+| `booleans` | Set | The set $\{\mathrm{false}, \mathrm{true}\}$ |
 | `complexes` | Set | The set of all complex numbers ($\mathbb{C}$) |
 | `anything` | Set | Generic placeholder set for untyped interfaces (see [sets](#sets)) |
 
@@ -137,7 +140,10 @@ regions, and analysis regions. The predefined sets are:
 - `reals` — $\mathbb{R}$, the set of all real numbers.
 - `posreals` — $(0, \infty)$, the positive real numbers.
 - `nonnegreals` — $[0, \infty)$, the non-negative real numbers.
+- `posintegers` — $\{1, 2, 3, \ldots\}$, the positive integers.
+- `nonnegintegers` — $\{0, 1, 2, \ldots\}$, the non-negative integers.
 - `integers` — $\mathbb{Z}$, the set of all integers.
+- `booleans` — $\{\mathrm{false}, \mathrm{true}\}$.
 - `complexes` — $\mathbb{C}$, the set of all complex numbers.
 - `anything` — a broad placeholder set for generic interfaces (e.g., anonymous functions
   via holes). Not formally the union of all other sets; it signals that no specific type
