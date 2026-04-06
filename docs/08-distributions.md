@@ -1,48 +1,28 @@
 ## <a id="sec:catalog"></a>Built-in distributions and measures
 
-Distribution/measure constructors follow the calling convention described in [calling conventions](04-design.md#sec:calling-convention). Each constructor defines an argument order
-(given by the parameter list in the catalog below), so both positional and keyword
-calling are supported:
+Distribution and measure constructors follow the general [calling conventions](04-design.md#sec:calling-convention); the parameter order listed in the catalog below defines the positional argument order.
 
-```flatppl
-Normal(0, 1)                          # positional
-Normal(mu = 0, sigma = 1)             # keyword (recommended for complex constructors)
-Gamma(shape = 2.0, rate = 0.5)        # keyword
-```
-
-All built-in distribution constructors in this section have real-valued (or integer-valued)
-parameters and produce variates over real (or integer) spaces — scalar, array, or
-record-valued, depending on the distribution.
-
-**Design principles:**
-
-- **All parameters must be supplied.** Omitting a parameter is a static error. There are no
-  default values. Use input nodes to form kernels.
-- **Parameterization via explicit inputs.** Bind some parameters to input nodes declared with `elementof(...)`,
-  then reify with `lawof`. The kernel's input interface is exactly the set of reached input nodes.
-- **Distribution constructors take only distribution parameters, never variate names.** The
-  variate name comes from the `draw` binding or `pushfwd`. This is a clean break from
-  current HS³ convention, where each distribution carries variate names via fields like
-  `"x"`.
-- **One canonical parameterization per distribution.** FlatPPL does not perform hidden
-  algebraic conversions. Users who work with an alternative convention (e.g. Gamma
-  shape/scale instead of shape/rate) write the conversion explicitly.
+**Variate domain and support.** The catalog lists a variate **domain** and **support** for
+each distribution. Both depend on the distribution parameters. The domain is the set over
+which density evaluation is defined (returning 0 outside the support); the support is the
+set where the density is nonzero. In generative mode, draws always land in the support; in
+scoring mode, density evaluation is valid over the full domain.
 
 ### Standard distributions
 
-| Distribution | Parameters | HS³ | RooFit |
+| Distribution | Parameters | Domain | Support |
 |---|---|---|---|
-| `Normal` | `mu`, `sigma` | `gaussian_dist` | `RooGaussian` |
-| `Exponential` | `rate` | `exponential_dist` | `RooExponential` |
-| `LogNormal` | `mu`, `sigma` | `lognormal_dist` | `RooLognormal` |
-| `Gamma` | `shape`, `rate` | — | `RooGamma` |
-| `Beta` | `alpha`, `beta` | — | — |
-| `Uniform` | `support` | `uniform_dist` | `RooUniform` |
-| `Poisson` | `rate` | `poisson_dist` | `RooPoisson` |
-| `ContinuedPoisson` | `rate` | `poisson_dist` | `RooPoisson` |
-| `Bernoulli` | `p` | — | — |
-| `Binomial` | `n`, `p` | — | — |
-| `MvNormal` | `mu`, `cov` | `multivariate_normal_dist` | `RooMultiVarGaussian` |
+| `Normal` | `mu`, `sigma` | `reals` | `reals` |
+| `Exponential` | `rate` | `reals` | `nonnegreals` |
+| `LogNormal` | `mu`, `sigma` | `reals` | `posreals` |
+| `Gamma` | `shape`, `rate` | `reals` | `posreals` |
+| `Beta` | `alpha`, `beta` | `reals` | `interval(0, 1)` |
+| `Uniform` | `support` | `reals` | `support` |
+| `Poisson` | `rate` | `integers` | `nonnegintegers` |
+| `ContinuedPoisson` | `rate` | `reals` | `nonnegreals` |
+| `Bernoulli` | `p` | `integers` | `booleans` |
+| `Binomial` | `n`, `p` | `integers` | `interval(0, n)` |
+| `MvNormal` | `mu`, `cov` | `fill(reals, n)` | `fill(reals, n)` |
 
 #### `Normal(mu=, sigma=)`
 
@@ -167,9 +147,9 @@ The measure algebra operations from [measure algebra and analysis](06-measure-al
 `normalize`, `superpose`, `iid`, `joint`, `jointchain`, `chain`, `truncate`, `pushfwd`)
 serve as distribution combinators. Additionally:
 
-| Distribution | Parameters | HS³ | RooFit |
+| Distribution | Parameters | Domain | Support |
 |---|---|---|---|
-| `PoissonProcess` | `intensity` | `rate_extended_dist` / `rate_density_dist` | `RooExtendPdf` + base PDF |
+| `PoissonProcess` | `intensity` | arrays/tables | arrays/tables |
 
 #### `PoissonProcess(intensity=)`
 
@@ -210,16 +190,16 @@ mathematically natural form: the intensity measure determines both the expected 
 
 ### HEP-specific distributions
 
-| Distribution | Parameters | HS³ | RooFit |
+| Distribution | Parameters | Domain | Support |
 |---|---|---|---|
-| `CrystalBall` | `m0`, `sigma`, `alpha`, `n` | `crystalball_dist` | `RooCBShape` |
-| `DoubleSidedCrystalBall` | `m0`, `sigmaL`, `sigmaR`, `alphaL`, `nL`, `alphaR`, `nR` | `crystalball_dist` | `RooCrystalBall` |
-| `Argus` | `resonance`, `slope`, `power` | `argus_dist` | `RooArgusBG` |
-| `BreitWigner` | `mean`, `width` | — | `RooBreitWigner` |
-| `RelativisticBreitWigner` | `mean`, `width` | `relativistic_breit_wigner_dist` | — |
-| `Voigtian` | `mean`, `width`, `sigma` | — | `RooVoigtian` |
-| `BifurcatedGaussian` | `mean`, `sigmaL`, `sigmaR` | — | `RooBifurGauss` |
-| `GeneralizedNormal` | `mean`, `alpha`, `beta` | `generalized_normal_dist` | — |
+| `CrystalBall` | `m0`, `sigma`, `alpha`, `n` | `reals` | `reals` |
+| `DoubleSidedCrystalBall` | `m0`, `sigmaL`, `sigmaR`, `alphaL`, `nL`, `alphaR`, `nR` | `reals` | `reals` |
+| `Argus` | `resonance`, `slope`, `power` | `reals` | `interval(0, resonance)` |
+| `BreitWigner` | `mean`, `width` | `reals` | `reals` |
+| `RelativisticBreitWigner` | `mean`, `width` | `reals` | `posreals` |
+| `Voigtian` | `mean`, `width`, `sigma` | `reals` | `reals` |
+| `BifurcatedGaussian` | `mean`, `sigmaL`, `sigmaR` | `reals` | `reals` |
+| `GeneralizedNormal` | `mean`, `alpha`, `beta` | `reals` | `reals` |
 
 #### `CrystalBall(m0=, sigma=, alpha=, n=)`
 
