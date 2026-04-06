@@ -21,7 +21,7 @@
 | `relabel(value, names)` as value-level operation | Structural bijection, no density correction. Composes with `pushfwd` via hole expressions for measure-level relabeling. |
 | No implicit auto-connection | Dependencies only via explicit composition (`draw`, `jointchain`, etc.); no ambient same-name matching. Contrast with RooFit. |
 | Measure = kernel with empty interface | Kernels are the general concept; measures are the closed case. Application is only for non-empty interfaces; nullary calls (`f()`, `K()`) are not surface syntax. |
-| Keyword-only distribution constructors | `Normal(mu=0, sigma=1)`. Self-documenting; one canonical parameterization per distribution. |
+| Distribution constructors support positional and keyword calling | `Normal(0, 1)` for brevity, `Normal(mu=0, sigma=1)` for clarity. One canonical parameterization per distribution; the catalog defines the argument order. |
 | All parameters required (no defaults) | Parameterization via module inputs or `fn(...)` hole expressions, not missing arguments. |
 | `rate` for Poisson (not `lambda`) | Avoids Python keyword collision; matches physical intuition. |
 | Likelihood defined prior-free | Serves both Bayesian and frequentist users. |

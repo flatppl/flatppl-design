@@ -38,9 +38,9 @@ f(record(a = x, b = y))       # shallow auto-splatting
   constructs like `functionof`, `lawof`, and `broadcast` have a distinguished first
   operand followed by optional keyword bindings — see below.)
 - **Built-in functions** (`exp`, `log`, `cat`, `ifelse`, `polynomial`, ...) have a defined
-  argument order.
-- **Built-in measure and kernel constructors** (`Normal`, `Poisson`, ...) do **not** have
-  a positional calling convention. They must be called with keyword arguments or a record.
+  argument order and support both positional and keyword calling.
+- **Built-in measure and kernel constructors** (`Normal`, `Poisson`, ...) have a defined
+  argument order and support both positional and keyword calling.
 - **User-defined callables** from `functionof` / `lawof` support positional calling only
   when an explicit interface declaration has been provided. Otherwise they are
   keyword-only.

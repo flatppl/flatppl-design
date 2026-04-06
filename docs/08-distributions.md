@@ -1,12 +1,13 @@
 ## <a id="sec:catalog"></a>Built-in distributions and measures
 
-Distribution/measure constructors follow the calling convention described in [calling conventions](04-design.md#sec:calling-convention): they use
-**keyword-only arguments** (no positional calling convention is defined for them):
+Distribution/measure constructors follow the calling convention described in [calling conventions](04-design.md#sec:calling-convention). Each constructor defines an argument order
+(given by the parameter list in the catalog below), so both positional and keyword
+calling are supported:
 
 ```flatppl
-Normal(mu = 0, sigma = 1)
-Poisson(rate = 5.3)
-Gamma(shape = 2.0, rate = 0.5)
+Normal(0, 1)                          # positional
+Normal(mu = 0, sigma = 1)             # keyword (recommended for complex constructors)
+Gamma(shape = 2.0, rate = 0.5)        # keyword
 ```
 
 All built-in distribution constructors in this section have real-valued (or integer-valued)
