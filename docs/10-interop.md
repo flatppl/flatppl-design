@@ -329,7 +329,7 @@ parameter is free (no `draw` constraint).
 ##### Uncorrelated shape factor (`shapefactor` / `ShapeFactor`)
 
 Explicit array-valued input: unconstrained per-bin multiplicative factors. Each bin has its own input.
-In FlatPPL: `expected * gamma`, where `gamma = elementof(fill(reals, n_bins))` is an explicit array-valued input.
+In FlatPPL: `expected * gamma`, where `gamma = elementof(cartpow(reals, n_bins))` is an explicit array-valued input.
 Used for data-driven background estimates where the per-bin rates are entirely
 determined by the fit.
 

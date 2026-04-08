@@ -22,7 +22,7 @@ scoring mode, density evaluation is valid over the full domain.
 | `ContinuedPoisson` | `rate` | `reals` | `nonnegreals` |
 | `Bernoulli` | `p` | `integers` | `booleans` |
 | `Binomial` | `n`, `p` | `integers` | `interval(0, n)` |
-| `MvNormal` | `mu`, `cov` | `fill(reals, n)` | `fill(reals, n)` |
+| `MvNormal` | `mu`, `cov` | `cartpow(reals, n)` | `cartpow(reals, n)` |
 
 #### `Normal(mu=, sigma=)`
 

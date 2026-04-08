@@ -5,11 +5,10 @@ value-level operations in FlatPPL. For measure-level operations, see [measure al
 
 ### Array generation
 
-- **`fill(x, n, m, ...)`** — creates an array filled with `x`. When `x` is a set,
-  produces the Cartesian power (e.g., `fill(reals, 3)` is $\mathbb{R}^3$). When `x` is
-  a value, produces a constant array (e.g., `fill(0.0, 10)`).
+- **`fill(x, n, m, ...)`** — creates an array of shape `n × m × ...` filled with
+  value `x` (e.g., `fill(0.0, 10)`).
 
-- **`eye(n)`** — $n \times n$ identity matrix $I_n$.
+- **`eye(n)`** — creates the $n \times n$ identity matrix $I_n$.
 
 - **`onehot(i, n)`** — length-$n$ basis vector $e_i$ with one at position $i$ and zero elsewhere.
 
@@ -23,7 +22,7 @@ value-level operations in FlatPPL. For measure-level operations, see [measure al
 
   Note: When used to specify a binning, `n` is the number of bin **edges** (producing n-1 bins).
 
-- **`extlinspace(from, to, n)`** — extended linspace with overflow edges.
+- **`extlinspace(from, to, n)`** — extended `linspace` with overflow edges.
   Semantically equivalent to `cat([-inf], linspace(from, to, n), [inf])`,
   producing n+2 edge points and n+1 bins (n-1 finite bins plus 2 overflow bins).
 

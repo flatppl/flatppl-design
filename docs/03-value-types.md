@@ -149,34 +149,33 @@ regions, and analysis regions. The predefined sets are:
   via holes). Not formally the union of all other sets; it signals that no specific type
   constraint is imposed.
 
-User-constructed sets are:
+Additional sets may be constructed using the following language constructs:
 
-**Interval.** `interval(lo, hi)` denotes the closed interval $[lo, hi]$. For continuous
-measures, endpoint open/closed status is measure-theoretically irrelevant. For discrete
-measures (w.r.t. `Counting`), both endpoints are included: `interval(0, 5)` covers
-$\{0, 1, 2, 3, 4, 5\}$. The closed-closed convention is separate from `bincounts`'
-bin ownership rule (see [binning](07-functions.md#binning)).
+**Interval.** `interval(lo, hi)` denotes the closed interval $[lo, hi]$.
 
-For record-valued measures, multi-dimensional regions are expressed as records of
-intervals, e.g. `record(a = interval(0, 1), b = interval(-10, 10))`.
+**Cartesian product.** `cartprod(S1, S2, ...)` produces a Cartesian product of sets `S1`, `S2`, etc., mirroring `joint(M1, M2, ...)` for measures. The result is the set of arrays whose
+elements lie in the respective component sets. For example, `cartprod(reals, posreals)`
+is the set of 2-element arrays with the first element in $\mathbb{R}$ and the second in
+$(0, \infty)$.
 
-**Cartesian power.** `fill(S, m, n, ...)` applied to a set `S` produces the Cartesian power
-$S^n$ — the set of $m \times n \times \ldots$ arrays whose entries lie in `S`.
-So `fill(reals, 3)` represents $\mathbb{R}^3$.
+The keyword form `cartprod(a = S1, b = S2, ...)` produces a set of records with
+field `a` in `S1`, field `b` in `S2`, etc., mirroring `joint(a = M1, b = M2, ...)`.
 
-**Collections of sets.** Arrays and records of sets are interpreted as Cartesian products:
-`[S1, S2, S3]` is the set of 3-element arrays whose elements lie in `S1`, `S2`, `S3`
-respectively, and `record(a = S1, b = S2)` is the set of records with field `a` in `S1`
-and field `b` in `S2`.
+**Cartesian power.** `cartpow(S, m, n, ...)` produces the Cartesian power
+$S^{m \times n \times \ldots}$, mirroring `iid(M, m, n, ...)` for measures.
+So `cartpow(reals, 3)` represents $\mathbb{R}^3$.
 
-**`valueset(x)`.** Returns the canonical value set associated with node `x`:
+`relabel` applies to set products in the same way as to measures
+(see [interface adaptation](04-design.md#interface-adaptation)).
+
+**Sets that govern values.** `valueset(x)` returns the canonical value set associated with node `x`:
 
 - For `x = elementof(S)`, `valueset(x)` is `S`.
 - For `x = draw(M)`, `valueset(x)` is the measurable set of `M`.
 - For deterministically computed nodes, `valueset(x)` returns a conservative superset
   of the values that `x` can take (since the exact set is often not tractable).
 
-Note: `valueset` is a low-level language construct used when lowering `functionof` or `lawof` with boundary inputs. User-level code should typically use `elementof(...)`.
+Note: `valueset` is a low-level language construct used when lowering `functionof` or `lawof` with boundary inputs. User-level code should typically use `elementof(...)` and specify sets explicitly.
 
 ### Beyond values
 

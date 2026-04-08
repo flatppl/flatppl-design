@@ -140,7 +140,7 @@ The table below provides a compact overview of the language. Each family name li
 | [Likelihoods and posteriors](06-measure-algebra.md#likelihoods-and-posteriors) | `likelihoodof`, `joint_likelihood`, `densityof`, `logdensityof`, `bayesupdate` |
 | [Higher-order operations](07-functions.md#sec:functions) | `broadcast` |
 | [Data access and reshaping](07-functions.md#sec:functions) | `get`, `cat`, `record`, `preset`, `fixed`, `all`, `filter`, `selectbins` |
-| [Constructors](07-functions.md#sec:functions) | `table`, `rowstack`, `colstack`, `linspace`, `extlinspace`, `interval`, `fill` |
+| [Constructors](07-functions.md#sec:functions) | `table`, `rowstack`, `colstack`, `linspace`, `extlinspace`, `fill` |
 | [Binning and interpolation](07-functions.md#sec:functions) | `bincounts`, `interp_pwlin`, `interp_pwexp`, `interp_poly2_lin`, `interp_poly6_lin`, `interp_poly6_exp` |
 | [Shape functions](07-functions.md#sec:functions) | `polynomial`, `bernstein`, `stepwise` |
 | [Math and logic](07-functions.md#sec:functions) | `exp`, `log`, `pow`, `sqrt`, `abs`, `sin`, `cos`, `min`, `max`, `ifelse`, `land`, `lor`, `lnot`, `lxor` |
@@ -151,6 +151,7 @@ The table below provides a compact overview of the language. Each family name li
 | [Module operations](04-design.md#sec:modules) | `load_module`, `load_table` |
 | [Constants](03-value-types.md#sec:valuetypes) | `true`, `false`, `inf`, `pi`, `im` |
 | [Predefined sets](03-value-types.md#sec:valuetypes) | `reals`, `posreals`, `nonnegreals`, `posintegers`, `nonnegintegers`, `integers`, `booleans`, `complexes`, `anything` |
+| [Set constructors](03-value-types.md#sets) | `interval`, `cartprod`, `cartpow` |
 | [Selectors and operators](04-design.md#sec:calling-convention) | `all` (slicing), `in` (membership) |
 
 ### A tour of FlatPPL
