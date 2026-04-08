@@ -516,3 +516,32 @@ events = load_table("observed_events.csv")
 
 Path resolution follows the same rules as `load_module`: relative to the directory of
 the FlatPPL file containing the call.
+
+### FlatPPL version compatibility
+
+A FlatPPL module may declare which versions of FlatPPL it is compatible with
+via the reserved binding `flatppl_compat`:
+
+```flatppl
+flatppl_compat = "0.1"
+```
+
+The value is a string following Julia-style semantic versioning conventions: for
+pre-1.0 versions, the minor version is breaking (`"0.1"` means $\geq$ 0.1.0, $<$ 0.2.0);
+for versions $\geq$ 1.0, the major version is breaking (`"1"` means $\geq$ 1.0.0, $<$ 2.0.0).
+Multiple ranges are comma-separated and combined with OR:
+
+```flatppl
+flatppl_compat = "0.8, 0.9.2, 1.0.0, 2"
+```
+
+declares compatibility with versions v0.8.x, v0.9.2 upwards to v1, v1.x.y, and v2.x.y.
+
+The declaration is optional. Short-lived models, didactic examples and the like may omit it.
+For embedded FlatPPL blocks, version compatibility may be managed at the host-language level
+(e.g. via Python or Julia package/environment dependency version bounds on FlatPPL packages).
+FlatPPL files of models intended for long-term use, publication or archival should definitely
+include a compatibility declaration.
+
+The compatibility declaration of a loaded module is accessible via dot syntax
+(like any other bound value in the module): `some_module.flatppl_compat`.
