@@ -89,18 +89,31 @@ equivalent in the target system.
 
 | FlatPPL | HS³ | RooFit | Parameter notes |
 |---|---|---|---|
-| `Normal` | `gaussian_dist` (also `normal_dist`) | `RooGaussian` | `mu` → `mean` (HS³/RooFit) |
-| `Exponential` | `exponential_dist` | `RooExponential` | `rate` → `c` (HS³); RooFit uses $e^{c \cdot x}$, so `c` = $-$`rate` |
-| `LogNormal` | `lognormal_dist` | `RooLognormal` | HS³: same names; RooFit: `m0` = $e^\mu$, `k` = $e^\sigma$ |
-| `Gamma` | — | `RooGamma` | `shape` → `gamma`, `rate` → $1/$`beta` (RooFit uses scale), `mu` = 0 |
-| `Beta` | — | — (via `bindPdf`) | |
 | `Uniform` | `uniform_dist` | `RooUniform` | |
+| `Normal` | `gaussian_dist` (also `normal_dist`) | `RooGaussian` | `mu` → `mean` (HS³/RooFit) |
+| `GeneralizedNormal` | `generalized_normal_dist` | — | Names match HS³ |
+| `Cauchy` | — | — | Equivalent to `BreitWigner(location, 2 * scale)` |
+| `StudentT` | — | — | |
+| `Logistic` | — | — | |
+| `LogNormal` | `lognormal_dist` | `RooLognormal` | HS³: same names; RooFit: `m0` = $e^\mu$, `k` = $e^\sigma$ |
+| `Exponential` | `exponential_dist` | `RooExponential` | `rate` → `c` (HS³); RooFit uses $e^{c \cdot x}$, so `c` = $-$`rate` |
+| `Gamma` | — | `RooGamma` | `shape` → `gamma`, `rate` → $1/$`beta` (RooFit uses scale), `mu` = 0 |
+| `Weibull` | — | — | |
+| `Beta` | — | — (via `bindPdf`) | |
+| `Bernoulli` | — | — (via `bindPdf`) | |
+| `Categorical` | — | — | |
+| `Binomial` | — | — (via `bindPdf`) | |
 | `Poisson` | `poisson_dist` | `RooPoisson` | `rate` → `mean` (HS³/RooFit) = $\lambda$ |
 | `ContinuedPoisson` | `poisson_dist` (implicit) | `RooPoisson` (`noRounding=true`) | Same as `Poisson` |
-| `Bernoulli` | — | — (via `bindPdf`) | |
-| `Binomial` | — | — (via `bindPdf`) | |
 | `MvNormal` | `multivariate_normal_dist` | `RooMultiVarGaussian` | `mu` → `mean` (HS³); `cov` → `covariances` (HS³) |
+| `Wishart` | — | — | |
+| `InverseWishart` | — | — | |
+| `LKJ` | — | — | Equivalent to `pushfwd(row_gram, LKJCholesky(...))` |
+| `LKJCholesky` | — | — | |
+| `Dirichlet` | — | — | |
+| `Multinomial` | — | — | |
 | `PoissonProcess` | `rate_extended_dist` / `rate_density_dist` | `RooExtendPdf` + base PDF | Translator decomposes via `normalize`/`totalmass` |
+| `BinnedPoissonProcess` | `bincounts_extended_dist` / `bincounts_density_dist` | `RooExtendPdf` + binned PDF | Equivalent to `pushfwd(bincounts, PoissonProcess)` |
 | `CrystalBall` | `crystalball_dist` | `RooCBShape` | Names match directly |
 | `DoubleSidedCrystalBall` | `crystalball_dist` (double-sided) | `RooCrystalBall` | `sigmaL` → `sigma_L` (HS³), etc. |
 | `Argus` | `argus_dist` | `RooArgusBG` | Names match HS³; RooFit: `resonance` → `m0`, `slope` → `c`, `power` → `p` |
