@@ -1,293 +1,322 @@
-## <a id="sec:catalog"></a>Built-in distributions and measures
+## <a id="sec:distributions"></a>Built-in distributions
 
-Distribution and measure constructors follow the general [calling conventions](04-design.md#sec:calling-convention); the parameter order listed in the catalog below defines the positional argument order.
+This section catalogs the built-in distributions (i.e. probability measures) provided
+by FlatPPL.
 
-**Variate domain and support.** The catalog lists a variate **domain** and **support** for
-each distribution. Both depend on the distribution parameters. The domain is the set over
-which density evaluation is defined (returning 0 outside the support); the support is the
-set where the density is nonzero. In generative mode, draws always land in the support; in
-scoring mode, density evaluation is valid over the full domain.
+The distribution constructors listed here are FlatPPL Markov kernels and the
+distribution parameters are kernel inputs/arguments. 
+The kernels follow the general [calling conventions](04-design.md#sec:calling-convention).
+The names and order of the distribution parameters specified below define the names
+and positional order of the kernel arguments.
+
+**Variate domain and support.** The catalog below lists both variate domain and support for
+each distribution. The domain is the set over which density evaluation is defined
+(returning 0 outside the support). The support is the set where the density is nonzero.
+Samples always fall within the support.
+
+**Probability density and mass functions** are given as densities in the Radon-Nikodym
+sense, for both continuous and discrete distributions. The reference measure is
+specified as well.
+
 
 ### Standard distributions
 
 | Distribution | Parameters | Domain | Support |
 |---|---|---|---|
-| `Normal` | `mu`, `sigma` | `reals` | `reals` |
-| `Exponential` | `rate` | `reals` | `nonnegreals` |
-| `LogNormal` | `mu`, `sigma` | `reals` | `posreals` |
-| `Gamma` | `shape`, `rate` | `reals` | `posreals` |
-| `Beta` | `alpha`, `beta` | `reals` | `interval(0, 1)` |
-| `Uniform` | `support` | `reals` | `support` |
-| `Poisson` | `rate` | `integers` | `nonnegintegers` |
-| `ContinuedPoisson` | `rate` | `reals` | `nonnegreals` |
-| `Bernoulli` | `p` | `integers` | `booleans` |
-| `Binomial` | `n`, `p` | `integers` | `interval(0, n)` |
-| `MvNormal` | `mu`, `cov` | `cartpow(reals, n)` | `cartpow(reals, n)` |
+| [`Uniform`](#uniform) | `support` | `reals` | `support` |
+| [`Normal`](#normal) | `mu`, `sigma` | `reals` | `reals` |
+| [`GeneralizedNormal`](#generalizednormal) | `mean`, `alpha`, `beta` | `reals` | `reals` |
+| [`LogNormal`](#lognormal) | `mu`, `sigma` | `reals` | `posreals` |
+| [`Exponential`](#exponential) | `rate` | `reals` | `nonnegreals` |
+| [`Gamma`](#gamma) | `shape`, `rate` | `reals` | `posreals` |
+| [`Beta`](#beta) | `alpha`, `beta` | `reals` | `unitinterval` |
+| [`Bernoulli`](#bernoulli) | `p` | `integers` | `booleans` |
+| [`Binomial`](#binomial) | `n`, `p` | `integers` | `interval(0, n)` |
+| [`Poisson`](#poisson) | `rate` | `integers` | `nonnegintegers` |
+| [`ContinuedPoisson`](#continuedpoisson) | `rate` | `reals` | `nonnegreals` |
 
-#### `Normal(mu=, sigma=)`
+<a id="uniform"></a>**`Uniform(support)`** — The [uniform distribution](https://en.wikipedia.org/wiki/Continuous_uniform_distribution). Semantically equivalent to `normalize(Lebesgue(support = S))`.
 
-Gaussian distribution with mean `mu` (real) and standard deviation `sigma` (positive real).
+Domain/Support: `reals`/`support`.
 
-**HS³:** `gaussian_dist` (also `normal_dist`). Parameter mapping: FlatPPL `mu` = HS³ `mean`,
-FlatPPL `sigma` = HS³ `sigma`.
+Parameters:
 
-**RooFit:** `RooGaussian`. Parameter mapping: FlatPPL `mu` = RooFit `mean`, FlatPPL `sigma` =
-RooFit `sigma`.
+- `support`: a region object (e.g., `interval(a, b)`).
 
-#### `Exponential(rate=)`
+Density w.r.t. `Lebesgue(reals)`:
 
-Exponential distribution with decay rate `rate` (positive real). Density proportional to
-exp(−rate · x) for x ≥ 0.
+$$\frac{1}{|S|} \quad \text{for } x \in S$$
 
-**HS³:** `exponential_dist`. Parameter mapping: FlatPPL `rate` = HS³ `c`.
+<a id="normal"></a>**`Normal(mu, sigma)`** — The [normal (or Gaussian) distribution](https://en.wikipedia.org/wiki/Normal_distribution).
 
-**RooFit:** `RooExponential`. Caution: RooFit uses exp(c · x), so RooFit `c` = −FlatPPL `rate`
-(the translator must negate the sign).
+Domain/Support: `reals`/`reals`.
 
-#### `LogNormal(mu=, sigma=)`
+Parameters:
 
-Log-normal distribution. If X ~ LogNormal(mu, sigma), then log(X) ~ Normal(mu, sigma).
-Parameters: `mu` (real, log-space mean) and `sigma` (positive real, log-space std dev).
+- `mu = elementof(reals)`: the mean $\mu$.
+- `sigma = elementof(posreals)`: the standard deviation $\sigma$.
 
-**HS³:** `lognormal_dist`. Parameter mapping: FlatPPL `mu` = HS³ `mu`, FlatPPL `sigma` = HS³
-`sigma`.
+Density w.r.t. `Lebesgue(reals)`: 
 
-**RooFit:** `RooLognormal`. Caution: RooFit parameterizes via `m0` and `k`, where m0 =
-$\exp(\mu)$ and $k = \exp(\sigma)$. The translator must exponentiate.
+$$\frac{1}{\sigma\sqrt{2\pi}} \exp\!\left(-\frac{(x - \mu)^2}{2\sigma^2}\right)$$
 
-#### `Gamma(shape=, rate=)`
+<a id="generalizednormal"></a>**`GeneralizedNormal(mean, alpha, beta)`** — The [symmetric generalized normal distribution](https://en.wikipedia.org/wiki/Generalized_normal_distribution#Symmetric_version). Reduces to the normal distribution when $\beta = 2$.
 
-Gamma distribution with shape parameter `shape` (positive real) and rate parameter `rate`
-(positive real). Density proportional to x^(shape−1) · exp(−rate · x).
+Domain/Support: `reals`/`reals`.
 
-**HS³:** Not currently in the HS³ standard.
+Parameters:
 
-**RooFit:** `RooGamma`. Parameter mapping: FlatPPL `shape` = RooFit `gamma`, FlatPPL `rate` =
-1/RooFit `beta` (RooFit uses scale = 1/rate), RooFit `mu` = 0.
+- `mean = elementof(reals)`: location $\mu$.
+- `alpha = elementof(posreals)`: scale.
+- `beta = elementof(posreals)`: shape.
 
-**Design note.** The canonical parameterization is shape/rate, not shape/scale. Users who
-prefer the scale convention write `Gamma(shape = a, rate = 1/s)` explicitly.
+Density w.r.t. `Lebesgue(reals)`:
 
-#### `Beta(alpha=, beta=)`
+$$\frac{\beta}{2\alpha\,\Gamma(1/\beta)} \exp\!\left(-\left(\frac{|x - \mu|}{\alpha}\right)^\beta\right)$$
 
-Beta distribution on [0, 1] with shape parameters `alpha` (positive real) and `beta`
-(positive real).
+<a id="lognormal"></a>**`LogNormal(mu, sigma)`** — The [log-normal distribution](https://en.wikipedia.org/wiki/Log-normal_distribution). If $X \sim \text{LogNormal}(\mu, \sigma)$, then $\log(X) \sim \text{Normal}(\mu, \sigma)$.
 
-**HS³:** Not currently in the HS³ standard.
+Domain/Support: `reals`/`posreals`.
 
-**RooFit:** No dedicated class; expressible via `bindPdf`.
+Parameters:
 
-#### `Uniform(support=)`
+- `mu = elementof(reals)`: log-space mean $\mu$.
+- `sigma = elementof(posreals)`: log-space standard deviation $\sigma$.
 
-Uniform probability distribution on the given support region. The `support` parameter is a
-region object (e.g., `interval(a, b)`).
+Density w.r.t. `Lebesgue(reals)`:
 
-Semantically equivalent to `normalize(Lebesgue(support = interval(a, b)))`.
+$$\frac{1}{x \sigma\sqrt{2\pi}} \exp\!\left(-\frac{(\ln x - \mu)^2}{2\sigma^2}\right) \quad \text{for } x > 0$$
 
-**HS³:** `uniform_dist`.
+`LogNormal(mu, sigma)` is equivalent to `pushfwd(exp, Normal(mu, sigma))`.
 
-**RooFit:** `RooUniform`.
+<a id="exponential"></a>**`Exponential(rate)`** — The [exponential distribution](https://en.wikipedia.org/wiki/Exponential_distribution).
 
-#### `Poisson(rate=)`
+Domain/Support: `reals`/`nonnegreals`.
 
-Poisson distribution with expected count `rate` (non-negative real). The parameter is
-called `rate` rather than `lambda` to avoid the Python keyword collision.
+Parameters:
 
-**HS³:** `poisson_dist`. Parameter mapping: FlatPPL `rate` = HS³ `mean` = $\lambda$.
+- `rate = elementof(posreals)`: the decay rate $\lambda$.
 
-**RooFit:** `RooPoisson`. Parameter mapping: FlatPPL `rate` = RooFit `mean`.
+Density w.r.t. `Lebesgue(reals)`:
 
-#### `ContinuedPoisson(rate=)`
+$$\lambda \, e^{-\lambda x} \quad \text{for } x \geq 0$$
 
-Continuous extension of the Poisson distribution to non-negative real $x$ via the gamma
-function. Parameter `rate` (non-negative real). This is not a probability measure; it
-exists to provide well-defined log-density evaluation for non-integer data such as Asimov
-datasets. Engines should not use it in generative mode without explicit user acknowledgment.
+<a id="gamma"></a>**`Gamma(shape, rate)`** — The [gamma distribution](https://en.wikipedia.org/wiki/Gamma_distribution).
 
-**HS³:** `poisson_dist` (same type; the continued extension is implicit).
+Domain/Support: `reals`/`posreals`.
 
-**RooFit:** `RooPoisson` with `noRounding=true`.
+Parameters:
 
-#### `Bernoulli(p=)`
+- `shape = elementof(posreals)`: shape parameter $\alpha$.
+- `rate = elementof(posreals)`: rate parameter $\beta$ (inverse of scale).
 
-Bernoulli distribution with success probability `p` (real in [0, 1]).
+Density w.r.t. `Lebesgue(reals)`:
 
-**HS³:** Not currently in the HS³ standard.
+$$\frac{\beta^\alpha}{\Gamma(\alpha)} x^{\alpha-1} e^{-\beta x} \quad \text{for } x > 0$$
 
-**RooFit:** No dedicated class; expressible via `bindPdf`.
+<a id="beta"></a>**`Beta(alpha, beta)`** — The [beta distribution](https://en.wikipedia.org/wiki/Beta_distribution).
 
-#### `Binomial(n=, p=)`
+Domain/Support: `reals`/`unitinterval`.
 
-Binomial distribution with `n` trials (positive integer) and success probability `p` (real
-in [0, 1]).
+Parameters:
 
-**HS³:** Not currently in the HS³ standard.
+- `alpha = elementof(posreals)`: shape parameter $\alpha$.
+- `beta = elementof(posreals)`: shape parameter $\beta$.
 
-**RooFit:** No dedicated class; expressible via `bindPdf`.
+Density w.r.t. `Lebesgue(reals)`:
 
-#### `MvNormal(mu=, cov=)`
+$$\frac{x^{\alpha-1}(1-x)^{\beta-1}}{B(\alpha, \beta)} \quad \text{for } x \in (0, 1)$$
 
-Multivariate normal distribution. Parameters: `mu` (array of reals, mean vector) and `cov`
-(matrix, covariance matrix, must be positive definite). Positive semi-definite (singular)
-covariances define valid measures but do not have densities with respect to the ambient
-Lebesgue measure and are not supported by the standard `likelihoodof` evaluation.
+<a id="bernoulli"></a>**`Bernoulli(p)`** — The [Bernoulli distribution](https://en.wikipedia.org/wiki/Bernoulli_distribution).
 
-**HS³:** `multivariate_normal_dist`. Parameter mapping: FlatPPL `mu` = HS³ `mean`, FlatPPL `cov` =
-HS³ `covariances`.
+Domain/Support: `integers`/`booleans`.
 
-**RooFit:** `RooMultiVarGaussian`. Parameter mapping: FlatPPL `mu` = RooFit `mu`, FlatPPL `cov` =
-RooFit `cov`.
+Parameters:
 
-**Design note.** Variate components are unnamed by default. Named components are obtained
-via `relabel` (see [interface adaptation](04-design.md#interface-adaptation)).
+- `p = elementof(unitinterval)`: success probability.
 
-### Composite distributions
+Density w.r.t. `Counting(integers)`:
 
-The measure algebra operations from [measure algebra and analysis](06-measure-algebra.md#sec:measure-algebra) (`weighted`, `logweighted`,
-`normalize`, `superpose`, `iid`, `joint`, `jointchain`, `chain`, `truncate`, `pushfwd`)
-serve as distribution combinators. Additionally:
+$$p^k (1-p)^{1-k} \quad \text{for } k \in \{0, 1\}$$
+
+<a id="binomial"></a>**`Binomial(n, p)`** — The [binomial distribution](https://en.wikipedia.org/wiki/Binomial_distribution).
+
+Domain/Support: `integers`/`interval(0, n)`.
+
+Parameters:
+
+- `n = elementof(posintegers)`: number of trials.
+- `p = elementof(unitinterval)`: success probability.
+
+Density w.r.t. `Counting(integers)`:
+
+$$\binom{n}{k} p^k (1-p)^{n-k} \quad \text{for } k \in \{0, \ldots, n\}$$
+
+<a id="poisson"></a>**`Poisson(rate)`** — The [Poisson distribution](https://en.wikipedia.org/wiki/Poisson_distribution).
+
+Domain/Support: `integers`/`nonnegintegers`.
+
+Parameters:
+
+- `rate = elementof(nonnegreals)`: expected count $\lambda$.
+
+Density w.r.t. `Counting(integers)`:
+
+$$\frac{\lambda^k e^{-\lambda}}{k!} \quad \text{for } k \in \mathbb{N}_0$$
+
+Note: The parameter is called `rate` since `lambda` is a Python keyword.
+
+For natively binned models, `broadcast(Poisson, expected_counts)` produces an
+array-valued observation kernel of independent Poisson counts.
+
+<a id="continuedpoisson"></a>**`ContinuedPoisson(rate)`** — Continuous extension of `Poisson` to the reals.
+`ContinuedPoisson` is not normalized, and so not a probability measure. At
+non-negative integer values, its density w.r.t. the Lebesgue measure is same
+as the density of `Poisson` w.r.t. the counting measure, with a continuous
+extension in between (by replacing the Poission factorial with the gamma function).
+`ContinuedPoisson` is popular in particle physics to obtain a well-defined
+"Poisson-like" log-density evaluation on non-integer data such as Asimov datasets.
+`draw(ContinuedPoisson(rate))` is not a well-defined operation in FlatPPL.
+
+Domain/Support: `reals`/`nonnegreals`.
+
+Parameters:
+
+- `rate = elementof(nonnegreals)`: expected count $\lambda$.
+
+Density w.r.t. `Lebesgue(reals)`:
+
+$$\frac{\lambda^x e^{-\lambda}}{\Gamma(x+1)} \quad \text{for } x \geq 0$$
+
+### Multivariate distributions
 
 | Distribution | Parameters | Domain | Support |
 |---|---|---|---|
-| `PoissonProcess` | `intensity` | arrays/tables | arrays/tables |
+| [`MvNormal`](#mvnormal) | `mu`, `cov` | `cartpow(reals, n)` | `cartpow(reals, n)` |
 
-#### `PoissonProcess(intensity=)`
+<a id="mvnormal"></a>**`MvNormal(mu, cov)`** — The [multivariate normal distribution](https://en.wikipedia.org/wiki/Multivariate_normal_distribution).
 
-Poisson point process with the given intensity measure. The `intensity` parameter is a
-measure or kernel over real scalar values or records of real scalar values; it must have
-finite total mass.
+Domain/Support: `cartpow(reals, n)`/`cartpow(reals, n)`.
 
-**Sample representation.** A draw from a `PoissonProcess` produces:
+Parameters:
 
-- **Scalar event space:** an array of real scalars (the individual events).
-- **Record-valued event space:** a `table` (see [tables](03-value-types.md#tables)).
-  The array length is the random event count.
+- `mu`: mean vector (array of reals, length $n$).
+- `cov`: covariance matrix ($n \times n$, positive definite).
 
-The order of events in a `PoissonProcess` array or table is representation-only and has no
-semantic meaning. The standard Poisson process likelihood formula absorbs the permutation
-symmetry factor.
+Density w.r.t. `iid(Lebesgue(reals), n)`:
 
-**HS³:** The translator decomposes the intensity measure via `normalize(M)` and
-`totalmass(M)` — the total mass gives the expected event count and the normalized form
-gives the event shape distribution. This maps to `rate_extended_dist` (or
-`rate_density_dist` when expressed as a density).
+$$\frac{1}{\sqrt{(2\pi)^n \det \Sigma}} \exp\!\left(-\frac{1}{2}(\mathbf{x}-\boldsymbol{\mu})^\top \Sigma^{-1} (\mathbf{x}-\boldsymbol{\mu})\right)$$
 
-**RooFit:** Maps to `RooExtendPdf(...)` plus the base PDF obtained from `normalize(M)`.
-When the intensity is parameterized (i.e., a kernel), `PoissonProcess` acts pointwise,
-producing a kernel-valued process — consistent with how all measure algebra operations
-treat kernels.
+`MvNormal(mu, cov)` is equivalent to `pushfwd(fn(mu + lower_cholesky(cov) * _), iid(Normal(0, 1), n))`.
 
-**Binned observation model.** Binned Poisson processes are constructed via pushforward
-through `bincounts`: `pushfwd(fn(bincounts(edges, _)), PoissonProcess(intensity = M))`.
-For natively binned models where expected counts per bin are computed directly, the
-equivalent form is `broadcast(fn(Poisson(rate = _)), expected_counts)`. See the
-[pyhf and HistFactory compatibility](10-interop.md#sec:histfactory) section for details.
+### Composite distributions
 
-**Design rationale.** The `PoissonProcess(intensity = M)` parameterization takes a single
-intensity measure rather than separate rate and shape parameters. This is the
-mathematically natural form: the intensity measure determines both the expected count
-(total mass) and the event distribution (normalized form).
+| Distribution | Parameters | Domain | Support |
+|---|---|---|---|
+| [`PoissonProcess`](#poissonprocess) | `intensity` | arrays/tables | arrays/tables |
+
+<a id="poissonprocess"></a>**`PoissonProcess(intensity)`** — The (inhomogeneous) [Poisson point process](https://en.wikipedia.org/wiki/Poisson_point_process), parameterized by an intensity measure. Variates are arrays (scalar points) or tables (record-valued points). The order of entries in the resulting array or table carries no semantic meaning (permutation-invariant).
+
+Domain/Support: arrays/tables.
+
+Parameters:
+
+- `intensity`: finite-mass measure or kernel over scalar or record-valued points.
+
+Given a normalized distribution `shape` and an expected count `n`, the intensity is
+constructed via `weighted(n, shape)`. Conversely, any intensity decomposes as
+`totalmass(intensity)` (expected count) and `normalize(intensity)` (shape distribution).
+
+Binned Poisson processes may be constructed via pushforward:
+`pushfwd(fn(bincounts(edges, _)), PoissonProcess(intensity = M))`.
+
+**Note.** In particle physics, a likelihood based on a Poisson process is often called an extended likelihood.
 
 ### HEP-specific distributions
 
 | Distribution | Parameters | Domain | Support |
 |---|---|---|---|
-| `CrystalBall` | `m0`, `sigma`, `alpha`, `n` | `reals` | `reals` |
-| `DoubleSidedCrystalBall` | `m0`, `sigmaL`, `sigmaR`, `alphaL`, `nL`, `alphaR`, `nR` | `reals` | `reals` |
-| `Argus` | `resonance`, `slope`, `power` | `reals` | `interval(0, resonance)` |
-| `BreitWigner` | `mean`, `width` | `reals` | `reals` |
-| `RelativisticBreitWigner` | `mean`, `width` | `reals` | `posreals` |
-| `Voigtian` | `mean`, `width`, `sigma` | `reals` | `reals` |
-| `BifurcatedGaussian` | `mean`, `sigmaL`, `sigmaR` | `reals` | `reals` |
-| `GeneralizedNormal` | `mean`, `alpha`, `beta` | `reals` | `reals` |
+| [`CrystalBall`](#crystalball) | `m0`, `sigma`, `alpha`, `n` | `reals` | `reals` |
+| [`DoubleSidedCrystalBall`](#doublesidedcrystalball) | `m0`, `sigmaL`, `sigmaR`, `alphaL`, `nL`, `alphaR`, `nR` | `reals` | `reals` |
+| [`Argus`](#argus) | `resonance`, `slope`, `power` | `reals` | `interval(0, resonance)` |
+| [`BreitWigner`](#breitwigner) | `mean`, `width` | `reals` | `reals` |
+| [`RelativisticBreitWigner`](#relativisticbreitwigner) | `mean`, `width` | `reals` | `posreals` |
+| [`Voigtian`](#voigtian) | `mean`, `width`, `sigma` | `reals` | `reals` |
+| [`BifurcatedGaussian`](#bifurcatedgaussian) | `mean`, `sigmaL`, `sigmaR` | `reals` | `reals` |
 
-#### `CrystalBall(m0=, sigma=, alpha=, n=)`
+<a id="crystalball"></a>**`CrystalBall(m0, sigma, alpha, n)`** — The [Crystal Ball distribution](https://en.wikipedia.org/wiki/Crystal_Ball_function): Gaussian core with a power-law tail on one side.
 
-Crystal Ball function: Gaussian core with a power-law tail on one side. Parameters: peak
-position `m0` (real), width `sigma` (positive real), transition point `alpha` (positive
-real), and power-law exponent `n` (positive real).
+Domain/Support: `reals`/`reals`.
 
-**HS³:** `crystalball_dist`. Parameter mapping: FlatPPL names match HS³ names directly (`m0`,
-`sigma`, `alpha`, `n`).
+Parameters:
 
-**RooFit:** `RooCBShape`.
+- `m0 = elementof(reals)`: peak position.
+- `sigma = elementof(posreals)`: width.
+- `alpha = elementof(posreals)`: transition point (in units of $\sigma$).
+- `n = elementof(posreals)`: power-law exponent.
 
-#### `DoubleSidedCrystalBall(m0=, sigmaL=, sigmaR=, alphaL=, nL=, alphaR=, nR=)`
+<a id="doublesidedcrystalball"></a>**`DoubleSidedCrystalBall(m0, sigmaL, sigmaR, alphaL, nL, alphaR, nR)`** — The double-sided [Crystal Ball distribution](https://en.wikipedia.org/wiki/Crystal_Ball_function): Gaussian core with independent power-law tails on both sides.
 
-Double-sided Crystal Ball: Gaussian core with independent power-law tails on both sides.
-Parameters: peak position `m0` (real), left/right widths `sigmaL`, `sigmaR` (positive
-reals), left/right transition points `alphaL`, `alphaR` (positive reals), and left/right
-power-law exponents `nL`, `nR` (positive reals).
+Domain/Support: `reals`/`reals`.
 
-**HS³:** `crystalball_dist` (the double-sided variant). Parameter mapping: FlatPPL `sigmaL` =
-HS³ `sigma_L`, FlatPPL `sigmaR` = HS³ `sigma_R`, etc.
+Parameters:
 
-**RooFit:** `RooCrystalBall`.
+- `m0 = elementof(reals)`: peak position.
+- `sigmaL = elementof(posreals)`, `sigmaR = elementof(posreals)`: left/right widths.
+- `alphaL = elementof(posreals)`, `alphaR = elementof(posreals)`: left/right transition points.
+- `nL = elementof(posreals)`, `nR = elementof(posreals)`: left/right power-law exponents.
 
-#### `Argus(resonance=, slope=, power=)`
+<a id="argus"></a>**`Argus(resonance, slope, power)`** — The [ARGUS distribution](https://en.wikipedia.org/wiki/ARGUS_distribution).
 
-ARGUS background function. Parameters: kinematic endpoint `resonance` (positive real),
-slope parameter `slope` (real), and power parameter `power` (positive real, typically 0.5).
+Domain/Support: `reals`/`interval(0, resonance)`.
 
-**HS³:** `argus_dist`. Parameter mapping: FlatPPL names match HS³ names directly (`resonance`,
-`slope`, `power`).
+Parameters:
 
-**RooFit:** `RooArgusBG`. Parameter mapping: FlatPPL `resonance` = RooFit `m0`, FlatPPL `slope` =
-RooFit `c`, FlatPPL `power` = RooFit `p`.
+- `resonance = elementof(posreals)`: kinematic endpoint.
+- `slope = elementof(reals)`: slope parameter.
+- `power = elementof(posreals)`: power parameter (typically 0.5).
 
-#### `BreitWigner(mean=, width=)`
+<a id="breitwigner"></a>**`BreitWigner(mean, width)`** — The non-relativistic [Breit-Wigner (Cauchy/Lorentzian) distribution](https://en.wikipedia.org/wiki/Cauchy_distribution). The non-relativistic and relativistic Breit-Wigners are distinct distributions and have separate constructors.
 
-Non-relativistic Breit-Wigner (Cauchy/Lorentzian) distribution. Parameters: resonance
-position `mean` (real) and full width at half maximum `width` (positive real, $\Gamma$).
+Domain/Support: `reals`/`reals`.
 
-**HS³:** Not currently in the HS³ standard; we recommend it be proposed for addition.
+Parameters:
 
-**RooFit:** `RooBreitWigner`.
+- `mean = elementof(reals)`: resonance position $m$.
+- `width = elementof(posreals)`: full width at half maximum $\Gamma$.
 
-**Design note.** The non-relativistic and relativistic Breit-Wigners are distinct
-distributions and have separate constructors.
+Density w.r.t. `Lebesgue(reals)`:
 
-#### `RelativisticBreitWigner(mean=, width=)`
+$$\frac{1}{\pi} \frac{\Gamma/2}{(x - m)^2 + (\Gamma/2)^2}$$
 
-Relativistic Breit-Wigner distribution. Parameters: resonance mass `mean` (positive real)
-and full width `width` (positive real, $\Gamma$).
+<a id="relativisticbreitwigner"></a>**`RelativisticBreitWigner(mean, width)`** — The [relativistic Breit-Wigner distribution](https://en.wikipedia.org/wiki/Relativistic_Breit%E2%80%93Wigner_distribution).
 
-**HS³:** `relativistic_breit_wigner_dist`. Parameter mapping: FlatPPL `mean` = HS³ `mean`,
-FlatPPL `width` = HS³ `width`.
+Domain/Support: `reals`/`posreals`.
 
-**RooFit:** Not currently in RooFit as a dedicated class.
+Parameters:
 
-#### `Voigtian(mean=, width=, sigma=)`
+- `mean = elementof(posreals)`: resonance mass $m$.
+- `width = elementof(posreals)`: full width $\Gamma$.
 
-Voigt profile: convolution of a Breit-Wigner and a Gaussian. Parameters: resonance
-position `mean` (real), Breit-Wigner full width `width` (positive real, $\Gamma$), and Gaussian
-resolution `sigma` (positive real).
+<a id="voigtian"></a>**`Voigtian(mean, width, sigma)`** — The [Voigt profile](https://en.wikipedia.org/wiki/Voigt_profile): convolution of a Breit-Wigner and a Gaussian.
 
-**HS³:** Not currently in the HS³ standard; we recommend it be proposed for addition.
+Domain/Support: `reals`/`reals`.
 
-**RooFit:** `RooVoigtian`.
+Parameters:
 
-#### `BifurcatedGaussian(mean=, sigmaL=, sigmaR=)`
+- `mean = elementof(reals)`: resonance position.
+- `width = elementof(posreals)`: Breit-Wigner full width $\Gamma$.
+- `sigma = elementof(posreals)`: Gaussian resolution.
 
-Gaussian with different widths on left and right sides. Parameters: peak position `mean`
-(real), left-side width `sigmaL` (positive real), and right-side width `sigmaR` (positive
-real).
+<a id="bifurcatedgaussian"></a>**`BifurcatedGaussian(mean, sigmaL, sigmaR)`** — [Split normal distribution](https://en.wikipedia.org/wiki/Split_normal_distribution): Gaussian with different widths on left and right sides.
 
-**HS³:** Not currently in the HS³ standard.
+Domain/Support: `reals`/`reals`.
 
-**RooFit:** `RooBifurGauss`.
+Parameters:
 
-#### `GeneralizedNormal(mean=, alpha=, beta=)`
-
-Generalized normal distribution. Parameters: location `mean` (real), scale `alpha`
-(positive real), and shape `beta` (positive real). Reduces to the normal distribution
-when beta = 2.
-
-**HS³:** `generalized_normal_dist`. Parameter mapping: FlatPPL names match HS³ names directly
-(`mean`, `alpha`, `beta`).
-
-**RooFit:** Not currently in RooFit as a dedicated class.
-
+- `mean = elementof(reals)`: peak position.
+- `sigmaL = elementof(posreals)`: left-side width.
+- `sigmaR = elementof(posreals)`: right-side width.
 
 ### Density-defined distributions
 
@@ -305,14 +334,13 @@ proportional to f. The function f must be non-negative over S. For log-space den
 The shape functions `polynomial`, `bernstein`, and `stepwise` are documented in the
 [built-in functions](07-functions.md#sec:functions) section.
 
-#### Density-defined distribution example
+**Example.**
 
 ```flatppl
 bern = fn(bernstein(coefficients = [c0, c1, c2, c3], x = _))
 dist = normalize(weighted(bern, Lebesgue(support = interval(lo, hi))))
 ```
 
-**Note.** Only the normalized forms (`normalize(weighted(...))` / `normalize(logweighted(...))`)
-correspond to HS³/RooFit PDF objects. FlatPPL treats negative density values as a semantic
-error, not as values to be clipped to zero. See the
-[interoperability](10-interop.md#sec:interop) section for translator guidance.
+**Note.** FlatPPL treats negative density values as a semantic error, not as values to be
+clipped to zero. See the [interoperability](10-interop.md#sec:interop) section for
+translator guidance on mapping density-defined distributions to HS³ and RooFit.

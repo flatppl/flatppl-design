@@ -80,6 +80,43 @@ equivalent: individually named top-level bindings. FlatPPL additionally supports
 support. Translators must flatten structured variates into individually named components for
 HS³ serialization.
 
+### Distribution parameter mapping
+
+The following table maps FlatPPL distribution constructors to their HS³ and RooFit
+equivalents, including parameter name translations. Where parameter names differ,
+translators must apply the documented mapping. Entries marked "—" have no dedicated
+equivalent in the target system.
+
+| FlatPPL | HS³ | RooFit | Parameter notes |
+|---|---|---|---|
+| `Normal` | `gaussian_dist` (also `normal_dist`) | `RooGaussian` | `mu` → `mean` (HS³/RooFit) |
+| `Exponential` | `exponential_dist` | `RooExponential` | `rate` → `c` (HS³); RooFit uses $e^{c \cdot x}$, so `c` = $-$`rate` |
+| `LogNormal` | `lognormal_dist` | `RooLognormal` | HS³: same names; RooFit: `m0` = $e^\mu$, `k` = $e^\sigma$ |
+| `Gamma` | — | `RooGamma` | `shape` → `gamma`, `rate` → $1/$`beta` (RooFit uses scale), `mu` = 0 |
+| `Beta` | — | — (via `bindPdf`) | |
+| `Uniform` | `uniform_dist` | `RooUniform` | |
+| `Poisson` | `poisson_dist` | `RooPoisson` | `rate` → `mean` (HS³/RooFit) = $\lambda$ |
+| `ContinuedPoisson` | `poisson_dist` (implicit) | `RooPoisson` (`noRounding=true`) | Same as `Poisson` |
+| `Bernoulli` | — | — (via `bindPdf`) | |
+| `Binomial` | — | — (via `bindPdf`) | |
+| `MvNormal` | `multivariate_normal_dist` | `RooMultiVarGaussian` | `mu` → `mean` (HS³); `cov` → `covariances` (HS³) |
+| `PoissonProcess` | `rate_extended_dist` / `rate_density_dist` | `RooExtendPdf` + base PDF | Translator decomposes via `normalize`/`totalmass` |
+| `CrystalBall` | `crystalball_dist` | `RooCBShape` | Names match directly |
+| `DoubleSidedCrystalBall` | `crystalball_dist` (double-sided) | `RooCrystalBall` | `sigmaL` → `sigma_L` (HS³), etc. |
+| `Argus` | `argus_dist` | `RooArgusBG` | Names match HS³; RooFit: `resonance` → `m0`, `slope` → `c`, `power` → `p` |
+| `BreitWigner` | — | `RooBreitWigner` | |
+| `RelativisticBreitWigner` | `relativistic_breit_wigner_dist` | — | Names match HS³ |
+| `Voigtian` | — | `RooVoigtian` | |
+| `BifurcatedGaussian` | — | `RooBifurGauss` | |
+| `GeneralizedNormal` | `generalized_normal_dist` | — | Names match HS³ |
+
+**Density-defined distributions.** Only the normalized forms
+(`normalize(weighted(...))` / `normalize(logweighted(...))`) correspond to HS³/RooFit PDF
+objects. HS³'s `density_function_dist` and `log_density_function_dist` are the closest
+semantic matches. On the RooFit side, `RooWrapperPdf` may silently clip negative density
+values to zero, which is not semantics-preserving — FlatPPL treats negative densities as
+a semantic error.
+
 ### <a id="sec:roofit"></a>RooFit
 
 RooFit is a C++ modeling toolkit in ROOT — the most mature and widely deployed statistical

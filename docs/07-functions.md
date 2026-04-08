@@ -1,7 +1,7 @@
 ## <a id="sec:functions"></a>Built-in functions
 
 This section provides reference documentation for all deterministic functions and
-value-level operations in FlatPPL. For measure-level operations, see [measure algebra and analysis](06-measure-algebra.md#sec:measure-algebra). For distribution constructors, see [built-in distributions and measures](08-distributions.md#sec:catalog).
+value-level operations in FlatPPL. For measure-level operations, see [measure algebra and analysis](06-measure-algebra.md#sec:measure-algebra). For distribution constructors, see [built-in distributions](08-distributions.md#sec:distributions).
 
 ### Array generation
 
