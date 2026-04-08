@@ -37,6 +37,7 @@ When a real and a complex value meet in arithmetic, the real is promoted to comp
 | `reals` | Set | The set of all real numbers ($\mathbb{R}$). Default support for `Lebesgue` |
 | `posreals` | Set | The positive real numbers $(0, \infty)$ |
 | `nonnegreals` | Set | The non-negative real numbers $[0, \infty)$ |
+| `unitinterval` | Set | The unit interval $[0, 1]$ |
 | `posintegers` | Set | The positive integers $\{1, 2, 3, \ldots\}$ |
 | `nonnegintegers` | Set | The non-negative integers $\{0, 1, 2, \ldots\}$ |
 | `integers` | Set | The set of all integers ($\mathbb{Z}$). Default support for `Counting` |
@@ -140,6 +141,7 @@ regions, and analysis regions. The predefined sets are:
 - `reals` — $\mathbb{R}$, the set of all real numbers.
 - `posreals` — $(0, \infty)$, the positive real numbers.
 - `nonnegreals` — $[0, \infty)$, the non-negative real numbers.
+- `unitinterval` — $[0, 1]$, the unit interval.
 - `posintegers` — $\{1, 2, 3, \ldots\}$, the positive integers.
 - `nonnegintegers` — $\{0, 1, 2, \ldots\}$, the non-negative integers.
 - `integers` — $\mathbb{Z}$, the set of all integers.
