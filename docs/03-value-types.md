@@ -167,6 +167,12 @@ field `a` in `S1`, field `b` in `S2`, etc., mirroring `joint(a = M1, b = M2, ...
 $S^{m \times n \times \ldots}$, mirroring `iid(M, m, n, ...)` for measures.
 So `cartpow(reals, 3)` represents $\mathbb{R}^3$.
 
+**Standard simplex.** `stdsimplex(n)` denotes the standard $(n{-}1)$-dimensional probability
+simplex $\Delta_{n-1} = \{x \in \mathbb{R}^n : x_i \geq 0,\; \sum_i x_i = 1\}$.
+`Lebesgue(support = stdsimplex(n))` is the $(n{-}1)$-dimensional Hausdorff measure on the
+simplex, embedded in $\mathbb{R}^n$: it measures surface area within the simplex and assigns
+zero mass to sets that do not intersect it.
+
 `relabel` applies to set products in the same way as to measures
 (see [interface adaptation](04-design.md#interface-adaptation)).
 

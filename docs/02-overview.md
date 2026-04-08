@@ -146,12 +146,12 @@ The table below provides a compact overview of the language. Each family name li
 | [Math and logic](07-functions.md#sec:functions) | `exp`, `log`, `pow`, `sqrt`, `abs`, `sin`, `cos`, `min`, `max`, `ifelse`, `land`, `lor`, `lnot`, `lxor` |
 | [Complex arithmetic](07-functions.md#sec:functions) | `complex`, `real`, `imag`, `conj`, `abs2`, `cis` |
 | [Reductions](07-functions.md#sec:functions) | `sum`, `product`, `length` |
-| [Distributions](08-distributions.md#sec:distributions) | `Normal`, `Poisson`, `PoissonProcess`, `Exponential`, ... |
+| [Distributions](08-distributions.md#sec:distributions) | `Normal`, `Poisson`, `PoissonProcess`, `Exponential`, `Dirichlet`, ... |
 | [Fundamental measures](06-measure-algebra.md#sec:measure-algebra) | `Lebesgue`, `Counting`, `Dirac` |
 | [Module operations](04-design.md#sec:modules) | `load_module`, `load_table`, `flatppl_compat` |
 | [Constants](03-value-types.md#sec:valuetypes) | `true`, `false`, `inf`, `pi`, `im` |
 | [Predefined sets](03-value-types.md#sec:valuetypes) | `reals`, `posreals`, `nonnegreals`, `unitinterval`, `posintegers`, `nonnegintegers`, `integers`, `booleans`, `complexes`, `anything` |
-| [Set constructors](03-value-types.md#sets) | `interval`, `cartprod`, `cartpow` |
+| [Set constructors](03-value-types.md#sets) | `interval`, `cartprod`, `cartpow`, `stdsimplex` |
 | [Selectors and operators](04-design.md#sec:calling-convention) | `all` (slicing), `in` (membership) |
 
 ### A tour of FlatPPL
