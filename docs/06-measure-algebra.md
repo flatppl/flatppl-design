@@ -11,9 +11,9 @@ finite products thereof), where the $\sigma$-algebra is the standard Borel
 $\sigma$-algebra and can be left implicit. A **measure** on $X$ is a $\sigma$-additive
 function $\mu: \Sigma_X \to [0, \infty]$. A **probability measure** has $\mu(X) = 1$.
 All measures in FlatPPL are **$\sigma$-finite** (admitting a countable cover of
-finite-measure sets), which ensures that densities (Radon-Nikodym derivatives) exist
-and that product and marginalization operations are well-defined
-([Staton, 2017](15-references.md#staton2017)). In the rest of this document, "measure"
+finite-measure sets), which ensures that the Radon-Nikodym theorem applies (so
+densities exist with respect to a dominating reference measure) and that product and
+marginalization operations are well-defined. In the rest of this document, "measure"
 means "$\sigma$-finite measure."
 
 A **transition kernel** (or **kernel**) from $X$ to $Y$ is a measurable function
@@ -21,9 +21,7 @@ $\kappa: X \to M(Y)$, where $M(Y)$ is the space of measures on $Y$. When each
 $\kappa(x, \cdot)$ is a probability measure, the kernel is called a **Markov kernel**.
 In FlatPPL, kernels are represented as functions that map value points to measures.
 
-The classical Giry monad operates on probability measures, which are normalized. FlatPPL extends this to $\sigma$-finite measures in general, e.g. to represent non-normalized posteriors and intensity measures. The
-algebraic structure carries over to this
-setting; [Staton (2017)](15-references.md#staton2017) provides the formal basis.
+The classical Giry monad operates on probability measures, which are normalized. FlatPPL extends this to $\sigma$-finite measures in general, e.g. to represent non-normalized posteriors and intensity measures. [Staton (2017)](15-references.md#staton2017) provides the formal basis for this extension using the more general class of s-finite measures; all $\sigma$-finite measures are s-finite, so FlatPPL's algebraic operations are well-founded within that framework.
 
 **Density convention.** All density formulas in this section are with respect to a
 reference measure implied by the constituent distribution types: Lebesgue for continuous

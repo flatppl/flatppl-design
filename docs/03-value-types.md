@@ -45,6 +45,14 @@ When a real and a complex value meet in arithmetic, the real is promoted to comp
 | `complexes` | Set | The set of all complex numbers ($\mathbb{C}$) |
 | `anything` | Set | Generic placeholder set for untyped interfaces (see [sets](#sets)) |
 
+**Note on infinities.** `posreals`, `nonnegreals`, and `reals` admit `inf` (and, for
+`reals`, `-inf`) as legal values. Strictly speaking, these are subsets of the extended
+reals $\overline{\mathbb{R}} = \mathbb{R} \cup \{-\infty, +\infty\}$, not of
+$\mathbb{R}$. This is a deliberate choice for compatibility with common numerical and statistical libraries.
+When FlatPPL refers to `Lebesgue(support = reals)`, the reference measure is the
+ordinary Lebesgue measure on the finite-real part; the points $\pm\infty$ carry zero
+Lebesgue mass. Arithmetic on infinities follows IEEE 754 conventions.
+
 The selector `all` and the hole token `_` are syntactic elements, not value constants;
 they are documented in [calling conventions and anonymous functions](04-design.md#sec:calling-convention).
 

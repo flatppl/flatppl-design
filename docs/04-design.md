@@ -365,6 +365,8 @@ neg = fn(0 - _)
 poly = fn(polynomial(coefficients = cs, x = _))
 ```
 
+The trivial case `fn(_)` is the identity function, equivalent to the built-in `identity`.
+
 Multiple holes — left-to-right positional order:
 
 ```flatppl

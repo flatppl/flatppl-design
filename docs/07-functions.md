@@ -3,6 +3,11 @@
 This section provides reference documentation for all deterministic functions and
 value-level operations in FlatPPL. For measure-level operations, see [measure algebra and analysis](06-measure-algebra.md#sec:measure-algebra). For distribution constructors, see [built-in distributions](08-distributions.md#sec:distributions).
 
+### Identities
+
+- **`identity(x)`** — the identity function: returns its argument unchanged.
+  Equivalent to `fn(_)`.
+
 ### Array generation
 
 - **`fill(x, n, m, ...)`** — creates an array of shape `n × m × ...` filled with

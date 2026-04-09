@@ -187,7 +187,7 @@ Density w.r.t. `Lebesgue(reals)`:
 
 $$\frac{\beta^\alpha}{\Gamma(\alpha)} x^{-\alpha-1} e^{-\beta/x} \quad \text{for } x > 0$$
 
-`InverseGamma(shape, scale)` is equivalent to `pushfwd(fn(1/_), Gamma(shape, 1/scale))`.
+`InverseGamma(shape, scale)` is equivalent to `pushfwd(fn(1/_), Gamma(shape, scale))`.
 
 <a id="beta"></a>**`Beta(alpha, beta)`** — The [beta distribution](https://en.wikipedia.org/wiki/Beta_distribution).
 
@@ -263,7 +263,8 @@ Density w.r.t. `Counting(integers)`:
 
 $$\frac{\lambda^k e^{-\lambda}}{k!} \quad \text{for } k \in \mathbb{N}_0$$
 
-Note: The parameter is called `rate` since `lambda` is a Python keyword.
+At $\lambda = 0$, the distribution is the Dirac measure at $k = 0$.
+The parameter is called `rate` since `lambda` is a Python keyword.
 
 For natively binned models, `broadcast(Poisson, expected_counts)` produces an
 array-valued observation kernel of independent Poisson counts.
@@ -423,7 +424,7 @@ Domain/Support: integer arrays / integer arrays.
 Parameters:
 
 - `bins`: bin edges (vector) or record of bin edge vectors (multi-dimensional binning). Same format as for `bincounts`.
-- `intensity`: finite-mass measure or kernel over the binned space, see [`PoissonProcess`](#poissonprocess).
+- `intensity`: finite-mass measure or kernel over the underlying event space (scalar or record-valued), not the binned count space. See [`PoissonProcess`](#poissonprocess).
 
 `BinnedPoissonProcess(bins, intensity)` is equivalent to `pushfwd(fn(bincounts(bins, _)), PoissonProcess(intensity))`.
 

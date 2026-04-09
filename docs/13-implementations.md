@@ -14,12 +14,15 @@ model evaluation in both generative and scoring mode.
 
 - **TensorFlow Probability** (Python/TF and JAX): `tfp.distributions` provides a broad distribution library usable with both TensorFlow and JAX backends.
 
-- **Julia**: `MeasureBase.jl` provides the measure-theoretic foundation and
-`Distributions.jl` provides implementations of many distributions.
+- **Julia**: MeasureBase.jl provides the measure-theoretic foundation and
+Distributions.jl provides implementations of many distributions.
 
 ### Distributions
 
-| FlatPPL | NumPyro | TF Probability | Julia (Distributions.jl) |
+The table below lists conceptual equivalents, not necessarily exact constructor names.
+Implementations might use wrapper types or alternative parameterizations.
+
+| FlatPPL | NumPyro | TF Probability | Julia |
 |---|---|---|---|
 | `Uniform` | `Uniform` | `Uniform` | `Uniform` |
 | `Normal` | `Normal` | `Normal` | `Normal` |
@@ -38,9 +41,9 @@ model evaluation in both generative and scoring mode.
 | `Binomial` | `Binomial` | `Binomial` | `Binomial` |
 | `Poisson` | `Poisson` | `Poisson` | `Poisson` |
 | `ContinuedPoisson` | — | — | — |
-| `MvNormal` | `MultivariateNormal` | `MultivariateNormalFullCovariance` | `MvNormal` |
-| `Wishart` | `Wishart` | `Wishart` | `Wishart` |
-| `InverseWishart` | `InverseWishart` | `InverseWishart` | `InverseWishart` |
+| `MvNormal` | `MultivariateNormal` | `MultivariateNormalTriL` | `MvNormal` |
+| `Wishart` | `WishartCholesky` (via TFP) | `WishartTriL` | `Wishart` |
+| `InverseWishart` | `InverseWishart` (via TFP) | `InverseWishart` | `InverseWishart` |
 | `LKJ` | `LKJ` | `LKJ` | `LKJ` |
 | `LKJCholesky` | `LKJCholesky` | `CholeskyLKJ` | `LKJCholesky` |
 | `Dirichlet` | `Dirichlet` | `Dirichlet` | `Dirichlet` |

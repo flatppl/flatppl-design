@@ -138,6 +138,7 @@ The table below provides a compact overview of the language. Each family name li
 | [Interface adaptation](04-design.md#sec:design) | `relabel` |
 | [Measure combinators](06-measure-algebra.md#sec:measure-algebra) | `weighted`, `logweighted`, `normalize`, `totalmass`, `superpose`, `joint`, `jointchain`, `chain`, `iid`, `truncate`, `pushfwd` |
 | [Likelihoods and posteriors](06-measure-algebra.md#likelihoods-and-posteriors) | `likelihoodof`, `joint_likelihood`, `densityof`, `logdensityof`, `bayesupdate` |
+| [Structural disintegration](06-measure-algebra.md#structural-disintegration) | `kernelfor`, `kernelbase` |
 | [Higher-order operations](07-functions.md#sec:functions) | `broadcast` |
 | [Data access and reshaping](07-functions.md#sec:functions) | `get`, `cat`, `record`, `preset`, `fixed`, `all`, `filter`, `selectbins` |
 | [Constructors](07-functions.md#sec:functions) | `table`, `rowstack`, `colstack`, `linspace`, `extlinspace`, `fill` |
