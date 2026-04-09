@@ -12,7 +12,7 @@ fields where it could play a role. FlatPPL is likely to target RooFit via HS³ c
 initially, though direct support is also possible. In either case the implementation
 strategy is evolution, not replacement: non-breaking additions to widen the semantic
 scope of RooFit and bring it as close to the scope of FlatPPL as feasible. See the
-[RooFit mapping](10-interop.md#sec:roofit) section for details. Stan, as mentioned before, is very
+[HS³/RooFit profile](10-profiles.md#sec:hs3roofit) section for details. Stan, as mentioned before, is very
 powerful but does not cover all of our requirements. Many strictly Bayesian FlatPPL
 models could be converted to Stan model blocks though and run on the Stan engine. Accelerator support for RooFit seems less likely for now in general. 
 

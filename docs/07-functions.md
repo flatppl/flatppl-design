@@ -282,7 +282,7 @@ Matrix multiplication and addition use the standard `*` and `+` operators.
 
 FlatPPL provides five three-point interpolation functions that are general purpose
 but compatible with the interpolation methods used in RooFit, HistFactory, pyhf, and HS³
-(see [pyhf and HistFactory compatibility](10-interop.md#sec:histfactory)).
+(see [pyhf and HistFactory compatibility](10-profiles.md#sec:histfactory)).
 
 These interpolation functions are deterministic, value-level functions that interpolate
 between given anchor output values at $\alpha = -1$, $\alpha = 0$, and $\alpha = +1$ for

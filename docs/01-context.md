@@ -182,7 +182,7 @@ textual position. Data is represented by ordinary values (arrays, records, table
 This simplicity makes FlatPPL amenable to serialization, static analysis, and
 compilation to accelerator backends, while still being expressive enough to cover a wide
 range of models across scientific domains. The resulting graph structure is similar to an
-HS³ JSON document or a RooFit workspace, though FlatPPL concepts like random draws and measure/function reification do not currently exist in HS³ and RooFit. See the [interoperability](10-interop.md#sec:interop) section on how FlatPPL maps to them.
+HS³ JSON document or a RooFit workspace, though FlatPPL concepts like random draws and measure/function reification do not currently exist in HS³ and RooFit. See the [profiles and interoperability](10-profiles.md#sec:profiles) section on how FlatPPL maps to them.
 
 FlatPPL should be seen as a formal framework to express probabilistic models.
 It comes with a concrete syntax — a small language designed to parse as both valid Python
