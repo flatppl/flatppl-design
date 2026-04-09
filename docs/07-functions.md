@@ -164,11 +164,11 @@ Matrix multiplication and addition use the standard `*` and `+` operators.
 
 ### Reductions
 
-| Function | Arguments | Description |
-|---|---|---|
-| `sum` | array | sum of elements |
-| `product` | array | product of elements |
-| `length` | array/table | number of elements / rows |
+| Function | Arguments | Description | Domains |
+|---|---|---|---|
+| `sum` | array | sum of elements | real/complex arrays |
+| `product` | array | product of elements | real/complex arrays |
+| `length` | array/table | number of elements / rows | arrays, tables |
 
 ### Norms and normalization
 
@@ -184,13 +184,13 @@ Matrix multiplication and addition use the standard `*` and `+` operators.
 
 ### Logic and conditionals
 
-| Function | Arguments | Description |
-|---|---|---|
-| `land` | `a`, `b` | logical conjunction |
-| `lor` | `a`, `b` | logical disjunction |
-| `lnot` | `a` | logical negation |
-| `lxor` | `a`, `b` | logical exclusive-or |
-| `ifelse` | `cond`, `a`, `b` | returns `a` if `cond` is true, `b` otherwise |
+| Function | Arguments | Description | Domains |
+|---|---|---|---|
+| `land` | `a`, `b` | logical conjunction | `booleans` |
+| `lor` | `a`, `b` | logical disjunction | `booleans` |
+| `lnot` | `a` | logical negation | `booleans` |
+| `lxor` | `a`, `b` | logical exclusive-or | `booleans` |
+| `ifelse` | `cond`, `a`, `b` | returns `a` if `cond` is true, `b` otherwise | `cond`: `booleans`; `a`, `b`: `anything` |
 
 ### Membership, filtering, and bin selection
 
