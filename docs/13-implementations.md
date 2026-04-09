@@ -1,26 +1,33 @@
 ## Appendix: Implementations
 
 This appendix is a collection of functional equivalents between FlatPPL constructs and
-existing package ecosystems in Python and Julia.
-It is intended to provide a basis for FlatPPL implementations, and is not normative.
+existing package ecosystems in programming languages like Python and Julia.
+The focus is on existing building blocks that can be used for full FlatPPL implementations, not on the runtime or inference machinery that come as part of
+existing ecosystems. This appendix is not normative, it is meant to list possibilities,
+not to prescribe particular design choices.
 
-**Target ecosystems:**
+### Target ecosystems
 
-This subset of languages and packages is not meant to be exhaustive, but to cover
-some options that may lend themselves well to a full implementation of FlatPPL
-model evaluation in both generative and scoring mode.
+These two ecosystems are likely good candidates to underpin a full FlatPPL implementation,
+but there are of course many other options:
 
-- **NumPyro** (Python/JAX): probabilistic programming on JAX, with accelerator support via MLIR/StableHLO. Distributions from `numpyro.distributions` and `jax.scipy`.
-
-- **TensorFlow Probability** (Python/TF and JAX): `tfp.distributions` provides a broad distribution library usable with both TensorFlow and JAX backends.
+- **Python/JAX**: JAX provides the computation substrate (array ops, autodiff, JIT,
+  accelerator support via MLIR/StableHLO). Distribution objects are available from
+  `numpyro.distributions` or TensorFlow Probability on JAX (`tfp.substrates.jax`),
+  both usable as standalone libraries independently of their respective PPL runtimes.
+  In turn, functions and distributions expressed in FlatPPL could be made API-compatible
+  with NumPyro and TF Probability, allowing users to leverage the rich inference tools
+  built on top of them.
 
 - **Julia**: MeasureBase.jl provides the measure-theoretic foundation and
-Distributions.jl provides implementations of many distributions.
+  Distributions.jl (augmented by DistributionsHEP.jl and other packages) provides implementations of many distributions.
+  In turn, functions, distributions, and measures expressed in FlatPPL would fit
+  naturally into the MeasureBase.jl and Distributions.jl APIs.
 
 ### Distributions
 
 The table below lists approximate ecosystem equivalents, not exact constructor names.
-Implementations might use wrapper types or alternative parameterizations.
+This table may well be incomplete:
 
 | FlatPPL | NumPyro | TF Probability | Julia |
 |---|---|---|---|
@@ -50,10 +57,10 @@ Implementations might use wrapper types or alternative parameterizations.
 | `Multinomial` | `Multinomial` | `Multinomial` | `Multinomial` |
 | `PoissonProcess` | — | — | — |
 | `BinnedPoissonProcess` | — | — | — |
-| `CrystalBall` | — | — | — |
-| `DoubleSidedCrystalBall` | — | — | — |
-| `Argus` | — | — | — |
+| `CrystalBall` | — | — | `CrystalBall` (DistributionsHEP.jl) |
+| `DoubleSidedCrystalBall` | — | — | `DoubleCrystalBall` (DistributionsHEP.jl) |
+| `Argus` | — | — | `ArgusBG` (DistributionsHEP.jl) |
 | `BreitWigner` | `Cauchy` | `Cauchy` | `Cauchy` |
 | `RelativisticBreitWigner` | — | — | — |
 | `Voigtian` | — | — | — |
-| `BifurcatedGaussian` | — | — | — |
+| `BifurcatedGaussian` | — | — | `BifurcatedGaussian` (DistributionsHEP.jl) |
