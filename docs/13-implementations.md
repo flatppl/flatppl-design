@@ -19,7 +19,7 @@ Distributions.jl provides implementations of many distributions.
 
 ### Distributions
 
-The table below lists conceptual equivalents, not necessarily exact constructor names.
+The table below lists approximate ecosystem equivalents, not exact constructor names.
 Implementations might use wrapper types or alternative parameterizations.
 
 | FlatPPL | NumPyro | TF Probability | Julia |

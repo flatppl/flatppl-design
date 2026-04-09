@@ -36,7 +36,7 @@ When a real and a complex value meet in arithmetic, the real is promoted to comp
 | `inf` | Real | Positive infinity ($+\infty$). Used in `interval`, `extlinspace`, `truncate` |
 | `pi` | Real | The mathematical constant $\pi \approx 3.14159\ldots$ |
 | `im` | Complex | The imaginary unit $i$ ($i^2 = -1$). Equivalent to `complex(0.0, 1.0)` |
-| `reals` | Set | The set of all real numbers ($\mathbb{R}$). Default support for `Lebesgue` |
+| `reals` | Set | The real numbers, with $\pm\infty$ admitted (see note below). Default support for `Lebesgue` |
 | `posreals` | Set | The positive reals including $+\infty$: $(0, +\infty]$ |
 | `nonnegreals` | Set | The non-negative reals including $+\infty$: $[0, +\infty]$ |
 | `unitinterval` | Set | The unit interval $[0, 1]$ |
