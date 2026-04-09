@@ -170,6 +170,18 @@ Matrix multiplication and addition use the standard `*` and `+` operators.
 | `product` | array | product of elements |
 | `length` | array/table | number of elements / rows |
 
+### Norms and normalization
+
+| Function | Arguments | Description | Domains |
+|---|---|---|---|
+| `l1norm` | `v` | $\sum_i \lvert v_i\rvert$ | real/complex vectors |
+| `l2norm` | `v` | $\sqrt{\sum_i \lvert v_i\rvert^2}$ | real/complex vectors |
+| `l1unit` | `v` | $v / \lVert v\rVert_1$ | real/complex vectors |
+| `l2unit` | `v` | $v / \lVert v\rVert_2$ | real/complex vectors |
+| `logsumexp` | `v` | $\log \sum_i e^{v_i}$ | real vectors |
+| `softmax` | `v` | $(e^{v_i} / \sum_j e^{v_j})_i$ | real vectors |
+| `logsoftmax` | `v` | $(v_i - \log \sum_j e^{v_j})_i$ | real vectors |
+
 ### Logic and conditionals
 
 | Function | Arguments | Description |
