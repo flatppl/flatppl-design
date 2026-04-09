@@ -20,7 +20,7 @@ models could be converted to Stan model blocks though and run on the Stan engine
 [pyhs3](https://pypi.org/project/pyhs3/) provides a first Python HS³ implementation. In regard to FlatPPL there is more room for direct support in the Python ecosystem than in C++/RooFit. JAX offers a
 natural path to accelerator-oriented execution via MLIR/StableHLO.
 
-**Julia.** There is only a prototype HS³ implementation in Julia (HS3.jl). Julia has a rich ecosystem of statistics packages like Distributions.jl and MeasureBase.jl that provide an excellent basis for an inference-agnostic implementation of FlatPPL, orthogonal to inference packages like ProfileLikelihood.jl, BAT.jl and others. FlatPPL and HS³ models could be supported in Julia via the same graph engine. The Julia equivalent to JAX is Reactant.jl, it also targets accelerators via MLIR/StableHLO.
+**Julia.** There is only a prototype HS³ implementation in Julia (HS3.jl). Julia has a rich ecosystem of statistics packages like Distributions.jl and MeasureBase.jl that provide an excellent basis for an inference-agnostic implementation of FlatPPL, orthogonal to inference packages like ProfileLikelihood.jl, BAT.jl and others. FlatPPL and HS³ models could be supported in Julia via the same graph engine. The Julia equivalent to JAX is Reactant.jl, like JAX it targets accelerators via MLIR/StableHLO.
 
 **Host-language embedding.** Because the source syntax parses as valid Python and Julia,
 `.flatppl` files can also serve as valid host-language source text. Conversely, higher-level
@@ -121,7 +121,7 @@ Measures, likelihood objects, and functions are first-class in the sense that th
 bound to names, passed to their respective combinators and operations, and referenced by
 other bindings. However, they may not appear inside arrays, records, or tables.
 
-**Modules** represent whole FlatPPL documents, each FlatPPL source file is a module.
+**Modules** represent whole FlatPPL documents; each FlatPPL source file is a module.
 FlatPPL code can load modules (via `load_module(module_filename)`) and access objects in loaded
 modules via dot-syntax scoping (`loaded_module.some_object`). Module objects give access
 to another namespace, but are not themselves first-class objects in the computational graph:

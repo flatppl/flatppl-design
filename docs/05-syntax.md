@@ -43,7 +43,7 @@ design choices regarding embedding are left to specific FlatPPL implementations.
 
 ### Comments
 
-Lines beginning with `#` (after optional whitespace) are comments and are ignored. Inline comments (`x = 3.14  # a comment`) supported as well.
+Lines beginning with `#` (after optional whitespace) are comments and are ignored. Inline comments (`x = 3.14  # a comment`) are supported as well.
 
 ### Excluded and reserved syntax
 

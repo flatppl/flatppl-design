@@ -113,8 +113,8 @@ model = jointchain(M_abc, pushfwd(fn(relabel(_, ["d", "e"])), K_de))
 `joint(M1, M2)` constructs an independent product: $p(a,b) = p(a) \cdot p(b)$. The components
 must be independent — no shared stochastic ancestors.
 
-`jointchain(M, K1, K2)` constructs a hierarchical (dependent) joint: p(a,b,c) =
-p(a) · p(b|a) · p(c|a,b). Each kernel's inputs are bound to upstream variate names.
+`jointchain(M, K1, K2)` constructs a hierarchical (dependent) joint: $p(a,b,c) =
+p(a) \cdot p(b|a) \cdot p(c|a,b)$. Each kernel's inputs are bound to upstream variate names.
 The density factorizes without marginalization; density evaluation is tractable whenever
 the constituent conditional densities are tractable. This maps to `RooProdPdf` with
 `Conditional(...)` in RooFit.
@@ -196,8 +196,7 @@ keeps their namespaces separate.
 
 RooFit determines parameter/observable roles from usage context, which allows treating a
 likelihood as a probability density by normalizing over parameters. This is mathematically
-unsound in general (the likelihood is not a probability density in parameter space). The
-FlatPPL's generative DAG determines roles by construction: `draw` introduces a variate, and
+unsound in general (the likelihood is not a probability density in parameter space). FlatPPL's generative DAG determines roles by construction: `draw` introduces a variate, and
 module input nodes become parameters. This prevents a class of subtle statistical errors.
 
 ### Q: What are generative mode and scoring mode?

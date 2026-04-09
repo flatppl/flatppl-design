@@ -72,7 +72,7 @@ This applies to all measure-to-measure operations except `jointchain` and `chain
 require non-nullary kernels in all but the first argument
 (see [dependent composition](#dependent-composition)).
 
-**Operations that map measures to values** like `totalmass`, `densityof` and `logdensityof` require
+**Operations that map measures to values**, like `totalmass`, `densityof`, and `logdensityof`, require
 closed measures (i.e. nullary kernels) as inputs. `densityof(M, x)` and
 `logdensityof(M, x)` evaluate the density of a measure at a point with respect to an implicit reference measure.
 
@@ -113,7 +113,7 @@ closed measures (i.e. nullary kernels) as inputs. `densityof(M, x)` and
   events = draw(PoissonProcess(intensity = intensity))
   ```
 
-  To build a normalized mixture distribution use
+  To build a normalized mixture distribution, use
   `normalize(superpose(weighted(w1, M1), weighted(w2, M2)))`. For example:
 
   ```flatppl
