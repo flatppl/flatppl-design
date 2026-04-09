@@ -35,8 +35,8 @@ When a real and a complex value meet in arithmetic, the real is promoted to comp
 | `pi` | Real | The mathematical constant $\pi \approx 3.14159\ldots$ |
 | `im` | Complex | The imaginary unit $i$ ($i^2 = -1$). Equivalent to `complex(0.0, 1.0)` |
 | `reals` | Set | The set of all real numbers ($\mathbb{R}$). Default support for `Lebesgue` |
-| `posreals` | Set | The positive real numbers $(0, \infty)$ |
-| `nonnegreals` | Set | The non-negative real numbers $[0, \infty)$ |
+| `posreals` | Set | The positive reals including $+\infty$: $(0, +\infty]$ |
+| `nonnegreals` | Set | The non-negative reals including $+\infty$: $[0, +\infty]$ |
 | `unitinterval` | Set | The unit interval $[0, 1]$ |
 | `posintegers` | Set | The positive integers $\{1, 2, 3, \ldots\}$ |
 | `nonnegintegers` | Set | The non-negative integers $\{0, 1, 2, \ldots\}$ |
@@ -139,8 +139,8 @@ FlatPPL has a limited notion of sets, used to specify input domains, supports, t
 regions, and analysis regions. The predefined sets are:
 
 - `reals` — $\mathbb{R}$, the set of all real numbers.
-- `posreals` — $(0, \infty)$, the positive real numbers.
-- `nonnegreals` — $[0, \infty)$, the non-negative real numbers.
+- `posreals` — $(0, +\infty]$, the positive reals including $+\infty$.
+- `nonnegreals` — $[0, +\infty]$, the non-negative reals including $+\infty$.
 - `unitinterval` — $[0, 1]$, the unit interval.
 - `posintegers` — $\{1, 2, 3, \ldots\}$, the positive integers.
 - `nonnegintegers` — $\{0, 1, 2, \ldots\}$, the non-negative integers.
