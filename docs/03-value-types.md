@@ -26,6 +26,8 @@ phase = cis(3 * pi / 4)       # unit-modulus complex from angle
 
 When a real and a complex value meet in arithmetic, the real is promoted to complex with zero imaginary part.
 
+**Scalar value categories and sets.** FlatPPL distinguishes boolean, integer, real, and complex scalar values operationally. In particular, conditionals and logical operators require boolean values. However, the predefined value sets satisfy the canonical inclusions `booleans` $\subset$ `integers` $\subset$ `reals`, and there is a canonical embedding of `reals` into `complexes`. Arithmetic may use these canonical embeddings implicitly where specified by the language.
+
 ### Predefined constants
 
 | Name | Type | Description |
