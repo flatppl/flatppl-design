@@ -400,7 +400,7 @@ g = functionof(f(_tmp1, b, _tmp2), arg1 = _tmp1, arg2 = _tmp2)
 `_` may **not** appear on the left-hand side of a variable binding, and may **not** appear
 outside of `fn(...)`.
 
-### <a id="sec:broadcast"></a>Broadcasting
+### <a id="sec:higher-order"></a>Higher-order operations
 
 `broadcast(f_or_K, name = array, ...)` or `broadcast(f_or_K, array, ...)` maps a function or kernel
 elementwise over arrays (and row-wise over tables; see [tables](03-value-types.md#tables)).
@@ -460,6 +460,18 @@ structure. For those, use `jointchain` or `chain` with explicit indexing.
 dimensions (length 1) are implicitly expanded to match the corresponding dimension of
 the other arguments. Scalar arguments are treated as arrays with all-singleton shape.
 Non-singleton dimensions must match across all arguments.
+
+**`reduce(f, xs)`** is a left fold over `xs` using the binary function `f`. For a vector
+`xs = [x0, x1, ..., xn-1]`, it computes `f(...f(f(x0, x1), x2)..., xn-1)`. For a table,
+`xs` is traversed row-wise and `f` takes two records (the accumulator and the next row).
+The first element (or row) is used as the initial accumulator value. Implementations may
+evaluate in parallel when `f` is associative. Unlike `broadcast`, `reduce` accepts only
+deterministic functions, not kernels.
+
+**`scan(f, init, xs)`** is a left scan over `xs` using the binary function `f` with
+explicit initial accumulator `init`. It produces a vector (or table) of intermediate
+accumulator values, one per element/row of `xs`, of the same length as the input.
+Like `reduce`, `scan` accepts only deterministic functions.
 
 ### <a id="sec:modules"></a>Multi-file models
 

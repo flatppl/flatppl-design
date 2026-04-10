@@ -69,7 +69,7 @@ valid FlatPPL expressions that evaluate to allowed element types (e.g. `[a, b, 2
 One-dimensional arrays of scalars act as vectors for linear algebra
 (see [built-in functions](07-functions.md#sec:functions)). Vectors of vectors are not
 interpreted as matrices implicitly, but can be turned into matrices explicitly
-using `rowstack(...)` or `colstack(...)` (see [concatenation](07-functions.md#concatenation-of-collections)).
+using `rowstack(...)` or `colstack(...)` (see [array operations](07-functions.md#array-and-table-operations)).
 
 FlatPPL supports standard linear algebra operations (addition, multiplication) on
 scalars, vectors, and matrices.

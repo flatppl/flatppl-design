@@ -71,7 +71,7 @@ value-level operations in FlatPPL. For measure-level operations, see [measure al
   keyword `all` selects an entire axis: `get(M, i, all)` returns row i, `get(M, all, j)`
   returns column j. Surface syntax `M[:, j]` lowers to `get(M, all, j)`.
 
-### Concatenation of collections
+### Array and table operations
 
 **`cat(x, y, ...)`** concatenates values of the same structural kind:
 
@@ -107,6 +107,8 @@ M = colstack([1, 2, 3], [4, 5, 6])
 returns
 
 $$M = \begin{pmatrix} 1 & 4 \\ 2 & 5 \\ 3 & 6 \end{pmatrix}$$
+
+**`reverse(xs)`** reverses the order of elements in a vector or rows in a table.
 
 ### Complex numbers
 

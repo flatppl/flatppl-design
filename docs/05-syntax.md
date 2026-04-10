@@ -62,7 +62,7 @@ FlatPPL has a very lean syntax:
   only in decomposition assignments (see below).
 - **No implicit elementwise operators.** Infix `+`, `-`, `*`, `/` are not implicitly
   elementwise on arrays or matrices. Use `broadcast`
-  (see [broadcasting](04-design.md#sec:broadcast)).
+  (see [broadcasting](04-design.md#sec:higher-order)).
 
 **Reserved syntax:** Names of the form `_name_` (leading and trailing underscore) are
 reserved as placeholder variables inside `functionof` and `lawof`

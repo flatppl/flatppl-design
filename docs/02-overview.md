@@ -139,8 +139,8 @@ The table below provides a compact overview of the language. Each family name li
 | [Measure combinators](06-measure-algebra.md#sec:measure-algebra) | `weighted`, `logweighted`, `normalize`, `totalmass`, `superpose`, `joint`, `jointchain`, `chain`, `iid`, `truncate`, `pushfwd` |
 | [Likelihoods and posteriors](06-measure-algebra.md#likelihoods-and-posteriors) | `likelihoodof`, `joint_likelihood`, `densityof`, `logdensityof`, `bayesupdate` |
 | [Structural disintegration](06-measure-algebra.md#structural-disintegration) | `kernelfor`, `kernelbase` |
-| [Higher-order operations](07-functions.md#sec:functions) | `broadcast` |
-| [Data access and reshaping](07-functions.md#sec:functions) | `get`, `cat`, `record`, `preset`, `fixed`, `all`, `filter`, `selectbins` |
+| [Higher-order operations](04-design.md#sec:higher-order) | `broadcast`, `reduce`, `scan` |
+| [Data access and reshaping](07-functions.md#sec:functions) | `get`, `cat`, `record`, `preset`, `fixed`, `all`, `filter`, `selectbins`, `reverse` |
 | [Constructors](07-functions.md#sec:functions) | `table`, `rowstack`, `colstack`, `linspace`, `extlinspace`, `fill` |
 | [Binning and interpolation](07-functions.md#sec:functions) | `bincounts`, `interp_pwlin`, `interp_pwexp`, `interp_poly2_lin`, `interp_poly6_lin`, `interp_poly6_exp` |
 | [Shape functions](07-functions.md#sec:functions) | `polynomial`, `bernstein`, `stepwise` |
