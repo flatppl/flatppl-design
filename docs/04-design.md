@@ -479,8 +479,11 @@ Each FlatPPL file is a **module**: a flat namespace of named bindings. This corr
 directly to a RooFit workspace and to an HS³ document. When FlatPPL code is embedded in
 Julia or Python via macros or decorators, each embedded block is a separate module.
 
-**`load_module("path/to/file.flatppl")`** loads a FlatPPL file and returns a module reference.
-Members are accessed via dot syntax:
+**`load_module(source)`** loads a FlatPPL file and returns a module reference.
+
+`source` may be a file path or a URL.
+
+Bound names in the loaded module are accessed via dot syntax:
 
 ```flatppl
 sig = load_module("signal_channel.flatppl")
@@ -502,34 +505,14 @@ the right-hand side may be any value node in the loading module. The value set o
 both must be compatible, so the computational structure of the loaded module
 is not modified.
 
-**Path resolution.** Relative paths in `load_module(...)` are resolved relative to the directory
+**Path resolution.** Relative file paths in `load_module(...)` are resolved relative to the directory
 of the FlatPPL file containing that `load_module(...)` call, not the host process's working
-directory. This keeps model directories relocatable. The forward slash `/` is the
-mandatory path separator on all platforms. Parent-directory traversal via `..` is allowed.
-Absolute paths are permitted but discouraged, as they prevent relocatable model
-repositories and may be rejected by archival tools.
+directory. For embedded FlatPPL code, relative paths are resolved relative to the directory of the source file containing the embedded FlatPPL code block. The forward slash `/` is the mandatory path separator
+on all platforms. Parent-directory traversal via `..` is allowed.
+Absolute file paths are permitted but discouraged, as they prevent relocatable model repositories.
 
 **Aliasing** is just assignment: `sig_model = sig.model` creates a local alias — a
 reference to the same underlying object in the loaded module's DAG, not a clone.
-
-### Loading tabular data
-
-**`load_table("path/to/file.ext")`** loads a tabular data file and returns a `table`
-value. The file format is inferred from the extension. All FlatPPL engines must support
-at least:
-
-- **CSV and WSV** (`.csv`, `.wsv`) — comma- or whitespace-separated values with column
-  names in the first row.
-- **JSON** (`.json`) — containing either an array of objects (array-of-structs) or an
-  object of arrays (struct-of-arrays).
-- **Arrow IPC** (`.arrow`, `.arrows`) — Apache Arrow Stream and File formats.
-
-```flatppl
-events = load_table("observed_events.csv")
-```
-
-Path resolution follows the same rules as `load_module`: relative to the directory of
-the FlatPPL file containing the call.
 
 ### FlatPPL version compatibility
 

@@ -299,7 +299,7 @@ both on model parameters and on observed data — producing a joint model:
 - Stan `target += ...` accumulates contributions to a joint log-density; in FlatPPL this
   corresponds to `logweighted(...)` applied to the underlying joint measure.
 - Stan's parameter block maps to `draw(...)` with appropriate priors.
-- Stan's data block defines literal values or `load_table(...)`.
+- Stan's data block defines literal values or `load_data(...)`.
 - Stan's transformed parameters/data blocks map to deterministic computation.
 
 The resulting FlatPPL model is a joint distribution that can be decomposed via

@@ -8,7 +8,7 @@ value-level operations in FlatPPL. For measure-level operations, see [measure al
 - **`identity(x)`** — the identity function: returns its argument unchanged.
   Equivalent to `fn(_)`.
 
-### Array generation
+### Array and table generation
 
 - **`fill(x, n, m, ...)`** — creates an array of shape `n × m × ...` filled with
   value `x` (e.g., `fill(0.0, 10)`).
@@ -39,6 +39,40 @@ value-level operations in FlatPPL. For measure-level operations, see [measure al
   without constructing explicit vectors. Note that in this case `n` specifies the number of finite edge
   points; `extlinspace(from, to, n)` produces `n + 2` total edge points (adding `-inf` and
   `inf`) and a total of `n + 1` bins (including the overflow bins).
+
+- **`load_data(source, valueset)`** — loads a collection of data entries from an
+  external source and returns a vector or table. The shape of the result is determined
+  by the declared `valueset`, which defines the set that governs each vector entry or
+  table row.
+
+  - `source`: a file path or URL identifying the data source. File path resolution follows
+    the same rules as with `load_module`.
+  - `valueset`: specifies the set that governs each vector entry or table row.
+
+  This loads a table with a scalar column `a` and a 3-vector column `b`:
+
+  ```flatppl
+  events = load_data(
+      source = "observed_events.csv",
+      valueset = cartprod(a = reals, b = cartpow(reals, 3)))
+  ```
+
+  This loads a flat vector of real values:
+
+  ```flatppl
+  weights = load_data(source = "weights.csv", valueset = reals)
+  ```
+
+  Tabular data with a single column can be loaded as a vector instead of a table, depending
+  on `valueset`.
+
+  All FlatPPL engines must support at least:
+
+  - **JSON** (`.json`) — containing either an array of objects (array-of-structs),
+    an object of arrays (struct-of-arrays) or a vector.
+  - **CSV and WSV** (`.csv`, `.wsv`) — comma- or whitespace-separated values with
+    column names in the first row.
+  - **Arrow IPC** (`.arrow`, `.arrows`) — Apache Arrow File and Stream formats.
 
 ### Field and element access
 

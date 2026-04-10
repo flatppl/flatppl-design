@@ -101,8 +101,7 @@ T[i, :, k]       # → get(T, i, all, k)
 `elementof(S)`, `valueset(x)`, `draw(M)`, `lawof(...)`, `functionof(...)`, and `fn(...)` are
 special forms with their own syntax rules — they are not ordinary function calls.
 Their semantics are defined in [language design](04-design.md#sec:design).
-`load_module(...)` and `load_table(...)` are module-level operations documented in
-[multi-file models](04-design.md#sec:modules).
+`load_module(...)` is documented in [multi-file models](04-design.md#sec:modules).
 
 ### Lowered linear form
 
