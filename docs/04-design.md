@@ -17,6 +17,15 @@ The order of bindings in a module is semantically irrelevant; the dependency gra
 determined by name references. Implementations may evaluate bindings in any valid
 topological order, in series or in parallel.
 
+**Private bindings.** Top-level binding names that begin with a single underscore
+(e.g. `_tmp`, `_combined`) are private to the module by convention. They are not
+part of the module's public interface and may be eliminated, inlined, renamed, or
+otherwise not preserved by tooling such as term-rewriting or dead-code elimination.
+Bindings that should be preserved across rewriting passes must use names that do
+not begin with an underscore. (Names of the form `_name_` with both leading and
+trailing underscores are reserved for placeholder variables inside `functionof` and
+`lawof`; see [placeholders and holes](#placeholders-and-holes).)
+
 Numerical precision (e.g., 32-bit vs. 64-bit floating point) is not specified by
 FlatPPL; the choice is left to implementations and their users.
 
