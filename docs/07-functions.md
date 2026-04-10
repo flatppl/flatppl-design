@@ -150,6 +150,33 @@ For complex arguments, `log` and `sqrt` use the principal branch ($\arg(z) \in (
 `pow` extends via $z^w = e^{w \log z}$ (principal branch); either or both arguments may be
 complex.
 
+### Operator-equivalent functions
+
+FlatPPL arithmetic operators cannot themselves be used as first-class function names.
+Instead, they lower to the following named function equivalents, which can also be
+be passed as arguments to higher-order functions like `broadcast`, `reduce` and `scan`.
+
+**Arithmetic functions:**
+
+| Function | Arguments | Corresponds to | Domains |
+|---|---|---|---|
+| `add` | `a`, `b` | `a + b` | scalars or arrays of same shape (real or complex) |
+| `sub` | `a`, `b` | `a - b` | scalars or arrays of same shape (real or complex) |
+| `mul` | `a`, `b` | `a * b` | scalars; matrix/matrix and matrix/vector products |
+| `divide` | `a`, `b` | `a / b` | scalars (real or complex) |
+| `neg` | `x` | `-x` | scalars or arrays (real or complex) |
+
+**Comparison functions:**
+
+| Function | Arguments | Corresponds to | Domains |
+|---|---|---|---|
+| `eq` | `a`, `b` | `a == b` | `reals`, `integers`, `booleans` |
+| `ne` | `a`, `b` | `a != b` | `reals`, `integers`, `booleans` |
+| `lt` | `a`, `b` | `a < b` | `reals` |
+| `le` | `a`, `b` | `a <= b` | `reals` |
+| `gt` | `a`, `b` | `a > b` | `reals` |
+| `ge` | `a`, `b` | `a >= b` | `reals` |
+
 ### Linear algebra
 
 | Function | Arguments | Description | Domains |

@@ -145,6 +145,7 @@ The table below provides a compact overview of the language. Each family name li
 | [Binning and interpolation](07-functions.md#sec:functions) | `bincounts`, `interp_pwlin`, `interp_pwexp`, `interp_poly2_lin`, `interp_poly6_lin`, `interp_poly6_exp` |
 | [Shape functions](07-functions.md#sec:functions) | `polynomial`, `bernstein`, `stepwise` |
 | [Math and logic](07-functions.md#sec:functions) | `identity`, `exp`, `log`, `pow`, `sqrt`, `abs`, `sin`, `cos`, `min`, `max`, `ifelse`, `land`, `lor`, `lnot`, `lxor` |
+| [Operator functions](07-functions.md#sec:functions) | `add`, `sub`, `mul`, `divide`, `neg`, `eq`, `ne`, `lt`, `le`, `gt`, `ge` |
 | [Complex arithmetic](07-functions.md#sec:functions) | `complex`, `real`, `imag`, `conj`, `abs2`, `cis` |
 | [Reductions](07-functions.md#sec:functions) | `sum`, `product`, `length` |
 | [Norms and normalization](07-functions.md#sec:functions) | `l1norm`, `l2norm`, `l1unit`, `l2unit`, `logsumexp`, `softmax`, `logsoftmax` |
