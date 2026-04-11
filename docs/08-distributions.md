@@ -38,17 +38,27 @@ specified as well.
 | [`InverseGamma`](#inversegamma) | `shape`, `scale` | `reals` | `posreals` |
 | [`Beta`](#beta) | `alpha`, `beta` | `reals` | `unitinterval` |
 
-<a id="uniform"></a>**`Uniform(support)`** — The [uniform distribution](https://en.wikipedia.org/wiki/Continuous_uniform_distribution). Semantically equivalent to `normalize(Lebesgue(support = S))`.
+<a id="uniform"></a>**`Uniform(support)`** — The uniform distribution on `support`.
 
-Domain/Support: `reals`/`support`.
+Domain/Support: ambient value space of `support` / `support`.
 
 Parameters:
 
-- `support`: a region object (e.g., `interval(a, b)`).
+- `support`: any FlatPPL set $S$ with
+  $0 < \lambda(S) < \infty$, where
+  $\lambda$ is `Lebesgue(support)`.
+  Examples include `interval(a, b)`, `cartpow(unitinterval, n)`, `cartprod(a = interval(0, 1), b = interval(2, 5))` and `stdsimplex(n)`.
 
-Density w.r.t. `Lebesgue(reals)`:
+Density w.r.t. `Lebesgue(support = S)` inside of `S`:
 
-$$\frac{1}{|S|} \quad \text{for } x \in S$$
+$$
+\frac{1}{\lambda(S)},
+$$
+
+where $\lambda = \mathrm{Lebesgue}(\mathrm{support} = S)$ is the canonical
+continuous reference measure on $S$.
+
+`Uniform(S)` is equivalent to `normalize(Lebesgue(S))`.
 
 <a id="normal"></a>**`Normal(mu, sigma)`** — The [normal (or Gaussian) distribution](https://en.wikipedia.org/wiki/Normal_distribution).
 

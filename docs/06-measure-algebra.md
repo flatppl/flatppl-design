@@ -43,10 +43,20 @@ The Giry-style measure monad is defined by two operations:
 FlatPPL provides three fundamental measures: the reference measures `Lebesgue` and
 `Counting`, and the point-mass measure `Dirac`.
 
-- `Lebesgue(support = S)` — the Lebesgue measure on $\mathbb{R}$, restricted to support
-  `S`. Density is 1 inside `S`, 0 outside. Reference measure for all continuous
-  distributions. `iid(Lebesgue(support = reals), n)` yields the Lebesgue measure on
-  $\mathbb{R}^n$.
+- `Lebesgue(support = S)` — the canonical continuous reference measure on
+  the support set `S`, restricted to `S`. For full-dimensional subsets of
+  Euclidean or product spaces this is the ordinary Lebesgue measure on the
+  ambient space. For lower-dimensional embedded sets such as `stdsimplex(n)`,
+  it is the corresponding Hausdorff measure on that set.
+  
+  `S` may be any FlatPPL set: one-dimensional
+  (e.g. `reals`, `interval(0, 1)`, `posreals`), a Cartesian power
+  (e.g. `cartpow(reals, n)`), a
+  record-structured product (e.g. `cartprod(a = reals, b = posreals)`), a
+  lower-dimensional embedded set (e.g. `stdsimplex(n)`) and so on (see
+  [sets](03-value-types.md#sets)).
+  
+  `iid(Lebesgue(reals), n)` is equivalent to `Lebesgue(cartpow(reals, n))`.
 - `Counting(support = S)` — the counting measure on $\mathbb{Z}$, restricted to support
   `S`. Mass 1 at every integer in `S`. Reference measure for all discrete distributions.
 - `Dirac(value = v)` — point-mass probability measure at `v` for any variate type.
