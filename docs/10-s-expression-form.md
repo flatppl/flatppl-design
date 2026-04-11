@@ -1,20 +1,25 @@
 ## Canonical S-expression form
 
-Surface FlatPPL is the language users author. The **canonical S-expression form** is a
-machine-facing representation that tools use to exchange, analyze, rewrite, and transform
-FlatPPL models. It is not user-facing — users continue to author surface FlatPPL — but it
-is the standardized exchange format between FlatPPL tools. Defining one canonical form in
-the spec ensures that independently written tools can interoperate without each rolling
-their own representation.
+Users and tools author FlatPPL models in the surface form described in the previous
+sections. In addition to this surface form, FlatPPL also has a canonical S-expression
+form that can carry metadata.
 
-A canonical-form module produced by the standard lowering pipeline pretty-prints back to
-equivalent surface FlatPPL, modulo formatting and alpha-renaming of internal names.
-Canonical-form modules authored directly by tools (with annotations, reordered bindings,
-or tool-chosen names) may not round-trip exactly but remain valid canonical-form modules.
+FlatPPL is designed to be usable as an intermediate representation suited to
+term-rewriting, with two main use cases in mind:
 
-Tools typically lower surface FlatPPL to bare canonical form, run type inference to
-populate `(meta (type ...))` slots, run profile-restricting term rewriting, and hand off
-to a target backend; `.fpir` is the conventional file extension for canonical-form files.
+- Restricting FlatPPL code to specific subsets of the language that map directly
+  to specific other probabilistic languages.
+- Optimizing FlatPPL code before handing it off to host-language implementations
+  (which then can do further optimization within their own language stack).
+
+Non-trivial automated term-rewriting requires type inference, and a representation
+that can carry the inferred type information as metadata. Surface FlatPPL maps
+mechanically to the bare S-expression form; tooling can then perform type inference
+and attach `(meta (type ...))` annotations. The S-expression form maps back mechanically
+to surface FlatPPL; metadata is dropped in the process.
+
+FlatPPL engines will ingest the surface form and/or the S-expression form, depending
+on their design.
 
 ### Module structure
 
