@@ -55,9 +55,9 @@ in the loading module's namespace.
 ### Type annotations
 
 Type metadata in the canonical form is optional. A canonical-form module is well-formed
-whether or not its bindings carry `(type ...)` annotations. A binding is in one of two
-states: **absent** means inference has not been run on the binding; **`(type <t>)`**
-with concrete content means inference has determined the type.
+whether or not its bindings carry `(type ...)` annotations. A binding's
+`(meta (type ...))` slot is in one of two states: **absent** (inference has not been
+run) or **`(type <t>)`** with concrete content (inference has determined the type).
 
 FlatPPL is designed so that type inference on a well-formed module always succeeds.
 There is no "inference failed" state — if inference cannot determine the type of a
