@@ -46,17 +46,16 @@ Parameters:
 
 - `support`: any FlatPPL set $S$ with
   $0 < \lambda(S) < \infty$, where
-  $\lambda$ is `Lebesgue(support)`.
-  Examples include `interval(a, b)`, `cartpow(unitinterval, n)`, `cartprod(a = interval(0, 1), b = interval(2, 5))` and `stdsimplex(n)`.
+  $\lambda$ is [`Lebesgue(S)`](06-measure-algebra.md#fundamental-measures).
 
-Density w.r.t. `Lebesgue(support = S)` inside of `S`:
+Density w.r.t. [`Lebesgue(support = S)`](06-measure-algebra.md#fundamental-measures) inside of `S`:
 
 $$
 \frac{1}{\lambda(S)},
 $$
 
 where $\lambda = \mathrm{Lebesgue}(\mathrm{support} = S)$ is the canonical
-continuous reference measure on $S$.
+continuous reference measure associated with $S$.
 
 `Uniform(S)` is equivalent to `normalize(Lebesgue(S))`.
 

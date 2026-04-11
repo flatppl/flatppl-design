@@ -46,9 +46,9 @@ FlatPPL provides three fundamental measures: the reference measures `Lebesgue` a
 - `Lebesgue(support = S)` — the canonical continuous reference measure on
   the support set `S`, restricted to `S`. For full-dimensional subsets of
   Euclidean or product spaces this is the ordinary Lebesgue measure on the
-  ambient space. For lower-dimensional embedded sets such as `stdsimplex(n)`,
-  it is the corresponding Hausdorff measure on that set.
-  
+  ambient space. For lower-dimensional embedded affine sets such as
+  `stdsimplex(n)`, it is the intrinsic affine Lebesgue measure on that set.
+
   `S` may be any FlatPPL set: one-dimensional
   (e.g. `reals`, `interval(0, 1)`, `posreals`), a Cartesian power
   (e.g. `cartpow(reals, n)`), a
