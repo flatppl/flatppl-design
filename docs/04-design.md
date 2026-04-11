@@ -70,6 +70,12 @@ A variate represents a specific value — one realization in any given evaluatio
 of the model. A measure or kernel, by contrast, represents the entire distribution
 over possible values. More formally, measures are monadic while variates are not.
 
+Keeping variates and measures distinct matters because arithmetic means different
+things for each: In mathematics, $2 \cdot x$ transforms a variate (producing a new
+variate with twice the value), while $2 \cdot \mu$ rescales a measure's total mass.
+FlatPPL supports both via different syntax — arithmetic on variates,
+`weighted(...)` on measures.
+
 A binding of the form `c = f(a, b)` introduces a **deterministic node** in the computational DAG.
 A binding of the form `x = draw(Normal(mu = c, sigma = s))` introduces a **stochastic node**.
 In generative mode, a stochastic node yields a sampled value; in scoring mode,

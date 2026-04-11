@@ -111,6 +111,8 @@ Within FlatPPL, a `preset` object is semantically equivalent to a record, and co
 ### Tables
 
 Tables are datasets that consist of named columns of equal length.
+Table columns must be vectors, as using higher-dimensional arrays as columns would require a leading-axis convention for row iteration and broadcasting, which FlatPPL intentionally avoids.
+
 Tables are constructed from columns via `table(col1 = [...], col2 = [...])`:
 
 ```flatppl

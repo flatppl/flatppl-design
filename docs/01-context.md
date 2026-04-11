@@ -138,7 +138,7 @@ shapes.
 
 We surveyed the landscape of probabilistic languages, but no currently available language covers all of our requirements. Some relevant examples are:
 
-**Stan** ([Carpenter et al., 2017](15-references.md#carpenter2017)) is the strongest candidate for longevity: it has a large and active user and developer community, bindings for multiple languages (R, Python, Julia and others), and solid funding. However:
+**Stan** ([Carpenter et al., 2017](14-references.md#carpenter2017)) is the strongest candidate for longevity: it has a large and active user and developer community, bindings for multiple languages (R, Python, Julia and others), and solid funding. However:
 
 - Stan is fundamentally Bayesian, and there is no separation between prior and observation model in a Stan model block. This means that there is no access to the likelihood for frequentist settings, and no way to express one as a standalone object.
 - The Stan language is tightly coupled to a specific compiler and runtime (stanc → C++);
@@ -147,7 +147,7 @@ We surveyed the landscape of probabilistic languages, but no currently available
 - Stan is a full probabilistic programming language with rich syntax, it cannot function as a
   serialization format, and there is no export path to one.
 
-**SlicStan** ([Gorinova et al., 2019](15-references.md#gorinova2019)) introduced compositional, blockless Stan with an information-flow type system
+**SlicStan** ([Gorinova et al., 2019](14-references.md#gorinova2019)) introduced compositional, blockless Stan with an information-flow type system
 for automatic variable classification. The "shredding" approach is relevant to our design.
 But it remains a Stan dialect, inheriting Stan's Bayesian orientation.
 
@@ -157,15 +157,15 @@ to specific inference engines.
 **GraphPPL.jl** (used by RxInfer) separates model specification from inference backend, which
 is architecturally what we want. But it's Julia-specific and Bayesian-focused.
 
-**Hakaru** ([Narayanan et al., 2016](15-references.md#narayanan2016)) has elegant semantics built on the
+**Hakaru** ([Narayanan et al., 2016](14-references.md#narayanan2016)) has elegant semantics built on the
 Giry monad, expressing programs as measure expressions with support for both frequentist
 and Bayesian reasoning. However, it does not appear to be actively maintained, and is tied firmly to the Haskell language.
 
 **Birch** is a standalone PPL transpiling to C++, but more of an academic project without guaranteed longevity.
 
 Two recent research projects from the PL community are tangentially relevant. **LASAPP**
-([Böck et al., 2024](15-references.md#boeck2024)) demonstrates that a cross-PPL abstraction layer is
-achievable, though its IR is too minimal for our needs. [Fenske et al. (2025)](15-references.md#fenske2025)
+([Böck et al., 2024](14-references.md#boeck2024)) demonstrates that a cross-PPL abstraction layer is
+achievable, though its IR is too minimal for our needs. [Fenske et al. (2025)](14-references.md#fenske2025)
 propose a representation-agnostic factor abstraction, but it operates at the
 inference level, below where a model specification language sits.
 
