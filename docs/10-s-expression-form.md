@@ -2,13 +2,14 @@
 
 Users and tools author FlatPPL models in the surface form described in the previous
 sections. In addition to this surface form, FlatPPL also has a canonical S-expression
-form that can carry metadata.
+form that can carry metadata, in particular type annotations.
 
 FlatPPL is designed to be usable as an intermediate representation suited to
 term-rewriting, with two main use cases in mind:
 
-- Restricting FlatPPL code to specific subsets of the language that map directly
-  to specific other probabilistic languages.
+- Restricting FlatPPL code to a specific subset of FlatPPL that maps directly
+  to a matching target probabilistic language
+  (see [Profiles and interoperability](11-profiles.md#sec:profiles)).
 - Optimizing FlatPPL code before handing it off to host-language implementations
   (which then can do further optimization within their own language stack).
 
@@ -48,6 +49,54 @@ A parameterized load looks like:
 Each substitution is a `(kwarg <param-name> <expression>)`. The expression is resolved
 in the caller's namespace. Top-level declarations may appear in any order; bindings are
 resolved by reference, not by textual position.
+
+### Type annotations
+
+Type metadata in the canonical form is optional. A canonical-form module is well-formed
+whether or not its bindings carry `(type ...)` annotations. A binding is in one of two
+states: **absent** means inference has not been run on the binding; **`(type <t>)`**
+with concrete content means inference has determined the type.
+
+FlatPPL is designed so that type inference on a well-formed module always succeeds.
+There is no "inference failed" state — if inference cannot determine the type of a
+binding, the module is ill-formed and should be reported as a static error rather than
+annotated with a failure marker. The `unknown` marker used in some type positions
+(see below) is not a failure indicator; it marks a determined-but-symbolic value such
+as a dimension size that is only known at runtime.
+
+The "type" terminology refers to the **structural category** of a value — scalar,
+array, record, table, measure, kernel, likelihood, function — not to a type system in
+the traditional programming-language sense.
+
+**Sets and types are distinct.** Set membership information attached via `elementof`
+(e.g. `(elementof posreals)`) is preserved structurally in the expression itself, not
+encoded into the type annotation. The type lattice records structural category
+(`(scalar real)`); the `elementof` expression records set membership (`posreals` as a
+subset of `reals`).
+
+#### Type categories
+
+- `(scalar real)`, `(scalar integer)`, `(scalar boolean)`, `(scalar complex)`
+- `(array <rank> <shape> <element-type>)` — fixed-rank arrays. Each entry in
+  `<shape>` is a dimension size or `unknown` for dimensions whose size is only known
+  at runtime (e.g. `(array 2 (unknown 3) (scalar real))` is a 2D real array with
+  unknown row count and three columns).
+- `(record (<field> <type>) ...)` — records with named fields.
+- `(table (columns ((<name> <type>) ...)) (nrows <N>))` — tables with named columns
+  and row count (or `unknown` for runtime-determined row counts).
+- `(measure (support <type>))` — closed measures.
+- `(kernel (inputs ((<ref> <type>) ...)) (support <type>))` — parameterized measures.
+  The `inputs` list pairs each referenced ambient binding with the type the kernel
+  expects of it.
+- `(function (params ((<name> <type>) ...)) (result <type>))` — functions. `params`
+  uses names because parameters are locally scoped.
+- `(likelihood (parameters ((<ref> <type>) ...)) (data-type <type>))` — likelihood
+  objects. `parameters` identifies the ambient bindings whose values the likelihood
+  needs.
+
+Reference-based parameter lists (for kernels and likelihoods) make parameter identity
+explicit: two parameters named `center` from different loaded modules are distinct
+because `(ref h1 center)` and `(ref h2 center)` are different references.
 
 ### Expressions
 
@@ -109,6 +158,11 @@ on `(add ?x ?y)` fires only on the built-in. There is no overlap.
 (record (kwarg mu (real 0.0)) (kwarg sigma (real 1.0)))
 ```
 
+Scalar literal tags (`int`, `real`, `complex`, `bool`, `string`) correspond to the
+scalar types in the type lattice — `(real 1.0)` is a literal of type `(scalar real)`,
+and so on. Using the short form as a literal tag and the `(scalar ...)` form in type
+annotations keeps both positions readable.
+
 The `vector` form has the shape `(vector <elem-type> <expr>...)`. The `<elem-type>`
 is an element-type symbol (`real`, `int`, `bool`, `complex`, `string`, or `vector` for
 nested vectors), or `unknown` if the element type cannot be determined from the literal's
@@ -148,54 +202,6 @@ lists via `(params ...)`:
 Inside the body, parameter references use `(ref param <name>)`. Parameter names
 preserve the surface trailing-underscore placeholder convention (e.g. `_x_`), keeping
 the round-trip to surface FlatPPL trivial.
-
-### Type annotations
-
-Type metadata in the canonical form is optional. A canonical-form module is well-formed
-whether or not its bindings carry `(type ...)` annotations. A binding is in one of two
-states: **absent** means inference has not been run on the binding; **`(type <t>)`**
-with concrete content means inference has determined the type.
-
-FlatPPL is designed so that type inference on a well-formed module always succeeds.
-There is no "inference failed" state — if inference cannot determine the type of a
-binding, the module is ill-formed and should be reported as a static error rather than
-annotated with a failure marker. The `unknown` marker used in some type positions
-(see below) is not a failure indicator; it marks a determined-but-symbolic value such
-as a dimension size that is only known at runtime.
-
-The "type" terminology refers to the **structural category** of a value — scalar,
-array, record, table, measure, kernel, likelihood, function — not to a type system in
-the traditional programming-language sense.
-
-**Sets and types are distinct.** Set membership information attached via `elementof`
-(e.g. `(elementof posreals)`) is preserved structurally in the expression itself, not
-encoded into the type annotation. The type lattice records structural category
-(`(scalar real)`); the `elementof` expression records set membership (`posreals` as a
-subset of `reals`).
-
-#### Type categories
-
-- `(scalar real)`, `(scalar integer)`, `(scalar boolean)`, `(scalar complex)`
-- `(array <rank> <shape> <element-type>)` — fixed-rank arrays. Each entry in
-  `<shape>` is a dimension size or `unknown` for dimensions whose size is only known
-  at runtime (e.g. `(array 2 (unknown 3) (scalar real))` is a 2D real array with
-  unknown row count and three columns).
-- `(record (<field> <type>) ...)` — records with named fields.
-- `(table (columns ((<name> <type>) ...)) (nrows <N>))` — tables with named columns
-  and row count (or `unknown` for runtime-determined row counts).
-- `(measure (support <type>))` — closed measures.
-- `(kernel (inputs ((<ref> <type>) ...)) (support <type>))` — parameterized measures.
-  The `inputs` list pairs each referenced ambient binding with the type the kernel
-  expects of it.
-- `(function (params ((<name> <type>) ...)) (result <type>))` — functions. `params`
-  uses names because parameters are locally scoped.
-- `(likelihood (parameters ((<ref> <type>) ...)) (data-type <type>))` — likelihood
-  objects. `parameters` identifies the ambient bindings whose values the likelihood
-  needs.
-
-Reference-based parameter lists (for kernels and likelihoods) make parameter identity
-explicit: two parameters named `center` from different loaded modules are distinct
-because `(ref h1 center)` and `(ref h2 center)` are different references.
 
 ### Cross-module type inference
 
