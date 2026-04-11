@@ -111,14 +111,15 @@ on `(add ?x ?y)` fires only on the built-in. There is no overlap.
 
 The `vector` form has the shape `(vector <elem-type> <expr>...)`. The `<elem-type>`
 is an element-type symbol (`real`, `int`, `bool`, `complex`, `string`, or `vector` for
-nested vectors) or `unknown` if type inference has been performed yet. Each `<expr>` is an
-expression that evaluates to a value of that type. Bare scalars at element positions
-are interpreted as literals of the declared element type; other expressions (such as
-`(ref ...)` for references or built-in calls) appear as usual:
+nested vectors), or `unknown` if the element type cannot be determined from the literal's
+contents alone and type inference has not yet run. Each `<expr>` is an expression that
+evaluates to a value of that type. Bare scalars at element positions are interpreted as
+literals of the declared element type; other expressions (such as `(ref ...)` for
+references or built-in calls) appear as usual:
 
 ```lisp
-(vector real 1.0 (ref self a) 2.0)  ; mixed literal and reference
-(vector unknown 1.0 2.0 3.0)        ; pre-inference, element type not yet known
+(vector real 1.0 (ref self a) 2.0)           ; element type declared; mixes literal and reference
+(vector unknown (ref self a) (ref self b))   ; pre-inference; element type depends on references
 ```
 
 Vectors of vectors use `vector` as the element type:
@@ -144,19 +145,23 @@ lists via `(params ...)`:
           (kwarg sigma (ref self spread))))
 ```
 
-Inside the body, parameter references use `(ref param <name>)`. Surface FlatPPL's
-trailing-underscore placeholder convention (`_x_`) is only a surface-level cue; the
-canonical form carries the parameter list explicitly.
+Inside the body, parameter references use `(ref param <name>)`. Parameter names
+preserve the surface trailing-underscore placeholder convention (e.g. `_x_`), keeping
+the round-trip to surface FlatPPL trivial.
 
 ### Type annotations
 
 Type metadata in the canonical form is optional. A canonical-form module is well-formed
-regardless of whether its bindings carry `(type ...)` annotations. Three states are
-distinguished:
+whether or not its bindings carry `(type ...)` annotations. A binding is in one of two
+states: **absent** means inference has not been run on the binding; **`(type <t>)`**
+with concrete content means inference has determined the type.
 
-- **Absent** — the binding has no `(type ...)` field; inference has not been run.
-- **`(type unknown)`** — inference was attempted but could not determine the type.
-- **`(type <t>)`** with concrete content — inference determined the type.
+FlatPPL is designed so that type inference on a well-formed module always succeeds.
+There is no "inference failed" state — if inference cannot determine the type of a
+binding, the module is ill-formed and should be reported as a static error rather than
+annotated with a failure marker. The `unknown` marker used in some type positions
+(see below) is not a failure indicator; it marks a determined-but-symbolic value such
+as a dimension size that is only known at runtime.
 
 The "type" terminology refers to the **structural category** of a value — scalar,
 array, record, table, measure, kernel, likelihood, function — not to a type system in
@@ -172,11 +177,12 @@ subset of `reals`).
 
 - `(scalar real)`, `(scalar integer)`, `(scalar boolean)`, `(scalar complex)`
 - `(array <rank> <shape> <element-type>)` — fixed-rank arrays. Each entry in
-  `<shape>` is a dimension size or `unknown` (e.g. `(array 2 (unknown 3) (scalar real))`
-  is a 2D real array with unknown row count and three columns).
+  `<shape>` is a dimension size or `unknown` for dimensions whose size is only known
+  at runtime (e.g. `(array 2 (unknown 3) (scalar real))` is a 2D real array with
+  unknown row count and three columns).
 - `(record (<field> <type>) ...)` — records with named fields.
 - `(table (columns ((<name> <type>) ...)) (nrows <N>))` — tables with named columns
-  and row count (or `unknown`).
+  and row count (or `unknown` for runtime-determined row counts).
 - `(measure (support <type>))` — closed measures.
 - `(kernel (inputs ((<ref> <type>) ...)) (support <type>))` — parameterized measures.
   The `inputs` list pairs each referenced ambient binding with the type the kernel
