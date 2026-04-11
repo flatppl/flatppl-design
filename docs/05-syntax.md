@@ -65,7 +65,7 @@ FlatPPL has a very lean syntax:
   (see [broadcasting](04-design.md#sec:higher-order)). This keeps matrix algebra
   unambiguous.
 
-**Reserved syntax:** Names of the form `_name_` (leading and trailing underscore) are
+**Reserved names:** Names of the form `_name_` (leading and trailing underscore) are
 reserved as placeholder variables inside `functionof` and `lawof`
 (see [placeholder variables](04-design.md#placeholder-variables)). They are not valid as
 ordinary variable names.
@@ -109,6 +109,7 @@ Their semantics are defined in [language design](04-design.md#sec:design).
 FlatPPL code admits a stable lowering to a linear SSA-style core form in
 which every non-atomic subexpression is bound to a fresh name (see
 [placeholders and holes](04-design.md#placeholders-and-holes) for the lowering stages).
-In the resulting form, every line matches one of a small family of statement shapes
-(`name = literal`, `name = name op name`, `name = name(name, ...)`, etc.), making each
-line recognizable without recursive parsing.
+In the resulting form, every line is a binding whose right-hand side is either a
+literal or a function call: `name = c` or `name = f(name, ...)`. Operators, indexing,
+field access, and array literals all desugar to function calls (`add`, `get`,
+`vector`, etc.), giving the core form a uniform shape.

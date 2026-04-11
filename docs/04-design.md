@@ -94,9 +94,9 @@ Both can be used together in a FlatPPL module, but they map to different types o
 probabilistic coding systems.
 Stochastic-node notation mirrors probabilistic programming languages like Stan and Pyro,
 while measure composition mirrors the HS³ and RooFit approach. By supporting both approaches,
-FlatPPL can be emitted from both types of systems. Term-rewriting within FlatPPL can raise
-and lower code to match either of them. This strengthens the potential role of FlatPPL as
-a cross-system intermediate representation (IR).
+FlatPPL can be emitted from both types of systems. Term-rewriting via FlatPIR can raise
+and lower code to match either of them. This enables FlatPPL and FlatPIR to act as
+an interoperability platform.
 
 ### Module inputs
 

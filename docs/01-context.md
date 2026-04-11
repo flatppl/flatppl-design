@@ -191,10 +191,16 @@ and valid Julia — but the semantics stand on their own.
 **FlatPPL as a design tool.** Beyond its role as a model description language, FlatPPL can serve as a reasoning aid: it is easier to write down, review, and discuss prospective
 features in FlatPPL syntax than in JSON or C++, this can also contribute to the further evolution of standards and tools like HS³ and RooFit.
 
-**Creating FlatPPL models.** FlatPPL is intended both for direct authoring and as a target
-representation for models defined elsewhere. Writing FlatPPL documents directly may be quite
-practical for smaller models, and so for didactic settings. But FlatPPL can also serve as a portable
-intermediate representation (IR) emitted by higher-level modeling frontends. FlatPPL contains its
-own lowered linear SSA-like form, and so is very suitable as an IR. This dual role is deliberate.
-It allows for lowering and raising stochastic code via stable transformations within one single
-portable modeling language.
+**Creating and ingesting FlatPPL models.** FlatPPL is intended both for direct authoring and
+as a target representation for models defined in other stochastic languages. Writing FlatPPL
+documents directly is practical for smaller and medium-sized models and for didactic settings.
+Users may prefer to use host-language frameworks to author models though, especially larger
+and complex models, or to use other DSLs to run, exchange and preserve models. FlatPPL is
+designed to be broad enough to make it a practical target from a wide variety of modeling
+frontends, and defines profiles (see [Profiles](11-profiles.md#sec:profiles)) for easy mapping to other target languages.
+
+**FlatPIR.** FlatPPL comes with an intermediate representation (IR) based on S-expressions,
+the Flat Probabilistic Intermediate Representation (FlatPIR) (see
+[Intermediate Representation](10-flatpir.md)). FlatPIR supports metadata like type annotations
+and is suitable for automated term-rewriting for optimization and conversion between FlatPPL
+profiles. FlatPPL maps directly to and from FlatPIR, enabling round-tripping.

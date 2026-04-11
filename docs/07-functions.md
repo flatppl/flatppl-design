@@ -153,16 +153,18 @@ $$M = \begin{pmatrix} 1 & 4 \\ 2 & 5 \\ 3 & 6 \end{pmatrix}$$
 
 **`reverse(xs)`** reverses the order of elements in a vector or rows in a table.
 
-### Complex numbers
+### Scalar restrictions and constructors
 
-Use these functions to (de-)construct complex numbers. See
-section [value types](03-value-types.md#sec:valuetypes) for the
-details on complex numbers in FlatPPL.
+These functions set-restrict or construct scalar values (see
+[value types](03-value-types.md#sec:valuetypes) for set definitions).
 
 | Function | Arguments | Description | Domains |
 | --- | --- | --- | --- |
+| `boolean` | `x` | returns `x` when `x in booleans` | any scalar numeric |
+| `integer` | `x` | returns `x` when `x in integers` | any scalar numeric |
+| `real` | `x` | returns `x` (or $\mathrm{Re}(x)$ for complex) | any scalar numeric |
 | `complex` | `re`, `im` | $\mathrm{re} + i \cdot \mathrm{im}$ | `reals` |
-| `real` | `x` | $\mathrm{Re}(x)$ | `reals`, `complexes` |
+| `string` | `x` | returns `x` | `string` |
 | `imag` | `x` | $\mathrm{Im}(x)$ | `reals`, `complexes` |
 
 ### Elementary functions

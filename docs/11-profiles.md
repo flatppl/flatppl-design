@@ -1,13 +1,14 @@
 ## <a id="sec:profiles"></a>Profiles and interoperability
 
-### FlatPPL as an intermediate representation
+### FlatPPL as an exchange platform
 
 While full FlatPPL implementations are feasible for some languages and package ecosystems
 with modest effort (see [appendix](12-implementations.md)), a key strength of FlatPPL is
-its suitability as an intermediate representation (IR) between probabilistic modeling
+its suitability as an exchange platform between probabilistic modeling
 systems. Rather than requiring pairwise translators between $n$ systems — an $O(n^2)$
 problem — FlatPPL enables a hub-and-spoke architecture: each system needs only one
-importer and one exporter, with term-rewriting within FlatPPL handled by common tooling.
+importer and one exporter, with term-rewriting within FlatPPL/FlatPIR handled by common
+tooling.
 
 This approach follows established patterns in compiler and interoperability ecosystems:
 LLVM provides a language- and target-independent IR shared across many front ends and

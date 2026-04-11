@@ -11,21 +11,21 @@ FlatPPL, a Flat Portable Probabilistic Language <br />
 </h1>
 
 **Abstract.** FlatPPL is a declarative, inference-agnostic probabilistic language designed for
-authoring, sharing, and preserving statistical models across scientific domains. It is
-intended both as a directly writable source language and as a portable intermediate representation that higher-level modeling frontends may emit. The design
-is still under development; this document presents the current proposal. FlatPPL describes
+authoring, sharing, and converting statistical models across scientific domains. It is
+intended both as a directly writable source language and as a portable representation that higher-level modeling frontends may emit. The design
+is still under development; this document presents the current draft. FlatPPL describes
 models as static directed acyclic graphs (DAGs) of named mathematical objects — variates,
-measures, functions, and likelihoods — in a single global namespace with no block
-structure, no loops, and no dynamic branching. Data is represented by ordinary values (arrays, records,
-tables), not a separate semantic category. Its surface syntax is designed to lie in the intersection
+measures, functions, and likelihoods — in a single global namespace with no block structure,
+no loops, and no dynamic branching. Its surface syntax is designed to lie in the intersection
 of valid Python and valid Julia, making parsing relatively lightweight and host-language
 embedding practical. In addition to deterministic and stochastic nodes, the language
 provides a measure algebra for measures and Markov kernels. Measures, kernels, and
 deterministic functions can be reified from sub-DAGs with optional boundary inputs, making
 it possible to extract conditional kernels and deterministic functions from larger models
-without auxiliary variables. FlatPPL is designed for substantial compatibility with the
-HEP Statistics Serialization Standard (HS³) and RooFit; bidirectional translation for a
-large class of models with tractable densities or likelihoods is a design goal.
+without auxiliary variables. FlatPPL defines profiles, subsets of the language that map to
+target languages like the HEP Statistics Serialization Standard (HS³). FlatPPL is accompanied
+by the Flat Probabilistic Intermediate Representation (FlatPIR), to facilitate term-rewriting
+for optimization and conversion between profiles.
 
 **Scope and status of this document.**
 
