@@ -21,7 +21,7 @@ $\kappa: X \to M(Y)$, where $M(Y)$ is the space of measures on $Y$. When each
 $\kappa(x, \cdot)$ is a probability measure, the kernel is called a **Markov kernel**.
 In FlatPPL, kernels are represented as functions that map value points to measures.
 
-The classical Giry monad operates on probability measures, which are normalized. FlatPPL extends this to $\sigma$-finite measures in general, e.g. to represent non-normalized posteriors and intensity measures. [Staton (2017)](16-references.md#staton2017) provides the formal basis for this extension using the more general class of s-finite measures; all $\sigma$-finite measures are s-finite, so FlatPPL's algebraic operations are well-founded within that framework.
+The classical Giry monad operates on probability measures, which are normalized. FlatPPL extends this to $\sigma$-finite measures in general, e.g. to represent non-normalized posteriors and intensity measures. [Staton (2017)](15-references.md#staton2017) provides the formal basis for this extension using the more general class of s-finite measures; all $\sigma$-finite measures are s-finite, so FlatPPL's algebraic operations are well-founded within that framework.
 
 **Density convention.** All density formulas in this section are with respect to a
 reference measure implied by the constituent distribution types: Lebesgue for continuous
@@ -133,8 +133,11 @@ closed measures (i.e. nullary kernels) as inputs. `densityof(M, x)` and
 - **`joint(M1, M2, ...)`** — independent product measure:
   $(M_1 \otimes M_2)(A \times B) = M_1(A) \cdot M_2(B)$.
 
-  The output variate is the `cat` of the component variates
-  (see [array operations](07-functions.md#array-and-table-operations)).
+  The output variate is formed by combining the component variates via `cat`
+  (see [array operations](07-functions.md#array-and-table-operations)). All components
+  must have the same shape class: all scalars (yielding an array), all arrays
+  (yielding a concatenated array), or all records with distinct field names (yielding
+  a merged record). Mixing shape classes is a static error.
 
   For example, the measure product of a normal and an exponential probability measure,
   defined over a space of vectors, would be
