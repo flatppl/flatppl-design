@@ -59,12 +59,11 @@ whether or not its bindings carry `(type ...)` annotations. A binding's
 `(meta (type ...))` slot is in one of two states: **absent** (inference has not been
 run) or **`(type <t>)`** with concrete content (inference has determined the type).
 
-FlatPPL is designed so that type inference on a well-formed module always succeeds.
-There is no "inference failed" state — if inference cannot determine the type of a
-binding, the module is ill-formed and should be reported as a static error rather than
-annotated with a failure marker. The `unknown` marker used in some type positions
-(see below) is not a failure indicator; it marks a determined-but-symbolic value such
-as a dimension size that is only known at runtime.
+Type inference on a well-formed module always succeeds; if a binding's type cannot be
+determined, the module is ill-formed and the engine reports a static error rather than
+emitting a failure marker. The `deferred` marker that appears in some type positions
+(see below) is not such an indicator — it marks a value whose resolution is deferred
+to a later pipeline stage (type inference, or load/runtime).
 
 The "type" terminology refers to the **structural category** of a value — scalar,
 array, record, table, measure, kernel, likelihood, function — not to a type system in
@@ -80,12 +79,12 @@ subset of `reals`).
 
 - `(scalar real)`, `(scalar integer)`, `(scalar boolean)`, `(scalar complex)`
 - `(array <rank> <shape> <element-type>)` — fixed-rank arrays. Each entry in
-  `<shape>` is a dimension size or `unknown` for dimensions whose size is only known
-  at runtime (e.g. `(array 2 (unknown 3) (scalar real))` is a 2D real array with
-  unknown row count and three columns).
+  `<shape>` is a dimension size or `deferred` for dimensions whose size is only known
+  at runtime (e.g. `(array 2 (deferred 3) (scalar real))` is a 2D real array with
+  deferred row count and three columns).
 - `(record (<field> <type>) ...)` — records with named fields.
 - `(table (columns ((<name> <type>) ...)) (nrows <N>))` — tables with named columns
-  and row count (or `unknown` for runtime-determined row counts).
+  and row count (or `deferred` for runtime-determined row counts).
 - `(measure (support <type>))` — closed measures.
 - `(kernel (inputs ((<ref> <type>) ...)) (support <type>))` — parameterized measures.
   The `inputs` list pairs each referenced ambient binding with the type the kernel
@@ -167,15 +166,15 @@ annotations keeps both positions readable.
 
 The `vector` form has the shape `(vector <elem-type> <expr>...)`. The `<elem-type>`
 is an element-type symbol (`real`, `int`, `bool`, `complex`, `string`, or `vector` for
-nested vectors), or `unknown` if the element type cannot be determined from the literal's
+nested vectors), or `deferred` if the element type cannot be determined from the literal's
 contents alone and type inference has not yet run. Each `<expr>` is an expression that
 evaluates to a value of that type. Bare scalars at element positions are interpreted as
 literals of the declared element type; other expressions (such as `(ref ...)` for
 references or built-in calls) appear as usual:
 
 ```lisp
-(vector real 1.0 (ref self a) 2.0)           ; element type declared; mixes literal and reference
-(vector unknown (ref self a) (ref self b))   ; pre-inference; element type depends on references
+(vector real 1.0 (ref self a) 2.0)            ; element type declared; mixes literal and reference
+(vector deferred (ref self a) (ref self b))   ; pre-inference; element type depends on references
 ```
 
 Vectors of vectors use `vector` as the element type:
@@ -371,7 +370,7 @@ L = likelihoodof(h.obs_kernel, input_data)
       (kwarg source (string "inputs.csv"))
       (kwarg valueset (cartprod (kwarg x reals))))
     (meta (type (table (columns ((x (scalar real))))
-                       (nrows unknown)))))
+                       (nrows deferred)))))
 
   (bind L
     (likelihoodof (ref h obs_kernel) (ref self input_data))
@@ -380,7 +379,7 @@ L = likelihoodof(h.obs_kernel, input_data)
                     ((ref self a) (scalar real))
                     ((ref h spread) (scalar real)))
                   (data-type (table (columns ((x (scalar real))))
-                                    (nrows unknown))))))))
+                                    (nrows deferred))))))))
 ```
 
 The likelihood `L`'s parameter interface contains `((ref self a) ...)` — the caller's
