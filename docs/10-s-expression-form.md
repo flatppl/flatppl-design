@@ -98,15 +98,49 @@ reals  posreals  integers  booleans  pi  inf  im
 A rewriter pattern on `(call ?head ?args...)` fires only on user invocations; a pattern
 on `(add ?x ?y)` fires only on the built-in. There is no overlap.
 
-**Literal values** are tagged:
+**Literal values** are wrapped in parenthesized forms with a type tag as the head:
 
 ```lisp
 (int 3)
 (real 1.0)
+(complex 0.5 2.0)
 (string "inputs.csv")
 (bool true)
-(array (real 1.0) (real 2.0) (real 3.0))
+(vector real 1.0 2.0 3.0)
+(record (kwarg mu (real 0.0)) (kwarg sigma (real 1.0)))
 ```
+
+The `vector` form has the shape `(vector <elem-type> <expr>...)`. The `<elem-type>`
+is an element-type symbol (`real`, `int`, `bool`, `complex`, `string`, or `vector` for
+nested vectors) or `unknown` if type inference has been performed yet. Each `<expr>` is an
+expression that evaluates to a value of that type. Bare scalars at element positions
+are interpreted as literals of the declared element type; other expressions (such as
+`(ref ...)` for references or built-in calls) appear as usual:
+
+```lisp
+(vector real 1.0 (ref self a) 2.0)  ; mixed literal and reference
+(vector unknown 1.0 2.0 3.0)        ; pre-inference, element type not yet known
+```
+
+Vectors of vectors use `vector` as the element type:
+
+```lisp
+(vector vector
+  (vector real 1.0 2.0 3.0)
+  (vector real 4.0 5.0))
+```
+
+Complex elements stay tagged since they are two-component values:
+
+```lisp
+(vector complex (complex 0.5 2.0) (complex 1.0 0.0))
+```
+
+FlatPPL surface syntax has no literal form for matrices or higher-rank arrays.
+Matrices are constructed from vectors via `rowstack` / `colstack`; higher-rank or
+filled arrays are constructed via `fill` / `zeros` / `ones` / `eye` / `onehot`. In
+the canonical form these appear as ordinary built-in calls, not literals. Table
+literals similarly appear as `table` calls, not as a dedicated literal form.
 
 **Function parameter lists.** `functionof` and `lawof` introduce explicit parameter
 lists via `(params ...)`:
@@ -145,8 +179,9 @@ subset of `reals`).
 #### Type categories
 
 - `(scalar real)`, `(scalar integer)`, `(scalar boolean)`, `(scalar complex)`
-- `(array <rank> <shape> <element-type>)` — fixed-rank arrays; shape entries may be
-  `unknown`.
+- `(array <rank> <shape> <element-type>)` — fixed-rank arrays. Each entry in
+  `<shape>` is a dimension size or `unknown` (e.g. `(array 2 (unknown 3) (scalar real))`
+  is a 2D real array with unknown row count and three columns).
 - `(record (<field> <type>) ...)` — records with named fields.
 - `(table (columns ((<name> <type>) ...)) (nrows <N>))` — tables with named columns
   and row count (or `unknown`).
