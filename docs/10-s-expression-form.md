@@ -23,11 +23,10 @@ on their design.
 
 ### Module structure
 
-FlatPPL modules in surface form - FlatPPL files or embedded code blocks - map one-to-one to S-expression representations, modules are not flattened. Tooling may of course
-flatten modules explicitly, e.g. for optimization before code evaluation.
-
-A canonical S-expression file contains exactly one `(module ...)` form with these
-elements:
+Each surface FlatPPL module (file or embedded code block) maps to one canonical-form
+`(module ...)`; modules are not flattened in the canonical form, though tooling
+may flatten them internally (e.g. for cross-module optimization before code evaluation). A canonical S-expression file contains exactly one
+`(module ...)` form with these elements:
 
 - `(meta ...)` — module-level metadata, including `flatppl_compat` version.
 - `(load <alias> (path "..."))` — zero or more declarations of loaded dependencies,
@@ -136,12 +135,6 @@ Complex elements stay tagged since they are two-component values:
 (vector complex (complex 0.5 2.0) (complex 1.0 0.0))
 ```
 
-FlatPPL surface syntax has no literal form for matrices or higher-rank arrays.
-Matrices are constructed from vectors via `rowstack` / `colstack`; higher-rank or
-filled arrays are constructed via `fill` / `zeros` / `ones` / `eye` / `onehot`. In
-the canonical form these appear as ordinary built-in calls, not literals. Table
-literals similarly appear as `table` calls, not as a dedicated literal form.
-
 **Function parameter lists.** `functionof` and `lawof` introduce explicit parameter
 lists via `(params ...)`:
 
@@ -165,10 +158,9 @@ distinguished:
 - **`(type unknown)`** — inference was attempted but could not determine the type.
 - **`(type <t>)`** with concrete content — inference determined the type.
 
-The "type" terminology refers to the **structural category** of a value — scalar, array,
-record, table, measure, kernel, likelihood, function — not to a type system in the
-traditional sense. FlatPPL surface syntax has no type annotations; the canonical form's
-type field is a tool-facing inference result that supports rewriting and analysis.
+The "type" terminology refers to the **structural category** of a value — scalar,
+array, record, table, measure, kernel, likelihood, function — not to a type system in
+the traditional programming-language sense.
 
 **Sets and types are distinct.** Set membership information attached via `elementof`
 (e.g. `(elementof posreals)`) is preserved structurally in the expression itself, not
@@ -199,14 +191,10 @@ Reference-based parameter lists (for kernels and likelihoods) make parameter ide
 explicit: two parameters named `center` from different loaded modules are distinct
 because `(ref h1 center)` and `(ref h2 center)` are different references.
 
-### Module independence and cross-module inference
+### Cross-module type inference
 
 Each module is analyzed independently: its annotation is computed from its own
 perspective (using `self` for local references) and is correct for every legal caller.
-This follows from a language-level invariant: load-bindings can only supply values for
-a loaded module's existing free inputs — they cannot extend the interface, change
-declared types, or modify value sets.
-
 When module B loads module A, B's inference reads A's annotated exports and translates
 them into B's perspective:
 
@@ -254,12 +242,6 @@ input_data = load_data(
 
 L = likelihoodof(h.obs_kernel, input_data)
 ```
-
-In this model, `h` is the helper module with the caller's `a` substituted for `center`.
-The likelihood `L` applies the partially-specialized `obs_kernel` to each row of
-`input_data`. The kernel's placeholder `_x_` is matched against the `x` field of each
-row; the remaining free parameters (`spread` from the helper, `a` from the caller) form
-the likelihood's external parameter interface.
 
 #### Bare canonical form
 
@@ -314,10 +296,6 @@ the likelihood's external parameter interface.
     (likelihoodof (ref h obs_kernel) (ref self input_data))))
 ```
 
-The `(load h ...)` declaration appears before `(bind a ...)` but references `(ref self a)`
-inside its substitution. This is legitimate because the canonical form is a DAG:
-references are resolved structurally, not by textual order.
-
 #### Annotated canonical form
 
 `helpers.fpir` after type inference:
@@ -351,9 +329,6 @@ references are resolved structurally, not by textual order.
     (add (ref self center) (real 1.0))
     (meta (type (scalar real)))))
 ```
-
-Annotations are written from the helper's own `self` perspective — independent of any
-caller. `obs_kernel`'s result is a kernel with two inputs, both referenced via `self`.
 
 `model.fpir` after type inference:
 
