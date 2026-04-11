@@ -141,7 +141,7 @@ The table below provides a compact overview of the language. Each family name li
 | [Structural disintegration](06-measure-algebra.md#structural-disintegration) | `kernelfor`, `kernelbase` |
 | [Higher-order operations](04-design.md#sec:higher-order) | `broadcast`, `reduce`, `scan` |
 | [Data access and reshaping](07-functions.md#sec:functions) | `get`, `cat`, `record`, `preset`, `fixed`, `all`, `filter`, `selectbins`, `reverse` |
-| [Array and table generation](07-functions.md#sec:functions) | `table`, `rowstack`, `colstack`, `linspace`, `extlinspace`, `fill`, `load_data` |
+| [Array and table generation](07-functions.md#sec:functions) | `table`, `rowstack`, `colstack`, `linspace`, `extlinspace`, `fill`, `zeros`, `ones`, `eye`, `onehot`, `load_data` |
 | [Binning and interpolation](07-functions.md#sec:functions) | `bincounts`, `interp_pwlin`, `interp_pwexp`, `interp_poly2_lin`, `interp_poly6_lin`, `interp_poly6_exp` |
 | [Shape functions](07-functions.md#sec:functions) | `polynomial`, `bernstein`, `stepwise` |
 | [Math and logic](07-functions.md#sec:functions) | `identity`, `exp`, `log`, `pow`, `sqrt`, `abs`, `sin`, `cos`, `min`, `max`, `ifelse`, `land`, `lor`, `lnot`, `lxor` |

@@ -13,6 +13,12 @@ value-level operations in FlatPPL. For measure-level operations, see [measure al
 - **`fill(x, n, m, ...)`** — creates an array of shape `n × m × ...` filled with
   value `x` (e.g., `fill(0.0, 10)`).
 
+- **`zeros(n, m, ...)`** — creates a real-valued array of shape `n × m × ...` filled
+  with zeros. Equivalent to `fill(0, n, m, ...)`.
+
+- **`ones(n, m, ...)`** — creates a real-valued array of shape `n × m × ...` filled
+  with ones. Equivalent to `fill(1, n, m, ...)`.
+
 - **`eye(n)`** — creates the $n \times n$ identity matrix $I_n$.
 
 - **`onehot(i, n)`** — length-$n$ basis vector $e_i$ with one at position $i$ and zero elsewhere.
