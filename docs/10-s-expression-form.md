@@ -13,10 +13,10 @@ term-rewriting, with two main use cases in mind:
 - Optimizing FlatPPL code before handing it off to host-language implementations
   (which then can do further optimization within their own language stack).
 
-Non-trivial automated term-rewriting requires type inference, and a representation
-that can carry the inferred type information as metadata. Surface FlatPPL maps
-mechanically to the bare S-expression form; tooling can then perform type inference
-and attach `(meta (type ...))` annotations. The S-expression form maps back mechanically
+Non-trivial automated term-rewriting requires type information, and therefore a
+representation that supports type annotations. Surface FlatPPL maps mechanically
+to the bare S-expression form; tooling can then perform type inference and attach
+`(meta (type ...))` annotations. The S-expression form maps back mechanically
 to surface FlatPPL; metadata is dropped in the process.
 
 FlatPPL engines will ingest the surface form and/or the S-expression form, depending
