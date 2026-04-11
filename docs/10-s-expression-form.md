@@ -38,6 +38,9 @@ may flatten them internally (e.g. for cross-module optimization before code eval
 - `(bind <name> <expression>)` — each binding pairs a name with an expression, optionally
   with a trailing `(meta ...)` slot for type annotations.
 
+Top-level declarations may appear in any order: bindings are resolved by reference,
+not by textual position.
+
 A parameterized load looks like:
 
 ```lisp
@@ -47,8 +50,7 @@ A parameterized load looks like:
 ```
 
 Each substitution is a `(kwarg <param-name> <expression>)`. The expression is resolved
-in the caller's namespace. Top-level declarations may appear in any order; bindings are
-resolved by reference, not by textual position.
+in the loading module's namespace. 
 
 ### Type annotations
 
