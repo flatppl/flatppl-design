@@ -23,6 +23,9 @@ on their design.
 
 ### Module structure
 
+FlatPPL modules in surface form - FlatPPL files or embedded code blocks - map one-to-one to S-expression representations, modules are not flattened. Tooling may of course
+flatten modules explicitly, e.g. for optimization before code evaluation.
+
 A canonical S-expression file contains exactly one `(module ...)` form with these
 elements:
 
@@ -31,8 +34,7 @@ elements:
   optionally followed by a `(bindings ...)` sub-form supplying substitution values for
   the loaded module's free inputs.
 - `(exports <name1> <name2> ...)` — the module's public interface. Bindings listed here
-  are the root set for rewriting passes; unlisted bindings may be eliminated, inlined,
-  or renamed.
+  are the root set for rewriting passes; unlisted bindings may be elided during term-rewriting.
 - `(bind <name> <expression>)` — each binding pairs a name with an expression, optionally
   with a trailing `(meta ...)` slot for type annotations.
 
@@ -45,13 +47,14 @@ A parameterized load looks like:
 ```
 
 Each substitution is a `(kwarg <param-name> <expression>)`. The expression is resolved
-in the caller's namespace. Order of top-level declarations is a readability convention,
-not semantic — the canonical form is structural (a DAG).
+in the caller's namespace. Top-level declarations may appear in any order; bindings are
+resolved by reference, not by textual position.
 
 ### Expressions
 
-The canonical form distinguishes three kinds of expression head, so rewriting rules can
-pattern-match on the right one without name-based dispatch:
+Expressions in the canonical form come in structurally distinct shapes for built-in
+operations, references, and user function invocations. Rewriting rules can pattern-match
+on expression category without name-based dispatch:
 
 **Built-in operations** are bare-headed forms with the operation name as the head symbol:
 
