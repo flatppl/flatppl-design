@@ -63,16 +63,18 @@ on expression category without name-based dispatch:
 (Normal (kwarg mu (real 0.0)) (kwarg sigma (real 1.0)))
 (draw (Normal ...))
 (elementof reals)
-(load_data (source (string "...")) (valueset ...))
+(load_data (kwarg source (string "...")) (kwarg valueset ...))
 ```
 
-This covers both ordinary functions and language-defined operations (`elementof`, `draw`,
-`lawof`, `functionof`, `likelihoodof`, `load_data`). Argument encoding is per-built-in:
-`kwarg` pairs (`Normal`), labeled sub-forms (`load_data`), `params` lists (`functionof`),
-or positional — documented in each built-in's entry in the reference.
+This covers both ordinary functions and special forms like `elementof`, `draw`, and
+`functionof`, which all share the same syntactic shape in the canonical form. Most
+built-ins take ordinary positional or `kwarg` arguments. Two exceptions: `functionof`
+and `lawof` introduce parameter scope via an explicit `(params ...)` list, and
+`load_module` uses dedicated `(path ...)` and `(bindings ...)` sub-forms for its
+module-level operation.
 
-Because FlatPPL does not allow users to shadow built-in names, bare symbols matching a
-built-in name refer unambiguously to that built-in. User bindings always use `(ref ...)`.
+User bindings always use `(ref ...)` while built-ins use bare symbols. This is
+unambiguous because FlatPPL does not allow user bindings to shadow built-in names.
 
 **Built-in constants** appear as bare symbols in argument positions:
 
@@ -270,8 +272,8 @@ the likelihood's external parameter interface.
 
   (bind input_data
     (load_data
-      (source (string "inputs.csv"))
-      (valueset (cartprod (kwarg x reals)))))
+      (kwarg source (string "inputs.csv"))
+      (kwarg valueset (cartprod (kwarg x reals)))))
 
   (bind L
     (likelihoodof (ref h obs_kernel) (ref self input_data))))
@@ -342,8 +344,8 @@ caller. `obs_kernel`'s result is a kernel with two inputs, both referenced via `
 
   (bind input_data
     (load_data
-      (source (string "inputs.csv"))
-      (valueset (cartprod (kwarg x reals))))
+      (kwarg source (string "inputs.csv"))
+      (kwarg valueset (cartprod (kwarg x reals))))
     (meta (type (table (columns ((x (scalar real))))
                        (nrows unknown)))))
 
