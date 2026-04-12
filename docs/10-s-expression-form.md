@@ -96,8 +96,10 @@ subset of `reals`).
 - `(table (columns (<name> <type>) ...) (nrows <N>))` — tables with named columns
   and row count. `<N>` is a positive integer or `dynamic`; tables loaded via
   `load_data` are a common source of dynamic row counts.
-- `(measure (support <type>))` — closed measures.
-- `(kernel (inputs (<ref> <type>) ...) (support <type>))` — parameterized measures.
+- `(measure (domain <type>))` — closed measures. `<type>` is the type of values on
+  which density evaluation is defined (typically broader than the measure's support;
+  density returns zero outside the support).
+- `(kernel (inputs (<ref> <type>) ...) (domain <type>))` — parameterized measures.
   The `inputs` list pairs each referenced ambient binding with the type the kernel
   expects of it.
 - `(function (inputs (<name> <type>) ...) (result <type>))` — functions. The
@@ -357,7 +359,7 @@ L = likelihoodof(h.obs_kernel, input_data)
                   (result (kernel
                             (inputs ((ref self center) (scalar real))
                                     ((ref self spread) (scalar real)))
-                            (support (scalar real))))))))
+                            (domain (scalar real))))))))
 
   (bind shifted_value
     (add (ref self center) (real 1.0))
