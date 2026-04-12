@@ -35,8 +35,10 @@ may flatten them internally (e.g. for cross-module optimization before code eval
   the loaded module's free inputs.
 - `(exports <name1> <name2> ...)` — the module's public interface. Bindings listed here
   are the root set for rewriting passes; unlisted bindings may be elided during term-rewriting.
-- `(bind <name> <expression>)` — each binding pairs a name with an expression, optionally
-  with a trailing `(meta ...)` slot for type annotations.
+- `(bind <name> <expression> (meta (type <t>)))` — each binding pairs a name with an
+  expression and a trailing `(meta ...)` slot carrying its type annotation. The slot is
+  always present; before type inference has run it holds `(type deferred)`
+  (see [Type annotations](#type-annotations)).
 
 Top-level declarations may appear in any order: bindings are resolved by reference,
 not by textual position.
@@ -54,16 +56,16 @@ in the loading module's namespace.
 
 ### Type annotations
 
-Type metadata in the canonical form is optional. A canonical-form module is well-formed
-whether or not its bindings carry `(type ...)` annotations. A binding's
-`(meta (type ...))` slot is in one of two states: **absent** (inference has not been
-run) or **`(type <t>)`** with concrete content (inference has determined the type).
+Every binding in the canonical form carries a `(meta (type ...))` slot. Before type
+inference has run, the slot holds `(type deferred)`; inference rewrites it in place to
+a concrete type.
 
-Type inference on a well-formed module always succeeds; if a binding's type cannot be
-determined, the module is ill-formed and the engine reports a static error rather than
-emitting a failure marker. The `deferred` marker that appears in some type positions
-(see below) is not such an indicator — it marks a value whose resolution is deferred
-to a later pipeline stage (type inference, or load/runtime).
+FlatPPL is designed such that type inference on a well-formed module can always succeed.
+If inference fails — for example, an unresolvable reference or a type error in an
+expression — the module is ill-formed and the engine should report a static error. As a
+diagnostic aid, the engine may also rewrite the affected `(type deferred)` slot to
+`(type (failed "reason"))`, so that downstream tooling and users can see the cause and
+location of the failure inline.
 
 The "type" terminology refers to the **structural category** of a value — scalar,
 array, record, table, measure, kernel, likelihood, function — not to a type system in
@@ -77,6 +79,12 @@ subset of `reals`).
 
 #### Type categories
 
+- `deferred` — placeholder for "not yet resolved at this pipeline stage." Appears as a
+  binding's top-level type before inference runs, and inside other type forms (array
+  shapes, table row counts, vector element types) for values resolved at load/runtime.
+- `(failed "<reason>")` — diagnostic marker written into a binding's `(type ...)` slot
+  when inference attempted to resolve it but could not. The reason string is for human
+  and tooling consumption. A module containing any `failed` marker is ill-formed.
 - `(scalar real)`, `(scalar integer)`, `(scalar boolean)`, `(scalar complex)`
 - `(array <rank> <shape> <element-type>)` — fixed-rank arrays. Each entry in
   `<shape>` is a dimension size or `deferred` for dimensions whose size is only known
@@ -266,19 +274,23 @@ L = likelihoodof(h.obs_kernel, input_data)
   (exports center spread obs_kernel shifted_value)
 
   (bind center
-    (elementof reals))
+    (elementof reals)
+    (meta (type deferred)))
 
   (bind spread
-    (elementof posreals))
+    (elementof posreals)
+    (meta (type deferred)))
 
   (bind obs_kernel
     (functionof (params (_x_))
       (Normal
         (kwarg mu (add (ref self center) (ref param _x_)))
-        (kwarg sigma (ref self spread)))))
+        (kwarg sigma (ref self spread))))
+    (meta (type deferred)))
 
   (bind shifted_value
-    (add (ref self center) (real 1.0))))
+    (add (ref self center) (real 1.0))
+    (meta (type deferred))))
 ```
 
 `model.fpir`:
@@ -292,21 +304,26 @@ L = likelihoodof(h.obs_kernel, input_data)
          (bindings (kwarg center (ref self a))))
 
   (bind a
-    (elementof reals))
+    (elementof reals)
+    (meta (type deferred)))
 
   (bind b
-    (draw (Normal (kwarg mu (real 0.0)) (kwarg sigma (real 2.0)))))
+    (draw (Normal (kwarg mu (real 0.0)) (kwarg sigma (real 2.0))))
+    (meta (type deferred)))
 
   (bind _combined
-    (add (ref self a) (ref self b)))
+    (add (ref self a) (ref self b))
+    (meta (type deferred)))
 
   (bind input_data
     (load_data
       (kwarg source (string "inputs.csv"))
-      (kwarg valueset (cartprod (kwarg x reals)))))
+      (kwarg valueset (cartprod (kwarg x reals))))
+    (meta (type deferred)))
 
   (bind L
-    (likelihoodof (ref h obs_kernel) (ref self input_data))))
+    (likelihoodof (ref h obs_kernel) (ref self input_data))
+    (meta (type deferred))))
 ```
 
 #### Annotated canonical form
