@@ -79,20 +79,23 @@ subset of `reals`).
 
 #### Type categories
 
-- `deferred` — placeholder for "not yet resolved at this pipeline stage." Appears as a
-  binding's top-level type before inference runs, and inside other type forms (array
-  shapes, table row counts, vector element types) for values resolved at load/runtime.
+- `deferred` — pipeline-state placeholder for "not yet resolved at this stage." Appears
+  as a binding's top-level type before inference has run, and as the element-type tag
+  of a vector literal when inference has not yet determined it.
 - `(failed "<reason>")` — diagnostic marker written into a binding's `(type ...)` slot
   when inference attempted to resolve it but could not. The reason string is for human
   and tooling consumption. A module containing any `failed` marker is ill-formed.
-- `(scalar real)`, `(scalar integer)`, `(scalar boolean)`, `(scalar complex)`
-- `(array <rank> <shape> <element-type>)` — fixed-rank arrays. Each entry in
-  `<shape>` is a dimension size or `deferred` for dimensions whose size is only known
-  at runtime (e.g. `(array 2 (deferred 3) (scalar real))` is a 2D real array with
-  deferred row count and three columns).
+- `(scalar real)`, `(scalar integer)`, `(scalar boolean)`, `(scalar complex)` — the
+  four scalar value types.
+- `(array <rank> <shape> <element-type>)` — arrays. `<rank>` is a positive integer
+  literal (not `dynamic`). Each entry in `<shape>` is a positive integer dimension
+  size, or the placeholder `dynamic` for a dimension whose size is determined at load
+  or runtime rather than statically (e.g. `(array 2 (dynamic 3) (scalar real))` is a 2D
+  real array with three columns and a dynamic row count).
 - `(record (<field> <type>) ...)` — records with named fields.
 - `(table (columns ((<name> <type>) ...)) (nrows <N>))` — tables with named columns
-  and row count (or `deferred` for runtime-determined row counts).
+  and row count. `<N>` is a positive integer or `dynamic`; tables loaded via
+  `load_data` are a common source of dynamic row counts.
 - `(measure (support <type>))` — closed measures.
 - `(kernel (inputs ((<ref> <type>) ...)) (support <type>))` — parameterized measures.
   The `inputs` list pairs each referenced ambient binding with the type the kernel
@@ -387,7 +390,7 @@ L = likelihoodof(h.obs_kernel, input_data)
       (kwarg source (string "inputs.csv"))
       (kwarg valueset (cartprod (kwarg x reals))))
     (meta (type (table (columns ((x (scalar real))))
-                       (nrows deferred)))))
+                       (nrows dynamic)))))
 
   (bind L
     (likelihoodof (ref h obs_kernel) (ref self input_data))
@@ -396,7 +399,7 @@ L = likelihoodof(h.obs_kernel, input_data)
                     ((ref self a) (scalar real))
                     ((ref h spread) (scalar real)))
                   (data-type (table (columns ((x (scalar real))))
-                                    (nrows deferred))))))))
+                                    (nrows dynamic))))))))
 ```
 
 The likelihood `L`'s parameter interface contains `((ref self a) ...)` — the caller's
