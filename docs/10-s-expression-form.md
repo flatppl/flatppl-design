@@ -105,7 +105,7 @@ subset of `reals`).
 - `(function (inputs (<name> <type>) ...) (result <type>))` — functions. The
   `inputs` list uses local names (matching the `functionof` binder), since function
   parameters are locally scoped.
-- `(likelihood (inputs (<ref> <type>) ...) (data-type <type>))` — likelihood
+- `(likelihood (inputs (<ref> <type>) ...) (obstype <type>))` — likelihood
   objects. The `inputs` list pairs each referenced ambient binding with the type the
   likelihood expects of it.
 
@@ -401,7 +401,7 @@ L = likelihoodof(h.obs_kernel, input_data)
                   (inputs
                     ((ref self a) (scalar real))
                     ((ref h spread) (scalar real)))
-                  (data-type (table (columns (x (scalar real)))
+                  (obstype (table (columns (x (scalar real)))
                                     (nrows dynamic))))))))
 ```
 
