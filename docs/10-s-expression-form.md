@@ -211,21 +211,25 @@ the round-trip to surface FlatPPL trivial.
 
 ### Cross-module type inference
 
-Each module is analyzed independently: its annotation is computed from its own
-perspective (using `self` for local references) and is correct for every legal caller.
-When module B loads module A, B's inference reads A's annotated exports and translates
-them into B's perspective:
+Each module is annotated independently: types are computed from its own perspective
+(using `self` for local references). When module B loads module A, B's inference
+proceeds as follows:
 
 1. For each `(load <alias> (path "..."))`, locate A's canonical-form file.
 2. If A is not yet annotated, run inference on it first (with cycle detection).
-3. Read the `(type ...)` metadata of each binding in A's `(exports ...)`.
+3. Read A's exported bindings and their type annotations.
 4. Translate A's `self` references: each `(ref self X)` becomes `(ref <alias> X)`
    unless the load supplies a substitution for `X`, in which case the substitution
    expression replaces the reference entirely.
-5. Use the translated annotations when resolving cross-module references in B.
+5. Use A's translated annotations when resolving cross-module references in B.
+   When an exported type contains `any` (e.g. a generic function), B's inference
+   flows B's concrete argument types through A's function body to determine the
+   concrete result type at each call site.
 
 A's annotation file is read-only from B's perspective; the same annotated file serves
-every caller regardless of its load arguments.
+every caller. Type annotations are sufficient for term rewriting within a module;
+cross-module type inference may additionally traverse exported function bodies when
+signatures contain `any`.
 
 ### Example
 
