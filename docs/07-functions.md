@@ -10,6 +10,9 @@ value-level operations in FlatPPL. For measure-level operations, see [measure al
 
 ### Array and table generation
 
+- **`vector(x1, x2, ...)`** — constructs a 1D array (vector) from the given elements.
+  Equivalent to the array literal syntax `[x1, x2, ...]`.
+
 - **`fill(x, n, m, ...)`** — creates an array of shape `n × m × ...` filled with
   value `x` (e.g., `fill(0.0, 10)`).
 
