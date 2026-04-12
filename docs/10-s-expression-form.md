@@ -85,6 +85,8 @@ subset of `reals`).
 - `(failed "<reason>")` — diagnostic marker written into a binding's `(type ...)` slot
   when inference attempted to resolve it but could not. The reason string is for human
   and tooling consumption. A module containing any `failed` marker is ill-formed.
+- `any` — used where no concrete-type constraint is applicable, e.g. for the input
+  of `fn(sum(_))`. Counterpart of the value-level set `anything`.
 - `(scalar real)`, `(scalar integer)`, `(scalar boolean)`, `(scalar complex)` — the
   four scalar value types.
 - `(array <rank> <shape> <element-type>)` — arrays. `<rank>` is a positive integer
@@ -96,22 +98,11 @@ subset of `reals`).
 - `(table (columns (<name> <type>) ...) (nrows <N>))` — tables with named columns
   and row count. `<N>` is a positive integer or `dynamic`; tables loaded via
   `load_data` are a common source of dynamic row counts.
-- `(measure (domain <type>))` — closed measures. `<type>` is the type of values on
-  which density evaluation is defined (typically broader than the measure's support;
-  density returns zero outside the support).
-- `(kernel (inputs (<ref> <type>) ...) (domain <type>))` — parameterized measures.
-  The `inputs` list pairs each referenced ambient binding with the type the kernel
-  expects of it.
-- `(function (inputs (<name> <type>) ...) (result <type>))` — functions. The
-  `inputs` list uses local names (matching the `functionof` binder), since function
-  parameters are locally scoped.
-- `(likelihood (inputs (<ref> <type>) ...) (obstype <type>))` — likelihood
-  objects. The `inputs` list pairs each referenced ambient binding with the type the
-  likelihood expects of it.
-
-Kernel and likelihood `inputs` use references rather than local names, making each
-input's identity explicit: two `center` inputs from different loaded modules remain
-distinct because `(ref h1 center)` and `(ref h2 center)` are different references.
+- `(measure (domain <type>))` — closed measures. `<type>` is the type of values that
+   sampling generates and on which density evaluation is defined.
+- `(kernel (inputs (<name> <type>) ...) (domain <type>))` — transition kernels.
+- `(function (inputs (<name> <type>) ...) (result <type>))` — functions.
+- `(likelihood (inputs (<name> <type>) ...) (obstype <type>))` — likelihood objects.
 
 ### Expressions
 
@@ -248,7 +239,9 @@ A two-module example showing lowering and annotation.
 center = elementof(reals)
 spread = elementof(posreals)
 
-obs_kernel = functionof(Normal(mu = center + _x_, sigma = spread))
+obs_kernel = functionof(
+    Normal(mu = center + _x_, sigma = spread),
+    center = center, spread = spread, x = _x_)
 
 shifted_value = center + 1.0
 ```
@@ -288,10 +281,10 @@ L = likelihoodof(h.obs_kernel, input_data)
     (meta (type deferred)))
 
   (bind obs_kernel
-    (functionof (params (_x_))
+    (functionof (params (center spread _x_))
       (Normal
-        (kwarg mu (add (ref self center) (ref param _x_)))
-        (kwarg sigma (ref self spread))))
+        (kwarg mu (add (ref param center) (ref param _x_)))
+        (kwarg sigma (ref param spread))))
     (meta (type deferred)))
 
   (bind shifted_value
@@ -350,16 +343,15 @@ L = likelihoodof(h.obs_kernel, input_data)
     (meta (type (scalar real))))
 
   (bind obs_kernel
-    (functionof (params (_x_))
+    (functionof (params (center spread _x_))
       (Normal
-        (kwarg mu (add (ref self center) (ref param _x_)))
-        (kwarg sigma (ref self spread))))
-    (meta (type (function
-                  (inputs (_x_ (scalar real)))
-                  (result (kernel
-                            (inputs ((ref self center) (scalar real))
-                                    ((ref self spread) (scalar real)))
-                            (domain (scalar real))))))))
+        (kwarg mu (add (ref param center) (ref param _x_)))
+        (kwarg sigma (ref param spread))))
+    (meta (type (kernel
+                  (inputs (center (scalar real))
+                          (spread (scalar real))
+                          (_x_ (scalar real)))
+                  (domain (scalar real))))))
 
   (bind shifted_value
     (add (ref self center) (real 1.0))
@@ -398,16 +390,15 @@ L = likelihoodof(h.obs_kernel, input_data)
   (bind L
     (likelihoodof (ref h obs_kernel) (ref self input_data))
     (meta (type (likelihood
-                  (inputs
-                    ((ref self a) (scalar real))
-                    ((ref h spread) (scalar real)))
+                  (inputs (center (scalar real))
+                          (spread (scalar real))
+                          (_x_ (scalar real)))
                   (obstype (table (columns (x (scalar real)))
-                                    (nrows dynamic))))))))
+                                  (nrows dynamic))))))))
 ```
 
-The likelihood `L`'s `inputs` list contains `((ref self a) ...)` — the caller's `a`
-substituted into the helper's `center` at load time — and `((ref h spread) ...)` —
-the helper's unsubstituted `spread`, still referenced through the `h` alias. A
-downstream tool walks the `inputs` list, resolves each reference in its ambient
-module, and plugs in values. `input_data`'s type was derived from the `valueset`
-argument of `load_data` without reading the file.
+The likelihood `L` inherits its `inputs` list from `obs_kernel`'s reified parameters —
+local names `center`, `spread`, and `_x_`, decoupled from any same-named module-level
+binding. A downstream tool walks the list and supplies a value for each parameter at
+the call site, with the matching done by name. `input_data`'s type was derived from
+the `valueset` argument of `load_data` without reading the file.
