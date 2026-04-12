@@ -93,17 +93,17 @@ subset of `reals`).
   or runtime rather than statically (e.g. `(array 2 (dynamic 3) (scalar real))` is a 2D
   real array with three columns and a dynamic row count).
 - `(record (<field> <type>) ...)` — records with named fields.
-- `(table (columns ((<name> <type>) ...)) (nrows <N>))` — tables with named columns
+- `(table (columns (<name> <type>) ...) (nrows <N>))` — tables with named columns
   and row count. `<N>` is a positive integer or `dynamic`; tables loaded via
   `load_data` are a common source of dynamic row counts.
 - `(measure (support <type>))` — closed measures.
-- `(kernel (inputs ((<ref> <type>) ...)) (support <type>))` — parameterized measures.
+- `(kernel (inputs (<ref> <type>) ...) (support <type>))` — parameterized measures.
   The `inputs` list pairs each referenced ambient binding with the type the kernel
   expects of it.
-- `(function (inputs ((<name> <type>) ...)) (result <type>))` — functions. The
+- `(function (inputs (<name> <type>) ...) (result <type>))` — functions. The
   `inputs` list uses local names (matching the `functionof` binder), since function
   parameters are locally scoped.
-- `(likelihood (inputs ((<ref> <type>) ...)) (data-type <type>))` — likelihood
+- `(likelihood (inputs (<ref> <type>) ...) (data-type <type>))` — likelihood
   objects. The `inputs` list pairs each referenced ambient binding with the type the
   likelihood expects of it.
 
@@ -353,7 +353,7 @@ L = likelihoodof(h.obs_kernel, input_data)
         (kwarg mu (add (ref self center) (ref param _x_)))
         (kwarg sigma (ref self spread))))
     (meta (type (function
-                  (inputs ((_x_ (scalar real))))
+                  (inputs (_x_ (scalar real)))
                   (result (kernel
                             (inputs ((ref self center) (scalar real))
                                     ((ref self spread) (scalar real)))
@@ -390,7 +390,7 @@ L = likelihoodof(h.obs_kernel, input_data)
     (load_data
       (kwarg source (string "inputs.csv"))
       (kwarg valueset (cartprod (kwarg x reals))))
-    (meta (type (table (columns ((x (scalar real))))
+    (meta (type (table (columns (x (scalar real)))
                        (nrows dynamic)))))
 
   (bind L
@@ -399,7 +399,7 @@ L = likelihoodof(h.obs_kernel, input_data)
                   (inputs
                     ((ref self a) (scalar real))
                     ((ref h spread) (scalar real)))
-                  (data-type (table (columns ((x (scalar real))))
+                  (data-type (table (columns (x (scalar real)))
                                     (nrows dynamic))))))))
 ```
 
