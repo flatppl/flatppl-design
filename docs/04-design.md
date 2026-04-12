@@ -114,6 +114,9 @@ Here `mu` and `sigma` are module inputs. The special form `elementof(S)` declare
 their values are restricted to the given sets. To evaluate a subgraph of a module, the
 application must supply concrete values for all inputs that are part of the subgraph.
 
+Module inputs must *not* be bound to `elementof(anything)`, as this would prevent
+type inference on the module.
+
 The role of module inputs — as fit parameters, hyperparameters, or fixed constants — is determined by
 how the FlatPPL module is used by an application, not by the module itself.
 
