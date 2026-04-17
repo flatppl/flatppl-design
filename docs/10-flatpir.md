@@ -5,17 +5,21 @@ representation of FlatPPL. FlatPIR uses standard S-expression syntax (compatible
 with Lisp/Scheme readers). FlatPPL maps directly to FlatPIR and FlatPIR maps
 back directly to FlatPPL (metadata is dropped in the process).
 
-FlatPIR is designed for term-rewriting, with two main use cases:
+**Note:** The design of FlatPIR is preliminary and subject to change. It is not part
+of FlatPPL semantic versioning yet.
 
-- Restricting FlatPPL code to a specific subset that maps directly to a target
+FlatPPL engines may ingest either surface FlatPPL or FlatPIR, depending on their design.
+
+FlatPIR is designed to support term-rewriting, with two main use cases:
+
+- Restricting FlatPPL/FlatPIR code to a specific subset that maps directly to a target
   probabilistic language
   (see [Profiles and interoperability](11-profiles.md#sec:profiles)).
-- Optimizing FlatPPL code before handing it off to host-language implementations
+- Optimizing FlatPPL/FlatPIR code before handing it off to host-language implementations
   (which then can do further optimization within their own language stack).
 
-Term-rewriting requires type information, so FlatPIR supports `(%meta (%type ...))`
-annotations on every binding. FlatPPL engines may ingest either surface FlatPPL or
-FlatPIR, depending on their design.
+Term-rewriting can require both value type and binding phase (see [Phases](04-design.md#phases))
+information, so FlatPIR includes `(%meta (%type ...) (%phase ...))` annotations on every binding.
 
 ### Naming convention
 
@@ -39,9 +43,9 @@ FlatPIR files use the file extension `.flatpir`. A FlatPIR file contains exactly
   the loaded module's free inputs.
 - `(%exports <name1> <name2> ...)` — the module's public interface. Bindings listed here
   are the root set for rewriting passes; unlisted bindings may be elided during term-rewriting.
-- `(%bind <name> <expression> (%meta (%type <t>)))` — pairs a name with an expression
-  and a type annotation. Before inference the annotation is `(%type %deferred)`;
-  inference replaces it with a concrete type (see below).
+- `(%bind <name> <expression> (%meta (%type <t>) (%phase <p>)))` — pairs a name with
+  an expression, a type annotation, and a phase annotation. Before inference both
+  annotations are `%deferred` (see below).
 
 Top-level declarations may appear in any order: bindings are resolved by reference,
 not by textual position.
@@ -54,14 +58,15 @@ A parameterized load looks like:
          (%assign center (%ref %global a))))
 ```
 
-Each substitution is takes the form `(%assign <input-name> <expression>)`. The
+Each substitution takes the form `(%assign <input-name> <expression>)`. The
 expression is resolved in the loading module's namespace.
 
-### Type annotations
+### Type and phase annotations
 
-Every binding in FlatPIR carries a `(%meta (%type ...))` slot. Before type
-inference has run, the slot holds `(%type %deferred)`; inference rewrites it in place to
-a concrete type.
+Every binding in FlatPIR carries `(%meta (%type ...) (%phase ...))` metadata. Before
+inference, both slots hold `%deferred`; inference rewrites them in place with concrete
+types and binding phases. Phase is computed by ancestor analysis (cheaper than type inference):
+`%fixed`, `%parameterized`, or `%stochastic` (see [Phases](04-design.md#phases)).
 
 FlatPPL is designed such that type inference on a well-formed module can always succeed.
 If inference fails — for example, an unresolvable reference or a type error in an
@@ -307,22 +312,22 @@ L = likelihoodof(helpers.obs_kernel, input_data)
 
   (%bind center
     (elementof reals)
-    (%meta (%type %deferred)))
+    (%meta (%type %deferred) (%phase %deferred)))
 
   (%bind spread
     (elementof posreals)
-    (%meta (%type %deferred)))
+    (%meta (%type %deferred) (%phase %deferred)))
 
   (%bind obs_kernel
     (functionof (%params (center spread _x_))
       (Normal
         (%kwarg mu (add (%ref %local center) (%ref %local _x_)))
         (%kwarg sigma (%ref %local spread))))
-    (%meta (%type %deferred)))
+    (%meta (%type %deferred) (%phase %deferred)))
 
   (%bind shifted_value
     (add (%ref %global center) (real 1.0))
-    (%meta (%type %deferred))))
+    (%meta (%type %deferred) (%phase %deferred))))
 ```
 
 `model.flatpir`:
@@ -337,25 +342,25 @@ L = likelihoodof(helpers.obs_kernel, input_data)
 
   (%bind a
     (elementof reals)
-    (%meta (%type %deferred)))
+    (%meta (%type %deferred) (%phase %deferred)))
 
   (%bind b
     (draw (Normal (%kwarg mu (real 0.0)) (%kwarg sigma (real 2.0))))
-    (%meta (%type %deferred)))
+    (%meta (%type %deferred) (%phase %deferred)))
 
   (%bind _combined
     (add (%ref %global a) (%ref %global b))
-    (%meta (%type %deferred)))
+    (%meta (%type %deferred) (%phase %deferred)))
 
   (%bind input_data
     (load_data
       (%kwarg source (string "inputs.csv"))
       (%kwarg valueset (cartprod (%field x reals))))
-    (%meta (%type %deferred)))
+    (%meta (%type %deferred) (%phase %deferred)))
 
   (%bind L
     (likelihoodof (%ref helpers obs_kernel) (%ref %global input_data))
-    (%meta (%type %deferred))))
+    (%meta (%type %deferred) (%phase %deferred))))
 ```
 
 #### Annotated FlatPIR
@@ -369,11 +374,11 @@ L = likelihoodof(helpers.obs_kernel, input_data)
 
   (%bind center
     (elementof reals)
-    (%meta (%type (%scalar real))))
+    (%meta (%type (%scalar real)) (%phase %parameterized)))
 
   (%bind spread
     (elementof posreals)
-    (%meta (%type (%scalar real))))
+    (%meta (%type (%scalar real)) (%phase %parameterized)))
 
   (%bind obs_kernel
     (functionof (%params (center spread _x_))
@@ -384,11 +389,12 @@ L = likelihoodof(helpers.obs_kernel, input_data)
                     (%inputs (center (%scalar real))
                              (spread (%scalar real))
                              (_x_ (%scalar real)))
-                    (%domain (%scalar real))))))
+                    (%domain (%scalar real))))
+           (%phase %fixed)))
 
   (%bind shifted_value
     (add (%ref %global center) (real 1.0))
-    (%meta (%type (%scalar real)))))
+    (%meta (%type (%scalar real)) (%phase %parameterized))))
 ```
 
 `model.flatpir` after type inference:
@@ -403,22 +409,23 @@ L = likelihoodof(helpers.obs_kernel, input_data)
 
   (%bind a
     (elementof reals)
-    (%meta (%type (%scalar real))))
+    (%meta (%type (%scalar real)) (%phase %parameterized)))
 
   (%bind b
     (draw (Normal (%kwarg mu (real 0.0)) (%kwarg sigma (real 2.0))))
-    (%meta (%type (%scalar real))))
+    (%meta (%type (%scalar real)) (%phase %stochastic)))
 
   (%bind _combined
     (add (%ref %global a) (%ref %global b))
-    (%meta (%type (%scalar real))))
+    (%meta (%type (%scalar real)) (%phase %stochastic)))
 
   (%bind input_data
     (load_data
       (%kwarg source (string "inputs.csv"))
       (%kwarg valueset (cartprod (%field x reals))))
     (%meta (%type (%table (%columns (x (%scalar real)))
-                          (%nrows %dynamic)))))
+                          (%nrows %dynamic)))
+           (%phase %fixed)))
 
   (%bind L
     (likelihoodof (%ref helpers obs_kernel) (%ref %global input_data))
@@ -427,7 +434,8 @@ L = likelihoodof(helpers.obs_kernel, input_data)
                              (spread (%scalar real))
                              (_x_ (%scalar real)))
                     (%obstype (%table (%columns (x (%scalar real)))
-                                      (%nrows %dynamic))))))))
+                                      (%nrows %dynamic)))))
+           (%phase %fixed))))
 ```
 
 The likelihood `L` inherits its `%inputs` list from `obs_kernel`'s reified parameters —

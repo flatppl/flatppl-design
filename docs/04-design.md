@@ -98,27 +98,59 @@ FlatPPL can be emitted from both types of systems. Term-rewriting via FlatPIR ca
 and lower code to match either of them. This enables FlatPPL and FlatPIR to act as
 an interoperability platform.
 
-### Module inputs
+### Internal parameters and external inputs
 
-FlatPPL modules declare their external inputs by binding variables to `elementof(...)`:
+FlatPPL declares unresolved values via two special forms:
+
+- `elementof(S)` — declares a module-internal parameter that takes a specific value
+  during a single evaluation of a subgraph that contains it; the value may vary between
+  evaluations (e.g., during parameter inference).
+- `external(S)` — declares a module-external input. The value must be supplied by
+  applications that use the module or by modules that load the containing module and
+  bind this input to a fixed value in their own namespace. Module inputs can be
+  thought of as hyperparameters and their values don't change between subgraph
+  evaluations.
 
 ```flatppl
+n_dims = external(posintegers)
 mu = elementof(reals)
 sigma = elementof(interval(0.0, inf))
-
-x = draw(Normal(mu = mu, sigma = sigma))
+dist = iid(Normal(mu = mu, sigma = sigma), n_dims)
+x = draw(dist)
 y = 2 * x
 ```
 
-Here `mu` and `sigma` are module inputs. The special form `elementof(S)` declares that
-their values are restricted to the given sets. To evaluate a subgraph of a module, the
-application must supply concrete values for all inputs that are part of the subgraph.
+The distinction between `external` and `elementof` determines phase classification
+(see below), closure behavior in `functionof`/`lawof`
+(see [application and reification](#application-and-reification)), and cross-module
+binding rules for `load_module` (see [Multi-file models](#sec:modules)).
 
-Module inputs must *not* be bound to `elementof(anything)`, as this would prevent
-type inference on the module.
+### <a id="phases"></a>Phases
 
-The role of module inputs — as fit parameters, hyperparameters, or fixed constants — is determined by
-how the FlatPPL module is used by an application, not by the module itself.
+FlatPPL classifies every binding into one of three phases by ancestor analysis:
+
+- **fixed** — no `elementof(...)` ancestor and no `draw(...)` ancestor, but may have
+  `load_data(...)` ancestors.
+- **parameterized** — at least one `elementof(...)` ancestor, no `draw(...)` ancestor.
+- **stochastic** — at least one `draw(...)` ancestor.
+
+External inputs and loaded data (length and content) are fixed; `elementof` inputs are
+parameterized; `draw` nodes are stochastic. Phase propagates through the DAG: a
+binding's phase is the dominant of its ancestors' phases
+(stochastic > parameterized > fixed).
+
+Both fixed and parameterized bindings are deterministic, but their values have different
+life cycles: A FlatPPL module can be thought of as having an initialized state, where external inputs have been set and data and referenced modules have been loaded.
+Fixed values are the values that are given or deterministically computable at this
+point and so do not change after module initialization. Parameterized values differ
+between evaluations of the same subgraph (e.g. of a likelihood) of the
+initialized module, given different inputs. Note that this is a mental model,
+applications are not required to use an explicit initialization state to implement
+these semantics.
+
+Phase governs closure behavior
+(see [application and reification](#application-and-reification)) and load-time
+binding rules (see [Multi-file models](#sec:modules)).
 
 ### Application and reification
 
@@ -139,10 +171,14 @@ measure (i.e. a probability measure) `m`.
 In the other direction, `m = lawof(x)` reifies the ancestor subgraph of a given value `x`
 as a probability measure or Markov kernel, depending on whether there are free inputs.
 
-By default, `lawof` and `functionof` trace the full ancestor subgraph back
-to the module inputs. They can be called with additional keyword-arguments
-to designate and label boundary nodes, stopping the trace there, so that
-these nodes become the inputs of the kernel or function under their new names.
+By default, `lawof` and `functionof` trace the ancestor subgraph of a given node back
+to `elementof` nodes; these become inputs of the reified callable. Fixed ancestors
+(including `external(...)` and `load_data(...)` nodes) are closed over and do not
+become inputs. `functionof` does not allow for intermediate stochastic ancestors
+(its full sub-DAG must be deterministic) while `lawof` permits them. Both can be
+called with additional keyword arguments to designate and label boundary nodes, stopping
+the trace there so that these nodes become the inputs of the kernel or function under
+their new names.
 
 #### <a id="sec:functionof"></a>Deterministic functions and `functionof`
 
@@ -169,9 +205,10 @@ C = broadcast(f, a = A, b = B)      # apply f elementwise over arrays A, B
 `e` and all its ancestors — as a reusable function object.
 The sub-DAG must be fully deterministic and so must not contain any `draw` nodes.
 
-The argument names of the resulting function are the names of the free variables of the sub-DAG,
-but decoupled from those variables. As the graph nodes are
-not ordered, the function only supports keyword arguments, not positional arguments.
+The argument names of the resulting function are the names of the leaf nodes of the
+reified sub-DAG; the input nodes of the function are decoupled from these leaf nodes.
+Fixed ancestor nodes are closed over and not exposed as inputs. As the graph nodes
+are not ordered, the function only supports keyword arguments, not positional arguments.
 
 The output type of the reified function matches the type of the argument of `functionof`:
 
@@ -181,10 +218,11 @@ f = functionof(record(x = something, y = other))     # record output
 f = functionof([something, other])                    # array output
 ```
 
-**Subgraph reification.** Sometimes only part of the ancestor sub-DAG should be reified. In our example, `e`
-depends on `c` and `d`, which in turn depend on `a` and `b`. If we want the function
-represented by the subgraph that starts at `a` and `d` — ignoring how `d` was computed
-from `a` and `b` — we can set *boundary inputs* that stop the ancestor backtrace early:
+**Specifying reification boundaries.** Sometimes only a selected part of the ancestor
+sub-DAG should be reified. In our example, `e` depends on `c` and `d`, which in turn
+depend on `a` and `b`. If we want the function represented by the subgraph that starts
+at `a` and `d` — ignoring how `d` was computed from `a` and `b` — we can specify 
+*boundary inputs* that stop the ancestor backtrace early:
 
 ```flatppl
 g = functionof(e, p = a, q = d)     # g: {p, q: Real} → Real
@@ -196,11 +234,10 @@ which become the inputs of `g` under the new names `p` and `q`. The computation 
 `a` and `b` to `d` is excluded — `g` only contains the path from `a` and `d` to `e`.
 
 If boundary inputs are specified, the reified function supports positional arguments
-in addition to keyword arguments. Either all boundary inputs must be given, or none —
-this ensures the specification covers all inputs and introduces an explicit argument
-order.
-Technically, a specified boundary node `a` is replaced by a new node, generated via
-`elementof(valueset(a))`, in the reified graph.
+in addition to keyword arguments; their order is determined by the order in which the
+boundary inputs are specified. Either all inputs must be specified explicitly or
+none. A specified boundary node `a` can be thought of as being substituted with a new
+node, generated via `elementof(valueset(a))`, in the reified graph.
 
 The function argument names do not have to differ from the boundary node names:
 
@@ -518,10 +555,17 @@ explicit input nodes of the loaded module:
 sig = load_module("signal_channel.flatppl", mu = signal_strength, theta = nuisance)
 ```
 
-The left-hand side of these bindings must refer to an input of the loaded module, while
-the right-hand side may be any value node in the loading module. The value set of
-both must be compatible, so the computational structure of the loaded module
-is not modified.
+The left-hand side of each keyword argument must refer to an input of the loaded module.
+The phase of this input determines what it can be bound to on the right-hand side:
+
+- `external` inputs of the loaded module may only be bound to **fixed** values in the
+  loading module.
+- `elementof` inputs of the loaded module may only be bound to **parameterized** values
+  in the loading module.
+- No other kinds of nodes in the loaded module may be bound to nodes in the loading module.
+
+Value sets must be compatible in both cases, so the computational structure of the
+loaded module is not modified.
 
 **Path resolution.** Relative file paths in `load_module(...)` are resolved relative to the directory
 of the FlatPPL file containing that `load_module(...)` call, not the host process's working
