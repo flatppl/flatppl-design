@@ -143,6 +143,11 @@ value-level operations in FlatPPL. For measure-level operations, see [measure al
 
 **`cat(x, y, ...)`** concatenates values of the same structural kind:
 
+- **`cat(scalar1, scalar2, ...)`** with all scalar arguments produces a vector of
+  those scalars. Equivalent to `vector(scalar1, scalar2, ...)`.
+
+  Example: `cat(1, 2, 3)` produces `[1, 2, 3]`.
+
 - **`cat(vector1, vector2, ...)`** concatenates vectors.
 
   Example: `cat([1, 2, 3], [4, 5])` produces `[1, 2, 3, 4, 5]`.
@@ -151,8 +156,9 @@ value-level operations in FlatPPL. For measure-level operations, see [measure al
 
   Example: `cat(record(a=1, b=2), record(c=3))` produces `record(a=1, b=2, c=3)`.
 
-Duplicate field names across the input records are a static error.
-Concatenation of a mix of vectors and records is also not permitted.
+Duplicate field names across the input records are a static error. Concatenation
+of a mix of value types (e.g. scalars with vectors, or vectors with records)
+is not permitted.
 
 **`rowstack(vs)`** constructs a matrix whose rows are the vectors in `vs`. The
 argument `vs` is a vector of vectors, all of the same length.
