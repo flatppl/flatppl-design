@@ -6,8 +6,11 @@ function CodeBlock(el)
   local lang = ""
   if el.classes and #el.classes > 0 then
     lang = el.classes[1]
-    -- Use Python highlighting for FlatPPL code blocks
-    if lang == "flatppl" then lang = "python" end
+    -- Map FlatPPL surface forms to host-language highlighting:
+    -- canonical FlatPPL and FlatPPJ use Julia-flavored highlighting; FlatPPY uses Python.
+    if lang == "flatppl" then lang = "julia" end
+    if lang == "flatppj" then lang = "julia" end
+    if lang == "flatppy" then lang = "python" end
     -- Sanitize lang to alphanumeric only (prevent injection via class names)
     lang = lang:gsub("[^%w]", "")
   end

@@ -258,12 +258,21 @@ local function heading_permalink(el)
   return el
 end
 
--- Phase 4: rewrite "flatppl" code-block class to "python" for syntax highlighting.
--- Only applies to HTML output; Markdown output keeps "flatppl" labels (useful for
--- AI chats), and Typst handles the alias via a show rule in typst-header.typ.
-local function flatppl_to_python(el)
-  if FORMAT:match("html") and el.classes[1] == "flatppl" then
-    el.classes[1] = "python"
+-- Phase 4: rewrite FlatPPL surface-form code-block classes to host-language
+-- aliases for syntax highlighting. Canonical FlatPPL and FlatPPJ map to Julia;
+-- FlatPPY maps to Python. Only applies to HTML output; Markdown output keeps
+-- the original labels (useful for AI chats), and Typst handles the aliases via
+-- typst-code-blocks.lua.
+local flatppl_alias = {
+  flatppl = "julia",
+  flatppj = "julia",
+  flatppy = "python",
+}
+
+local function flatppl_to_host(el)
+  if FORMAT:match("html") then
+    local alias = flatppl_alias[el.classes[1]]
+    if alias then el.classes[1] = alias end
   end
   return el
 end
@@ -338,6 +347,6 @@ return {
   { Header = header_filter },
   { Inlines = inlines_filter },
   { Header = heading_permalink },
-  { CodeBlock = flatppl_to_python },
+  { CodeBlock = flatppl_to_host },
   { Pandoc = inject_section_rules },
 }
