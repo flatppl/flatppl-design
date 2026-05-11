@@ -104,7 +104,8 @@ from.
 Values in a preset record that are wrapped in `fixed(...)` indicate that these
 values should be held constant while others are varied, e.g. during
 optimization. `fixed(x)` is semantically identical to `identity(x)` during
-FlatPPL code evaluation, it is merely a hint to tooling.
+FlatPPL code evaluation, it is merely a hint to tooling. The hint is only
+meaningful when `fixed(...)` appears directly as a preset-record field value.
 
 For example:
 
