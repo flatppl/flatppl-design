@@ -1,54 +1,21 @@
-## <a id="sec:syntax"></a>Canonical syntax
+## <a id="sec:syntax"></a>Canonical syntax and variants
 
 This section specifies the canonical surface form of FlatPPL, used throughout
 this document as a notation for defining FlatPPL semantics and presenting examples.
-Note that the semantics of FlatPPL do not depend on this canonical syntax. Alternative
-syntactical representations may be advantageous for specific software ecosystems and
-use cases. They must map directly to and from the canonical syntax, though, with
-lossless round-trips except for formatting and whitespace.
+It also defines two variant surface forms for host-language embedding:
+**FlatPPY** for Python and **FlatPPJ** for Julia
+(see [FlatPPY](#flatppy) and [FlatPPJ](#flatppj) below).
 
-FlatPPL source files in canonical syntax use the filename extension `.flatppl`;
-alternative representations must use different filename extensions.
+The semantics of FlatPPL do not depend on this canonical syntax and its variants;
+equivalent code in FlatPPL, FlatPPY and FlatPPJ lowers to the same FlatPIR.
 
-### Python/Julia-compatible syntax
+Alternative syntactical representations may be advantageous for specific
+software ecosystems and use cases. Like FlatPPY and FlatPPJ, such alternative
+representations must map directly to and from canonical FlatPPL without change
+in semantics; surface spelling may change (e.g. `x ~ M` ↔ `x = draw(M)` or
+`xs[i]` ↔ `get0(xs, i)`), but the lowered FlatPIR is the same.
 
-The FlatPPL syntax is a subset of the intersection of valid (i.e. parsable)
-Python and Julia syntax.
-
-FlatPPL code is therefore parseable by Python's `ast.parse()` and Julia's `Meta.parse()`,
-and no custom parser is required to implement FlatPPL engines in these languages.
-For other programming languages (e.g. C/C++), a standalone parser will be straightforward
-to implement, given the intentionally small grammar of FlatPPL.
-
-Note that FlatPPL semantics are entirely different from both Python and Julia.
-
-**Embedding in host languages.** The Python/Julia compatible AST design enables direct
-embedding of FlatPPL code as a domain-specific language (DSL). The host-language tooling
-parses the FlatPPL code, but it is then handed off to a FlatPPL engine as an AST, not
-interpreted or run as native host-language code.
-
-In Python, FlatPPL can be embedded via a decorator:
-
-```python
-@flatppl
-def flatppl_module():
-    mu = elementof(reals)
-    a = draw(Normal(mu = mu, sigma = 1))
-    m = lawof(a)
-```
-
-In **Julia**, via a macro:
-
-```julia
-flatppl_module = @flatppl begin
-    mu = elementof(reals)
-    a = draw(Normal(mu = mu, sigma = 1))
-    m = lawof(a)
-end
-```
-
-Note: These examples illustrate possible embedding approaches and are not normative;
-design choices regarding embedding are left to specific FlatPPL implementations.
+Canonical FlatPPL uses the filename extension `.flatppl`.
 
 ### Comments
 
@@ -59,16 +26,23 @@ Lines beginning with `#` (after optional whitespace) are comments and are ignore
 FlatPPL has a very lean syntax:
 
 - **Bindings**: `name = expr` and decomposition `a, b, c = expr` (see below).
+- **Tilde bindings**: `name ~ expr` and decomposition `a, b ~ expr`, equivalent
+  to `name = draw(expr)` and `a, b = draw(expr)` respectively (see
+  [variates and measures](04-design.md#sec:variate-measure)).
 - **Literals**: numbers (`3.14`, `42`, `0xF7`, `0x3e`, `1_000_000`, `1.45e7`), strings
   (`"foo"`), booleans (`true`, `false`), arrays (`[1, 2, 3]`), records
   (`record(a = 1, b = 2)`), tuples (`(a, b)`).
-- **Infix arithmetic and comparisons**: `+`, `-`, `*`, `/`, unary `-`, `<`, `>`, `==`,
-  `!=`, `<=`, `>=`.
+- **Infix arithmetic, exponentiation, and comparisons**: `+`, `-`, `*`, `/`, `^`,
+  unary `-`, and the comparisons `<`, `>`, `==`, `!=`, `<=`, `>=`, and `in`
+  (set membership). Comparisons may be chained: `a < b <= c` lowers to
+  `land(a < b, b <= c)`. `^` is right-associative and binds tighter than unary `-`.
+- **Logical operators**: `&&`, `||`, `!` (lowering to `land`, `lor`, `lnot`;
+  see [Logic and conditionals](07-functions.md#logic-and-conditionals)).
 - **Function calls**: `f(x, y)` (positional), `f(a = x, b = y)` (keyword) and
   `f(object, a = x, b = y)` (for some special operations).
 - **Indexing and field access**: `A[i]`, `A[i, j]`, `A[:, j]`, `r.field`.
 
-Also see the [formal grammar](#formal-grammar) below.
+Also see the [formal grammars](#formal-grammars) below.
 
 See [binding names](04-design.md#sec:binding-names) for rules on binding names,
 name resolution, and the reserved modules `self` and `base`.
@@ -79,27 +53,26 @@ The above are the only syntactical constructs allowed in FlatPPL. The following
 Python and Julia constructs, for example, are not allowed directly in canonical FlatPPL,
 but can easily be represented in other ways:
 
-- **No `~` operator.** Use `draw()` instead.
-- **No `**` or `^` for exponentiation.** Use `pow(a, b)`.
-- **No logical operators** (`and`/`or`/`not` in Python, `&&`/`||`/`!` in Julia). Use
-  the functions `land`, `lor`, `lnot`, `lxor`.
 - **No type annotations.** Types are inferred from the semantic rules.
 - **No loops or conditionals.** Use `ifelse(cond, a, b)` for piecewise definitions
   (see [logic and conditionals](07-functions.md#logic-and-conditionals)).
 - **No function definition blocks.** Use `functionof`
   (see [language design](04-design.md#sec:functionof)).
-- **No implicit elementwise operators.** Infix `+`, `-`, `*`, `/` are not implicitly
-  elementwise on arrays or matrices. Use `broadcast`
+- **No implicit elementwise operators.** Infix `+`, `-`, `*`, `/`, `^` are not
+  implicitly elementwise on arrays or matrices. Use `broadcast`
   (see [broadcasting](04-design.md#sec:higher-order)). This keeps matrix algebra
   unambiguous.
 
 ### Decomposition syntax
 
-The left side of an assignment may decompose an array, record, or tuple into named
-components:
+The left side of an `=` or `~` assignment may decompose an array, record, or tuple
+into named components:
 
 ```flatppl
-a, b, c = draw(MvNormal(mu = mean_vector, cov = cov_matrix))
+a, b, c ~ MvNormal(mu = mean_vector, cov = cov_matrix)
+# equivalent to
+# a, b, c = draw(MvNormal(mu = mean_vector, cov = cov_matrix))
+
 x, y = some_record
 l, m, n = some_tuple
 value, _ = rand(rstate, m)
@@ -130,11 +103,103 @@ special operations with their own syntax rules — they are not ordinary functio
 Their semantics are defined in [language design](04-design.md#sec:design).
 `load_module(...)` is documented in [multi-file models](04-design.md#sec:modules).
 
-### Formal grammar
 
-The canonical surface syntax is defined in EBNF below (ISO 14977-style,
-with `::=` for production and `|` for alternation). Operator precedence is encoded
-through stratified non-terminals (`Comparison` > `Additive` > `Multiplicative` > `Unary`).
+### <a id="flatppy"></a>FlatPPY: Python-embeddable surface syntax
+
+FlatPPY is the Python-AST-compatible surface form of FlatPPL.
+
+In contrast to FlatPPL, FlatPPY uses 0-based indexing in `xs[i]` and lowers
+square-bracket indexing to `get0`. To achieve Python-AST compatibility,
+several canonical FlatPPL constructs are expressed in desugared form or
+differently in FlatPPY:
+
+| Canonical FlatPPL | FlatPPY |
+|---|---|
+| `x ~ M` | `x = draw(M)` |
+| `a, b ~ M` | `a, b = draw(M)` |
+| `x ^ y` | `pow(x, y)` |
+| `a && b` | `a and b` |
+| `a \|\| b` | `a or b` |
+| `!a` | `not a` |
+| `true`, `false` | `True`, `False` |
+
+The Python-style `and`/`or`/`not` keywords lower to `land`/`lor`/`lnot` calls.
+FlatPPY follows Python precedence: `not a < b` parses as `not (a < b)`,
+*not* as `(not a) < b`.
+
+Standalone FlatPPY source files use the extension `.flatppy`.
+
+FlatPPY example:
+
+```flatppy
+mu = elementof(reals)
+a = draw(Normal(mu = mu, sigma = 1))
+m = lawof(a)
+```
+
+FlatPPY can be embedded directly in Python via a decorator, for example:
+
+```python
+@flatppy
+def flatppy_module():
+    mu = elementof(reals)
+    a = draw(Normal(mu = mu, sigma = 1))
+    m = lawof(a)
+```
+
+(Embedding examples are illustrative, not normative; design choices regarding
+embedding are left to specific implementations.)
+
+### <a id="flatppj"></a>FlatPPJ: Julia-embeddable surface syntax
+
+FlatPPJ is a superset of canonical FlatPPL that adds Julia-friendly idioms.
+In addition to the canonical FlatPPL syntax, FlatPPJ supports Julia's semicolon
+keyword separator in calls: `f(x; a = 1, b = 2)` is equivalent to
+`f(x, a = 1, b = 2)`.
+
+Like FlatPPL, FlatPPJ uses 1-based indexing in `xs[i]` and lowers
+square-bracket indexing to `get`.
+
+Standalone FlatPPJ source files use the extension `.flatppj`.
+
+FlatPPJ example:
+
+```flatppj
+mu = elementof(reals)
+a ~ Normal(;mu = mu, sigma = 1)
+m = lawof(a)
+```
+
+FlatPPJ (and therefore also canonical FlatPPL, which is a subset of FlatPPJ)
+is parseable by Julia's `Meta.parse()` and can be embedded directly in Julia
+via a macro, for example:
+
+```julia
+flatppj_module = @flatppj begin
+    mu = elementof(reals)
+    a ~ Normal(;mu = mu, sigma = 1)
+    m = lawof(a)
+end
+```
+
+(Embedding examples are illustrative, not normative; design choices regarding
+embedding are left to specific implementations.)
+
+### Formal grammars
+
+The canonical surface syntax and its variants are defined in EBNF below
+(ISO 14977-style, with `::=` for production and `|` for alternation).
+The grammars are organized as a **base grammar** (the least common
+denominator of FlatPPL, FlatPPY, and FlatPPJ) plus per-variant extension
+rules. The base grammar is a factoring device, not a surface syntax on
+its own.
+
+A variant's full grammar is obtained by merging its base grammar with the
+variant's extension rules: rules whose left-hand non-terminal is not in the
+base are added; rules whose left-hand non-terminal already appears in the
+base replace the base's production.
+
+**Base grammar.**
 
 ```ebnf
 (* Top level *)
@@ -158,22 +223,21 @@ FieldAccess     ::= "." Name
 Indexing        ::= "[" IndexExpr ("," IndexExpr)* "]"
 IndexExpr       ::= Expression | ":"
 
-CompOp          ::= "<" | ">" | "==" | "!=" | "<=" | ">="
+CompOp          ::= "<" | ">" | "==" | "!=" | "<=" | ">=" | "in"
 AddOp           ::= "+" | "-"
 MulOp           ::= "*" | "/"
 
 (* Calls *)
-Call            ::= "(" CallArgs? ")"
+Call            ::= "(" CallArgs ")"
 CallArgs        ::= PositionalArgs | KeywordArgs | MixedArgs
 PositionalArgs  ::= Expression ("," Expression)*
 KeywordArgs     ::= KeywordArg ("," KeywordArg)*
 KeywordArg      ::= Name "=" Expression
 MixedArgs       ::= Expression ("," Expression)* ("," KeywordArg)+
 
-(* Literals *)
-Literal         ::= Number | String | Boolean | ArrayLiteral | TupleLiteral
+(* Literals — no boolean literals in the base grammar *)
+Literal         ::= Number | String | ArrayLiteral | TupleLiteral
 Number          ::= IntegerLit | RealLit
-Boolean         ::= "true" | "false"
 ArrayLiteral    ::= "[" (Expression ("," Expression)* ","?)? "]"
 TupleLiteral    ::= "(" Expression "," Expression ("," Expression)* ","? ")"
 
@@ -199,6 +263,53 @@ Newline         ::= LF | CR | CRLF
 Comment         ::= "#" { any character except newline }
 ```
 
+**FlatPPL grammar.** The FlatPPL grammar is the base grammar with these
+additional rules and overrides:
+
+```ebnf
+(* Boolean literals *)
+Literal         ::= Number | String | Boolean | ArrayLiteral | TupleLiteral
+Boolean         ::= "true" | "false"
+
+(* Tilde bindings *)
+Statement          ::= Binding | TildeBinding | Decomposition | TildeDecomposition
+TildeBinding       ::= Name "~" Expression
+TildeDecomposition ::= Name ("," Name)+ "~" Expression
+
+(* Logical OR/AND above comparisons, exponentiation below multiplicative *)
+Expression      ::= Or
+Or              ::= And ("||" And)*
+And             ::= Comparison ("&&" Comparison)*
+Comparison      ::= Additive (CompOp Additive)*       (* chained *)
+Unary           ::= "-" Unary | "!" Unary | Exponential
+Exponential     ::= Postfix ("^" Unary)?
+```
+
+**FlatPPY grammar.** The FlatPPY grammar is the base grammar with these
+additional rules and overrides:
+
+```ebnf
+(* Boolean literals — Python spelling *)
+Literal         ::= Number | String | Boolean | ArrayLiteral | TupleLiteral
+Boolean         ::= "True" | "False"
+
+(* Python-style logical operators, with chained comparisons *)
+Expression      ::= Or
+Or              ::= And ("or" And)*
+And             ::= Not ("and" Not)*
+Not             ::= "not" Not | Comparison
+Comparison      ::= Additive (CompOp Additive)*       (* chained *)
+```
+
+**FlatPPJ grammar.** The FlatPPJ grammar is the FlatPPL grammar with these
+additional rules and overrides:
+
+```ebnf
+CallArgs        ::= PositionalArgs | KeywordArgs | MixedArgs | SemiKwargs
+SemiKwargs      ::= (Expression ("," Expression)*)? ";" KeywordArg ("," KeywordArg)*
+```
+
+
 **Statement separation.** Statements are separated by one or more `Newline`s. Blank
 lines and comment-only files are permitted. Newlines inside an unclosed `(` or `[`
 (paren/bracket depth > 0) are treated as whitespace (Python-style implicit line
@@ -218,6 +329,10 @@ only the special operations `functionof`, `kernelof`, `broadcast`, `load_module`
 `KeywordArgs` only. Among these, `functionof`, `kernelof`, `load_module`, and `load_data`
 take exactly one leading positional argument; only `broadcast` accepts multiple
 positional arguments before the keyword arguments.
+
+**Note on reserved words.** The keywords `and`, `or`, `not`, `in`, `true`,
+`false`, `True`, `False` are recognized before `Name` and cannot be used as
+bindings.
 
 **Note on holes and placeholders.** The lexical rule for `Name` admits `_` (the hole
 used inside `fn(...)`) and trailing-underscore identifiers `_x_` (placeholders used

@@ -139,6 +139,12 @@ value-level operations in FlatPPL. For measure-level operations, see [measure al
   keyword `all` selects an entire axis: `get(M, i, all)` returns row i, `get(M, all, j)`
   returns column j. Surface syntax `M[:, j]` lowers to `get(M, all, j)`.
 
+- **`get0(container, selectors...)`** — zero-based variant of `get`. Behaves like
+  `get` except that integer indices count from `0` instead of `1`. So `get0(v, 0)` returns the first element of vector `v`.
+
+  Note that [FlatPPY](05-syntax.md#flatppy) lowers square-bracket indexing `xs[i]`
+  to `get0(xs, i)` in contrast to FlatPPL and FlatPPJ, which lower to `get`.
+
 ### Array and table operations
 
 **`cat(x, y, ...)`** concatenates values of the same structural kind:
@@ -226,7 +232,6 @@ order.
 | `exp` | `x` | $e^x$ | `reals`, `complexes` |
 | `log` | `x` | $\ln(x)$ | `posreals`, `complexes` |
 | `log10` | `x` | $\log_{10}(x)$ | `posreals` |
-| `pow` | `base`, `exponent` | $\mathrm{base}^{\mathrm{exponent}}$ | `reals`, `complexes` |
 | `sqrt` | `x` | $\sqrt{x}$ | `nonnegreals`, `complexes` |
 | `abs` | `x` | $\vert x\vert$ | `reals`, `complexes` |
 | `abs2` | `x` | $\vert x\vert^2$ | `reals`, `complexes` |
@@ -269,6 +274,7 @@ be passed as arguments to higher-order functions like `broadcast`, `reduce` and 
 | `mul` | `a`, `b` | `a * b` | scalars; matrix/matrix and matrix/vector products |
 | `divide` | `a`, `b` | `a / b` | scalars (real or complex) |
 | `neg` | `x` | `-x` | scalars or arrays (real or complex) |
+| `pow` | `base`, `exponent` | `base ^ exponent` | scalars (real or complex; complex extension via principal branch, see above) |
 
 **Comparison functions:**
 
@@ -368,12 +374,19 @@ the reduction operation.
 
 ### Logic and conditionals
 
+**Logical operators:**
+
+| Function | Arguments | Corresponds to | Domains |
+|---|---|---|---|
+| `land` | `a`, `b` | `a && b` | `booleans` |
+| `lor` | `a`, `b` | `a \|\| b` | `booleans` |
+| `lnot` | `a` | `!a` | `booleans` |
+| `lxor` | `a`, `b` | (no infix operator) | `booleans` |
+
+**Conditionals:**
+
 | Function | Arguments | Description | Domains |
 |---|---|---|---|
-| `land` | `a`, `b` | logical conjunction | `booleans` |
-| `lor` | `a`, `b` | logical disjunction | `booleans` |
-| `lnot` | `a` | logical negation | `booleans` |
-| `lxor` | `a`, `b` | logical exclusive-or | `booleans` |
 | `ifelse` | `cond`, `a`, `b` | returns `a` if `cond` is true, `b` otherwise | `cond`: `booleans`; `a`, `b`: `anything` |
 
 ### Membership, filtering, and bin selection

@@ -27,10 +27,11 @@ frontends.
 [Profiles](12-profiles.md#sec:profiles)), specific subsets of the language for easy
 mapping to target probability languages and formats.
 
-**Canonical syntax.** FlatPPL comes with a canonical surface form, a simple
-syntax designed to parse as both valid Python and valid Julia. Due to this, FlatPPL
-is suited for embedding in Python and in Julia code as a DSL. See the section
-[on the canonical syntax](05-syntax.md#sec:syntax) for details.
+**Canonical syntax.** FlatPPL comes with a canonical surface form: a small,
+easy-to-parse syntax. Variants of that canonical syntax allow for direct
+embedding into host languages: **FlatPPY** for Python embedding and
+**FlatPPJ** for Julia embedding. See section
+[Syntax](05-syntax.md#sec:syntax) for details on FlatPPL, FlatPPY and FlatPPJ.
 
 This document uses the canonical syntax as a notation to define FlatPPL semantics
 and to present language examples. Note though that the semantics of FlatPPL are
@@ -176,7 +177,7 @@ highlights, not exhaustive — see the linked sections for complete listings.
 | [Likelihoods and posteriors](06-measure-algebra.md#likelihoods-and-posteriors) | `likelihoodof`, `joint_likelihood`, `densityof`, `logdensityof`, `bayesupdate` |
 | [Structural disintegration](06-measure-algebra.md#structural-disintegration) | `disintegrate` |
 | [Higher-order operations](04-design.md#sec:higher-order) | `broadcast`, `broadcasted`, `reduce`, `scan` |
-| [Data access and reshaping](07-functions.md#sec:functions) | `get`, `cat`, `record`, `tuple`, `all`, `filter`, `selectbins`, `reverse` |
+| [Data access and reshaping](07-functions.md#sec:functions) | `get`, `get0`, `cat`, `record`, `tuple`, `all`, `filter`, `selectbins`, `reverse` |
 | [Array and table generation](07-functions.md#sec:functions) | `array`, `table`, `rowstack`, `colstack`, `partition`, `linspace`, `extlinspace`, `fill`, `zeros`, `ones`, `eye`, `onehot`, `load_data` |
 | [Binning](07-functions.md#sec:functions) | `bincounts` |
 | [Shape functions](07-functions.md#sec:functions) | `polynomial`, `bernstein`, `stepwise` |

@@ -218,6 +218,7 @@ $$\frac{x^{\alpha-1}(1-x)^{\beta-1}}{B(\alpha, \beta)} \quad \text{for } x \in (
 |---|---|---|---|
 | [`Bernoulli`](#bernoulli) | `p` | `integers` | `booleans` |
 | [`Categorical`](#categorical) | `p` | `integers` | `interval(1, n)` |
+| [`Categorical0`](#categorical0) | `p` | `integers` | `interval(0, n-1)` |
 | [`Binomial`](#binomial) | `n`, `p` | `integers` | `interval(0, n)` |
 | [`Poisson`](#poisson) | `rate` | `integers` | `nonnegintegers` |
 
@@ -246,6 +247,23 @@ Density w.r.t. `Counting(integers)`:
 $$p_k \quad \text{for } k \in \{1, \ldots, n\}$$
 
 Categories are numbered starting from 1, consistent with FlatPPL's 1-based indexing convention.
+
+<a id="categorical0"></a>**`Categorical0(p)`** — Zero-based variant of `Categorical`, with support $\{0, 1, \ldots, n-1\}$.
+
+Domain/Support: `integers`/`interval(0, n-1)`.
+
+Parameters:
+
+- `p = elementof(stdsimplex(n))`: probability vector.
+
+Density w.r.t. `Counting(integers)`:
+
+$$p_{k+1} \quad \text{for } k \in \{0, \ldots, n-1\}$$
+
+Equivalences:
+
+- `Categorical0(p)` is equivalent to `pushfwd(fn(_ - 1), Categorical(p))`
+- `Categorical(p)` is equivalent to `pushfwd(fn(_ + 1), Categorical0(p))`
 
 <a id="binomial"></a>**`Binomial(n, p)`** — The [binomial distribution](https://en.wikipedia.org/wiki/Binomial_distribution).
 

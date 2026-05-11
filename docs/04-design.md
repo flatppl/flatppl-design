@@ -85,6 +85,10 @@ This makes built-in names shadowable: a module may bind any name except for
 `self` and `base`. Adding new built-ins to FlatPPL is therefore a non-breaking
 change.
 
+**Reserved names.** The names `and`, `or`, `not`, `True`, and `False` are
+reserved in FlatPPL and may not be used as module-level bindings. They have
+semantic meaning in FlatPPY (logical operators and boolean literals).
+
 ### <a id="sec:calling-convention"></a>Calling conventions
 
 Nullary calls (`f()`) are not allowed.
@@ -175,7 +179,8 @@ FlatPPL supports both via different syntax — arithmetic on variates,
 `weighted(...)` on measures.
 
 A binding of the form `c = f(a, b)` introduces a **deterministic node** in the computational DAG.
-A binding of the form `x = draw(Normal(mu = c, sigma = s))` introduces a **stochastic node**.
+A binding of the form `x ~ Normal(mu = c, sigma = s)`, equivalent to
+`x = draw(Normal(mu = c, sigma = s))`, introduces a **stochastic node**.
 In generative mode, a stochastic node yields a sampled value; in scoring mode,
 it contributes a density term that is either evaluated (if observed) or marginalized out
 (if latent).
@@ -214,7 +219,7 @@ n_dims = external(posintegers)
 mu = elementof(reals)
 sigma = elementof(interval(0.0, inf))
 dist = iid(Normal(mu = mu, sigma = sigma), n_dims)
-x = draw(dist)
+x ~ dist
 y = 2 * x
 ```
 
@@ -273,10 +278,11 @@ Ordinary function application `y = f(a, b, ...)` introduces a deterministic
 node `y` into the graph. `functionof(y)` goes in the opposite direction:
 it reifies the ancestor subgraph of `y` as a first-class function.
 
-Conversely, a probability measure represents a reified stochastic DAG, either implicit
-(built-in) or explicit. `x = draw(m)` introduces a stochastic node `x` by drawing a
-variate from a normalized measure (i.e. a probability measure) `m`. In the other
-direction, `m = lawof(x)` reifies the ancestor subgraph of `x` as a probability
+Conversely, a probability measure represents a reified stochastic DAG, either
+implicit (built-in) or explicit. `x ~ m` (equivalent to `x = draw(m)`)
+introduces a stochastic node `x` by drawing a variate from a normalized
+measure (i.e. a probability measure) `m`. In the other direction,
+`m = lawof(x)` reifies the ancestor subgraph of `x` as a probability
 measure — the law of `x` as a random variable. `lawof(draw(m))` is identical
 to `m` (see [reification to measures](#sec:lawof) below).
 
