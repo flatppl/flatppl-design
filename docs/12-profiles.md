@@ -148,7 +148,7 @@ exhaustive.
 | FlatPPL | HS³ | RooFit | Parameter mapping |
 |---|---|---|---|
 | `BinnedPoissonProcess` | `bincounts_extended_dist` / `bincounts_density_dist` | `RooExtendPdf` + binned PDF | |
-| `Cauchy` | — | `RooBreitWigner` | FlatPPL's `Cauchy(m, γ)` corresponds to RooBreitWigner under $\Gamma = 2γ$ |
+| `Cauchy` | — | `RooBreitWigner` | RooBreitWigner uses full width $\Gamma = 2 \cdot \text{scale}$ |
 | `Exponential` | `exponential_dist` | `RooExponential` | `rate` → `c` (HS³); RooFit: `c` = $-$`rate` |
 | `Gamma` | — | `RooGamma` | `shape` → `gamma`, `rate` → $1/$`beta`, `mu` = 0 |
 | `GeneralizedNormal` | `generalized_normal_dist` | — | Names match HS³ |

@@ -16,8 +16,8 @@ intended both as a directly writable source language and as a portable represent
 is still under development; this document presents the current draft. FlatPPL describes
 models as static directed acyclic graphs (DAGs) of named mathematical objects — variates,
 measures, functions, and likelihoods — in a single flat module-level namespace with no
-block structure, no loops, and no dynamic branching. Its canonical surface form is simple and lies within
-the intersection of Python and Julia syntax, making parsing lightweight and host-language
+block structure, no loops, and no dynamic branching. Its canonical surface form is simple and
+uses a Python/Julia-compatible syntax, making parsing lightweight and host-language
 embedding practical. In addition to deterministic and stochastic nodes, the language
 provides a measure algebra for measures and Markov kernels. Measures, kernels, and
 deterministic functions can be reified from sub-DAGs with optional boundary inputs, making

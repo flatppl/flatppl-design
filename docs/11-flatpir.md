@@ -1,4 +1,4 @@
-## Intermediate Representation
+## Intermediate representation
 
 This section defines **FlatPIR**, the intermediate representation of FlatPPL.
 FlatPPL engines may ingest either FlatPPL or FlatPIR, depending on their design.
