@@ -436,11 +436,11 @@ equivalent to `K`.
 Consider this Bayesian example:
 
 ```flatppl
-theta1 = draw(Normal(mu = 0.0, sigma = 1.0))
-theta2 = draw(Exponential(rate = 1.0))
+theta1 ~ Normal(mu = 0.0, sigma = 1.0)
+theta2 ~ Exponential(rate = 1.0)
 a = 5.0 * theta1
 b = abs(theta1) * theta2
-obs = draw(iid(Normal(mu = a, sigma = b), 10))
+obs ~ iid(Normal(mu = a, sigma = b), 10)
 
 joint_model = lawof(record(theta1 = theta1, theta2 = theta2, obs = obs))
 prior_predictive = lawof(record(obs = obs))
@@ -615,7 +615,7 @@ Multiple holes — left-to-right positional order:
 
 ```flatppl
 g = fn(f(_, b, _))
-h = fn(pow(_ / _, 2))
+h = fn((_ / _) ^ 2)
 ```
 
 Each `_` is distinct: `fn(_ * _)` multiplies two different inputs rather than squaring one.
@@ -680,7 +680,7 @@ Stochastic broadcast — kernel over array, producing an array-valued measure:
 
 ```flatppl
 K = fn(Normal(mu = _, sigma = 0.1))
-D = draw(broadcast(K, A))
+D ~ broadcast(K, A)
 ```
 
 *Return type:*

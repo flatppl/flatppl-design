@@ -8,7 +8,7 @@ This example walks through a realistic HEP model step by step.
 efficiency, modeled as a unit-normal nuisance parameter:
 
 ```flatppl
-raw_eff_syst = draw(Normal(mu = 0.0, sigma = 1.0))
+raw_eff_syst ~ Normal(mu = 0.0, sigma = 1.0)
 efficiency = 0.9 + 0.05 * raw_eff_syst
 ```
 
@@ -31,7 +31,7 @@ rate = superpose(
     weighted(mu_sig * efficiency, signal_template),
     bkg_template
 )
-events = draw(PoissonProcess(intensity = rate))
+events ~ PoissonProcess(intensity = rate)
 ```
 
 **Data and likelihood.** We define observed data and construct the likelihood. Since the
@@ -49,7 +49,7 @@ L_obs = likelihoodof(
     [3.1, 5.7, 2.4, 8.9, 4.2])
 
 # Constraint: auxiliary measurement model for the nuisance parameter
-aux_eff = draw(Normal(mu = raw_eff_syst, sigma = 1.0))
+aux_eff ~ Normal(mu = raw_eff_syst, sigma = 1.0)
 L_constr = likelihoodof(kernelof(aux_eff, raw_eff_syst = raw_eff_syst), 0.0)
 
 # Combined likelihood
@@ -77,8 +77,8 @@ L_sideband = joint_likelihood(L_obs_sideband, L_constr)
 **Bayesian analysis (optional).** To construct a posterior, define priors and reweight:
 
 ```flatppl
-mu_sig_prior = draw(Uniform(support = interval(0, 20)))
-raw_eff_syst_prior = draw(Normal(mu = 0, sigma = 1))
+mu_sig_prior ~ Uniform(support = interval(0, 20))
+raw_eff_syst_prior ~ Normal(mu = 0, sigma = 1)
 prior = lawof(record(mu_sig = mu_sig_prior, raw_eff_syst = raw_eff_syst_prior))
 posterior = bayesupdate(L, prior)
 # posterior is unnormalized; wrap in normalize(...) if needed
@@ -105,7 +105,7 @@ mvmodel = pushfwd(fn(relabel(_, ["a", "b", "c"])), MvNormal(mu = some_mean, cov 
 L_mv = likelihoodof(functionof(mvmodel), record(a = 1.1, b = 2.1, c = 3.1))
 
 # Expanded form (when intermediate variates are needed)
-a, b, c = draw(MvNormal(mu = some_mean, cov = some_cov))
+a, b, c ~ MvNormal(mu = some_mean, cov = some_cov)
 mvmodel_expanded = lawof(record(a = a, b = b, c = c))
 
 # Pushforward for variable transformation
@@ -119,12 +119,12 @@ result = broadcast(f, a = A)           # [3.0, 5.0, 7.0, 9.0]
 result = broadcast(f, A)              # same, positional (f has declared order)
 
 # Stochastic broadcast
-noisy = draw(Normal(mu = a, sigma = 0.1))
+noisy ~ Normal(mu = a, sigma = 0.1)
 K = kernelof(noisy, a = a)
-noisy_array = draw(broadcast(K, a = A))  # independent Normal draws at each element
+noisy_array ~ broadcast(K, a = A)  # independent Normal draws at each element
 
 # Truncated distribution (model physics)
-positive_sigma = draw(normalize(truncate(Normal(mu = 1.0, sigma = 0.5), interval(0, inf))))
+positive_sigma ~ normalize(truncate(Normal(mu = 1.0, sigma = 0.5), interval(0, inf)))
 
 # Density-defined distribution (Bernstein polynomial)
 bern = fn(bernstein(coefficients = [c0, c1, c2, c3], x = _))

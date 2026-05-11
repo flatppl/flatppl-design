@@ -80,7 +80,7 @@ n_sig = elementof(reals)
 n_bkg = elementof(reals)
 
 # Systematic: uncertain detector resolution
-raw_syst = draw(Normal(mu = 0.0, sigma = 1.0))
+raw_syst ~ Normal(mu = 0.0, sigma = 1.0)
 resolution = 2.5 + 0.3 * raw_syst
 
 # Signal: Gaussian peak at known mass, uncertain resolution
@@ -99,7 +99,7 @@ intensity = superpose(
 )
 
 # Unbinned model: Poisson process over scalar mass values
-events = draw(PoissonProcess(intensity = intensity))
+events ~ PoissonProcess(intensity = intensity)
 
 # Observed data and likelihood
 L = likelihoodof(kernelof(events), observed_data)
@@ -226,7 +226,7 @@ w = r.mu
 col_j = M[:, j]
 
 # Decomposition into named scalars
-a, b, c = draw(MvNormal(mu = mean, cov = cov_matrix))
+a, b, c ~ MvNormal(mu = mean, cov = cov_matrix)
 p, q = some_record
 l, m, n = some_tuple
 
@@ -281,7 +281,7 @@ mu = elementof(reals)
 sigma = elementof(interval(0.0, inf))
 
 # Random draw from a distribution
-a = draw(Normal(mu = mu, sigma = sigma))
+a ~ Normal(mu = mu, sigma = sigma)
 
 # Extract the distribution governing a value
 M = lawof(a)
@@ -307,7 +307,7 @@ C = broadcast(f, x = A)
 C = broadcast(f, A)
 
 # Kernel over array
-D = draw(broadcast(K, x = A))
+D ~ broadcast(K, x = A)
 ```
 
 #### Value-level operations
@@ -339,7 +339,7 @@ Combining, reweighting, and transforming measures some more:
 
 ```flatppl
 # IID draws
-xs = draw(iid(Normal(mu = 0, sigma = 1), 100))
+xs ~ iid(Normal(mu = 0, sigma = 1), 100)
 
 # Additive rate superposition
 sp = superpose(weighted(n_sig, sig), bkg)
@@ -376,10 +376,10 @@ The `fn(...)` form wraps a hole expression — an expression containing `_` — 
 ```flatppl
 # Single hole — one-argument function
 poly = fn(polynomial(coefficients = [a0, a1, a2], x = _))
-squared = fn(pow(_, 2))
+squared = fn(_ ^ 2)
 
 # Multi-hole: two-argument anonymous function
-ratio_sq = fn(pow(_ / _, 2))
+ratio_sq = fn((_ / _) ^ 2)
 ```
 
 #### Interpolation, binning, and systematic variations

@@ -364,7 +364,7 @@ shifted_value = center + 1.0
 a = elementof(reals)
 helpers = load_module("helpers.flatppl", center = a)
 
-b = draw(Normal(mu = 0.0, sigma = 2.0))
+b ~ Normal(mu = 0.0, sigma = 2.0)
 _combined = a + b
 
 input_data = load_data(

@@ -123,7 +123,7 @@ closed measures (i.e. nullary kernels) as inputs. `densityof(M, x)` and
 
   ```flatppl
   intensity = superpose(weighted(amplitude, signal_shape), bkg_shape)
-  events = draw(PoissonProcess(intensity = intensity))
+  events ~ PoissonProcess(intensity = intensity)
   ```
 
   To build a normalized mixture distribution, use
@@ -171,7 +171,7 @@ closed measures (i.e. nullary kernels) as inputs. `densityof(M, x)` and
   For example, to represent the draw of 100 IID samples from a normal distribution, use 
 
   ```flatppl
-  obs = draw(iid(Normal(mu = a, sigma = b), 100))
+  obs ~ iid(Normal(mu = a, sigma = b), 100)
   ```
 
 #### Dependent composition
@@ -201,9 +201,9 @@ closed measures (i.e. nullary kernels) as inputs. `densityof(M, x)` and
   is equivalent to
 
   ```flatppl
-  a = draw(M1)
-  b = draw(K2(a))
-  c = draw(K3([a, b]))
+  a ~ M1
+  b ~ K2(a)
+  c ~ K3([a, b])
   model = lawof(c)
   ```
 
@@ -234,9 +234,9 @@ closed measures (i.e. nullary kernels) as inputs. `densityof(M, x)` and
   is equivalent to
 
   ```flatppl
-  a = draw(M1)
-  b = draw(K2(a))
-  c = draw(K3([a, b]))
+  a ~ M1
+  b ~ K2(a)
+  c ~ K3([a, b])
   model = lawof([a, b, c])
   ```
 
@@ -280,7 +280,7 @@ closed measures (i.e. nullary kernels) as inputs. `densityof(M, x)` and
 
   ```flatppl
   mu = Normal(mu = 0, sigma = 1)
-  x = draw(mu)
+  x ~ mu
   y = exp(x)
   nu = lawof(y)
   ```
@@ -327,7 +327,7 @@ closed measures (i.e. nullary kernels) as inputs. `densityof(M, x)` and
   ```flatppl
   pos_x = elementof(interval(0, inf))
   sq = bijection(
-      functionof(pow(pos_x, 2), x = pos_x),
+      functionof(pos_x ^ 2, x = pos_x),
       functionof(sqrt(pos_x), x = pos_x),
       fn(log(2 * _))
   )
@@ -504,8 +504,8 @@ For example:
 ```flatppl
 # Equivalent to a Stan/Pyro/Turing.jl model
 sigma = 1.0
-a = draw(Normal(mu = 0.0, sigma = 2.0))
-b = draw(Normal(mu = a, sigma = sigma))
+a ~ Normal(mu = 0.0, sigma = 2.0)
+b ~ Normal(mu = a, sigma = sigma)
 joint_model = lawof(record(a = a, b = b))
 
 # Structural disintegration

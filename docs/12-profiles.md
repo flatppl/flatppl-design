@@ -196,7 +196,7 @@ channel's total per-bin nominal across samples (`staterror` only).
 | `broadcast(mul, expected, hepphys.interp_*(lo, 1.0, hi, alpha))` | `Normal(mu = alpha, sigma = 1.0)` (observed at `0`) | `normsys` | default `hepphys.interp_poly6_exp` |
 | `hepphys.interp_*(tmpl_dn, nom, tmpl_up, alpha)` | `Normal(mu = alpha, sigma = 1.0)` (observed at `0`) | `histosys` | default `hepphys.interp_poly6_lin`; replaces nominal directly |
 | `broadcast(mul, expected, gamma)` | none (free per-bin) | `shapefactor` | `gamma = elementof(cartpow(posreals, n_bins))` |
-| `broadcast(mul, expected, gamma)` | `broadcast(ContinuedPoisson, bcmul(gamma, tau))` (observed at `tau`) | `shapesys` | `tau = broadcast(fn(pow(_ / _, 2)), nom, sigma)`; non-integer `tau` requires `ContinuedPoisson` |
+| `broadcast(mul, expected, gamma)` | `broadcast(ContinuedPoisson, bcmul(gamma, tau))` (observed at `tau`) | `shapesys` | `tau = broadcast(fn((_ / _) ^ 2), nom, sigma)`; non-integer `tau` requires `ContinuedPoisson` |
 | `broadcast(mul, total_nom, gamma)` | `broadcast(fn(Normal(_, _)), gamma, delta)` (observed at `1.0` per bin) | `staterror` | `delta` from quadrature sum across samples |
 
 **Notes.** Modifiers with the same name share a single nuisance parameter; the
