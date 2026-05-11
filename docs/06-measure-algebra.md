@@ -140,9 +140,9 @@ closed measures (i.e. nullary kernels) as inputs. `densityof(M, x)` and
 
   The output variate is formed by combining the component variates via `cat`
   (see [array operations](07-functions.md#array-and-table-operations)). All components
-  must have the same shape class: all scalars (yielding an array), all arrays
-  (yielding a concatenated array), or all records with distinct field names (yielding
-  a merged record). Mixing shape classes is a static error.
+  must have the same shape class: all scalars (yielding a vector), all vectors
+  (yielding a concatenated vector), or all records with distinct field names
+  (yielding a merged record). Mixing shape classes is a static error.
 
   For example, the measure product of a normal and an exponential probability measure,
   defined over a space of vectors, would be
