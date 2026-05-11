@@ -87,27 +87,42 @@ ambiguity with row indexing on tables.
 
 ### Presets
 
-Presets are records tagged as suitable parameter or input values. Presets are advisory
-and not tied to a particular function, kernel, or likelihood. It is up to users and
-tooling to pair presets with compatible interfaces and decide how to use them, for example
-as reference points, starting values for optimizers, or similar.
+Presets are global fixed records and sets that hint suitable parameter/input
+values and value domains to FlatPPL tooling. Presets are advisory and not tied
+to a particular function, kernel, or likelihood. It is up to users and tooling
+to pair presets with compatible interfaces and decide how to use them, for
+example as reference points, starting values for optimizers, value ranges for
+optimization or plotting, etc.
 
-Presets are written `preset(name1=val1, name2=val2, ...)`. Presets accept the same field value types as records. However, values may be wrapped in a `fixed(...)` marker to
-indicate that they are intended to be held constant, e.g. during optimization.
-`fixed` may only appear at the top level of a `preset(...)`. Presets may not be nested.
+**Preset points.** Any literal (or fixed, in general) global binding
+`some_name = record(name1=val1, name2=val2, ...)` can be interpreted as a
+possibly suitable input for functions, kernels and likelihoods that have
+inputs/parameters with these names and shapes or that take a record of this
+shape as an input. Tooling may offer such preset points to users to choose
+from.
 
-For example
+Values in a preset record that are wrapped in `fixed(...)` indicate that these
+values should be held constant while others are varied, e.g. during
+optimization. `fixed(x)` is semantically identical to `identity(x)` during
+FlatPPL code evaluation, it is merely a hint to tooling.
+
+For example:
 
 ```flatppl
-starting_values = preset(a = 2.0, b = [4, 5, 6], c = fixed(8.0))
+L_init = record(a = 2.0, b = [4, 5, 6], c = fixed(8.0))
 ```
 
-informs users and tools that `starting_values` may be a good choice of test point or
-starting point for functions, kernels or likelihoods that take parameters
-`a`, `b`, and `c`, and that if this preset is chosen, `c` should be held
-constant while `a` and `b` are varied.
+**Preset domains.** Any literal/fixed global binding like
+`some_name = cartprod(name1=some_set, name2=some_other_set, ...)` can be
+interpreted as a possibly suitable domain for input/parameter-compatible
+functions, kernels and likelihoods. Like with preset points, tooling may offer
+such preset domains to users to choose from.
 
-Within FlatPPL, a `preset` object is semantically equivalent to a record, and converts to a record in any context that expects a record as an input. The `preset` annotation and `fixed` markers are lost at that point, they do not propagate.
+For example:
+
+```flatppl
+L_domain = cartprod(a = interval(0, 5), b = cartpow(interval(-10, 10), 3), c = interval(0, 20))
+```
 
 ### Tables
 

@@ -117,7 +117,7 @@ or may not be significant. The total number of inputs is never zero:
 - `record` and `table`: Named variadic inputs with significant order.
 - `functionof` and `kernelof`: One distinguished input, plus optional variadic
   named inputs with significant order.
-- `lawof`: One distinguished input.
+- `lawof`, `fixed`: One distinguished input.
 - `broadcast`: One distinguished input for the function to be broadcast, plus
   named or unnamed inputs that match the inputs of that function.
 - `broadcasted`: One distinguished input.
@@ -150,7 +150,7 @@ integer literal index (starting at 1). Decomposition as in `a, b, c = (...)` is 
 **Tuples are objects, not values.** They have no `valueset`, are not drawn from
 measures, and are not part of the measure algebra. Specifically:
 
-- A tuple may not appear inside another tuple, array, record, table, or preset.
+- A tuple may not appear inside another tuple, array, record, or table.
 - `elementof(...)` and `external(...)` may not produce tuples.
 - Measures, kernels, and likelihoods never use tuples as their domain.
 - `==`/`equal` does not compare tuples.

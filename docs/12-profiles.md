@@ -82,7 +82,7 @@ FlatPPL:
 mu_param = elementof(reals)
 sigma_param = elementof(posreals)
 mass = relabel(Normal(mu = mu_param, sigma = sigma_param), ["mass_obs"])
-nominal = preset(mu_param = 5.28, sigma_param = 0.003)
+nominal = record(mu_param = 5.28, sigma_param = 0.003)
 ```
 
 HS³ JSON:
@@ -105,8 +105,10 @@ HS³ JSON:
 Both describe the same mathematical content: two parameters with nominal values
 that define a normal distribution. The separate naming of distribution `mass`
 and variate `mass_obs` in HS³ is expressed as a global binding for the
-distribution and a record-valued variate in FlatPPL. A FlatPPL `preset` maps
-to an HS³ `parameter_points` entry.
+distribution and a record-valued variate in FlatPPL.
+
+HS³ `parameter_points` map to FlatPPL preset points and HS³ `domains` map to
+FlatPPL preset domains, see [Presets](03-value-types.md#presets).
 
 #### HS³/RooFit function mapping
 
