@@ -1,10 +1,16 @@
 [workspace]
 channels = ["conda-forge"]
-platforms = ["linux-64", "osx-64", "osx-arm64"]
+platforms = ["linux-64", "osx-64", "osx-arm64", "win-64"]
 
 [dependencies]
 pandoc = ">=3.9,<4"
 typst = ">=0.14,<1"
+
+[target.unix.dependencies]
+sed = "*"
+
+[target.win-64.dependencies]
+m2-sed = "*"
 
 [tasks]
 _mkdir = "mkdir -p build"
