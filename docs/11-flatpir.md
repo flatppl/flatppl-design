@@ -155,6 +155,8 @@ encoded into the type annotation. The type annotation records structural categor
   size, or the placeholder `%dynamic` for a dimension whose size is determined at load
   or runtime rather than statically (e.g. `(%array 2 (%dynamic 3) (%scalar real))` is a
   2D real array with three columns and a dynamic row count).
+- `(%tvector <length> <element-type>)` — transposed vectors. `<length>` is a
+  positive integer literal or `%dynamic`. A distinct type from `(%array 1 ...)`.
 - `(%record (<field> <type>) ...)` — records with named fields.
 - `(%table (%columns (<name> <type>) ...) (%nrows <N>))` — tables with named columns
   and row count. `<N>` is a positive integer or `%dynamic`; tables loaded via
