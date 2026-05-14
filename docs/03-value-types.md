@@ -68,7 +68,13 @@ Literal one-dimensional arrays are denoted as `[1.0, 2.0, 3.0]` and may contain 
 valid FlatPPL expressions that evaluate to allowed element types (e.g. `[a, b, 2 * c]`).
 
 One-dimensional arrays of scalars act as vectors for linear algebra
-(see [built-in functions](07-functions.md#sec:functions)). Vectors of vectors are not
+(see [built-in functions](07-functions.md#sec:functions)). In addition,
+transposed vectors are a distinct type in FlatPPL (see
+[linear algebra](07-functions.md#linear-algebra)). The term vector will
+represent both non-transposed vectors (one-dimensional arrays) and transposed
+vectors in the following, unless noted otherwise.
+
+Vectors of vectors are not
 interpreted as matrices implicitly, but can be turned into matrices explicitly
 using `rowstack` or `colstack` (see [array operations](07-functions.md#array-and-table-operations)).
 

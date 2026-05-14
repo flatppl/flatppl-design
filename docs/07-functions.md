@@ -328,8 +328,8 @@ passes — ensuring the invariant is always validated.
 
 | Function | Arguments | Description | Domains |
 |---|---|---|---|
-| `transpose` | `A` | $A^T$ | matrices |
-| `adjoint` | `A` | $A^\dagger$ (conj. transpose) | matrices |
+| `transpose` | `A` | $A^T$ | vectors, matrices |
+| `adjoint` | `A` | $A^\dagger$ (conj. transpose) | vectors, matrices |
 | `det` | `A` | $\det(A)$ | square matrices |
 | `logabsdet` | `A` | $\log\lvert\det(A)\rvert$ | square matrices |
 | `inv` | `A` | $A^{-1}$ | square matrices |
@@ -342,6 +342,13 @@ passes — ensuring the invariant is always validated.
 | `diagmat` | `x` | $\mathrm{diag}(x_1, \ldots, x_n)$ | vectors |
 
 Matrix multiplication and addition use the standard `*` and `+` operators.
+The product of a non-transposed vector and a transposed vector is a matrix;
+the product of a transposed vector and a non-transposed vector is a scalar.
+
+`transpose` and `adjoint` are self-inverse. The transpose of a vector is
+a transposed vector (see [arrays](03-value-types.md#arrays)), not a
+single-row matrix. The adjoint of a vector is a transposed vector with
+complex-conjugated elements.
 
 ### Reductions
 
