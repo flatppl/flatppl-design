@@ -697,10 +697,36 @@ vectorized stochastic model building.
 does not cover dependent sequential kernels, autoregressive chains, or coupled array
 structure. For those, use `jointchain` or `chain` with explicit indexing.
 
-*Shape adaptation:* `broadcast` follows standard broadcasting rules: singleton
-dimensions (length 1) are implicitly expanded to match the corresponding dimension of
-the other arguments. Scalar arguments are treated as arrays with all-singleton shape.
-Non-singleton dimensions must match across all arguments.
+*Collection arguments:* FlatPPL does not automatically insert leading or trailing
+dimensions for array arguments, unlike some other languages. It does, however,
+automatically expand singleton dimensions: All collection arguments (arrays and
+tables) must have the same number of axes. Tables count as having one axis
+(the table's rows) here. Along each axis, all collections must have the same
+size or be singular (size one). Size-one array axes are implicitly expanded by
+repetition to match the size of the other collection arguments along these axes. `addaxes` (see [array operations](07-functions.md#array-and-table-operations))
+may be used to reshape all input arrays to the same number of axes.
+
+For example, given a function `f`, a matrix `A` and a vector `b`
+
+```flatppl
+C = broadcast(f, A, addaxes(b, 1, 0))
+```
+
+behaves like NumPy-style broadcasting, while
+
+```flatppl
+C = broadcast(f, A, addaxes(b, 0, 1))
+```
+
+behaves like Julia-style broadcasting.
+
+*Non-collection inputs:* Scalar values, functions, kernels, measures and
+likelihood objects are allowed as broadcasting inputs, they are simply not
+iterated over but held constant while collection arguments are iterated over.
+If there are no collection arguments, `broadcast` behaves like a single
+function or kernel call.
+
+*Disallowed inputs:* Records and tuples are not allowed as inputs of broadcasts.
 
 *Tuple-returning callables:* if `f` returns a tuple, `broadcast(f, ...)` returns a
 tuple of arrays (componentwise), not an array of tuples.

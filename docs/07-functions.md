@@ -207,6 +207,15 @@ partition([1, 2, 3, 4, 5], [2, 3])  # [[1, 2], [3, 4, 5]]
 
 **`reverse(xs)`** reverses the order of elements in a vector or rows in a table.
 
+**`addaxes(A, n_leading, n_trailing)`** reshapes array `A` by adding
+`n_leading` singular (size-one) axes before the axes of `A` and `n_trailing`
+singular axes after them.
+
+`n_leading` and `n_trailing` must be non-negative fixed integers.
+
+Given an array `A` of size `(3, 4, 5)`, `addaxes(A, 2, 3)` will return an array
+of size `(1, 1, 3, 4, 5, 1, 1, 1)` with the same content as `A`.
+
 ### Scalar restrictions and constructors
 
 These functions set-restrict or construct scalar values (see
