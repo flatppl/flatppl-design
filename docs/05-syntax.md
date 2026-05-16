@@ -53,10 +53,11 @@ but can easily be represented in other ways:
   (see [logic and conditionals](07-functions.md#logic-and-conditionals)).
 - **No function definition blocks.** Use `functionof`
   (see [language design](04-design.md#sec:functionof)).
-- **No implicit elementwise operators.** Infix `+`, `-`, `*`, `/`, `^` are not
-  implicitly elementwise on arrays or matrices. Use `broadcast`
-  (see [broadcasting](04-design.md#sec:higher-order)). This keeps matrix algebra
-  unambiguous.
+- **No implicit operator broadcasting.** Infix `+`, `-`, `*`, `/`, `^` and
+  unary `-` follow standard linear-algebra and scalar semantics: `+`
+  and `-` require operands of identical shape (scalars, or arrays of
+  matching shape), `*` supports matrix and matrix–vector multiplication,
+  and `/` and `^` are scalar-only.
 
 ### Decomposition syntax
 
