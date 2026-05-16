@@ -258,15 +258,13 @@ local function heading_permalink(el)
   return el
 end
 
--- Phase 4: rewrite FlatPPL surface-form code-block classes to host-language
--- aliases for syntax highlighting. Canonical FlatPPL and FlatPPJ map to Julia;
--- FlatPPY maps to Python. Only applies to HTML output; Markdown output keeps
--- the original labels (useful for AI chats), and Typst handles the aliases via
--- typst-code-blocks.lua.
+-- Phase 4: rewrite the FlatPPL code-block class to a host-language alias for
+-- syntax highlighting. FlatPPL has no dedicated highlighter, so it reuses
+-- Julia-flavored highlighting. Only applies to HTML output; Markdown output
+-- keeps the original label (useful for AI chats), and Typst handles the alias
+-- via typst-code-blocks.lua.
 local flatppl_alias = {
   flatppl = "julia",
-  flatppj = "julia",
-  flatppy = "python",
 }
 
 local function flatppl_to_host(el)

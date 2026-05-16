@@ -85,10 +85,6 @@ This makes built-in names shadowable: a module may bind any name except for
 `self` and `base`. Adding new built-ins to FlatPPL is therefore a non-breaking
 change.
 
-**Reserved names.** The names `and`, `or`, `not`, `True`, and `False` are
-reserved in FlatPPL and may not be used as module-level bindings. They have
-semantic meaning in FlatPPY (logical operators and boolean literals).
-
 ### <a id="sec:calling-convention"></a>Calling conventions
 
 Nullary calls (`f()`) are not allowed.

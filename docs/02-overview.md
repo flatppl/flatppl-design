@@ -28,14 +28,12 @@ frontends.
 mapping to target probability languages and formats.
 
 **Canonical syntax.** FlatPPL comes with a canonical surface form: a small,
-easy-to-parse syntax. Variants of that canonical syntax allow for direct
-embedding into host languages: **FlatPPY** for Python embedding and
-**FlatPPJ** for Julia embedding. See section
-[Syntax](05-syntax.md#sec:syntax) for details on FlatPPL, FlatPPY and FlatPPJ.
-
+easy-to-parse syntax. See section [Syntax](05-syntax.md#sec:syntax) for the
+grammar and host-language embedding options.
 This document uses the canonical syntax as a notation to define FlatPPL semantics
 and to present language examples. Note though that the semantics of FlatPPL are
-independent from this canonical syntax.
+independent from this canonical syntax. The design of FlatPPL allows for
+alternative surface forms with the same semantics.
 
 **Canonical intermediate representation.** FlatPPL also comes with a canonical
 intermediate representation (IR) based on S-expressions, the Flat Probabilistic

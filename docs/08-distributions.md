@@ -262,8 +262,8 @@ $$p_{k+1} \quad \text{for } k \in \{0, \ldots, n-1\}$$
 
 Equivalences:
 
-- `Categorical0(p)` is equivalent to `pushfwd(fn(_ - 1), Categorical(p))`
-- `Categorical(p)` is equivalent to `pushfwd(fn(_ + 1), Categorical0(p))`
+- `Categorical0(p)` is equivalent to `pushfwd(fn(_ - 1), Categorical(p))`.
+- `Categorical(p)` is equivalent to `pushfwd(fn(_ + 1), Categorical0(p))`.
 
 <a id="binomial"></a>**`Binomial(n, p)`** — The [binomial distribution](https://en.wikipedia.org/wiki/Binomial_distribution).
 

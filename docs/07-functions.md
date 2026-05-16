@@ -142,8 +142,9 @@ value-level operations in FlatPPL. For measure-level operations, see [measure al
 - **`get0(container, selectors...)`** — zero-based variant of `get`. Behaves like
   `get` except that integer indices count from `0` instead of `1`. So `get0(v, 0)` returns the first element of vector `v`.
 
-  Note that [FlatPPY](05-syntax.md#flatppy) lowers square-bracket indexing `xs[i]`
-  to `get0(xs, i)` in contrast to FlatPPL and FlatPPJ, which lower to `get`.
+  Note that bracket indexing `xs[i]` is one-based and lowers to `get`, *not* to
+  `get0`. The intended role of `get0` is to support term-rewriting to languages
+  with zero-based indexing.
 
 ### Array and table operations
 
