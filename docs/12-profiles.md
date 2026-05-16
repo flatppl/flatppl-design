@@ -130,7 +130,7 @@ FlatPPL preset domains, see [Presets](03-value-types.md#presets).
 |---|---|---|
 | `joint(M1, M2, ...)` | `product_dist` | `RooProdPdf` |
 | `jointchain(M, K)` | — | `RooProdPdf` with `RooFit::Conditional(...)` |
-| `chain(M, K)` | — | `RooAbsPdf::createProjection(...)`; `RooFFTConvPdf` / `RooNumConvPdf` for convolutions |
+| `kchain(M, K)` | — | `RooAbsPdf::createProjection(...)`; `RooFFTConvPdf` / `RooNumConvPdf` for convolutions |
 | `normalize(superpose(weighted(w1, M1), weighted(w2, M2), ...))` | `mixture_dist` | `RooAddPdf` (normalized) |
 | `superpose(M1, M2, ...)` | — | `RooAddPdf` (extended) |
 | `normalize(weighted(w, M))` | — | `RooEffProd` |

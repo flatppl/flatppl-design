@@ -38,7 +38,7 @@ operations never rescale their inputs or outputs.
 The Giry-style measure monad is defined by two operations:
 
 - **Unit**: $\eta_X(x) = \delta_x$ (Dirac measure at $x$). In FlatPPL: `Dirac(value = v)`.
-- **Bind**: $(\nu \mathbin{\texttt{>>=}} \kappa)(B) = \int_X \kappa(x)(B)\, d\nu(x)$. In FlatPPL: `chain(M, K)`.
+- **Bind**: $(\nu \mathbin{\texttt{>>=}} \kappa)(B) = \int_X \kappa(x)(B)\, d\nu(x)$. In FlatPPL: `kchain(M, K)`.
 
 ### Fundamental measures and measure algebra
 
@@ -80,7 +80,7 @@ of kernels. On a kernel, the operation applies to the output measure at each inp
 - `pushfwd(f, K)` denotes $\theta \mapsto \mathrm{pushfwd}(f, \kappa(\theta))$
 - `weighted(w, K)` denotes $\theta \mapsto \mathrm{weighted}(w, \kappa(\theta))$
 
-This applies to all measure-to-measure operations except `jointchain` and `chain`, which
+This applies to all measure-to-measure operations except `jointchain` and `kchain`, which
 require non-nullary kernels in all but the first argument
 (see [dependent composition](#dependent-composition)).
 
@@ -176,7 +176,7 @@ closed measures (i.e. nullary kernels) as inputs. `densityof(M, x)` and
 
 #### Dependent composition
 
-- **`chain(M, K1, K2, ...)`** — left-associative Kleisli composition (monadic bind).
+- **`kchain(M, K1, K2, ...)`** — left-associative Kleisli composition (monadic bind).
   Keeps only the last kernel's variates, marginalizing out all intermediate variates.
   In contrast to standard Kleisli composition, the first argument may also be a measure
   (a nullary kernel). See `jointchain` below for the variant that retains all variates.
@@ -189,13 +189,13 @@ closed measures (i.e. nullary kernels) as inputs. `densityof(M, x)` and
   Left-associative.
 
   ```flatppl
-  prior_predictive = chain(prior, forward_kernel)
+  prior_predictive = kchain(prior, forward_kernel)
   ```
 
   **Equivalence with stochastic nodes:**
 
   ```flatppl
-  model = chain(M1, K2, K3)
+  model = kchain(M1, K2, K3)
   ```
 
   is equivalent to
@@ -211,7 +211,7 @@ closed measures (i.e. nullary kernels) as inputs. `densityof(M, x)` and
   base measure or kernel; the remaining arguments are non-nullary kernels whose inputs
   bind to the variates of everything to their left.
 
-  `jointchain` is left-associative. In contrast to `chain`,
+  `jointchain` is left-associative. In contrast to `kchain`,
   the output variate is the `cat` of the variates of all the components, as with `joint`.
 
   **Keyword form.** `jointchain(name1 = M, name2 = K1, ...)` names the component variates,
@@ -223,7 +223,7 @@ closed measures (i.e. nullary kernels) as inputs. `densityof(M, x)` and
   $$\nu(A \times B) = \int_A \kappa(a, B)\, d\mu(a)$$
 
   The density of the joint chain is the product of the constituent conditional densities —
-  no marginalization integral is involved, unlike with `chain`. So density is tractable if the densities of all the components are.
+  no marginalization integral is involved, unlike with `kchain`. So density is tractable if the densities of all the components are.
 
   **Equivalence with stochastic nodes:**
 
@@ -240,7 +240,7 @@ closed measures (i.e. nullary kernels) as inputs. `densityof(M, x)` and
   model = lawof([a, b, c])
   ```
 
-  **Relationship to `chain`:**
+  **Relationship to `kchain`:**
 
   ```flatppl
   jointchain(M, K)
@@ -249,7 +249,7 @@ closed measures (i.e. nullary kernels) as inputs. `densityof(M, x)` and
   is equivalent to
 
   ```flatppl
-  chain(M, functionof(joint(Dirac(value = _a_), K(_a_)), a = _a_))
+  kchain(M, functionof(joint(Dirac(value = _a_), K(_a_)), a = _a_))
   ```
 
 #### Support restriction

@@ -171,7 +171,7 @@ highlights, not exhaustive — see the linked sections for complete listings.
 |---|---|
 | [Special operations](04-design.md#sec:design) | `draw`, `lawof`, `functionof`, `kernelof`, `fn`, `fchain`, `bijection`, `fixed`, `elementof`, `external`, `valueset`, `vector`, `checked` |
 | [Interface adaptation](04-design.md#sec:design) | `relabel` |
-| [Measure combinators](06-measure-algebra.md#sec:measure-algebra) | `weighted`, `logweighted`, `normalize`, `totalmass`, `superpose`, `joint`, `jointchain`, `chain`, `iid`, `truncate`, `pushfwd` |
+| [Measure combinators](06-measure-algebra.md#sec:measure-algebra) | `weighted`, `logweighted`, `normalize`, `totalmass`, `superpose`, `joint`, `jointchain`, `kchain`, `iid`, `truncate`, `pushfwd` |
 | [Likelihoods and posteriors](06-measure-algebra.md#likelihoods-and-posteriors) | `likelihoodof`, `joint_likelihood`, `densityof`, `logdensityof`, `bayesupdate` |
 | [Structural disintegration](06-measure-algebra.md#structural-disintegration) | `disintegrate` |
 | [Higher-order operations](04-design.md#sec:higher-order) | `broadcast`, `broadcasted`, `reduce`, `scan` |
@@ -350,7 +350,7 @@ mix = normalize(superpose(
 j = joint(M1, M2)
 
 # Marginalizing composition
-pp = chain(prior, forward_kernel)
+pp = kchain(prior, forward_kernel)
 
 # Hierarchical joint (retains both variates)
 hj = jointchain(

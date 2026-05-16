@@ -121,7 +121,7 @@ or may not be significant. The total number of inputs is never zero:
 - `broadcast`: One distinguished input for the function to be broadcast, plus
   named or unnamed inputs that match the inputs of that function.
 - `broadcasted`: One distinguished input.
-- `cat`, `zeros`, `ones`, `fchain`, `chain`: Variadic unnamed inputs with
+- `cat`, `zeros`, `ones`, `fchain`, `kchain`: Variadic unnamed inputs with
   significant order.
 - `cartprod`, `joint`, `jointchain`: Variadic unnamed or named inputs with
   significant order.
@@ -186,7 +186,7 @@ FlatPPL intentionally supports two equivalent mechanisms to express stochastic c
 1. **Stochastic-node notation** expresses models as a mix of deterministic computations
    and `draw` statements, reading like a generative recipe.
 2. **Measure-composition notation** writes models as a mix of deterministic computations
-   and measure algebra, using `weighted`, `joint`, `jointchain`, `chain`, `pushfwd`, and
+   and measure algebra, using `weighted`, `joint`, `jointchain`, `kchain`, `pushfwd`, and
    related operations to combine and transform measures.
 
 Both can be used together in a FlatPPL module, but they map to different types of
@@ -452,7 +452,7 @@ Here we define
 - `prior_predictive`: the probability distribution of the observation obtained by
   marginalizing over `theta1` and `theta2` — they are internal stochastic nodes in
   the traced sub-DAG, not boundary inputs, so `lawof` integrates them out.
-  `prior_predictive` is equivalent to `chain(prior, forward_kernel)`.
+  `prior_predictive` is equivalent to `kchain(prior, forward_kernel)`.
 
 - `prior`: the probability distribution of the parameters `theta1` and `theta2`.
 
@@ -473,7 +473,7 @@ prior = joint(theta1 = Normal(mu = 0.0, sigma = 1.0),
               theta2 = Exponential(rate = 1.0))
 forward_kernel = functionof(obs_dist)
 joint_model = jointchain(prior, forward_kernel)
-prior_predictive = chain(prior, forward_kernel)
+prior_predictive = kchain(prior, forward_kernel)
 ```
 
 Here `forward_kernel` is built directly from the measure-valued expression
@@ -531,7 +531,7 @@ on `relabel`.
 `fchain` combines well with auto-splatting: if `f1` returns a record and `f2` accepts
 keyword arguments matching the record fields, the two functions compose directly.
 `fchain` is the deterministic analogue of
-[`chain`](06-measure-algebra.md#dependent-composition).
+[`kchain`](06-measure-algebra.md#dependent-composition).
 
 **`bijection(f, f_inv, logvolume)`** annotates a function `f` with its inverse
 `f_inv` and the log-volume-element `logvolume` of the forward map. The result is
@@ -729,7 +729,7 @@ vectorized stochastic model building.
 
 *Independence is explicit:* Kernel broadcast means independent elementwise lifting. It
 does not cover dependent sequential kernels, autoregressive chains, or coupled array
-structure. For those, use `jointchain` or `chain` with explicit indexing.
+structure. For those, use `jointchain` or `kchain` with explicit indexing.
 
 *Collection arguments:* FlatPPL does not automatically insert leading or trailing
 dimensions for array arguments, unlike some other languages. It does, however,
