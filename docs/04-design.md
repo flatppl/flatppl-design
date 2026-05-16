@@ -639,10 +639,23 @@ g = functionof(f(_tmp1, b, _tmp2), arg1 = _tmp1, arg2 = _tmp2)
 
 ### <a id="sec:higher-order"></a>Higher-order operations
 
-**Broadcasting.** `broadcast(f_or_K, name = array, ...)` or `broadcast(f_or_K, array, ...)` maps a function or kernel
-elementwise over arrays (and row-wise over tables; see [tables](03-value-types.md#tables)).
-Keyword arguments bind inputs by name. If the callable has a declared positional order,
-positional binding is also permitted.
+**Broadcasting.** `broadcast(f_or_K, name = array, ...)` or
+`broadcast(f_or_K, array, ...)` maps a function or kernel elementwise over
+arrays (and row-wise over tables; see [tables](03-value-types.md#tables)).
+Keyword arguments bind inputs by name. If the callable has a declared
+positional order, positional binding is also permitted.
+
+*Dot-syntax.* As a concise shorthand for `broadcast`, FlatPPL provides
+dot-call notation `f.(args)` and dot-operator notation `a .op b`, following
+the elementwise dotted operators of MATLAB and the broadcasting dot syntax of
+Julia. `f.(<args>)` lowers to `broadcast(f, <args>)` and supports calls
+with positional and keyword arguments. So `Normal.(means, sigmas)` is
+syntactic sugar for `broadcast(Normal, means, sigmas)`. A dotted binary
+operator `a .op b` lowers to `broadcast(opfn, a, b)` and a dotted unary
+operator `.op x` to `broadcast(opfn, x)`, where `opfn` is the function the
+plain operator lowers to. So `A .+ B` lowers to `broadcast(add, A, B)`
+and `.! X` lowers to `broadcast(lnot, X)`. The following examples show both
+explicit `broadcast` calls and the equivalent dot-notation.
 
 Deterministic broadcast with a named function:
 
@@ -652,16 +665,30 @@ f = functionof(b, a = a)
 C = broadcast(f, a = A)
 ```
 
+```flatppl
+b = 2 * a + 1
+f = functionof(b, a = a)
+C = f.(a = A)
+```
+
 With positional argument binding:
 
 ```flatppl
 C = broadcast(f, A)
 ```
 
+```flatppl
+C = f.(A)
+```
+
 Using an anonymous function:
 
 ```flatppl
 C = broadcast(fn(2 * _ + 1), A)
+```
+
+```flatppl
+C = fn(2 * _ + 1).(A)
 ```
 
 Multi-input broadcast:
@@ -672,11 +699,22 @@ g = functionof(d)
 E = broadcast(g, a = slopes, x = points, b_param = intercepts)
 ```
 
+```flatppl
+d = a * x + b_param
+g = functionof(d)
+E = g.(a = slopes, x = points, b_param = intercepts)
+```
+
 Stochastic broadcast — kernel over array, producing an array-valued measure:
 
 ```flatppl
 K = fn(Normal(mu = _, sigma = 0.1))
 D ~ broadcast(K, A)
+```
+
+```flatppl
+K = fn(Normal(mu = _, sigma = 0.1))
+D ~ K.(A)
 ```
 
 *Return type:*

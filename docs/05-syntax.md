@@ -33,6 +33,8 @@ FlatPPL has a very lean syntax:
   `land(a < b, b <= c)`. `^` is right-associative and binds tighter than unary `-`.
 - **Logical operators**: `&&`, `||`, `!` (lowering to `land`, `lor`, `lnot`;
   see [Logic and conditionals](07-functions.md#logic-and-conditionals)).
+- **Broadcasting**: Dot-call `f.(...)` and dot-prefixed operator application
+  `a .+ b` are syntactic sugar for `broadcast` (see [Broadcasting syntax](#broadcasting-syntax)).
 - **Function calls**: `f(x, y)` (positional), `f(a = x, b = y)` (keyword) and
   `f(object, a = x, b = y)` (for some special operations).
 - **Indexing and field access**: `A[i]`, `A[i, j]`, `A[:, j]`, `r.field`.
@@ -99,6 +101,19 @@ special operations with their own syntax rules — they are not ordinary functio
 Their semantics are defined in [language design](04-design.md#sec:design).
 `load_module(...)` is documented in [multi-file models](04-design.md#sec:modules).
 
+### <a id="broadcasting-syntax"></a>Broadcasting syntax
+
+FlatPPL provides dot-prefixed sugar for
+[`broadcast`](04-design.md#sec:higher-order):
+
+- **`f.(<args>)`** — dot-call.
+- **`a .op b`** — dotted binary operators.
+- **`.op x`** — dotted unary operators.
+
+Each dotted operator has the same precedence as its plain counterpart. `in`
+has no dotted form (its right operand is a set, not a broadcastable value).
+See [Higher-order operations](04-design.md#sec:higher-order) for dot-notation
+lowering.
 
 ### <a id="host-language-embedding"></a>Host-language embedding
 
@@ -158,23 +173,25 @@ TildeDecomposition ::= Name ("," Name)+ "~" Expression
 (* Expressions — logical OR/AND above comparisons,
    exponentiation below multiplicative *)
 Expression      ::= Or
-Or              ::= And ("||" And)*
-And             ::= Comparison ("&&" Comparison)*
+Or              ::= And (("||" | ".||") And)*
+And             ::= Comparison (("&&" | ".&&") Comparison)*
 Comparison      ::= Additive (CompOp Additive)*       (* chained *)
 Additive        ::= Multiplicative (AddOp Multiplicative)*
 Multiplicative  ::= Unary (MulOp Unary)*
-Unary           ::= "-" Unary | "!" Unary | Exponential
-Exponential     ::= Postfix ("^" Unary)?
-Postfix         ::= Primary (FieldAccess | Indexing | Call)*
+Unary           ::= ("-" | ".-") Unary | ("!" | ".!") Unary | Exponential
+Exponential     ::= Postfix (("^" | ".^") Unary)?
+Postfix         ::= Primary (FieldAccess | DotCall | Indexing | Call)*
 Primary         ::= Literal | Name | "(" Expression ")"
 
 FieldAccess     ::= "." Name
+DotCall         ::= "." "(" CallArgs ")"
 Indexing        ::= "[" IndexExpr ("," IndexExpr)* "]"
 IndexExpr       ::= Expression | ":"
 
 CompOp          ::= "<" | ">" | "==" | "!=" | "<=" | ">=" | "in"
-AddOp           ::= "+" | "-"
-MulOp           ::= "*" | "/"
+                  | ".<" | ".>" | ".==" | ".!=" | ".<=" | ".>="
+AddOp           ::= "+" | "-" | ".+" | ".-"
+MulOp           ::= "*" | "/" | ".*" | "./"
 
 (* Calls *)
 Call            ::= "(" CallArgs ")"
@@ -252,4 +269,11 @@ components).
 bounded lookahead. `CallArgs` is technically ambiguous in pure EBNF (an
 `Expression` can begin with a `Name`, and so can a `KeywordArg`), but a one-token
 lookahead after the leading `Name` (checking for `=`) suffices to choose between
-`PositionalArgs`/`MixedArgs` and `KeywordArgs`.
+`PositionalArgs`/`MixedArgs` and `KeywordArgs`. After a `.`, a one-token
+lookahead distinguishes `DotCall` (`.` followed by `(`) from `FieldAccess`
+(`.` followed by a `Name`). Dot-prefixed operators (`.+`, `.^`, `.==`, …) are
+single tokens, recognized by maximal munch. Maximal munch also resolves the
+trailing-dot real literal against a dotted operator: in `1./x` the `1.` is the
+real literal `1.0` (so this is `1.0 / x`), as in Julia. A dotted operator on an
+integer-literal operand needs whitespace or an explicit fractional part —
+`1 ./ x` or `1.0 ./ x`.
