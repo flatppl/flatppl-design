@@ -3,6 +3,9 @@
 <a id="bat"></a>
 BAT.jl — Bayesian Analysis Toolkit in Julia. <https://github.com/bat/BAT.jl>
 
+<a id="betancourt2012"></a>
+Betancourt, M. (2012). Cruising the simplex: Hamiltonian Monte Carlo and the Dirichlet distribution. *AIP Conf. Proc.* 1443, 157–164. <https://doi.org/10.1063/1.3703631>
+
 <a id="carpenter2017"></a>
 Carpenter, B. et al. (2017). Stan: A probabilistic programming language. *J. Stat. Softw.* 76(1). <https://mc-stan.org/>
 

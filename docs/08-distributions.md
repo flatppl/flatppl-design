@@ -323,6 +323,10 @@ $$\frac{1}{(2\pi)^{n/2} |\Sigma|^{1/2}} \exp\!\left(-\frac{1}{2}(\mathbf{x}-\bol
 
 `MvNormal(mu, cov)` is equivalent to `pushfwd(fn(mu + lower_cholesky(cov) * _), iid(Normal(0, 1), n))`.
 
+[Canonical transport](07-functions.md#sec:measure-eval-prims) of `MvNormal`:
+`builtin_fromnormal` is `mu + lower_cholesky(cov) * z`; `builtin_tonormal` is its inverse, the
+lower-triangular solve.
+
 <a id="wishart"></a>**`Wishart(nu, scale)`** — The [Wishart distribution](https://en.wikipedia.org/wiki/Wishart_distribution), a distribution over $n \times n$ positive-definite matrices.
 
 Domain/Support: $n \times n$ matrices / positive-definite $n \times n$ matrices.
@@ -388,6 +392,12 @@ Parameters:
 Density w.r.t. `Lebesgue(stdsimplex(n))`:
 
 $$\frac{\Gamma(\sum_i \alpha_i)}{\prod_i \Gamma(\alpha_i)} \prod_i x_i^{\alpha_i - 1}$$
+
+[Canonical transport](07-functions.md#sec:measure-eval-prims) of `Dirichlet` to/from
+standard uniform is the Connor–Mosimann stick-breaking map — the $i$-th break is
+`Beta(alpha_i, sum_{j>i} alpha_j)`, accumulated by stick-breaking onto `stdsimplex(n)`
+(see [Betancourt (2012)](15-references.md#betancourt2012)).
+The break ordering is fixed (descending reverse-cumsum of `alpha`).
 
 <a id="multinomial"></a>**`Multinomial(n, p)`** — The [multinomial distribution](https://en.wikipedia.org/wiki/Multinomial_distribution), the multivariate generalization of the Binomial distribution. `Multinomial(n, [1-p, p])` is equivalent to a reparameterized `Binomial(n, p)`.
 

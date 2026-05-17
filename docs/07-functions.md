@@ -519,3 +519,58 @@ more_random_data, rstate3 = rand(rstate2, iid(Exponential(1), 5))
   a binary serialization of the RNG state, engines should encode information in
   `bytes` that allows them to reject incompatible RNG states (e.g., from a different
   engine, RNG algorithm, or RNG state encoding method).
+
+### <a id="sec:measure-eval-prims"></a>Measure kernel evaluation primitives
+
+These functions provide building blocks for sampling measures, calculating
+densities and transporting variate values. They are mainly intended for
+engine use and term-rewriting, but are fully part of FlatPPL.
+
+Each function operates directly on a FlatPPL kernel object and a valid kernel
+input value, not on the resulting measure `kernel(kernel_input)`:
+
+- **`builtin_logdensityof(kernel, kernel_input, x)`** — log-density of
+  `kernel(kernel_input)` at `x` w.r.t. the kernel's reference measure;
+  `-inf` outside the support.
+- **`builtin_sample(rngstate, kernel, kernel_input, n, m, ...)`** — draws
+  from `kernel(kernel_input)`. Returns `(X, new_rngstate)` with an IID-sampled
+  array `X` of size `(n, m, ...)`, or a scalar `X` if no `n, m, ...` are given.
+- **`builtin_touniform(kernel, kernel_input, x)`** /
+  **`builtin_fromuniform(kernel, kernel_input, u)`** — the canonical
+  measurable transport of `kernel(kernel_input)` to / from the
+  standard uniform reference of matching dimension.
+- **`builtin_tonormal(kernel, kernel_input, x)`** /
+  **`builtin_fromnormal(kernel, kernel_input, z)`** — the same
+  transport to / from the standard normal reference.
+
+The transport functions implement the change of variables to/from the
+uni- or multivariate uniform/normal measure with the same degrees of
+freedom. The uniform and normal references are related elementwise by
+`invprobit` ($\Phi$) and `probit` ($\Phi^{-1}$). The following rules
+apply, normatively:
+
+- Wherever transport is defined, the four functions are mutually
+  consistent:
+  - `builtin_touniform(kernel, kernel_input, x)` is equivalent to
+    `invprobit.(builtin_tonormal(kernel, kernel_input, x))`
+  - `builtin_tonormal(kernel, kernel_input, x)` is equivalent to
+    `probit.(builtin_touniform(kernel, kernel_input, x))`
+  - `builtin_fromuniform(kernel, kernel_input, u)` is equivalent to
+    `builtin_fromnormal(kernel, kernel_input, probit.(u))`
+  - `builtin_fromnormal(kernel, kernel_input, z)` is equivalent to
+    `builtin_fromuniform(kernel, kernel_input, invprobit.(z))`
+
+- For kernels of univariate continuous measures, `builtin_touniform` /
+   `builtin_fromuniform` are the cumulative distribution function $F$
+   and its inverse (quantile) $F^{-1}$.
+
+- Otherwise the canonical transport is specified with the individual
+  measure (see [built-in distributions](08-distributions.md#sec:distributions)).
+
+**Engine requirements.** An engine must implement `builtin_logdensityof`
+and `builtin_sample` for every built-in measure kernel it supports. The
+four transport functions are defined only for continuous built-in
+kernels for which a canonical transport is specified; use of an undefined
+transport function is a static error. Engines must implement all four
+transport functions (typically some in terms of the others) for all measures
+they support and for which transport is specified in FlatPPL.
