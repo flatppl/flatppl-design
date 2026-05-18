@@ -243,7 +243,7 @@ Parameters:
 - `alpha = elementof(reals)`: intercept parameter in link scale.
 - `beta = elementof(cartpow(reals, k))`: $k$ dimensional vector of regression coefficients $\boldsymbol{\beta}$ in link scale.
 
-`PoissonLogGLM(x, n, alpha, beta)` is mathematically equivalent to `Poisson(exp(alpha + transpose(x) * beta))` but is more efficient.
+`PoissonLogGLM(x, alpha, beta)` is mathematically equivalent to `Poisson(exp(alpha + transpose(x) * beta))` but is more efficient.
 
 ### Module `ext-linear-algebra`
 
@@ -387,7 +387,7 @@ dist = standard_module("distances", "0.1")
 | `squared_euclidean`| `u`, `v` | Squared Euclidean distance | vector, vector |
 | `cosine` | `u`, `v` | Cosine distance | vector, vector |
 | `manhattan` | `u`, `v` | Manhattan/city-block distance | vector, vector |
-| `chebyshev` | `u`, `v` | Chebyshev (infinity norm) vector, vector | vector, vector |
+| `chebyshev` | `u`, `v` | Chebyshev (infinity norm) | vector, vector |
 | `minkowski` | `u`, `v`, `p` | Minkowski distance | vector, vector, posreals |
 | `jensenshannon`| `u`, `v` | Jensen-Shannon distance | stdsimplex, stdsimplex |
 

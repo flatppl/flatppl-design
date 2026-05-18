@@ -229,7 +229,7 @@ $$\frac{1}{2^{k/2} \Gamma(k/2)} x^{(k/2)-1} e^{-x/2}\quad \text{for } x > 0$$
 
 **Note.** The [chi-squared distribution](https://en.wikipedia.org/wiki/Chi-squared_distribution) with $k$ degrees of freedom is equivalent to `Gamma(shape = k/2, rate = 0.5)`.
 
-<a id="vonmises"></a>**`VonMises(alpha, beta)`** — The [von Mises distribution](https://en.wikipedia.org/wiki/Von_Mises_distribution).
+<a id="vonmises"></a>**`VonMises(mu, kappa)`** — The [von Mises distribution](https://en.wikipedia.org/wiki/Von_Mises_distribution).
 
 Domain/Support: `reals`/`interval(-pi, pi)`.
 
@@ -240,7 +240,7 @@ Parameters:
 
 Density w.r.t. `Lebesgue(reals)`:
 
-$$\frac{e^{\kappa \cos(x - \mu)}}{2 \pi I_0(x)} \quad \text{for } x \in [-\pi, \pi],$$ where $I_0(\cdot)$ is the modified Bessel function of the first kind of order 0. 
+$$\frac{e^{\kappa \cos(x - \mu)}}{2 \pi I_0(\kappa)} \quad \text{for } x \in [-\pi, \pi],$$ where $I_0(\cdot)$ is the modified Bessel function of the first kind of order 0. 
 
 <a id="laplace"></a>**`Laplace(location, scale)`** — The [Laplace (double exponential) distribution](https://en.wikipedia.org/wiki/Laplace_distribution).
 
@@ -351,7 +351,7 @@ Parameters:
 
 Density w.r.t. `Counting(integers)`:
 
-$$\binom{k + r - 1}{r - 1}\left(\frac{\beta}{\beta+1}\right)^{\alpha} \left(\frac{1}{\beta + 1}\right)^{k}, \quad k \in \mathbb{N}_0$$
+$$\binom{k + \alpha - 1}{\alpha - 1}\left(\frac{\beta}{\beta+1}\right)^{\alpha} \left(\frac{1}{\beta + 1}\right)^{k}, \quad k \in \mathbb{N}_0$$
 
 <a id="negbinomial2"></a>**`NegativeBinomial2(mu, psi)`** — Alternate parameterization of the [negative binomial distribution](https://en.wikipedia.org/wiki/Negative_binomial_distribution).
 
@@ -359,7 +359,7 @@ Domain/Support: `integers`/`nonnegintegers`.
 
 Parameters:
 
-- `mu = elementof(posreals)`: expected number of trials before stopping.
+- `mu = elementof(posreals)`: expected count.
 - `psi = elementof(posreals)`: overdispersion parameter (smaller -> more overdispersion).
 
 Density w.r.t. `Counting(integers)`:
