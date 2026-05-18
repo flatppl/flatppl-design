@@ -258,10 +258,11 @@ extlinalg = standard_module("ext-linear-algebra", "0.1")
 #### Functions
 
 Functions yielding multiple decomposition products return them as explicitly-named fields in a `record`.
+**Note.** The methods used to perform these operations are implementation details, and are not guaranteed by FlatPPL and may change between versions of an engine.
 
 | Function | Arguments | Description | Domains |
 |---|---|---|---|
-| `lu` | `A` | LU decomposition $\mathbf{P}\mathbf{A} = \mathbf{L}\mathbf{U}$ with partial pivoting; returns `record(P, L, U)` | square matrices |
+| `lu` | `A` | LU decomposition $\mathbf{P}\mathbf{A} = \mathbf{L}\mathbf{U}$; returns `record(P, L, U)` | square matrices |
 | `svd` | `A` | Singular value decomposition $\mathbf{A} = \mathbf{U} \boldsymbol{\Sigma} \mathbf{V}^\dagger$; returns `record(U, S, V)` | matrices |
 | `eigen` | `A` | Eigenvalues and right eigenvectors; returns `record(values, vectors)` | square matrices |
 | `eigmax` | `A` | Return maximal eigenvalue of $\mathbf{A}$ | square matrices |
@@ -271,7 +272,7 @@ Functions yielding multiple decomposition products return them as explicitly-nam
 | `lstsq` | `A`, `b` | Least squares solution for $\mathbf{x}$ in $\mathbf{A}\mathbf{x} = \mathbf{b}$ | $n \times k$ matrix $\mathbf{A}$, $n$ vector $\mathbf{b}$|
 | `rank` | `A` | Compute the numerical rank of the matrix `A`| square matrices |
 
-- **`lu(A)`** — computes the LU decomposition with partial pivoting of a square matrix `A`.
+- **`lu(A)`** — computes the LU decomposition of a square matrix `A`.
   Returns `record(P = P_mat, L = L_mat, U = U_mat)` such that $\mathbf{P} \mathbf{A} = \mathbf{L} \mathbf{U}$, where `P_mat` is a permutation matrix, `L_mat` is lower triangular with unit diagonal, and `U_mat` is upper triangular.
 
 - **`svd(A)`** — computes the singular value decomposition of matrix `A`.
@@ -288,9 +289,9 @@ Functions yielding multiple decomposition products return them as explicitly-nam
 
 - **`kron(A, B)`** — computes the Kronecker tensor product $\mathbf{A} \otimes \mathbf{B} = \begin{bmatrix} A_{1,1} \mathbf{B} & \cdots & A_{1,n} \mathbf{B}\\ \vdots & \ddots & \vdots \\ A_{m,1} \mathbf{B} & \cdots & A_{m,n} \mathbf{B}\end{bmatrix}$ of the $m \times n$ matrix `A` and the $p \times q$ matrix `B`, returning a $pm \times qn$ matrix.
 
-- **`lstsq(A, b)`** - computes the least squares solution of the equation $\mathbf{A}\mathbf{x} = \mathbf{b}$. **Note.** The method used is an engine implementation detail, and is not guaranteed by FlatPPL.
+- **`lstsq(A, b)`** - computes the least squares solution of the equation $\mathbf{A}\mathbf{x} = \mathbf{b}$.
 
-- **`rank(A)`** - computes the numerical rank of the matrix `A`. **Note.** The method used is an engine implementation detail, and is not guaranteed by FlatPPL.
+- **`rank(A)`** - computes the numerical rank of the matrix `A`. 
 
 ### Module `special-functions`
 

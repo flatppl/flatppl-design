@@ -236,7 +236,7 @@ Domain/Support: `reals`/`interval(-pi, pi)`.
 Parameters:
 
 - `mu = elementof(reals)`: location parameter $\mu$.
-- `kappa = elementof(posreals)`: scale parameter $\kappa$.
+- `kappa = elementof(posreals)`: concentration parameter $\kappa$ (larger -> more concentrated).
 
 Density w.r.t. `Lebesgue(reals)`:
 

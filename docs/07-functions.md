@@ -285,7 +285,7 @@ $$\begin{pmatrix}
   conv([1, 2, 3, 4], [1, 0, -1])  # [2, 2]
   ```
 
-  - **`crosscorr(v, filter)`** — computes the (valid) 1D cross correlation of vector $\mathbf{v}$ with
+- **`crosscorr(v, filter)`** — computes the (valid) 1D cross correlation of vector $\mathbf{v}$ with
   vector `filter`, producing a shorter vector.
 
   - `v`: input vector of numeric values.
@@ -293,7 +293,7 @@ $$\begin{pmatrix}
 
   The output is a vector of length `length(v) - length(filter) + 1`, where each
   element is the dot product of a consecutive window of `v` with `filter`: 
-  $$\mathrm{conv}(\mathbf{v}, \mathbf{f})_i = \left\langle \mathbf{v}_{i:i+\mathrm{length}(f)-1}, \mathbf{f} \right\rangle$$
+  $$\mathrm{crosscorr}(\mathbf{v}, \mathbf{f})_i = \left\langle \mathbf{v}_{i:i+\mathrm{length}(f)-1}, \mathbf{f} \right\rangle$$
 
   `crosscorr` performs no padding, no striding, and no windowing. 
   It must be the case that `length(filter) <= length(v)`, otherwise an error is raised.
