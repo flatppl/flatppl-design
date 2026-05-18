@@ -173,6 +173,12 @@ Parameters:
 
 The `generalized-linear-models` module contains efficient and stable implementations of log densities for common generalized linear models.
 
+Loaded via:
+
+```flatppl
+glm = standard_module("generalized-linear-models", "0.1")
+```
+
 #### Distributions
 
 | Distribution | Parameters | Domain | Support |
