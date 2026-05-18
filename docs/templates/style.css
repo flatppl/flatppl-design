@@ -50,7 +50,7 @@
     --syntax-cyan: #56b6c2;
     --syntax-blue: #61afef;
     --syntax-purple: #c678dd;
-    --syntax-comment: #5c6370;
+    --syntax-comment: #8b949e;
 }
 
 /* ── Base ─────────────────────────────────────────────── */
@@ -349,6 +349,10 @@ div.sourceCode>pre {
     margin: 0;
 }
 
+.code-wrapper > pre {
+    margin: 0;
+}
+
 .copy-btn {
     position: absolute;
     top: 0.5em;
@@ -468,6 +472,11 @@ hr {
 
 .download-link:hover {
     opacity: 0.88;
+}
+
+/* Dark mode: warm orange background needs dark text for sufficient contrast (≥4.5:1) */
+[data-theme="dark"] .download-link {
+    color: #1a1a1a !important;
 }
 
 /* ── Heading anchors ──────────────────────────────────── */
@@ -601,6 +610,11 @@ section.footnotes ol {
 
 .skip-to-content:focus {
     top: 0;
+}
+
+/* Dark mode: warm orange background needs dark text for sufficient contrast (≥4.5:1) */
+[data-theme="dark"] .skip-to-content {
+    color: #1a1a1a;
 }
 
 /* ── KaTeX math ───────────────────────────────────────── */

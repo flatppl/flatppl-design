@@ -23,8 +23,11 @@
   <script>
     /* Applied synchronously to prevent flash of wrong theme before CSS loads */
     (function () {
-      var t = localStorage.getItem('theme') ||
-        (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+      var t;
+      /* Storage may be blocked (opaque origins, private mode restrictions, etc.);
+         silence the error and fall through to the system preference. */
+      try { t = localStorage.getItem('theme'); } catch (e) {}
+      if (!t) { t = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'; }
       document.documentElement.setAttribute('data-theme', t);
     })();
   </script>
@@ -52,7 +55,7 @@
     </div>
   </nav>
   <button id="sidebar-toggle" aria-label="Toggle navigation">&#9776;</button>
-  <main id="content">
+  <main id="content" tabindex="-1">
     $for(include-before)$
     $include-before$
     $endfor$
@@ -157,6 +160,7 @@
         s.subIds.forEach(function (sid) { allIds.push(sid); });
       });
 
+      var lastActive = '';
       function updateActive() {
         var scrollY = window.scrollY || window.pageYOffset;
         var current = '';
@@ -167,7 +171,10 @@
           }
         });
 
-        if (current) { history.replaceState(null, '', '#' + current); }
+        if (current && current !== lastActive) {
+          history.replaceState(null, '', '#' + current);
+          lastActive = current;
+        }
 
         sectionItems.forEach(function (s) {
           var sectionLink = s.li.querySelector(':scope > a');
@@ -199,16 +206,42 @@
       // Toggle sidebar on mobile
       var toggle = document.getElementById('sidebar-toggle');
       var sidebar = document.getElementById('sidebar');
+      var mobileMediaQuery = window.matchMedia('(max-width: 60em)');
+      toggle.setAttribute('aria-controls', 'sidebar');
+      toggle.setAttribute('aria-expanded', 'false');
+
+      function updateSidebarInert() {
+        if (mobileMediaQuery.matches && !sidebar.classList.contains('open')) {
+          sidebar.setAttribute('inert', '');
+        } else {
+          sidebar.removeAttribute('inert');
+        }
+      }
+
       toggle.addEventListener('click', function () {
-        sidebar.classList.toggle('open');
+        var isOpen = sidebar.classList.toggle('open');
+        toggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+        updateSidebarInert();
       });
       nav.addEventListener('click', function () {
         sidebar.classList.remove('open');
+        toggle.setAttribute('aria-expanded', 'false');
+        updateSidebarInert();
       });
+      mobileMediaQuery.addEventListener('change', updateSidebarInert);
+      updateSidebarInert();
 
       // Theme toggle
       var themeToggle = document.getElementById('theme-toggle');
       var mq = window.matchMedia('(prefers-color-scheme: dark)');
+
+      // localStorage may be unavailable (opaque origins, private-mode restrictions, etc.)
+      function storageGet(key) {
+        try { return localStorage.getItem(key); } catch (e) { console.warn('localStorage unavailable:', e); return null; }
+      }
+      function storageSet(key, val) {
+        try { localStorage.setItem(key, val); } catch (e) { console.warn('localStorage unavailable:', e); }
+      }
 
       function applyThemeUI(theme) {
         themeToggle.textContent = theme === 'dark' ? 'Light' : 'Dark';
@@ -217,7 +250,7 @@
 
       function setTheme(theme, save) {
         document.documentElement.setAttribute('data-theme', theme);
-        if (save) localStorage.setItem('theme', theme);
+        if (save) { storageSet('theme', theme); }
         applyThemeUI(theme);
       }
 
@@ -227,7 +260,7 @@
 
       // Track system preference changes (only when user has no saved preference)
       mq.addEventListener('change', function (e) {
-        if (!localStorage.getItem('theme')) {
+        if (!storageGet('theme')) {
           setTheme(e.matches ? 'dark' : 'light', false);
         }
       });
@@ -239,10 +272,11 @@
 
     })();
 
-    // Copy buttons for syntax-highlighted code blocks
+    // Copy buttons for code blocks (div.sourceCode and plain pre blocks)
     (function () {
       if (!navigator.clipboard) return;
-      document.querySelectorAll('div.sourceCode').forEach(function (block) {
+
+      function addCopyButton(block, getTextFn) {
         var wrapper = document.createElement('div');
         wrapper.className = 'code-wrapper';
         block.parentNode.insertBefore(wrapper, block);
@@ -253,12 +287,27 @@
         btn.textContent = 'Copy';
         wrapper.appendChild(btn);
         btn.addEventListener('click', function () {
-          var pre = block.querySelector('pre');
-          navigator.clipboard.writeText(pre ? pre.innerText : '').then(function () {
+          navigator.clipboard.writeText(getTextFn()).then(function () {
             btn.textContent = 'Copied!';
+            setTimeout(function () { btn.textContent = 'Copy'; }, 1500);
+          }, function () {
+            btn.textContent = 'Failed';
             setTimeout(function () { btn.textContent = 'Copy'; }, 1500);
           });
         });
+      }
+
+      document.querySelectorAll('div.sourceCode').forEach(function (block) {
+        addCopyButton(block, function () {
+          var pre = block.querySelector('pre');
+          return pre ? pre.innerText : '';
+        });
+      });
+
+      // Plain pre blocks not already wrapped by div.sourceCode
+      document.querySelectorAll('pre').forEach(function (block) {
+        if (block.closest('div.sourceCode')) return;
+        addCopyButton(block, function () { return block.innerText; });
       });
     })();
   </script>
