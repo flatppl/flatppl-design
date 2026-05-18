@@ -337,9 +337,9 @@ sp = standard_module("special-functions", "0.1")
 
 - **`bessel_k(v, z)`** — computes the modified Bessel function of the second kind of real order `v` and real positive argument `z`.
 
-- **`digamma(x)`** — computes the digamma function, the logarithmic derivative of the gamma function, $\psi(x) = \frac{d}{dx} \ln \Gamma(x)$. **Note.** The digamma function has poles at non-positive integers, and therefore has no defined value at these points.
+- **`digamma(x)`** — computes the digamma function, the logarithmic derivative of the gamma function, $\psi(x) = \frac{d}{dx} \ln \Gamma(x)$. 
 
-- **`polygamma(n, x)`** — computes the polygamma function of order `n`, the $(n+1)$-th derivative of the logarithm of the gamma function, $\psi^{(n)}(x) = \frac{d^{n+1}}{dx^{n+1}} \ln \Gamma(x)$. **Note.** The polygamma function has poles at non-positive integers, and therefore has no defined value at these points.
+- **`polygamma(n, x)`** — computes the polygamma function of order `n`, the $(n+1)$-th derivative of the logarithm of the gamma function, $\psi^{(n)}(x) = \frac{d^{n+1}}{dx^{n+1}} \ln \Gamma(x)$. 
 
 - **`gammainc(a, x)`** — computes the regularized lower incomplete gamma function $P(a, x) = \frac{1}{\Gamma(a)} \int_0^x t^{a-1} e^{-t} dt$.
 
@@ -398,7 +398,7 @@ dist = standard_module("distances", "0.1")
 | `minkowski` | `u`, `v`, `p` | Minkowski distance | vector, vector, posreals |
 | `jensenshannon`| `u`, `v` | Jensen-Shannon distance | stdsimplex, stdsimplex |
 
-- **`pairwise_distance(X, metric)`** — Computes the `distance` distance between all pairs of elements in the $N$ vector $\mathbf{x}$. Returns an $N \times N$ matrix.
+- **`pairwise_distance(x, metric)`** — Computes the `distance` distance between all pairs of elements in the $N$ vector $\mathbf{x}$. Returns an $N \times N$ matrix.
 
 For example:
 
@@ -407,19 +407,19 @@ x = [[0, 0], [0, 1], [1, 1]]
 d = pairwise_distance(x, euclidean) # [[0, 1, 1.414...], [1, 0, 1], [1.414..., 1, 0]]
 ```
 
-- **`cross_distance(X, Y, metric)`** — Computes the cross-distance matrix for the `distance` distance between elements of the $N$ vector $\mathbf{x}$ and the $M$ vector $\mathbf{y}$.
+- **`cross_distance(x, y, metric)`** — Computes the cross-distance matrix for the `distance` distance between elements of the $N$ vector $\mathbf{x}$ and the $M$ vector $\mathbf{y}$.
   Returns an $N \times M$ matrix $\mathbf{D}$ where the $D_{i,j} = \text{distance}(\mathbf{x}_i, \mathbf{y}_j)$, noting that both $\mathbf{x}_i$ and $\mathbf{y}_j$ are themselves vectors.
 
 - **`euclidean(u, v)`** — Computes the $L_2$ Euclidean distance $\sqrt{\sum (u_i - v_i)^2}$ between two vectors.
 
 - **`squared_euclidean(u, v)`** — Computes the squared Euclidean distance $\sum (u_i - v_i)^2$ between two vectors. 
 
-- **`cosine(u, v)`** — Computes the cosine distance $1 - \frac{u \cdot v}{\|u\|_2 \|v\|_2}$ between two vectors.
+- **`cosine(u, v)`** — Computes the cosine distance $1 - \frac{u \cdot v}{\|u\|_2 \|v\|_2}$ between two vectors of non-zero magnitude.
 
-- **`manhattan(u, v)`** — Computes the Manhattan / $L_1$ norm distance $\sum \|u_i - v_i\|$ between two vectors.
+- **`manhattan(u, v)`** — Computes the Manhattan / $L_1$ norm distance $\sum |u_i - v_i|$ between two vectors.
 
-- **`chebyshev(u, v)`** — Computes the Chebyshev / $L_\infty$ maximum distance $\max_i \|u_i - v_i\|$ between two vectors.
+- **`chebyshev(u, v)`** — Computes the Chebyshev / $L_\infty$ maximum distance $\max_i |u_i - v_i|$ between two vectors.
 
-- **`minkowski(u, v, p)`** — Computes the $L_p$ Minkowski distance $(\sum \|u_i - v_i\|^p)^{1/p}$.
+- **`minkowski(u, v, p)`** — Computes the $L_p$ Minkowski distance $(\sum |u_i - v_i|^p)^{1/p}$.
 
 - **`jensenshannon(u, v)`** — Computes the Jensen-Shannon distance $\sqrt{\frac{1}{2} D_{KL}(u \parallel m) + \frac{1}{2} D_{KL}(v \parallel m)}$ between two probability vectors $u$ and $v$ where $m = \frac{u + v}{2}$. 

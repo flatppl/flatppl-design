@@ -89,7 +89,7 @@ Density w.r.t. `Lebesgue(reals)`:
 
 $$\frac{\beta}{2\alpha\,\Gamma(1/\beta)} \exp\!\left(-\left(\frac{|x - \mu|}{\alpha}\right)^\beta\right)$$
 
-<a id="cauchy"></a>**`Cauchy(location, scale)`** — The [Cauchy (Lorentzian) distribution](https://en.wikipedia.org/wiki/Cauchy_distribution). Equivalent to `StudentT(1, location, scale)` (location-scale form). Also known as the non-relativistic Breit-Wigner distribution; the Breit-Wigner parameterization uses the full width at half maximum $\Gamma = 2 \cdot \mathrm{scale}$, i.e. `Cauchy(mean, width / 2)`.
+<a id="cauchy"></a>**`Cauchy(location, scale)`** — The [Cauchy (Lorentzian) distribution](https://en.wikipedia.org/wiki/Cauchy_distribution). Equivalent to `pushfwd(fn(location + scale * _), StudentT(1))` (location-scale form). Also known as the non-relativistic Breit-Wigner distribution; the Breit-Wigner parameterization uses the full width at half maximum $\Gamma = 2 \cdot \mathrm{scale}$, i.e. `Cauchy(location, width / 2)`.
 
 Domain/Support: `reals`/`reals`.
 
@@ -185,7 +185,7 @@ Density w.r.t. `Lebesgue(reals)`:
 
 $$\frac{k}{\lambda}\left(\frac{x}{\lambda}\right)^{k-1} e^{-(x/\lambda)^k} \quad \text{for } x \geq 0$$
 
-<a id="inversegamma"></a>**`InverseGamma(shape, scale)`** — The [inverse-gamma distribution](https://en.wikipedia.org/wiki/Inverse-gamma_distribution). If $X \sim \text{Gamma}(\alpha, \beta)$, then $1/X \sim \text{InverseGamma}(\alpha, 1/\beta)$. Conjugate prior for the variance of a normal distribution.
+<a id="inversegamma"></a>**`InverseGamma(shape, scale)`** — The [inverse-gamma distribution](https://en.wikipedia.org/wiki/Inverse-gamma_distribution). If $X \sim \text{Gamma}(\alpha, \beta)$ (using the shape-rate parameterization as we do), then $1/X \sim \text{InverseGamma}(\alpha, \beta)$. Conjugate prior for the variance of a normal distribution.
 
 Domain/Support: `reals`/`posreals`.
 
@@ -345,7 +345,7 @@ Domain/Support: `integers`/`nonnegintegers`.
 Parameters:
 
 - `alpha = elementof(posreals)`: shape parameter.
-- `beta = elementof(posreals)`: scale parameter.
+- `beta = elementof(posreals)`: rate parameter.
 
 Density w.r.t. `Counting(integers)`:
 
