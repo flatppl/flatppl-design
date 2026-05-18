@@ -37,6 +37,9 @@ specified as well.
 | [`Weibull`](#weibull) | `shape`, `scale` | `reals` | `nonnegreals` |
 | [`InverseGamma`](#inversegamma) | `shape`, `scale` | `reals` | `posreals` |
 | [`Beta`](#beta) | `alpha`, `beta` | `reals` | `unitinterval` |
+| [`ChiSquared`](#chisq) | `k` | `reals` | `posreals` |
+| [`VonMises`](#vonmises) | `mu`, `kappa` | `reals` | `interval(-pi, pi)` |
+| [`Laplace`](#laplace) | `location`, `scale` | `reals` | `reals` |
 
 <a id="uniform"></a>**`Uniform(support)`** — The uniform distribution on `support`.
 
@@ -212,6 +215,46 @@ Density w.r.t. `Lebesgue(reals)`:
 
 $$\frac{x^{\alpha-1}(1-x)^{\beta-1}}{B(\alpha, \beta)} \quad \text{for } x \in (0, 1)$$
 
+<a id="chisq"></a>**`ChiSquared(k)`** — The [Chi-squared distribution](https://en.wikipedia.org/wiki/Chi-squared_distribution).
+
+Domain/Support: `reals`/`posreals`.
+
+Parameters:
+
+- `k = elementof(posintegers)`: degrees of freedom $k$.
+
+Density w.r.t. `Lebesgue(reals)`:
+
+$$\frac{1}{2^{k/2} \Gamma(k/2)} x^{(k/2)-1} e^{-x/2}\quad \text{for } x > 0$$
+
+**Note.** The [chi-squared distribution](https://en.wikipedia.org/wiki/Chi-squared_distribution) with $k$ degrees of freedom is equivalent to `Gamma(shape = k/2, rate = 0.5)`.
+
+<a id="vonmises"></a>**`VonMises(alpha, beta)`** — The [von Mises distribution](https://en.wikipedia.org/wiki/Von_Mises_distribution).
+
+Domain/Support: `reals`/`interval(-pi, pi)`.
+
+Parameters:
+
+- `mu = elementof(reals)`: location parameter $\mu$.
+- `kappa = elementof(posreals)`: scale parameter $\kappa$.
+
+Density w.r.t. `Lebesgue(reals)`:
+
+$$\frac{e^{\kappa \cos(x - \mu)}}{2 \pi I_0(x)} \quad \text{for } x \in [-\pi, \pi],$$ where $I_0(\cdot)$ is the modified Bessel function of the first kind of order 0. 
+
+<a id="laplace"></a>**`Laplace(location, scale)`** — The [Laplace (double exponential) distribution](https://en.wikipedia.org/wiki/Laplace_distribution).
+
+Domain/Support: `reals`/`reals`.
+
+Parameters:
+
+- `location = elementof(reals)`: location parameter $\mu$.
+- `scale = elementof(posreals)`: scale parameter $b$.
+
+Density w.r.t. `Lebesgue(reals)`:
+
+$$\frac{1}{2b} \exp\left(-\frac{|x - \mu|}{b}\right)$$
+
 ### Standard discrete distributions
 
 | Distribution | Parameters | Domain | Support |
@@ -221,6 +264,9 @@ $$\frac{x^{\alpha-1}(1-x)^{\beta-1}}{B(\alpha, \beta)} \quad \text{for } x \in (
 | [`Categorical0`](#categorical0) | `p` | `integers` | `interval(0, n-1)` |
 | [`Binomial`](#binomial) | `n`, `p` | `integers` | `interval(0, n)` |
 | [`Poisson`](#poisson) | `rate` | `integers` | `nonnegintegers` |
+| [`Geometric`](#geometric) | `p` | `integers` | `nonnegintegers` |
+| [`NegativeBinomial`](#negbinomial) | `alpha`, `beta` | `integers` | `nonnegintegers` |
+| [`NegativeBinomial2`](#negbinomial2) | `mu`, `psi` | `integers` | `nonnegintegers` |
 
 <a id="bernoulli"></a>**`Bernoulli(p)`** — The [Bernoulli distribution](https://en.wikipedia.org/wiki/Bernoulli_distribution).
 
@@ -277,6 +323,48 @@ Parameters:
 Density w.r.t. `Counting(integers)`:
 
 $$\binom{n}{k} p^k (1-p)^{n-k} \quad \text{for } k \in \{0, \ldots, n\}$$
+
+
+<a id="geometric"></a>**`Geometric(p)`** — The [geometric distribution](https://en.wikipedia.org/wiki/Geometric_distribution).
+
+Domain/Support: `integers`/`nonnegintegers`.
+
+Parameters:
+
+- `p = elementof(unitinterval)`: success probability.
+
+**Note.** We define the geometric in terms of performing Bernoulli trials with success probability $p$ until a success is observed. The number of failures until this success is geometrically distributed.
+
+Density w.r.t. `Counting(integers)`:
+
+$$p(1-p)^{k}, \quad k \in \mathbb{N}_0$$
+
+
+<a id="negbinomial"></a>**`NegativeBinomial(alpha, beta)`** — The [negative binomial distribution](https://en.wikipedia.org/wiki/Negative_binomial_distribution).
+
+Domain/Support: `integers`/`nonnegintegers`.
+
+Parameters:
+
+- `alpha = elementof(posreals)`: number of successes at which trials cease.
+- `beta = elementof(posreals)`: inverse failure odds.
+
+Density w.r.t. `Counting(integers)`:
+
+$$\binom{k + r - 1}{r - 1}\left(\frac{\beta}{\beta+1}\right)^{\alpha} \left(\frac{1}{\beta + 1}\right)^{k}, \quad k \in \mathbb{N}_0$$
+
+<a id="negbinomial2"></a>**`NegativeBinomial2(mu, psi)`** — Alternate parameterization of the [negative binomial distribution](https://en.wikipedia.org/wiki/Negative_binomial_distribution).
+
+Domain/Support: `integers`/`nonnegintegers`.
+
+Parameters:
+
+- `mu = elementof(posreals)`: expected number of trials before stopping.
+- `psi = elementof(posreals)`: overdispersion parameter (smaller -> more overdispersion).
+
+Density w.r.t. `Counting(integers)`:
+
+$$\binom{k + \psi - 1}{k}\left(\frac{\mu}{\mu + \psi}\right)^{k} \left(\frac{\psi}{\mu + \psi}\right)^{\psi}, \quad k \in \mathbb{N}_0$$
 
 <a id="poisson"></a>**`Poisson(rate)`** — The [Poisson distribution](https://en.wikipedia.org/wiki/Poisson_distribution).
 
@@ -391,7 +479,7 @@ Parameters:
 
 Density w.r.t. `Lebesgue(stdsimplex(n))`:
 
-$$\frac{\Gamma(\sum_i \alpha_i)}{\prod_i \Gamma(\alpha_i)} \prod_i x_i^{\alpha_i - 1}$$
+$$\frac{\Gamma(||\alpha||_1)}{\prod_i \Gamma(\alpha_i)} \prod_i x_i^{\alpha_i - 1}$$
 
 [Canonical transport](07-functions.md#sec:measure-eval-prims) of `Dirichlet` to/from
 standard uniform is the Connor–Mosimann stick-breaking map — the $i$-th break is
