@@ -45,9 +45,9 @@ value-level operations in FlatPPL. For measure-level operations, see [measure al
 - **`ones(n, m, ...)`** — creates a real-valued array of shape `n × m × ...` filled
   with ones. Equivalent to `fill(1, n, m, ...)`.
 
-- **`eye(n)`** — creates the $n \times n$ identity matrix $I_n$.
+- **`eye(n)`** — creates the $n \times n$ identity matrix $\mathbf{I}_n$.
 
-- **`onehot(i, n)`** — length-$n$ basis vector $e_i$ with one at position $i$ and zero
+- **`onehot(i, n)`** — length-$n$ basis vector $\mathbf{e}_i$ with one at position $i$ and zero
   elsewhere, for $i \in \{1, \ldots, n\}$.
 
 - **`linspace(from, to, n)`** — returns an endpoint-inclusive range of `n` real numbers,
@@ -168,7 +168,7 @@ of a mix of value types (e.g. scalars with vectors, or vectors with records)
 is not permitted.
 
 **`rowstack(vs)`** constructs a matrix whose rows are the vectors in `vs`. The
-argument `vs` is a vector of vectors, all of the same length.
+  argument `vs` is a vector of vectors, all of the same length.
 
 ```flatppl
 M = rowstack([[1, 2, 3], [4, 5, 6]])
@@ -176,7 +176,7 @@ M = rowstack([[1, 2, 3], [4, 5, 6]])
 
 returns
 
-$$M = \begin{pmatrix} 1 & 2 & 3 \\ 4 & 5 & 6 \end{pmatrix}$$
+$$\mathbf{M} = \begin{pmatrix} 1 & 2 & 3 \\ 4 & 5 & 6 \end{pmatrix}$$
 
 **`colstack(vs)`** constructs a matrix whose columns are the vectors in `vs`. The
 argument `vs` is a vector of vectors, all of the same length.
@@ -187,7 +187,11 @@ M = colstack([[1, 2, 3], [4, 5, 6]])
 
 returns
 
-$$M = \begin{pmatrix} 1 & 4 \\ 2 & 5 \\ 3 & 6 \end{pmatrix}$$
+$$\mathbf{M} = \begin{pmatrix} 1 & 4 \\ 2 & 5 \\ 3 & 6 \end{pmatrix}$$
+
+**`reshape(A, size, dimorder...)`** returns an array with the same data as `A` but with a new shape given by `size` and optionally a new traversal order `dimorder`.
+
+**`repeat(A, reps, dim)`** constructs an array by repeating `A` `reps` times along dimension `dim`.
 
 **`partition(xs, spec)`** splits a vector `xs` into a vector of sub-vectors. The
 second argument `spec` may be:
@@ -238,12 +242,12 @@ $$\begin{pmatrix}
 0 & 0 & 8 & 9 & 10
 \end{pmatrix}$$
 
-**`RepBandedMat(v, nrows)`** constructs a matrix with `nrows` rows in which every row `i`
+**`BandedMat(v, rows)`** constructs a matrix with `rows` rows in which every row `i`
 contains the vector `v` starting at column `i` and zeros elsewhere. 
 
 ```flatppl
 v = [1, 2, 3]
-A = RepBandedMat(v, 4)
+A = BandedMat(v, 4)
 ```
 
 produces the `4 x 6` matrix:
@@ -298,6 +302,7 @@ $$\begin{pmatrix}
 
   ```flatppl
   conv([1, 2, 3, 4], [1, 0, -1])  # [-2, -2]
+  ```
 
 ### Scalar restrictions and constructors
 
@@ -433,18 +438,21 @@ passes — ensuring the invariant is always validated.
 
 | Function | Arguments | Description | Domains |
 |---|---|---|---|
-| `transpose` | `A` | $A^T$ | vectors, matrices |
-| `adjoint` | `A` | $A^\dagger$ (conj. transpose) | vectors, matrices |
-| `det` | `A` | $\det(A)$ | square matrices |
-| `logabsdet` | `A` | $\log\lvert\det(A)\rvert$ | square matrices |
-| `inv` | `A` | $A^{-1}$ | square matrices |
-| `trace` | `A` | $\mathrm{tr}(A)$ | square matrices |
-| `linsolve` | `A`, `b` | solve $Ax = b$ for $x$ | square `A`, vector `b` |
-| `lower_cholesky` | `A` | triangular $L$ with $A = LL^\dagger$ | positive definite `A` |
-| `row_gram` | `A` | $A A^\dagger$ | matrices |
-| `col_gram` | `A` | $A^\dagger A$ | matrices |
-| `self_outer` | `x` | $x \cdot x^\dagger$ (outer product) | vectors |
+| `transpose` | `A` | $\mathbf{A}^T$ | vectors, matrices |
+| `adjoint` | `A` | $\mathbf{A}^\dagger$ (conj. transpose) | vectors, matrices |
+| `det` | `A` | $\det(\mathbf{A})$ | square matrices |
+| `logabsdet` | `A` | $\log\lvert\det(\mathbf{A})\rvert$ | square matrices |
+| `inv` | `A` | $\mathbf{A}^{-1}$ | square matrices |
+| `trace` | `A` | $\mathrm{tr}(\mathbf{A})$ | square matrices |
+| `linsolve` | `A`, `b` | solve $\mathbf{A}\mathbf{x} = \mathbf{b}$ for $\mathbf{x}$ | square `A`, vector `b` |
+| `qr` | `A` | QR decomposition $\mathbf{A} = \mathbf{Q}\mathbf{R}$; returns `record(Q, R)` | matrices |
+| `lower_cholesky` | `A` | triangular $\mathbf{L}$ with $\mathbf{A} = \mathbf{L}\mathbf{L}^\dagger$ | positive definite `A` |
+| `row_gram` | `A` | $\mathbf{A} \mathbf{A}^\dagger$ | matrices |
+| `col_gram` | `A` | $\mathbf{A}^\dagger \mathbf{A}$ | matrices |
+| `self_outer` | `x` | $\mathbf{x} \cdot \mathbf{x}^\dagger$ (outer product) | vectors |
 | `diagmat` | `x` | $\mathrm{diag}(x_1, \ldots, x_n)$ | vectors |
+| `diag` | `A`, `k` | extracts $k$th diagonal of $\mathbf{A}$ | square matrices, integer|
+| `quadform` | `A`, `x` | $\mathbf{x}^\dagger \mathbf{A} \mathbf{x}$ | square `A`, vector `x` |
 
 Matrix multiplication and addition use the standard `*` and `+` operators.
 The product of a non-transposed vector and a transposed vector is a matrix;
@@ -460,9 +468,12 @@ complex-conjugated elements.
 | Function | Arguments | Description | Domains |
 |---|---|---|---|
 | `sum` | `xs` | $\sum_i x_i$ | real/complex arrays |
+| `cumsum` | `xs` | cumulative sum $(x_1, x_1+x_2, \dots)$ | real/complex arrays |
 | `mean` | `xs` | $\bar{x} = \frac{1}{n} \sum_i x_i$ | real/complex arrays |
 | `var` | `xs` | $\frac{1}{n-1} \sum_i (x_i - \bar{x})^2$ | real arrays |
+| `std` | `xs` | $\sqrt{\mathrm{var}(\mathbf{x})}$ | real arrays |
 | `prod` | `xs` | $\prod_i x_i$ | real/complex arrays |
+| `cumprod` | `xs` | cumulative product $(x_1, x_1 x_2, \dots)$ | real/complex arrays |
 | `maximum` | `xs` | $\max_i x_i$ | real arrays |
 | `minimum` | `xs` | $\min_i x_i$ | real arrays |
 | `length` | `xs` | number of elements / rows | arrays, tables |
