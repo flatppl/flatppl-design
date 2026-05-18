@@ -35,6 +35,9 @@ $endif$
 <nav id="sidebar" role="navigation" aria-label="Section navigation">
   <div id="sidebar-title">$pagetitle$</div>
   <ul id="sidebar-nav"></ul>
+  <div id="theme-toggle-container">
+    <button id="theme-toggle" aria-label="Toggle dark mode">Dark Mode</button>
+  </div>
 </nav>
 <button id="sidebar-toggle" aria-label="Toggle navigation">&#9776;</button>
 <div id="content">
@@ -181,6 +184,26 @@ $endfor$
   nav.addEventListener('click', function() {
     sidebar.classList.remove('open');
   });
+
+  // Theme toggle
+  var themeToggle = document.getElementById('theme-toggle');
+  var currentTheme = localStorage.getItem('theme') || 'light';
+  
+  function setTheme(theme) {
+    currentTheme = theme;
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('theme', theme);
+    themeToggle.textContent = theme === 'dark' ? 'Light Mode' : 'Dark Mode';
+  }
+  
+  // Initialize theme
+  setTheme(currentTheme);
+
+  themeToggle.addEventListener('click', function() {
+    var newTheme = currentTheme === 'light' ? 'dark' : 'light';
+    setTheme(newTheme);
+  });
+
 })();
 </script>
 </body>
