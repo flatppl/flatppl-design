@@ -398,7 +398,7 @@ dist = standard_module("distances", "0.1")
 | `minkowski` | `u`, `v`, `p` | Minkowski distance | vector, vector, posreals |
 | `jensenshannon`| `u`, `v` | Jensen-Shannon distance | stdsimplex, stdsimplex |
 
-- **`pairwise_distance(x, metric)`** — Computes the `distance` distance between all pairs of elements in the $N$ vector $\mathbf{x}$. Returns an $N \times N$ matrix.
+- **`pairwise_distance(x, distance)`** — Computes the `distance` distance between all pairs of elements in the $N$ vector $\mathbf{x}$. Returns an $N \times N$ matrix.
 
 For example:
 
@@ -407,7 +407,7 @@ x = [[0, 0], [0, 1], [1, 1]]
 d = pairwise_distance(x, euclidean) # [[0, 1, 1.414...], [1, 0, 1], [1.414..., 1, 0]]
 ```
 
-- **`cross_distance(x, y, metric)`** — Computes the cross-distance matrix for the `distance` distance between elements of the $N$ vector $\mathbf{x}$ and the $M$ vector $\mathbf{y}$.
+- **`cross_distance(x, y, distance)`** — Computes the cross-distance matrix for the `distance` distance between elements of the $N$ vector $\mathbf{x}$ and the $M$ vector $\mathbf{y}$.
   Returns an $N \times M$ matrix $\mathbf{D}$ where the $D_{i,j} = \text{distance}(\mathbf{x}_i, \mathbf{y}_j)$, noting that both $\mathbf{x}_i$ and $\mathbf{y}_j$ are themselves vectors.
 
 - **`euclidean(u, v)`** — Computes the $L_2$ Euclidean distance $\sqrt{\sum (u_i - v_i)^2}$ between two vectors.

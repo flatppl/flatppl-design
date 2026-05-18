@@ -189,7 +189,7 @@ returns
 
 $$\mathbf{M} = \begin{pmatrix} 1 & 4 \\ 2 & 5 \\ 3 & 6 \end{pmatrix}$$
 
-**`reshape(A, size, dimorder...)`** returns an array with the same data as `A` but with a new shape given by `size` and optionally a new traversal order `dimorder`.
+<!-- **`reshape(A, size, dimorder...)`** returns an array with the same data as `A` but with a new shape given by `size` and optionally a new traversal order `dimorder`. -->
 
 **`repeat(A, reps, dim)`** constructs an array by repeating `A` `reps` times along dimension `dim`.
 
@@ -452,7 +452,7 @@ passes — ensuring the invariant is always validated.
 | `col_gram` | `A` | $\mathbf{A}^\dagger \mathbf{A}$ | matrices |
 | `self_outer` | `x` | $\mathbf{x} \cdot \mathbf{x}^\dagger$ (outer product) | vectors |
 | `diagmat` | `x` | $\mathrm{diag}(x_1, \ldots, x_n)$ | vectors |
-| `diag` | `A`, `k` | extracts the $k$th diagonal of $\mathbf{A}$ | matrices, integer|
+| `diag` | `A`, `k` | extracts the $k$th diagonal of $\mathbf{A}$ ($k=0$ for main, $k>0$ for super-diagonals, $k < 0$ for sub-diagonals) | matrices, integer|
 | `quadform` | `A`, `x` | $\mathbf{x}^\dagger \mathbf{A} \mathbf{x}$ | square `A`, vector `x` |
 
 Matrix multiplication and addition use the standard `*` and `+` operators.
