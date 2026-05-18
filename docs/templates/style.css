@@ -291,6 +291,10 @@ th {
     color: var(--heading-color);
 }
 
+tbody tr:nth-child(even) {
+    background: var(--pre-bg);
+}
+
 hr { border: none; border-top: 1px solid var(--border-color); margin: 2em 0; }
 
 /* ── Inline TOC ───────────────────────────────────────── */
@@ -453,3 +457,55 @@ header { margin-bottom: 2em; }
 [data-theme="dark"] code span.va { color: #e06c75; } /* Variable */
 [data-theme="dark"] code span.vs { color: #98c379; } /* VerbatimString */
 [data-theme="dark"] code span.wa { color: #e06c75; } /* Warning */
+
+/* ── Images ───────────────────────────────────────────── */
+#content img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    margin: 1em 0;
+    border-radius: 4px;
+}
+
+/* ── Text selection ───────────────────────────────────── */
+::selection {
+    background: #b3d4ff;
+    color: #1f2328;
+}
+
+[data-theme="dark"] ::selection {
+    background: #264f78;
+    color: #d7dae0;
+}
+
+/* ── Sidebar scrollbar ────────────────────────────────── */
+#sidebar {
+    scrollbar-width: thin;
+    scrollbar-color: var(--border-color) transparent;
+}
+
+/* ── Print ────────────────────────────────────────────── */
+@media print {
+    #sidebar, #sidebar-toggle, #theme-toggle-container, .download-link { display: none; }
+    #content { margin: 0; padding: 1em; max-width: none; }
+    a { color: inherit; text-decoration: underline; }
+    pre { border: 1px solid #ccc; white-space: pre-wrap; }
+}
+
+/* ── Content link hover ───────────────────────────────── */
+#content a:hover {
+    text-decoration-thickness: 2px;
+}
+
+/* ── List spacing ─────────────────────────────────────── */
+#content ul > li,
+#content ol > li {
+    margin-bottom: 0.25em;
+}
+
+/* ── Superscript / footnote refs ─────────────────────── */
+sup {
+    font-size: 0.75em;
+    line-height: 0;
+    vertical-align: super;
+}
