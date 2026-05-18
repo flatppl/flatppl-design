@@ -183,15 +183,15 @@ glm = standard_module("generalized-linear-models", "0.1")
 
 | Distribution | Parameters | Domain | Support |
 |---|---|---|---|
-| [`BernoulliLogitGLM`](#bernoullilogitglm) | `x`, `alpha`, `beta` | `integers` | `interval(0, 1)` |
+| [`BernoulliLogitGLM`](#bernoullilogitglm) | `x`, `alpha`, `beta` | `integers` | `booleans` |
 | [`BinomialLogitGLM`](#binomiallogitglm) | `x`, `n`, `alpha`, `beta` | `integers` | `interval(0, n)` |
-| [`CategoricalLogitGLM`](#categoricallogitglm) | `x`, `alpha`, `beta` | `integers` | `interval(1, k)` |
+| [`CategoricalLogitGLM`](#categoricallogitglm) | `x`, `alpha`, `beta` | `integers` | `interval(1, n)` |
 | [`NormalGLM`](#normalglm) | `x`, `alpha`, `beta`, `sigma` | `reals` | `reals` |
 | [`PoissonLogGLM`](#poissonlogglm) | `x`, `alpha`, `beta` | `integers` | `nonnegintegers` |
 
 <a id="bernoullilogitglm"></a>**`BernoulliLogitGLM(x, alpha, beta)`** — An efficient implementation of the log density for a generalized linear model in $k$ parameters with a Bernoulli distribution and a logistic link (logistic regression).
 
-Domain/Support: `integers`/`interval(0, 1)`.
+Domain/Support: `integers`/`booleans`.
 
 Parameters:
 
@@ -214,15 +214,15 @@ Parameters:
 
 `BinomialLogitGLM(x, n, alpha, beta)` is mathematically equivalent to `Binomial(n, invlogit(alpha + transpose(x) * beta))` but is more efficient.
 
-<a id="categoricallogitglm"></a>**`CategoricalLogitGLM(x, alpha, beta)`** — An efficient implementation of the log density for a multiclass logistic (softmax) generalized linear model.
+<a id="categoricallogitglm"></a>**`CategoricalLogitGLM(x, alpha, beta)`** — An efficient implementation of the log density for an $n$ logistic (softmax) generalized linear model.
 
-Domain/Support: `integers`/`interval(1, k)`.
+Domain/Support: `integers`/`interval(1, n)`.
 
 Parameters:
 
-- `x = elementof(cartpow(reals, p))`: $p$-dimensional predictor vector (row of design matrix).
-- `alpha = elementof(cartpow(reals, k))`: intercept vector of length $k$ (one intercept per class).
-- `beta = elementof(cartpow(reals, p, k))`: matrix of regression coefficients with shape $p \times k$ (columns correspond to classes).
+- `x = elementof(cartpow(reals, k))`: $k$ dimensional data vector $\mathbf{x}$.
+- `alpha = elementof(cartpow(reals, n))`: intercept $n$ vector (one intercept per class)
+- `beta = elementof(cartpow(reals, k, n))`: $k \times n$ matrix of regression coefficients (columns correspond to classes).
 
 `CategoricalLogitGLM(x, alpha, beta)` is mathematically equivalent to `Categorical(softmax(alpha + transpose(x) * beta))`, but is computed in a numerically stable manner.
 
@@ -322,7 +322,7 @@ sp = standard_module("special-functions", "0.1")
 | `digamma` | `x` | Digamma function $\psi(x)$ | reals |
 | `polygamma` | `n`, `x` | Polygamma function $\psi^{(n)}(x)$ | non-negative integers, reals |
 | `gammainc` | `a`, `x` | Regularized incomplete gamma function | posreals, posreals |
-| `betainc` | `a`, `b`, `x` | Regularized incomplete beta function | posreals, posreals, [0, 1] |
+| `betainc` | `a`, `b`, `x` | Regularized incomplete beta function | posreals, posreals, unitinterval |
 | `airy` | `x` | Airy function $\operatorname{Ai}(x)$ | reals |
 
 - **`erf(x)`** — computes the error function $\operatorname{erf}(x) = \frac{2}{\sqrt{\pi}} \int_0^x e^{-t^2} dt$.
@@ -337,9 +337,9 @@ sp = standard_module("special-functions", "0.1")
 
 - **`bessel_k(v, z)`** — computes the modified Bessel function of the second kind of real order `v` and real positive argument `z`.
 
-- **`digamma(x)`** — computes the digamma function, the logarithmic derivative of the gamma function, $\psi(x) = \frac{d}{dx} \ln \Gamma(x)$.
+- **`digamma(x)`** — computes the digamma function, the logarithmic derivative of the gamma function, $\psi(x) = \frac{d}{dx} \ln \Gamma(x)$. **Note.** The digamma function has poles at non-positive integers, and therefore has no defined value at these points.
 
-- **`polygamma(n, x)`** — computes the polygamma function of order `n`, the $(n+1)$-th derivative of the logarithm of the gamma function, $\psi^{(n)}(x) = \frac{d^{n+1}}{dx^{n+1}} \ln \Gamma(x)$.
+- **`polygamma(n, x)`** — computes the polygamma function of order `n`, the $(n+1)$-th derivative of the logarithm of the gamma function, $\psi^{(n)}(x) = \frac{d^{n+1}}{dx^{n+1}} \ln \Gamma(x)$. **Note.** The polygamma function has poles at non-positive integers, and therefore has no defined value at these points.
 
 - **`gammainc(a, x)`** — computes the regularized lower incomplete gamma function $P(a, x) = \frac{1}{\Gamma(a)} \int_0^x t^{a-1} e^{-t} dt$.
 
@@ -388,8 +388,8 @@ dist = standard_module("distances", "0.1")
 
 | Function | Arguments | Description | Domains |
 |---|---|---|---|
-| `pairwise_distance` | `x`, `metric` | Pairwise distances between vectors | vector of vectors, functions |
-| `cross_distance` | `x`, `y`, `metric` | Cross-distances between vector elements of vectors | vector of vectors, vector of vectors, functions |
+| `pairwise_distance` | `x`, `distance` | Pairwise distances between vectors | vector of vectors, functions |
+| `cross_distance` | `x`, `y`, `distance` | Cross-distances between vector elements of vectors | vector of vectors, vector of vectors, functions |
 | `euclidean` | `u`, `v` | Euclidean distance | vector, vector |
 | `squared_euclidean`| `u`, `v` | Squared Euclidean distance | vector, vector |
 | `cosine` | `u`, `v` | Cosine distance | vector, vector |
@@ -398,10 +398,17 @@ dist = standard_module("distances", "0.1")
 | `minkowski` | `u`, `v`, `p` | Minkowski distance | vector, vector, posreals |
 | `jensenshannon`| `u`, `v` | Jensen-Shannon distance | stdsimplex, stdsimplex |
 
-- **`pairwise_distance(X, metric)`** — Computes pairwise `metric` distances between all pairs of elements in the $N$ vector $\mathbf{x}$. Returns an $N \times N$ matrix.
+- **`pairwise_distance(X, metric)`** — Computes the `distance` distance between all pairs of elements in the $N$ vector $\mathbf{x}$. Returns an $N \times N$ matrix.
 
-- **`cross_distance(X, Y, metric)`** — Computes the cross-distance matrix for the `metric` distance between elements of the $N$ vector $\mathbf{x}$ and the $M$ vector $\mathbf{y}$.
-  Returns an $N \times M$ matrix $\mathbf{D}$ where the $D_{i,j} = \text{metric}(\mathbf{x}_i, \mathbf{y}_j)$, noting that both $\mathbf{x}_i$ and $\mathbf{y}_j$ are themselves vectors.
+For example:
+
+```flatppl
+x = [[0, 0], [0, 1], [1, 1]]
+d = pairwise_distance(x, euclidean) # [[0, 1, 1.414...], [1, 0, 1], [1.414..., 1, 0]]
+```
+
+- **`cross_distance(X, Y, metric)`** — Computes the cross-distance matrix for the `distance` distance between elements of the $N$ vector $\mathbf{x}$ and the $M$ vector $\mathbf{y}$.
+  Returns an $N \times M$ matrix $\mathbf{D}$ where the $D_{i,j} = \text{distance}(\mathbf{x}_i, \mathbf{y}_j)$, noting that both $\mathbf{x}_i$ and $\mathbf{y}_j$ are themselves vectors.
 
 - **`euclidean(u, v)`** — Computes the $L_2$ Euclidean distance $\sqrt{\sum (u_i - v_i)^2}$ between two vectors.
 

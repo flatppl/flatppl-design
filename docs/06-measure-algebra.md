@@ -378,7 +378,7 @@ obs_events = [1.2, 3.4, 5.1, -1.5, 2.8]
 
 R = interval(-3.0, 3.0)
 obs_R = filter(fn(_ in R), obs_events)
-model_R = PoissonProcess(truncate(intensity, R))
+model_R = PoissonProcess(intensity = truncate(intensity, R))
 L_R = likelihoodof(functionof(model_R), obs_R)
 ```
 

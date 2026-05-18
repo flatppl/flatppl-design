@@ -368,6 +368,7 @@ For complex arguments, `log` and `sqrt` use the principal branch ($\arg(z) \in (
 complex.
 
 `logit` and `probit` evaluate to `-inf` at $p = 0$ and `inf` at $p = 1$.
+`log1p` evaluates to `-inf` at $x = -1$.
 
 ### Operator-equivalent functions
 
@@ -451,7 +452,7 @@ passes — ensuring the invariant is always validated.
 | `col_gram` | `A` | $\mathbf{A}^\dagger \mathbf{A}$ | matrices |
 | `self_outer` | `x` | $\mathbf{x} \cdot \mathbf{x}^\dagger$ (outer product) | vectors |
 | `diagmat` | `x` | $\mathrm{diag}(x_1, \ldots, x_n)$ | vectors |
-| `diag` | `A`, `k` | extracts $k$th diagonal of $\mathbf{A}$ | square matrices, integer|
+| `diag` | `A`, `k` | extracts the $k$th diagonal of $\mathbf{A}$ | matrices, integer|
 | `quadform` | `A`, `x` | $\mathbf{x}^\dagger \mathbf{A} \mathbf{x}$ | square `A`, vector `x` |
 
 Matrix multiplication and addition use the standard `*` and `+` operators.

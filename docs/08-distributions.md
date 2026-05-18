@@ -172,8 +172,6 @@ Density w.r.t. `Lebesgue(reals)`:
 
 $$\frac{\beta^\alpha}{\Gamma(\alpha)} x^{\alpha-1} e^{-\beta x} \quad \text{for } x > 0$$
 
-The [chi-squared distribution](https://en.wikipedia.org/wiki/Chi-squared_distribution) with $k$ degrees of freedom is `Gamma(shape = k/2, rate = 0.5)`.
-
 <a id="weibull"></a>**`Weibull(shape, scale)`** — The [Weibull distribution](https://en.wikipedia.org/wiki/Weibull_distribution). Generalizes the exponential distribution; `Weibull(1, 1/rate)` is equivalent to `Exponential(rate)`.
 
 Domain/Support: `reals`/`nonnegreals`.
@@ -221,7 +219,7 @@ Domain/Support: `reals`/`posreals`.
 
 Parameters:
 
-- `k = elementof(posintegers)`: degrees of freedom $k$.
+- `k = elementof(posreals)`: degrees of freedom $k$.
 
 Density w.r.t. `Lebesgue(reals)`:
 
@@ -263,10 +261,10 @@ $$\frac{1}{2b} \exp\left(-\frac{|x - \mu|}{b}\right)$$
 | [`Categorical`](#categorical) | `p` | `integers` | `interval(1, n)` |
 | [`Categorical0`](#categorical0) | `p` | `integers` | `interval(0, n-1)` |
 | [`Binomial`](#binomial) | `n`, `p` | `integers` | `interval(0, n)` |
-| [`Poisson`](#poisson) | `rate` | `integers` | `nonnegintegers` |
 | [`Geometric`](#geometric) | `p` | `integers` | `nonnegintegers` |
 | [`NegativeBinomial`](#negbinomial) | `alpha`, `beta` | `integers` | `nonnegintegers` |
 | [`NegativeBinomial2`](#negbinomial2) | `mu`, `psi` | `integers` | `nonnegintegers` |
+| [`Poisson`](#poisson) | `rate` | `integers` | `nonnegintegers` |
 
 <a id="bernoulli"></a>**`Bernoulli(p)`** — The [Bernoulli distribution](https://en.wikipedia.org/wiki/Bernoulli_distribution).
 
@@ -331,7 +329,7 @@ Domain/Support: `integers`/`nonnegintegers`.
 
 Parameters:
 
-- `p = elementof(unitinterval)`: success probability.
+- `p = elementof(unitinterval)`: success probability. At $p=0$ the Geometric distribution is degenerate.
 
 **Note.** We define the geometric in terms of performing Bernoulli trials with success probability $p$ until a success is observed. The number of failures until this success is geometrically distributed.
 
@@ -346,8 +344,8 @@ Domain/Support: `integers`/`nonnegintegers`.
 
 Parameters:
 
-- `alpha = elementof(posreals)`: number of successes at which trials cease.
-- `beta = elementof(posreals)`: inverse failure odds.
+- `alpha = elementof(posreals)`: shape parameter.
+- `beta = elementof(posreals)`: scale parameter.
 
 Density w.r.t. `Counting(integers)`:
 

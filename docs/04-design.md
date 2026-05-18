@@ -382,17 +382,18 @@ in which case the reified function takes a tuple argument.
 **Specifying reification boundaries.** Sometimes only a selected part of the ancestor
 sub-DAG should be reified. In our example, `e` depends on `c` and `d`, which in turn
 depend on `a` and `b`. If we want the function represented by the subgraph that starts
-at `a` and `d` — ignoring how `d` was computed from `a` and `b` — we can specify 
-*boundary inputs* that stop the ancestor backtrace early:
+at `c` and `d` — ignoring how `c` and `d` were computed from `a` and `b` — we can
+specify *boundary inputs* that stop the ancestor backtrace early:
 
 ```flatppl
-g = functionof(e, p = a, q = d)     # g: {p, q: Real} → Real
+g = functionof(e, p = c, q = d)     # g: {p, q: Real} → Real
 M2 = pushfwd(g, some_measure)       # transform a measure over (p, q)
 ```
 
-The keyword arguments `p = a, q = d` declare that the trace stops at nodes `a` and `d`,
+The keyword arguments `p = c, q = d` declare that the trace stops at nodes `c` and `d`,
 which become the inputs of `g` under the new names `p` and `q`. The computation from
-`a` and `b` to `d` is excluded — `g` only contains the path from `a` and `d` to `e`.
+`a` and `b` to `c` and `d` is excluded — `g` only contains the direct path from `c`
+and `d` to `e`.
 
 Boundary input specification is all-or-none: either every reified input is
 specified explicitly, or none is. With explicit boundary specification, the
@@ -409,11 +410,11 @@ node `a` can be thought of as being substituted with a new node, generated via
 The function argument names do not have to differ from the boundary node names:
 
 ```flatppl
-h = functionof(e, a = a, d = d)     # h: {a, d: Real} → Real
+h = functionof(e, c = c, d = d)     # h: {c, d: Real} → Real
 ```
 
-The resulting function `h` now has arguments named `a` and `d`, but these are local
-to the function and decoupled from the original nodes `a` and `d`.
+The resulting function `h` now has arguments named `c` and `d`, but these are local
+to the function and decoupled from the original nodes `c` and `d`.
 
 **Identity law.** `functionof(f(a, b), ..., a = a, b = b, ...)` is equivalent to `f`.
 
