@@ -39,6 +39,7 @@ $if(math)$
 $endif$
 </head>
 <body>
+<a class="skip-to-content" href="#content">Skip to content</a>
 <nav id="sidebar" role="navigation" aria-label="Section navigation">
   <div id="sidebar-title">$pagetitle$</div>
   <ul id="sidebar-nav"></ul>
@@ -171,11 +172,16 @@ $endfor$
 
       // Highlight section link
       sectionLink.classList.toggle('active', isActive);
+      if (isActive) { sectionLink.setAttribute('aria-current', 'location'); }
+      else { sectionLink.removeAttribute('aria-current'); }
 
       // Highlight subsection link
       var subLinks = s.li.querySelectorAll('.sidebar-subsections a');
       subLinks.forEach(function(sa) {
-        sa.classList.toggle('active', sa.getAttribute('href') === '#' + current);
+        var subActive = sa.getAttribute('href') === '#' + current;
+        sa.classList.toggle('active', subActive);
+        if (subActive) { sa.setAttribute('aria-current', 'location'); }
+        else { sa.removeAttribute('aria-current'); }
       });
     });
   }
@@ -223,6 +229,29 @@ $endfor$
     setTheme(current === 'light' ? 'dark' : 'light', true);
   });
 
+})();
+
+// Copy buttons for syntax-highlighted code blocks
+(function() {
+  if (!navigator.clipboard) return;
+  document.querySelectorAll('div.sourceCode').forEach(function(block) {
+    var wrapper = document.createElement('div');
+    wrapper.className = 'code-wrapper';
+    block.parentNode.insertBefore(wrapper, block);
+    wrapper.appendChild(block);
+    var btn = document.createElement('button');
+    btn.className = 'copy-btn';
+    btn.setAttribute('aria-label', 'Copy code to clipboard');
+    btn.textContent = 'Copy';
+    wrapper.appendChild(btn);
+    btn.addEventListener('click', function() {
+      var pre = block.querySelector('pre');
+      navigator.clipboard.writeText(pre ? pre.innerText : '').then(function() {
+        btn.textContent = 'Copied!';
+        setTimeout(function() { btn.textContent = 'Copy'; }, 1500);
+      });
+    });
+  });
 })();
 </script>
 </body>
