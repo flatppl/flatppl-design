@@ -1,258 +1,267 @@
 <!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml"$if(lang)$ lang="$lang$" xml:lang="$lang$"$endif$$if(dir)$ dir="$dir$"$endif$>
+<html xmlns="http://www.w3.org/1999/xhtml" $if(lang)$ lang="$lang$" xml:lang="$lang$" $endif$$if(dir)$ dir="$dir$"
+  $endif$>
+
 <head>
   <meta charset="utf-8" />
   <meta name="generator" content="pandoc" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
-$for(author-meta)$
+  $for(author-meta)$
   <meta name="author" content="$author-meta$" />
-$endfor$
-$if(date-meta)$
+  $endfor$
+  $if(date-meta)$
   <meta name="dcterms.date" content="$date-meta$" />
-$endif$
-$if(keywords)$
+  $endif$
+  $if(keywords)$
   <meta name="keywords" content="$for(keywords)$$keywords$$sep$, $endfor$" />
-$endif$
-$if(description-meta)$
+  $endif$
+  $if(description-meta)$
   <meta name="description" content="$description-meta$" />
-$endif$
+  $endif$
   <title>$if(title-prefix)$$title-prefix$ – $endif$$pagetitle$</title>
   <link rel="icon" href="favicon.ico" type="image/x-icon" />
   <script>
-  (function(){
-    var t = localStorage.getItem('theme') ||
-            (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
-    document.documentElement.setAttribute('data-theme', t);
-  })();
+    /* Applied synchronously to prevent flash of wrong theme before CSS loads */
+    (function () {
+      var t = localStorage.getItem('theme') ||
+        (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+      document.documentElement.setAttribute('data-theme', t);
+    })();
   </script>
   <style>
     $styles.html()$
   </style>
-$for(css)$
+  $for(css)$
   <link rel="stylesheet" href="$css$" />
-$endfor$
-$for(header-includes)$
+  $endfor$
+  $for(header-includes)$
   $header-includes$
-$endfor$
-$if(math)$
+  $endfor$
+  $if(math)$
   $math$
-$endif$
+  $endif$
 </head>
+
 <body>
-<a class="skip-to-content" href="#content">Skip to content</a>
-<nav id="sidebar" role="navigation" aria-label="Section navigation">
-  <div id="sidebar-title">$pagetitle$</div>
-  <ul id="sidebar-nav"></ul>
-  <div id="theme-toggle-container">
-    <button id="theme-toggle" aria-label="Toggle color theme">Theme</button>
-  </div>
-</nav>
-<button id="sidebar-toggle" aria-label="Toggle navigation">&#9776;</button>
-<div id="content">
-$for(include-before)$
-$include-before$
-$endfor$
-$if(title)$
-<header id="title-block-header">
-<h1 class="title">$title$</h1>
-$if(subtitle)$
-<p class="subtitle">$subtitle$</p>
-$endif$
-$for(author)$
-<div class="author">
-$if(author.name)$
-<span class="author-name">$author.name$</span>
-$if(author.affiliation)$
-<br><span class="author-affiliation">$author.affiliation$</span>
-$endif$
-$if(author.email)$
-<br><span class="author-email"><a href="mailto:$author.email$">$author.email$</a></span>
-$endif$
-$else$
-$author$
-$endif$
-</div>
-$endfor$
-$if(date)$
-<p class="date">$date$</p>
-$endif$
-$if(abstract)$
-<div class="abstract">
-<div class="abstract-title">$abstract-title$</div>
-$abstract$
-</div>
-$endif$
-</header>
-$endif$
-$if(toc)$
-<details id="full-toc" open aria-label="Table of contents">
-<summary><strong>Table of Contents</strong></summary>
-<nav id="$idprefix$TOC" role="doc-toc">
-$table-of-contents$
-</nav>
-</details>
-$endif$
-$body$
-$for(include-after)$
-$include-after$
-$endfor$
-</div>
-<script>
-// Build sidebar nav from section headings, with expandable subsections
-(function() {
-  var nav = document.getElementById('sidebar-nav');
+  <a class="skip-to-content" href="#content">Skip to content</a>
+  <nav id="sidebar" role="navigation" aria-label="Section navigation">
+    <div id="sidebar-title">$pagetitle$</div>
+    <ul id="sidebar-nav"></ul>
+    <div id="theme-toggle-container">
+      <button id="theme-toggle" aria-label="Toggle color theme">Theme</button>
+    </div>
+  </nav>
+  <button id="sidebar-toggle" aria-label="Toggle navigation">&#9776;</button>
+  <main id="content">
+    $for(include-before)$
+    $include-before$
+    $endfor$
+    $if(title)$
+    <header id="title-block-header">
+      <h1 class="title">$title$</h1>
+      $if(subtitle)$
+      <p class="subtitle">$subtitle$</p>
+      $endif$
+      $for(author)$
+      <div class="author">
+        $if(author.name)$
+        <span class="author-name">$author.name$</span>
+        $if(author.affiliation)$
+        <br><span class="author-affiliation">$author.affiliation$</span>
+        $endif$
+        $if(author.email)$
+        <br><span class="author-email"><a href="mailto:$author.email$">$author.email$</a></span>
+        $endif$
+        $else$
+        $author$
+        $endif$
+      </div>
+      $endfor$
+      $if(date)$
+      <p class="date">$date$</p>
+      $endif$
+      $if(abstract)$
+      <div class="abstract">
+        <div class="abstract-title">$abstract-title$</div>
+        $abstract$
+      </div>
+      $endif$
+    </header>
+    $endif$
+    $if(toc)$
+    <details id="full-toc" open aria-label="Table of contents">
+      <summary><strong>Table of Contents</strong></summary>
+      <nav id="$idprefix$TOC" role="doc-toc">
+        $table-of-contents$
+      </nav>
+    </details>
+    $endif$
+    $body$
+    $for(include-after)$
+    $include-after$
+    $endfor$
+  </main>
+  <script>
+    // Build sidebar nav from section headings, with expandable subsections
+    (function () {
+      var nav = document.getElementById('sidebar-nav');
 
-  // Collect top-level sections (h1 with single-number data-number)
-  var sections = document.querySelectorAll('#content h1[data-number]');
-  var sectionItems = []; // {li, id, subIds}
+      // Collect top-level sections (h1 with single-number data-number)
+      var sections = document.querySelectorAll('#content h1[data-number]');
+      var sectionItems = []; // {li, id, subIds}
 
-  sections.forEach(function(h) {
-    if (!h.id) return;
-    var num = h.getAttribute('data-number');
-    if (num.indexOf('.') !== -1) return;
+      sections.forEach(function (h) {
+        if (!h.id) return;
+        var num = h.getAttribute('data-number');
+        if (num.indexOf('.') !== -1) return;
 
-    var li = document.createElement('li');
-    var a = document.createElement('a');
-    a.textContent = h.textContent.replace(/^[\d.]+\s+/, '').replace(/\s*#$$/, '').trim();
-    a.href = '#' + h.id;
-    li.appendChild(a);
+        var li = document.createElement('li');
+        var a = document.createElement('a');
+        a.textContent = h.textContent.replace(/^[\d.]+\s+/, '').replace(/\s*#$$/, '').trim();
+        a.href = '#' + h.id;
+        li.appendChild(a);
 
-    // Find subsections (h2 with data-number starting with this section's number + ".")
-    var prefix = num + '.';
-    var subHeadings = document.querySelectorAll('#content h2[data-number]');
-    var subUl = null;
-    var subIds = [];
-    subHeadings.forEach(function(sh) {
-      var snum = sh.getAttribute('data-number');
-      if (!sh.id || !snum || !snum.startsWith(prefix)) return;
-      // Only direct children (e.g. "2.1" not "2.1.1")
-      var rest = snum.slice(prefix.length);
-      if (rest.indexOf('.') !== -1) return;
-      if (!subUl) {
-        subUl = document.createElement('ul');
-        subUl.className = 'sidebar-subsections';
-      }
-      var sli = document.createElement('li');
-      var sa = document.createElement('a');
-      sa.textContent = sh.textContent.replace(/^[\d.]+\s+/, '').replace(/\s*#$$/, '').trim();
-      sa.href = '#' + sh.id;
-      sli.appendChild(sa);
-      subUl.appendChild(sli);
-      subIds.push(sh.id);
-    });
-    if (subUl) li.appendChild(subUl);
+        // Find subsections (h2 with data-number starting with this section's number + ".")
+        var prefix = num + '.';
+        var subHeadings = document.querySelectorAll('#content h2[data-number]');
+        var subUl = null;
+        var subIds = [];
+        subHeadings.forEach(function (sh) {
+          var snum = sh.getAttribute('data-number');
+          if (!sh.id || !snum || !snum.startsWith(prefix)) return;
+          // Only direct children (e.g. "2.1" not "2.1.1")
+          var rest = snum.slice(prefix.length);
+          if (rest.indexOf('.') !== -1) return;
+          if (!subUl) {
+            subUl = document.createElement('ul');
+            subUl.className = 'sidebar-subsections';
+          }
+          var sli = document.createElement('li');
+          var sa = document.createElement('a');
+          sa.textContent = sh.textContent.replace(/^[\d.]+\s+/, '').replace(/\s*#$$/, '').trim();
+          sa.href = '#' + sh.id;
+          sli.appendChild(sa);
+          subUl.appendChild(sli);
+          subIds.push(sh.id);
+        });
+        if (subUl) li.appendChild(subUl);
 
-    nav.appendChild(li);
-    sectionItems.push({ li: li, id: h.id, subIds: subIds });
-  });
-
-  // Collect all trackable ids for scroll spy
-  var allIds = [];
-  sectionItems.forEach(function(s) {
-    allIds.push(s.id);
-    s.subIds.forEach(function(sid) { allIds.push(sid); });
-  });
-
-  function updateActive() {
-    var scrollY = window.scrollY || window.pageYOffset;
-    var current = '';
-    allIds.forEach(function(id) {
-      var el = document.getElementById(id);
-      if (el && el.offsetTop <= scrollY + 80) {
-        current = id;
-      }
-    });
-
-    sectionItems.forEach(function(s) {
-      var sectionLink = s.li.querySelector(':scope > a');
-      var isActive = current === s.id || s.subIds.indexOf(current) !== -1;
-
-      // Expand/collapse subsections
-      s.li.classList.toggle('expanded', isActive);
-
-      // Highlight section link
-      sectionLink.classList.toggle('active', isActive);
-      if (isActive) { sectionLink.setAttribute('aria-current', 'location'); }
-      else { sectionLink.removeAttribute('aria-current'); }
-
-      // Highlight subsection link
-      var subLinks = s.li.querySelectorAll('.sidebar-subsections a');
-      subLinks.forEach(function(sa) {
-        var subActive = sa.getAttribute('href') === '#' + current;
-        sa.classList.toggle('active', subActive);
-        if (subActive) { sa.setAttribute('aria-current', 'location'); }
-        else { sa.removeAttribute('aria-current'); }
+        nav.appendChild(li);
+        sectionItems.push({ li: li, id: h.id, subIds: subIds });
       });
-    });
-  }
-  window.addEventListener('scroll', updateActive);
-  updateActive();
 
-  // Toggle sidebar on mobile
-  var toggle = document.getElementById('sidebar-toggle');
-  var sidebar = document.getElementById('sidebar');
-  toggle.addEventListener('click', function() {
-    sidebar.classList.toggle('open');
-  });
-  nav.addEventListener('click', function() {
-    sidebar.classList.remove('open');
-  });
-
-  // Theme toggle
-  var themeToggle = document.getElementById('theme-toggle');
-  var mq = window.matchMedia('(prefers-color-scheme: dark)');
-
-  function applyThemeUI(theme) {
-    themeToggle.textContent = theme === 'dark' ? 'Light' : 'Dark';
-    themeToggle.setAttribute('aria-label', theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode');
-  }
-
-  function setTheme(theme, save) {
-    document.documentElement.setAttribute('data-theme', theme);
-    if (save) localStorage.setItem('theme', theme);
-    applyThemeUI(theme);
-  }
-
-  // data-theme already set by inline head script; sync button UI
-  var initialTheme = document.documentElement.getAttribute('data-theme') || 'light';
-  applyThemeUI(initialTheme);
-
-  // Track system preference changes (only when user has no saved preference)
-  mq.addEventListener('change', function(e) {
-    if (!localStorage.getItem('theme')) {
-      setTheme(e.matches ? 'dark' : 'light', false);
-    }
-  });
-
-  themeToggle.addEventListener('click', function() {
-    var current = document.documentElement.getAttribute('data-theme') || 'light';
-    setTheme(current === 'light' ? 'dark' : 'light', true);
-  });
-
-})();
-
-// Copy buttons for syntax-highlighted code blocks
-(function() {
-  if (!navigator.clipboard) return;
-  document.querySelectorAll('div.sourceCode').forEach(function(block) {
-    var wrapper = document.createElement('div');
-    wrapper.className = 'code-wrapper';
-    block.parentNode.insertBefore(wrapper, block);
-    wrapper.appendChild(block);
-    var btn = document.createElement('button');
-    btn.className = 'copy-btn';
-    btn.setAttribute('aria-label', 'Copy code to clipboard');
-    btn.textContent = 'Copy';
-    wrapper.appendChild(btn);
-    btn.addEventListener('click', function() {
-      var pre = block.querySelector('pre');
-      navigator.clipboard.writeText(pre ? pre.innerText : '').then(function() {
-        btn.textContent = 'Copied!';
-        setTimeout(function() { btn.textContent = 'Copy'; }, 1500);
+      // Collect all trackable ids for scroll spy
+      var allIds = [];
+      sectionItems.forEach(function (s) {
+        allIds.push(s.id);
+        s.subIds.forEach(function (sid) { allIds.push(sid); });
       });
-    });
-  });
-})();
-</script>
+
+      function updateActive() {
+        var scrollY = window.scrollY || window.pageYOffset;
+        var current = '';
+        allIds.forEach(function (id) {
+          var el = document.getElementById(id);
+          if (el && el.offsetTop <= scrollY + 80) {
+            current = id;
+          }
+        });
+
+        if (current) { history.replaceState(null, '', '#' + current); }
+
+        sectionItems.forEach(function (s) {
+          var sectionLink = s.li.querySelector(':scope > a');
+          var isActive = current === s.id || s.subIds.indexOf(current) !== -1;
+
+          // Expand/collapse subsections
+          s.li.classList.toggle('expanded', isActive);
+
+          // Highlight section link
+          sectionLink.classList.toggle('active', isActive);
+          if (isActive) {
+            sectionLink.setAttribute('aria-current', 'location');
+            sectionLink.scrollIntoView({ block: 'nearest' });
+          } else { sectionLink.removeAttribute('aria-current'); }
+
+          // Highlight subsection link
+          var subLinks = s.li.querySelectorAll('.sidebar-subsections a');
+          subLinks.forEach(function (sa) {
+            var subActive = sa.getAttribute('href') === '#' + current;
+            sa.classList.toggle('active', subActive);
+            if (subActive) { sa.setAttribute('aria-current', 'location'); }
+            else { sa.removeAttribute('aria-current'); }
+          });
+        });
+      }
+      window.addEventListener('scroll', updateActive, { passive: true });
+      updateActive();
+
+      // Toggle sidebar on mobile
+      var toggle = document.getElementById('sidebar-toggle');
+      var sidebar = document.getElementById('sidebar');
+      toggle.addEventListener('click', function () {
+        sidebar.classList.toggle('open');
+      });
+      nav.addEventListener('click', function () {
+        sidebar.classList.remove('open');
+      });
+
+      // Theme toggle
+      var themeToggle = document.getElementById('theme-toggle');
+      var mq = window.matchMedia('(prefers-color-scheme: dark)');
+
+      function applyThemeUI(theme) {
+        themeToggle.textContent = theme === 'dark' ? 'Light' : 'Dark';
+        themeToggle.setAttribute('aria-label', theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode');
+      }
+
+      function setTheme(theme, save) {
+        document.documentElement.setAttribute('data-theme', theme);
+        if (save) localStorage.setItem('theme', theme);
+        applyThemeUI(theme);
+      }
+
+      // data-theme already set by inline head script; sync button UI
+      var initialTheme = document.documentElement.getAttribute('data-theme') || 'light';
+      applyThemeUI(initialTheme);
+
+      // Track system preference changes (only when user has no saved preference)
+      mq.addEventListener('change', function (e) {
+        if (!localStorage.getItem('theme')) {
+          setTheme(e.matches ? 'dark' : 'light', false);
+        }
+      });
+
+      themeToggle.addEventListener('click', function () {
+        var current = document.documentElement.getAttribute('data-theme') || 'light';
+        setTheme(current === 'light' ? 'dark' : 'light', true);
+      });
+
+    })();
+
+    // Copy buttons for syntax-highlighted code blocks
+    (function () {
+      if (!navigator.clipboard) return;
+      document.querySelectorAll('div.sourceCode').forEach(function (block) {
+        var wrapper = document.createElement('div');
+        wrapper.className = 'code-wrapper';
+        block.parentNode.insertBefore(wrapper, block);
+        wrapper.appendChild(block);
+        var btn = document.createElement('button');
+        btn.className = 'copy-btn';
+        btn.setAttribute('aria-label', 'Copy code to clipboard');
+        btn.textContent = 'Copy';
+        wrapper.appendChild(btn);
+        btn.addEventListener('click', function () {
+          var pre = block.querySelector('pre');
+          navigator.clipboard.writeText(pre ? pre.innerText : '').then(function () {
+            btn.textContent = 'Copied!';
+            setTimeout(function () { btn.textContent = 'Copy'; }, 1500);
+          });
+        });
+      });
+    })();
+  </script>
 </body>
+
 </html>

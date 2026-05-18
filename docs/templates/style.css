@@ -1,6 +1,7 @@
 /* ── Theme variables ─────────────────────────────────── */
 :root {
     color-scheme: light;
+    /* native browser UI (scrollbars, inputs) matches theme */
     --bg-color: #ffffff;
     --text-color: #24292f;
     --heading-color: #1f2328;
@@ -29,10 +30,10 @@
     --heading-color: #d7dae0;
     --sidebar-bg: #21252b;
     --sidebar-border: #181a1f;
-    --link-color: #61afef;
+    --link-color: #d19a66;
     --sidebar-link-text: #abb2bf;
     --sidebar-link-hover-bg: #2c313a;
-    --sidebar-active-bg: #1f3358;
+    --sidebar-active-bg: #3a2500;
     --sidebar-sub-text: #9099a8;
     --code-bg: #2c313a;
     --pre-bg: #21252b;
@@ -43,6 +44,13 @@
     --author-aff: #7c8490;
     --anchor-color: #4b5263;
     --th-bg: #21252b;
+    --syntax-red: #e06c75;
+    --syntax-yellow: #e5c07b;
+    --syntax-green: #98c379;
+    --syntax-cyan: #56b6c2;
+    --syntax-blue: #61afef;
+    --syntax-purple: #c678dd;
+    --syntax-comment: #5c6370;
 }
 
 /* ── Base ─────────────────────────────────────────────── */
@@ -78,6 +86,8 @@ body {
     z-index: 100;
     display: flex;
     flex-direction: column;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border-color) transparent;
     transition: background-color 0.15s ease, border-color 0.15s ease;
 }
 
@@ -98,15 +108,15 @@ body {
     flex: 1;
 }
 
-#sidebar-nav > li {
+#sidebar-nav>li {
     border-top: 1px solid var(--border-light);
 }
 
-#sidebar-nav > li:first-child {
+#sidebar-nav>li:first-child {
     border-top: none;
 }
 
-#sidebar-nav > li > a {
+#sidebar-nav>li>a {
     display: block;
     padding: 0.45em 1em;
     color: var(--sidebar-link-text);
@@ -118,19 +128,19 @@ body {
     transition: background-color 0.1s ease, color 0.1s ease;
 }
 
-#sidebar-nav > li > a:hover {
+#sidebar-nav>li>a:hover {
     color: var(--link-color);
     background: var(--sidebar-link-hover-bg);
 }
 
-#sidebar-nav > li > a.active {
+#sidebar-nav>li>a.active {
     color: var(--link-color);
     border-left-color: var(--link-color);
     background: var(--sidebar-active-bg);
     font-weight: 600;
 }
 
-/* Subsections: hidden by default, shown when parent is expanded */
+/* max-height accordion: animates 0 → 50em on expand; JS only toggles .expanded */
 .sidebar-subsections {
     list-style: none;
     margin: 0;
@@ -140,7 +150,7 @@ body {
     transition: max-height 0.25s ease;
 }
 
-#sidebar-nav li.expanded > .sidebar-subsections {
+#sidebar-nav li.expanded>.sidebar-subsections {
     max-height: 50em;
 }
 
@@ -216,23 +226,75 @@ body {
 }
 
 /* ── Typography ───────────────────────────────────────── */
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
     margin-top: 1.6em;
     margin-bottom: 0.5em;
     color: var(--heading-color);
     line-height: 1.3;
 }
 
-h1 { font-size: 1.8em; border-bottom: 2px solid var(--border-color); padding-bottom: 0.3em; }
-h2 { font-size: 1.4em; border-bottom: 1px solid var(--border-light); padding-bottom: 0.2em; }
-h3 { font-size: 1.15em; }
+h1 {
+    font-size: 1.8em;
+    border-bottom: 2px solid var(--border-color);
+    padding-bottom: 0.3em;
+}
 
-.title { margin-top: 0; }
-.subtitle { color: var(--author-aff); font-size: 1.1em; margin: -0.2em 0 0.5em; }
+h2 {
+    font-size: 1.4em;
+    border-bottom: 1px solid var(--border-light);
+    padding-bottom: 0.2em;
+}
+
+h3 {
+    font-size: 1.15em;
+}
+
+.title {
+    margin-top: 0;
+}
+
+.subtitle {
+    color: var(--author-aff);
+    font-size: 1.1em;
+    margin: -0.2em 0 0.5em;
+}
 
 a {
     color: var(--link-color);
     text-underline-offset: 2px;
+}
+
+#content a:hover {
+    text-decoration-thickness: 2px;
+}
+
+#content a[href^="http"]::after {
+    content: " ↗";
+    font-size: 0.75em;
+    opacity: 0.55;
+}
+
+span.header-section-number {
+    color: var(--quote-color);
+    font-weight: 400;
+    margin-right: 0.3em;
+}
+
+#content ul>li,
+#content ol>li {
+    margin-bottom: 0.25em;
+}
+
+sup {
+    font-size: 0.75em;
+    line-height: 0;
+    /* prevents sup from inflating surrounding line-height */
+    vertical-align: super;
 }
 
 /* ── Code ─────────────────────────────────────────────── */
@@ -269,303 +331,15 @@ div.sourceCode {
     margin: 1.2em 0;
 }
 
-div.sourceCode > pre {
+div.sourceCode>pre {
     background: transparent;
     border: none;
     border-radius: 0;
     margin: 0;
 }
 
-/* ── Blockquote ───────────────────────────────────────── */
-blockquote {
-    border-left: 4px solid var(--border-color);
-    margin: 1.2em 0;
-    margin-left: 0;
-    padding: 0.4em 1em;
-
-    color: var(--quote-color);
-    background: var(--pre-bg);
-    border-radius: 0 10px 10px 0;
-}
-
-/* ── Tables ───────────────────────────────────────────── */
-table {
-    border-collapse: collapse;
-    width: 100%;
-    margin: 1.2em 0;
-    font-size: 0.95em;
-}
-
-th, td {
-    border: 1px solid var(--border-color);
-    padding: 0.5em 0.75em;
-    text-align: left;
-}
-
-th {
-    background: var(--th-bg);
-    font-weight: 600;
-    color: var(--heading-color);
-}
-
-tbody tr:nth-child(even) {
-    background: var(--pre-bg);
-}
-
-hr { border: none; border-top: 1px solid var(--border-color); margin: 2em 0; }
-
-/* ── Inline TOC ───────────────────────────────────────── */
-#full-toc {
-    background: var(--sidebar-bg);
-    border: 1px solid var(--sidebar-border);
-    border-radius: 12px;
-    padding: 1em 1.5em;
-    margin-bottom: 2em;
-}
-
-#full-toc summary {
-    cursor: pointer;
-    user-select: none;
-    font-size: 0.95em;
-    color: var(--heading-color);
-}
-
-#TOC ul { list-style: none; padding-left: 1.2em; }
-#TOC > ul { padding-left: 0; }
-#TOC a { color: var(--sidebar-link-text); text-decoration: none; font-size: 0.9em; }
-#TOC a:hover { color: var(--link-color); }
-
-/* ── Download links ───────────────────────────────────── */
-.download-link {
-    display: inline-block;
-    background: var(--link-color);
-    color: #fff !important;
-    padding: 0.4em 1.1em;
-    border-radius: 2em;
-    text-decoration: none;
-    font-weight: 500;
-    font-size: 0.9em;
-    margin-bottom: 1.5em;
-    margin-right: 0.5em;
-}
-
-.download-link:hover { opacity: 0.88; }
-
-/* ── Heading anchors ──────────────────────────────────── */
-.heading-anchor {
-    visibility: hidden;
-    text-decoration: none;
-    color: var(--anchor-color);
-    margin-left: 0.3em;
-    font-weight: 400;
-    font-size: 0.85em;
-}
-
-h1:hover .heading-anchor,
-h2:hover .heading-anchor,
-h3:hover .heading-anchor,
-h4:hover .heading-anchor,
-h5:hover .heading-anchor,
-h6:hover .heading-anchor {
-    visibility: visible;
-}
-
-.heading-anchor:hover {
-    color: var(--link-color);
-}
-
-#sidebar .heading-anchor,
-#TOC .heading-anchor,
-#full-toc .heading-anchor {
-    display: none;
-}
-
-/* ── Header / title block ─────────────────────────────── */
-header { margin-bottom: 2em; }
-
-.abstract {
-    background: var(--sidebar-bg);
-    border: 1px solid var(--sidebar-border);
-    border-radius: 12px;
-    padding: 1em 1.5em;
-    margin: 1.5em 0;
-    font-size: 0.95em;
-}
-
-.abstract-title {
-    font-weight: 700;
-    font-size: 1em;
-    margin-bottom: 0.5em;
-    color: var(--heading-color);
-}
-
-.author { margin: 0.3em 0; }
-.author-name { font-weight: 600; }
-.author-affiliation { font-style: italic; color: var(--author-aff); }
-.author-email { font-size: 0.9em; }
-.date { color: var(--author-aff); font-size: 0.9em; margin-top: 0.5em; }
-
-/* ── Reduced motion ───────────────────────────────────── */
-@media (prefers-reduced-motion: reduce) {
-    body, #sidebar,
-    #sidebar-nav > li > a,
-    .sidebar-subsections li a,
-    .sidebar-subsections,
-    #theme-toggle,
-    .copy-btn,
-    .skip-to-content {
-        transition: none;
-    }
-}
-
-/* ── Responsive ───────────────────────────────────────── */
-@media (max-width: 60em) {
-    #sidebar {
-        transform: translateX(-100%);
-        transition: transform 0.2s ease;
-    }
-    #sidebar.open {
-        transform: translateX(0);
-        box-shadow: 4px 0 16px rgba(0,0,0,0.2);
-    }
-    #sidebar-toggle {
-        display: block;
-    }
-    #content {
-        margin-left: 0;
-        padding: 2em 1.2em;
-        padding-top: 3.5em;
-    }
-}
-
-/* ── KaTeX math ───────────────────────────────────────── */
-.katex {
-    color: inherit;
-}
-
-.katex-display {
-    overflow-x: auto;
-    overflow-y: hidden;
-    padding: 0.2em 0;
-}
-
-/* ── Syntax highlighting (One Dark, dark mode only) ───── */
-[data-theme="dark"] code span.al { color: #e06c75; font-weight: bold; } /* Alert */
-[data-theme="dark"] code span.an { color: #d19a66; } /* Annotation */
-[data-theme="dark"] code span.at { color: #d19a66; } /* Attribute */
-[data-theme="dark"] code span.bn { color: #d19a66; } /* BaseN */
-[data-theme="dark"] code span.cf { color: #c678dd; } /* ControlFlow */
-[data-theme="dark"] code span.ch { color: #98c379; } /* Char */
-[data-theme="dark"] code span.cn { color: #d19a66; } /* Constant */
-[data-theme="dark"] code span.co { color: #5c6370; font-style: italic; } /* Comment */
-[data-theme="dark"] code span.cv { color: #e06c75; } /* CommentVar */
-[data-theme="dark"] code span.do { color: #5c6370; } /* Documentation */
-[data-theme="dark"] code span.dt { color: #e5c07b; } /* DataType */
-[data-theme="dark"] code span.dv { color: #d19a66; } /* DecVal */
-[data-theme="dark"] code span.er { color: #e06c75; } /* Error */
-[data-theme="dark"] code span.fl { color: #d19a66; } /* Float */
-[data-theme="dark"] code span.fu { color: #61afef; } /* Function */
-[data-theme="dark"] code span.in { color: #abb2bf; } /* Information */
-[data-theme="dark"] code span.kw { color: #c678dd; } /* Keyword */
-[data-theme="dark"] code span.op { color: #56b6c2; } /* Operator */
-[data-theme="dark"] code span.ot { color: #61afef; } /* Other */
-[data-theme="dark"] code span.pp { color: #c678dd; } /* Preprocessor */
-[data-theme="dark"] code span.sc { color: #56b6c2; } /* SpecialChar */
-[data-theme="dark"] code span.ss { color: #98c379; } /* SpecialString */
-[data-theme="dark"] code span.st { color: #98c379; } /* String */
-[data-theme="dark"] code span.va { color: #e06c75; } /* Variable */
-[data-theme="dark"] code span.vs { color: #98c379; } /* VerbatimString */
-[data-theme="dark"] code span.wa { color: #e06c75; } /* Warning */
-
-/* ── Images ───────────────────────────────────────────── */
-#content img {
-    max-width: 100%;
-    height: auto;
-    display: block;
-    margin: 1em 0;
-    border-radius: 8px;
-}
-
-/* ── Text selection ───────────────────────────────────── */
-::selection {
-    background: #b3d4ff;
-    color: #1f2328;
-}
-
-[data-theme="dark"] ::selection {
-    background: #264f78;
-    color: #d7dae0;
-}
-
-/* ── Sidebar scrollbar ────────────────────────────────── */
-#sidebar {
-    scrollbar-width: thin;
-    scrollbar-color: var(--border-color) transparent;
-}
-
-/* ── Print ────────────────────────────────────────────── */
-@media print {
-    #sidebar, #sidebar-toggle, #theme-toggle-container, .download-link { display: none; }
-    #content { margin: 0; padding: 1em; max-width: none; }
-    a { color: inherit; text-decoration: underline; }
-    pre { border: 1px solid #ccc; white-space: pre-wrap; }
-}
-
-/* ── Content link hover ───────────────────────────────── */
-#content a:hover {
-    text-decoration-thickness: 2px;
-}
-
-/* ── List spacing ─────────────────────────────────────── */
-#content ul > li,
-#content ol > li {
-    margin-bottom: 0.25em;
-}
-
-/* ── Superscript / footnote refs ─────────────────────── */
-sup {
-    font-size: 0.75em;
-    line-height: 0;
-    vertical-align: super;
-}
-
-/* ── Footnotes section ────────────────────────────────── */
-section.footnotes {
-    margin-top: 3em;
-    padding-top: 1em;
-    font-size: 0.875em;
-    color: var(--quote-color);
-}
-
-section.footnotes > hr {
-    display: none;
-}
-
-section.footnotes ol {
-    padding-left: 1.5em;
-    margin: 0.5em 0;
-}
-
-/* ── Skip-to-content ──────────────────────────────────── */
-.skip-to-content {
-    position: fixed;
-    top: -3em;
-    left: 0;
-    z-index: 999;
-    padding: 0.5em 1.2em;
-    background: var(--link-color);
-    color: #fff;
-    text-decoration: none;
-    border-radius: 0 0 8px 0;
-    font-size: 0.9em;
-    transition: top 0.15s ease;
-}
-
-.skip-to-content:focus {
-    top: 0;
-}
-
 /* ── Copy button ──────────────────────────────────────── */
+/* wrapper sits outside div.sourceCode so overflow:hidden doesn't clip the button */
 .code-wrapper {
     position: relative;
     margin: 1.2em 0;
@@ -599,4 +373,443 @@ section.footnotes ol {
 .copy-btn:hover {
     background: var(--sidebar-link-hover-bg);
     border-color: var(--link-color);
+}
+
+/* ── Blockquote ───────────────────────────────────────── */
+blockquote {
+    border-left: 4px solid var(--border-color);
+    margin: 1.2em 0;
+    padding: 0.4em 1em;
+    color: var(--quote-color);
+    background: var(--pre-bg);
+    border-radius: 0 10px 10px 0;
+}
+
+/* ── Tables ───────────────────────────────────────────── */
+table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 1.2em 0;
+    font-size: 0.95em;
+}
+
+th,
+td {
+    border: 1px solid var(--border-color);
+    padding: 0.5em 0.75em;
+    text-align: left;
+}
+
+th {
+    background: var(--th-bg);
+    font-weight: 600;
+    color: var(--heading-color);
+}
+
+tbody tr:nth-child(even) {
+    background: var(--pre-bg);
+}
+
+hr {
+    border: none;
+    border-top: 1px solid var(--border-color);
+    margin: 2em 0;
+}
+
+/* ── Inline TOC ───────────────────────────────────────── */
+#full-toc {
+    background: var(--sidebar-bg);
+    border: 1px solid var(--sidebar-border);
+    border-radius: 12px;
+    padding: 1em 1.5em;
+    margin-bottom: 2em;
+}
+
+#full-toc summary {
+    cursor: pointer;
+    user-select: none;
+    font-size: 0.95em;
+    color: var(--heading-color);
+}
+
+#TOC ul {
+    list-style: none;
+    padding-left: 1.2em;
+}
+
+#TOC>ul {
+    padding-left: 0;
+}
+
+#TOC a {
+    color: var(--sidebar-link-text);
+    text-decoration: none;
+    font-size: 0.9em;
+}
+
+#TOC a:hover {
+    color: var(--link-color);
+}
+
+/* ── Download links ───────────────────────────────────── */
+.download-link {
+    display: inline-block;
+    background: var(--link-color);
+    color: #fff !important;
+    /* override link colour in both themes */
+    padding: 0.4em 1.1em;
+    border-radius: 2em;
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 0.9em;
+    margin-bottom: 1.5em;
+    margin-right: 0.5em;
+}
+
+.download-link:hover {
+    opacity: 0.88;
+}
+
+/* ── Heading anchors ──────────────────────────────────── */
+.heading-anchor {
+    visibility: hidden;
+    text-decoration: none;
+    color: var(--anchor-color);
+    margin-left: 0.3em;
+    font-weight: 400;
+    font-size: 0.85em;
+}
+
+h1:hover .heading-anchor,
+h2:hover .heading-anchor,
+h3:hover .heading-anchor,
+h4:hover .heading-anchor,
+h5:hover .heading-anchor,
+h6:hover .heading-anchor {
+    visibility: visible;
+}
+
+.heading-anchor:hover {
+    color: var(--link-color);
+}
+
+/* suppress anchor links inside TOC and sidebar to avoid duplicating the link UI */
+#sidebar .heading-anchor,
+#TOC .heading-anchor,
+#full-toc .heading-anchor {
+    display: none;
+}
+
+/* ── Header / title block ─────────────────────────────── */
+header {
+    margin-bottom: 2em;
+}
+
+.abstract {
+    background: var(--sidebar-bg);
+    border: 1px solid var(--sidebar-border);
+    border-radius: 12px;
+    padding: 1em 1.5em;
+    margin: 1.5em 0;
+    font-size: 0.95em;
+}
+
+.abstract-title {
+    font-weight: 700;
+    font-size: 1em;
+    margin-bottom: 0.5em;
+    color: var(--heading-color);
+}
+
+.author {
+    margin: 0.3em 0;
+}
+
+.author-name {
+    font-weight: 600;
+}
+
+.author-affiliation {
+    font-style: italic;
+    color: var(--author-aff);
+}
+
+.author-email {
+    font-size: 0.9em;
+}
+
+.date {
+    color: var(--author-aff);
+    font-size: 0.9em;
+    margin-top: 0.5em;
+}
+
+/* ── Footnotes section ────────────────────────────────── */
+section.footnotes {
+    margin-top: 3em;
+    padding-top: 1em;
+    font-size: 0.875em;
+    color: var(--quote-color);
+}
+
+section.footnotes>hr {
+    display: none;
+    /* Pandoc inserts <hr> before footnotes; margin-top provides separation */
+}
+
+section.footnotes ol {
+    padding-left: 1.5em;
+    margin: 0.5em 0;
+}
+
+/* ── Images ───────────────────────────────────────────── */
+#content img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    margin: 1em 0;
+    border-radius: 8px;
+}
+
+/* ── Text selection ───────────────────────────────────── */
+::selection {
+    background: #b3d4ff;
+    color: #1f2328;
+}
+
+[data-theme="dark"] ::selection {
+    background: #264f78;
+    /* One Dark / VS Code dark selection colour */
+    color: #d7dae0;
+}
+
+/* ── Skip-to-content ──────────────────────────────────── */
+/* hidden off-screen; slides in on keyboard Tab focus */
+.skip-to-content {
+    position: fixed;
+    top: -3em;
+    left: 0;
+    z-index: 999;
+    padding: 0.5em 1.2em;
+    background: var(--link-color);
+    color: #fff;
+    text-decoration: none;
+    border-radius: 0 0 8px 0;
+    font-size: 0.9em;
+    transition: top 0.15s ease;
+}
+
+.skip-to-content:focus {
+    top: 0;
+}
+
+/* ── KaTeX math ───────────────────────────────────────── */
+.katex {
+    color: inherit;
+    /* prevent KaTeX default black leaking in dark mode */
+}
+
+.katex-display {
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 0.2em 0;
+}
+
+/* ── Syntax highlighting (One Dark, dark mode only) ───── */
+[data-theme="dark"] code span.al {
+    color: var(--syntax-red);
+    font-weight: bold;
+}
+
+/* Alert */
+[data-theme="dark"] code span.an {
+    color: var(--syntax-comment);
+}
+
+/* Annotation */
+[data-theme="dark"] code span.at {
+    color: var(--link-color);
+}
+
+/* Attribute */
+[data-theme="dark"] code span.bn {
+    color: var(--syntax-blue);
+}
+
+/* BaseN */
+[data-theme="dark"] code span.cf {
+    color: var(--link-color);
+}
+
+/* ControlFlow */
+[data-theme="dark"] code span.ch {
+    color: var(--syntax-green);
+}
+
+/* Char */
+[data-theme="dark"] code span.cn {
+    color: var(--syntax-comment);
+}
+
+/* Constant */
+[data-theme="dark"] code span.co {
+    color: var(--syntax-comment);
+    font-style: italic;
+}
+
+/* Comment */
+[data-theme="dark"] code span.cv {
+    color: var(--syntax-comment);
+}
+
+/* CommentVar */
+[data-theme="dark"] code span.do {
+    color: var(--syntax-comment);
+}
+
+/* Documentation */
+[data-theme="dark"] code span.dt {
+    color: var(--link-color);
+}
+
+/* DataType */
+[data-theme="dark"] code span.dv {
+    color: var(--syntax-blue);
+}
+
+/* DecVal */
+[data-theme="dark"] code span.er {
+    color: var(--syntax-red);
+}
+
+/* Error */
+[data-theme="dark"] code span.fl {
+    color: var(--syntax-blue);
+}
+
+/* Float */
+[data-theme="dark"] code span.fu {
+    color: var(--link-color);
+}
+
+/* Function */
+[data-theme="dark"] code span.in {
+    color: var(--syntax-comment);
+}
+
+/* Information */
+[data-theme="dark"] code span.kw {
+    color: var(--link-color);
+}
+
+/* Keyword */
+[data-theme="dark"] code span.op {
+    color: var(--syntax-cyan);
+}
+
+/* Operator */
+[data-theme="dark"] code span.ot {
+    color: var(--syntax-comment);
+}
+
+/* Other */
+[data-theme="dark"] code span.pp {
+    color: var(--syntax-comment);
+}
+
+/* Preprocessor */
+[data-theme="dark"] code span.sc {
+    color: var(--syntax-cyan);
+}
+
+/* SpecialChar */
+[data-theme="dark"] code span.ss {
+    color: var(--syntax-green);
+}
+
+/* SpecialString */
+[data-theme="dark"] code span.st {
+    color: var(--syntax-green);
+}
+
+/* String */
+[data-theme="dark"] code span.va {
+    color: var(--syntax-red);
+}
+
+/* Variable */
+[data-theme="dark"] code span.vs {
+    color: var(--syntax-green);
+}
+
+/* VerbatimString */
+[data-theme="dark"] code span.wa {
+    color: var(--syntax-comment);
+}
+
+/* Warning */
+
+/* ── Print ────────────────────────────────────────────── */
+@media print {
+
+    #sidebar,
+    #sidebar-toggle,
+    #theme-toggle-container,
+    .download-link {
+        display: none;
+    }
+
+    #content {
+        margin: 0;
+        padding: 1em;
+        max-width: none;
+    }
+
+    a {
+        color: inherit;
+        text-decoration: underline;
+    }
+
+    pre {
+        border: 1px solid #ccc;
+        white-space: pre-wrap;
+    }
+}
+
+/* ── Responsive ───────────────────────────────────────── */
+@media (max-width: 60em) {
+    #sidebar {
+        transform: translateX(-100%);
+        transition: transform 0.2s ease;
+    }
+
+    #sidebar.open {
+        transform: translateX(0);
+        box-shadow: 4px 0 16px rgba(0, 0, 0, 0.2);
+    }
+
+    #sidebar-toggle {
+        display: block;
+    }
+
+    #content {
+        margin-left: 0;
+        padding: 3.5em 1.2em 2em;
+    }
+}
+
+/* ── Reduced motion ───────────────────────────────────── */
+/* must come after responsive so it wins when both queries match */
+@media (prefers-reduced-motion: reduce) {
+
+    body,
+    #sidebar,
+    #sidebar-nav>li>a,
+    .sidebar-subsections li a,
+    .sidebar-subsections,
+    #theme-toggle,
+    .copy-btn,
+    .skip-to-content {
+        transition: none;
+    }
 }
