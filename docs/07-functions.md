@@ -329,6 +329,19 @@ order.
 | `abs2` | `x` | $\vert x\vert^2$ | `reals`, `complexes` |
 | `sin` | `x` | $\sin(x)$ | `reals`, `complexes` |
 | `cos` | `x` | $\cos(x)$ | `reals`, `complexes` |
+| `tan` | `x` | $\tan(x)$ | `reals`, `complexes` |
+| `asin` | `x` | $\arcsin(x)$ | `interval(-1, 1)`, `complexes` |
+| `acos` | `x` | $\arccos(x)$ | `interval(-1, 1)`, `complexes` |
+| `atan` | `x` | $\arctan(x)$ | `reals`, `complexes` |
+| `atan2` | `y`, `x` | $\operatorname{atan2}(y, x)$ | `reals` |
+| `sinh` | `x` | $\sinh(x)$ | `reals`, `complexes` |
+| `cosh` | `x` | $\cosh(x)$ | `reals`, `complexes` |
+| `tanh` | `x` | $\tanh(x)$ | `reals`, `complexes` |
+| `asinh` | `x` | $\operatorname{arsinh}(x)$ | `reals`, `complexes` |
+| `acosh` | `x` | $\operatorname{arcosh}(x)$ | `interval(1, inf)`, `complexes` |
+| `atanh` | `x` | $\operatorname{artanh}(x)$ | `interval(-1, 1)`, `complexes` |
+| `log1p` | `x` | $\ln(1 + x)$ | `interval(-1, inf)` |
+| `expm1` | `x` | $e^x - 1$ | `reals` |
 | `min` | `a`, `b` | $\min(a, b)$ | `reals` |
 | `max` | `a`, `b` | $\max(a, b)$ | `reals` |
 | `floor` | `x` | $\lfloor x \rfloor$ | `reals` |
