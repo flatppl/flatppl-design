@@ -217,6 +217,88 @@ singular axes after them.
 Given an array `A` of size `(3, 4, 5)`, `addaxes(A, 2, 3)` will return an array
 of size `(1, 1, 3, 4, 5, 1, 1, 1)` with the same content as `A`.
 
+
+**`BlockDiagMat(mats)`** constructs a block-diagonal matrix from a vector of matrices `mats`.
+Each matrix appears on a diagonal block in the output, and all off-diagonal blocks are zero.
+The resulting matrix has row and column dimensions equal to the sums of the corresponding
+dimensions of the input matrices.
+
+```flatppl
+A = [[1, 2], [3, 4]]
+B = [[5, 6, 7], [8, 9, 10]]
+M = BlockDiagMat([A, B])
+```
+
+returns a matrix equivalent to:
+
+$$\begin{pmatrix}
+1 & 2 & 0 & 0 & 0 \\
+3 & 4 & 0 & 0 & 0 \\
+0 & 0 & 5 & 6 & 7 \\
+0 & 0 & 8 & 9 & 10
+\end{pmatrix}$$
+
+**`RepBandedMat(v, nrows)`** constructs a matrix with `nrows` rows in which every row `i`
+contains the vector `v` starting at column `i` and zeros elsewhere. 
+
+```flatppl
+v = [1, 2, 3]
+A = RepBandedMat(v, 4)
+```
+
+produces the `4 x 6` matrix:
+
+$$\begin{pmatrix}
+1 & 2 & 3 & 0 & 0 & 0 \\
+0 & 1 & 2 & 3 & 0 & 0 \\
+0 & 0 & 1 & 2 & 3 & 0 \\
+0 & 0 & 0 & 1 & 2 & 3
+\end{pmatrix}$$
+
+### Convolution
+
+| Function | Arguments | Description | Domains |
+| --- | --- | --- | --- |
+| `conv` | `v`, `filter` | convolves `v` with the filter `f` | vector, vector |
+| `crosscorr` | `v`, `filter` | compute the cross correlations of `v` with the filter `f` | vector, vector |
+
+- **`conv(v, filter)`** — computes the (valid) 1D convolution of vector $\mathbf{v}$ with
+  vector `filter`, producing a shorter vector.
+
+  - `v`: input vector of numeric values.
+  - `filter`: convolution kernel vector of numeric values.
+
+  The output is a vector of length `length(v) - length(filter) + 1`, where each
+  element is the dot product of a consecutive window of `v` with the reverse of `filter`: 
+  $$\mathrm{conv}(\mathbf{v}, \mathbf{f})_i = \langle v_{i:i+\mathrm{length}(f)-1, \mathrm{reverse}(f)}\rangle$$
+
+  `conv` performs no padding, no striding, and no windowing. 
+  It must be the case that `length(filter) <= length(v)`, otherwise an error is raised.
+
+  Example:
+
+  ```flatppl
+  conv([1, 2, 3, 4], [1, 0, -1])  # [2, 2]
+  ```
+
+  - **`crosscorr(v, filter)`** — computes the (valid) 1D cross correlation of vector $\mathbf{v}$ with
+  vector `filter`, producing a shorter vector.
+
+  - `v`: input vector of numeric values.
+  - `filter`: correlation kernel vector of numeric values.
+
+  The output is a vector of length `length(v) - length(filter) + 1`, where each
+  element is the dot product of a consecutive window of `v` with `filter`: 
+  $$\mathrm{conv}(\mathbf{v}, \mathbf{f})_i = \langle v_{i:i+\mathrm{length}(f)-1, f}\rangle$$
+
+  `crosscorr` performs no padding, no striding, and no windowing. 
+  It must be the case that `length(filter) <= length(v)`, otherwise an error is raised.
+
+  Example:
+
+  ```flatppl
+  conv([1, 2, 3, 4], [1, 0, -1])  # [-2, -2]
+
 ### Scalar restrictions and constructors
 
 These functions set-restrict or construct scalar values (see
