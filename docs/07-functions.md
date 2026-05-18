@@ -338,7 +338,7 @@ order.
 | `asin` | `x` | $\arcsin(x)$ | `interval(-1, 1)`, `complexes` |
 | `acos` | `x` | $\arccos(x)$ | `interval(-1, 1)`, `complexes` |
 | `atan` | `x` | $\arctan(x)$ | `reals`, `complexes` |
-| `atan2` | `y`, `x` | $\operatorname{atan2}(y, x)$ | `reals` |
+| `atan2` | `y`, `x` | $\operatorname{atan2}(y, x)$ | `reals`, `reals` |
 | `sinh` | `x` | $\sinh(x)$ | `reals`, `complexes` |
 | `cosh` | `x` | $\cosh(x)$ | `reals`, `complexes` |
 | `tanh` | `x` | $\tanh(x)$ | `reals`, `complexes` |
@@ -446,7 +446,7 @@ passes — ensuring the invariant is always validated.
 | `inv` | `A` | $\mathbf{A}^{-1}$ | square matrices |
 | `trace` | `A` | $\mathrm{tr}(\mathbf{A})$ | square matrices |
 | `linsolve` | `A`, `b` | solve $\mathbf{A}\mathbf{x} = \mathbf{b}$ for $\mathbf{x}$ | square `A`, vector `b` |
-| `qr` | `A` | QR decomposition $\mathbf{A} = \mathbf{Q}\mathbf{R}$; returns `record(Q, R)` | matrices |
+| `qr` | `A` | QR decomposition (unpivoted) $\mathbf{A} = \mathbf{Q}\mathbf{R}$; returns `record(Q, R)` | matrices |
 | `lower_cholesky` | `A` | triangular $\mathbf{L}$ with $\mathbf{A} = \mathbf{L}\mathbf{L}^\dagger$ | positive definite `A` |
 | `row_gram` | `A` | $\mathbf{A} \mathbf{A}^\dagger$ | matrices |
 | `col_gram` | `A` | $\mathbf{A}^\dagger \mathbf{A}$ | matrices |
