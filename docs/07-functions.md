@@ -40,14 +40,14 @@ value-level operations in FlatPPL. For measure-level operations, see [measure al
   value `x` (e.g., `fill(0.0, 10)`).
 
 - **`zeros(n, m, ...)`** — creates a real-valued array of shape `n × m × ...` filled
-  with zeros. Equivalent to `fill(0, n, m, ...)`.
+  with zeros. Equivalent to `fill(0.0, n, m, ...)`.
 
 - **`ones(n, m, ...)`** — creates a real-valued array of shape `n × m × ...` filled
-  with ones. Equivalent to `fill(1, n, m, ...)`.
+  with ones. Equivalent to `fill(1.0, n, m, ...)`.
 
-- **`eye(n)`** — creates the $n \times n$ identity matrix $\mathbf{I}_n$.
+- **`eye(n)`** — creates the $n \times n$ real-valued identity matrix $\mathbf{I}_n$.
 
-- **`onehot(i, n)`** — length-$n$ basis vector $\mathbf{e}_i$ with one at position $i$ and zero
+- **`onehot(i, n)`** — length-$n$ real-valued basis vector $\mathbf{e}_i$ with one at position $i$ and zero
   elsewhere, for $i \in \{1, \ldots, n\}$.
 
 - **`linspace(from, to, n)`** — returns an endpoint-inclusive range of `n` real numbers,
@@ -191,7 +191,9 @@ $$\mathbf{M} = \begin{pmatrix} 1 & 4 \\ 2 & 5 \\ 3 & 6 \end{pmatrix}$$
 
 <!-- **`reshape(A, size, dimorder...)`** returns an array with the same data as `A` but with a new shape given by `size` and optionally a new traversal order `dimorder`. -->
 
-**`repeat(A, reps, dim)`** constructs an array by repeating `A` `reps` times along dimension `dim`.
+**`repeat(A, reps, dim)`** constructs an array by repeating `A` `reps` times along dimension `dim`. `reps` is a positive integer; `dim` is a fixed positive integer in $\{1, \ldots, \mathrm{ndims}(A)\}$.
+
+For example, `repeat([1, 2, 3], 3, 1)` produces `[1, 2, 3, 1, 2, 3, 1, 2, 3]`. For a matrix `M` of shape `(1, 3)`, `repeat(M, 2, 1)` produces a shape-`(2, 3)` matrix (rows repeated); `repeat(M, 2, 2)` produces a shape-`(1, 6)` matrix (columns repeated), and `repeat(M, 2, 3)` produces a shape-`(1, 3, 2)` tensor.
 
 **`partition(xs, spec)`** splits a vector `xs` into a vector of sub-vectors. The
 second argument `spec` may be:
@@ -228,8 +230,8 @@ The resulting matrix has row and column dimensions equal to the sums of the corr
 dimensions of the input matrices.
 
 ```flatppl
-A = [[1, 2], [3, 4]]
-B = [[5, 6, 7], [8, 9, 10]]
+A = rowstack([[1, 2], [3, 4]])
+B = rowstack([[5, 6, 7], [8, 9, 10]])
 M = block_diag_mat([A, B])
 ```
 
@@ -311,12 +313,12 @@ These functions set-restrict or construct scalar values (see
 
 | Function | Arguments | Description | Domains |
 | --- | --- | --- | --- |
-| `boolean` | `x` | returns `x` when `x in booleans` | any scalar numeric |
-| `integer` | `x` | returns `x` when `x in integers` | any scalar numeric |
-| `real` | `x` | returns `x` (or $\mathrm{Re}(x)$ for complex) | any scalar numeric |
+| `boolean` | `x` | returns `x` when `x in booleans`, otherwise a static error | any scalar numeric |
+| `integer` | `x` | returns `x` when `x in integers`, otherwise a static error | any scalar numeric |
+| `real` | `x` | returns `x` for real `x`, $\mathrm{Re}(x)$ for complex `x` | any scalar numeric |
 | `complex` | `re`, `im` | $\mathrm{re} + i \cdot \mathrm{im}$ | `reals` |
-| `string` | `x` | returns `x` | `string` |
-| `imag` | `x` | $\mathrm{Im}(x)$ | `reals`, `complexes` |
+| `string` | `x` | identity on strings | `string` |
+| `imag` | `x` | $\mathrm{Im}(x)$ (returns `0` for real `x`) | `reals`, `complexes` |
 
 ### Elementary functions
 
@@ -364,11 +366,10 @@ order.
 | `invprobit` | `x` | $\Phi(x)$, standard-normal CDF | `reals` |
 
 For complex arguments, `log` and `sqrt` use the principal branch ($\arg(z) \in (-\pi, \pi]$).
-`pow` extends via $z^w = e^{w \log z}$ (principal branch); either or both arguments may be
-complex.
-
+`pow` (listed in the [operator-equivalent functions](#operator-equivalent-functions) table below) extends via $z^w = e^{w \log z}$ (principal branch); either or both arguments may be complex.
 `logit` and `probit` evaluate to `-inf` at $p = 0$ and `inf` at $p = 1$.
 `log1p` evaluates to `-inf` at $x = -1$.
+`atan2(0, 0)` returns `0`.
 
 ### Operator-equivalent functions
 
@@ -382,7 +383,7 @@ be passed as arguments to higher-order functions like `broadcast`, `reduce` and 
 |---|---|---|---|
 | `add` | `a`, `b` | `a + b` | scalars or arrays of same shape (real or complex) |
 | `sub` | `a`, `b` | `a - b` | scalars or arrays of same shape (real or complex) |
-| `mul` | `a`, `b` | `a * b` | scalars; matrix/matrix and matrix/vector products |
+| `mul` | `a`, `b` | `a * b` | scalars, matrix-matrix, matrix-vector, scalar-matrix, scalar-vector, transposedvector-vector |
 | `divide` | `a`, `b` | `a / b` | scalars (real or complex) |
 | `neg` | `x` | `-x` | scalars or arrays (real or complex) |
 | `pow` | `base`, `exponent` | `base ^ exponent` | scalars (real or complex; complex extension via principal branch, see above) |
@@ -445,14 +446,14 @@ passes — ensuring the invariant is always validated.
 | `logabsdet` | `A` | $\log\lvert\det(\mathbf{A})\rvert$ | square matrices |
 | `inv` | `A` | $\mathbf{A}^{-1}$ | square matrices |
 | `trace` | `A` | $\mathrm{tr}(\mathbf{A})$ | square matrices |
-| `linsolve` | `A`, `b` | solve $\mathbf{A}\mathbf{x} = \mathbf{b}$ for $\mathbf{x}$ | square `A`, vector `b` |
-| `qr` | `A` | QR decomposition (unpivoted) $\mathbf{A} = \mathbf{Q}\mathbf{R}$; returns `record(Q, R)` | matrices |
-| `lower_cholesky` | `A` | triangular $\mathbf{L}$ with $\mathbf{A} = \mathbf{L}\mathbf{L}^\dagger$ | positive definite `A` |
+| `linsolve` | `A`, `b` | solve $\mathbf{A}\mathbf{x} = \mathbf{b}$ for $\mathbf{x}$ (engines raise a runtime error if `A` is singular) | square `A`, vector `b` |
+| `qr` | `A` | QR decomposition (unpivoted) $\mathbf{A} = \mathbf{Q}\mathbf{R}$; for $m \times n \mathbf{A}$ with $m \geq n$, $\mathbf{Q}$ is $m \times n$ with orthonormal columns and $\mathbf{R}$ is $n \times n$ upper-triangular; returns `record(Q, R)` | $m \times n, m \geq n$ matrices |
+| `lower_cholesky` | `A` | lower-triangular $\mathbf{L}$ with $\mathbf{A} = \mathbf{L}\mathbf{L}^\dagger$ and positive diagonal entries | positive definite `A` |
 | `row_gram` | `A` | $\mathbf{A} \mathbf{A}^\dagger$ | matrices |
 | `col_gram` | `A` | $\mathbf{A}^\dagger \mathbf{A}$ | matrices |
 | `self_outer` | `x` | $\mathbf{x} \cdot \mathbf{x}^\dagger$ (outer product) | vectors |
 | `diagmat` | `x` | $\mathrm{diag}(x_1, \ldots, x_n)$ | vectors |
-| `diag` | `A`, `k` | extracts the $k$th diagonal of $\mathbf{A}$ ($k=0$ for main, $k>0$ for super-diagonals, $k < 0$ for sub-diagonals) | matrices, integer|
+| `diag` | `A`, `k` | extracts the $k$th diagonal of $\mathbf{A}$ as a vector ($k=0$ for the main diagonal, $k>0$ for super-diagonals, $k<0$ for sub-diagonals); when called as `diag(A)`, `k` defaults to `0` | matrices, integer |
 | `quadform` | `A`, `x` | $\mathbf{x}^\dagger \mathbf{A} \mathbf{x}$ | square `A`, vector `x` |
 
 Matrix multiplication and addition use the standard `*` and `+` operators.
@@ -477,7 +478,17 @@ complex-conjugated elements.
 | `cumprod` | `xs` | cumulative product $(x_1, x_1 x_2, \dots)$ | vectors |
 | `maximum` | `xs` | $\max_i x_i$ | real arrays |
 | `minimum` | `xs` | $\min_i x_i$ | real arrays |
-| `length` | `xs` | number of elements / rows | arrays, tables |
+| `length` | `x` | number of elements (1D array / vector) / rows (multi-dim array or table) | vectors, arrays, tables |
+| `size` | `x` | returns the dimensions of `x` in a vector| vector, arrays |
+
+`length` on a multi-dimensional array returns the size of the first axis. To obtain
+shape information for higher-dimensional arrays, use size;
+
+```flatppl
+x = rowstack([1, 2, 3], [4, 5, 6])
+l = length(x)  # 2
+s = size(x) # [2, 3]
+```
 
 **Table reductions.** When `sum`, `mean`, or `var` is applied to a table, the
 reduction operates column-wise and returns a record whose fields are the
@@ -512,6 +523,8 @@ the reduction operation.
 | Function | Arguments | Description | Domains |
 |---|---|---|---|
 | `ifelse` | `cond`, `a`, `b` | returns `a` if `cond` is true, `b` otherwise | `cond`: `booleans`; `a`, `b`: `anything` |
+
+**Note.** There is no guaranteed short circuit evaluation for `ifelse`; FlatPPL is a static-DAG language and both branches of `ifelse(cond, a, b)` and both operands of `land`/`lor` are part of the computational graph and contribute to the model structure. Engines may optimize evaluation of unused branches, but expressions like `ifelse(x == 0, 0, 1/x)` are not safe — the `1/x` branch is still constructed and may produce `inf`/`nan` even when the corresponding `cond` is false. 
 
 ### Membership, filtering, and bin selection
 
@@ -566,16 +579,23 @@ the reduction operation.
 
 ### Approximation functions
 
-**`polynomial(coefficients, x)`** — power-series polynomial $\sum a_i x^i$.
-Non-negativity over the intended support is the user's responsibility.
+**`polynomial(coefficients, x)`** — power-series polynomial evaluated at `x`:
 
-**`bernstein(coefficients, x)`** — Bernstein basis polynomial, guaranteed non-negative
-when all coefficients are non-negative. Defined on $[0, 1]$; the support interval of
-the surrounding `Lebesgue` provides the rescaling range.
+$$p(x) = \sum_{i=0}^{n-1} c_{i+1} \, x^i = c_1 + c_2 \, x + c_3 \, x^2 + \cdots + c_n \, x^{n-1}$$
+
+where `coefficients` is a length-$n$ vector $[c_1, c_2, \ldots, c_n]$. The first element is the constant term; the $i$-th element is the coefficient of $x^{i-1}$. Non-negativity over the intended support is the user's responsibility.
+
+**`bernstein(coefficients, x)`** — Bernstein basis polynomial of degree $n = \mathrm{length}(\mathrm{coefficients}) - 1$, evaluated at `x`:
+
+$$B(x) = \sum_{k=0}^{n} c_{k+1} \binom{n}{k} x^k (1 - x)^{n-k}$$
+
+where `coefficients` is a length-$(n+1)$ vector $[c_1, \ldots, c_{n+1}]$ giving the Bernstein-basis coefficients in degree order. Defined on $x \in [0, 1]$; the support interval of the surrounding `Lebesgue` (in `normalize(weighted(fn(bernstein(...)), Lebesgue(support = interval(lo, hi))))`) provides the rescaling range. Guaranteed non-negative on $[0, 1]$ when all coefficients are non-negative.
 
 **`stepwise(edges, values, x)`** — piecewise-constant step function. Strictly
 piecewise constant (no implicit interpolation). The length of vector `values`
 must be one less than the length of vector `edges`.
+
+For edges $e_1 < e_2 < \ldots < e_{n+1}$ and values $v_1, \ldots, v_n$, the function returns $v_i$ when $x \in [e_i, e_{i+1})$ for $i \in \{1, \ldots, n-1\}$, and $v_n$ when $x \in [e_n, e_{n+1}]$ (last bin closed on the right; same convention as [`bincounts`](#binning)). 
 
 ### <a id="sec:random"></a>Random value generation
 
@@ -606,7 +626,7 @@ more_random_data, rstate3 = rand(rstate2, iid(Exponential(1), 5))
   Returns a value in the set `rngstates`.
 
   `rngseed` must be a seed vector of bytes (integers in $\{0, \ldots, 255\}$).
-  Any vector is accepted; a seed length of 32 bytes provides sufficient entropy
+  Any non-empty vector is accepted; a seed length of 32 bytes provides sufficient entropy
   for virtually all modern RNG algorithms.
 
 - **`rand(rstate, m)`** — generates a random value from a closed measure `m` using RNG
