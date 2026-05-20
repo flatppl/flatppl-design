@@ -23,6 +23,13 @@ try {
   if (result.status !== 0) { throw new Error('npm install katex exited with code ' + result.status); }
   fs.mkdirSync(outDir, { recursive: true });
   fs.cpSync(path.join(tmpDir, 'node_modules', 'katex', 'dist'), outDir, { recursive: true });
+  // katex.min.css only uses woff2; remove ttf and woff to save ~876KB
+  const fontsDir = path.join(outDir, 'fonts');
+  for (const f of fs.readdirSync(fontsDir)) {
+    if (f.endsWith('.ttf') || (f.endsWith('.woff') && !f.endsWith('.woff2'))) {
+      fs.unlinkSync(path.join(fontsDir, f));
+    }
+  }
 } finally {
   fs.rmSync(tmpDir, { recursive: true, force: true });
 }

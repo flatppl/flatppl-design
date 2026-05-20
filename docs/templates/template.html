@@ -26,7 +26,7 @@
       var t;
       /* Storage may be blocked (opaque origins, private mode restrictions, etc.);
          silence the error and fall through to the system preference. */
-      try { t = localStorage.getItem('theme'); } catch (e) {}
+      try { t = localStorage.getItem('theme'); } catch (e) { }
       if (!t) { t = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'; }
       document.documentElement.setAttribute('data-theme', t);
     })();
@@ -48,13 +48,15 @@
 <body>
   <a class="skip-to-content" href="#content">Skip to content</a>
   <nav id="sidebar" role="navigation" aria-label="Section navigation">
-    <div id="sidebar-title">$pagetitle$<button id="sidebar-collapse" aria-label="Collapse sidebar">&#x2039;</button></div>
+    <div id="sidebar-title"><span id="sidebar-title-text">$pagetitle$</span><button id="sidebar-collapse"
+        aria-label="Collapse sidebar">&#x2039;</button></div>
     <ul id="sidebar-nav"></ul>
     <div id="theme-toggle-container">
       <button id="theme-toggle" aria-label="Toggle color theme">Theme</button>
     </div>
   </nav>
   <button id="sidebar-toggle" aria-label="Toggle navigation">&#9776;</button>
+  <div id="sidebar-backdrop"></div>
   <main id="content" tabindex="-1">
     $for(include-before)$
     $include-before$
@@ -153,22 +155,23 @@
         sectionItems.push({ li: li, id: h.id, subIds: subIds });
       });
 
-      // Collect all trackable ids for scroll spy
-      var allIds = [];
+      // Cache element refs once — no getElementById on every scroll tick
+      var allEls = [];
       sectionItems.forEach(function (s) {
-        allIds.push(s.id);
-        s.subIds.forEach(function (sid) { allIds.push(sid); });
+        var el = document.getElementById(s.id);
+        if (el) allEls.push({ id: s.id, el: el });
+        s.subIds.forEach(function (sid) {
+          var subEl = document.getElementById(sid);
+          if (subEl) allEls.push({ id: sid, el: subEl });
+        });
       });
 
       var lastActive = '';
       function updateActive() {
         var scrollY = window.scrollY || window.pageYOffset;
         var current = '';
-        allIds.forEach(function (id) {
-          var el = document.getElementById(id);
-          if (el && el.offsetTop <= scrollY + 80) {
-            current = id;
-          }
+        allEls.forEach(function (item) {
+          if (item.el.offsetTop <= scrollY + 80) current = item.id;
         });
 
         if (current && current !== lastActive) {
@@ -200,13 +203,20 @@
           });
         });
       }
-      window.addEventListener('scroll', updateActive, { passive: true });
+      var rafPending = false;
+      window.addEventListener('scroll', function () {
+        if (!rafPending) {
+          rafPending = true;
+          requestAnimationFrame(function () { rafPending = false; updateActive(); });
+        }
+      }, { passive: true });
       updateActive();
 
       // Sidebar toggle (mobile hamburger / wide-screen reopen)
       var toggle = document.getElementById('sidebar-toggle');
       var sidebar = document.getElementById('sidebar');
       var collapseBtn = document.getElementById('sidebar-collapse');
+      var backdrop = document.getElementById('sidebar-backdrop');
       var mobileMediaQuery = window.matchMedia('(max-width: 60em)');
       toggle.setAttribute('aria-controls', 'sidebar');
       toggle.setAttribute('aria-expanded', 'false');
@@ -220,6 +230,13 @@
         else { sidebar.removeAttribute('inert'); }
       }
 
+      function saveSidebarState(hidden) {
+        try {
+          if (hidden) { localStorage.setItem('sidebar-hidden', '1'); }
+          else { localStorage.removeItem('sidebar-hidden'); }
+        } catch (e) { }
+      }
+
       // Mobile: toggle open/close; Wide: always opens (collapse btn handles closing)
       toggle.addEventListener('click', function () {
         if (mobileMediaQuery.matches) {
@@ -228,6 +245,7 @@
         } else {
           document.body.classList.remove('sidebar-hidden');
           toggle.setAttribute('aria-expanded', 'true');
+          saveSidebarState(false);
         }
         updateSidebarInert();
       });
@@ -235,6 +253,14 @@
       // Wide-screen collapse button (lives inside sidebar)
       collapseBtn.addEventListener('click', function () {
         document.body.classList.add('sidebar-hidden');
+        toggle.setAttribute('aria-expanded', 'false');
+        saveSidebarState(true);
+        updateSidebarInert();
+      });
+
+      // Backdrop tap closes sidebar on mobile
+      backdrop.addEventListener('click', function () {
+        sidebar.classList.remove('open');
         toggle.setAttribute('aria-expanded', 'false');
         updateSidebarInert();
       });
@@ -254,6 +280,15 @@
         }
         updateSidebarInert();
       });
+
+      // Restore persisted sidebar collapse (wide screen only)
+      try {
+        if (!mobileMediaQuery.matches && localStorage.getItem('sidebar-hidden') === '1') {
+          document.body.classList.add('sidebar-hidden');
+          toggle.setAttribute('aria-expanded', 'false');
+        }
+      } catch (e) { }
+
       updateSidebarInert();
 
       // Theme toggle
@@ -333,6 +368,80 @@
       document.querySelectorAll('pre').forEach(function (block) {
         if (block.closest('div.sourceCode')) return;
         addCopyButton(block, function () { return block.innerText; });
+      });
+    })();
+
+    // Heading anchor links (#)
+    (function () {
+      document.querySelectorAll('#content h1[id], #content h2[id], #content h3[id], #content h4[id], #content h5[id], #content h6[id]').forEach(function (h) {
+        var a = document.createElement('a');
+        a.className = 'heading-anchor';
+        a.href = '#' + h.id;
+        a.setAttribute('aria-label', 'Link to this section');
+        a.textContent = '#';
+        h.appendChild(a);
+      });
+    })();
+
+    // Wrap tables for horizontal scroll on narrow viewports
+    (function () {
+      document.querySelectorAll('#content table').forEach(function (table) {
+        var wrapper = document.createElement('div');
+        wrapper.className = 'table-wrapper';
+        table.parentNode.insertBefore(wrapper, table);
+        wrapper.appendChild(table);
+      });
+    })();
+
+    // Footnote hover tooltips
+    (function () {
+      var tip = document.createElement('div');
+      tip.className = 'footnote-tooltip';
+      tip.setAttribute('role', 'tooltip');
+      tip.id = 'fn-tooltip';
+      document.body.appendChild(tip);
+
+      var activeFn = null;
+
+      function hide() { tip.style.display = 'none'; activeFn = null; }
+
+      function place(x, y) {
+        tip.style.left = '0'; tip.style.top = '0';
+        var tw = tip.offsetWidth, th = tip.offsetHeight;
+        if (x + tw + 16 > window.innerWidth) x = x - tw - 12;
+        if (y + th + 16 > window.innerHeight) y = y - th - 8;
+        tip.style.left = Math.max(4, x) + 'px';
+        tip.style.top = Math.max(4, y) + 'px';
+      }
+
+      document.querySelectorAll('a.footnote-ref').forEach(function (ref) {
+        var targetId = ref.getAttribute('href').replace(/^#/, '');
+        var fn = document.getElementById(targetId);
+        if (!fn) return;
+        var clone = fn.cloneNode(true);
+        var back = clone.querySelector('.footnote-back');
+        if (back) back.parentNode.removeChild(back);
+        var text = clone.textContent.trim();
+        ref.setAttribute('aria-describedby', 'fn-tooltip');
+
+        ref.addEventListener('mouseenter', function (e) {
+          activeFn = ref;
+          tip.textContent = text;
+          tip.style.display = 'block';
+          place(e.clientX + 14, e.clientY + 14);
+        });
+        ref.addEventListener('mousemove', function (e) {
+          if (activeFn === ref) place(e.clientX + 14, e.clientY + 14);
+        });
+        ref.addEventListener('mouseleave', hide);
+        ref.addEventListener('focus', function () {
+          activeFn = ref;
+          tip.textContent = text;
+          tip.style.display = 'block';
+          var r = ref.getBoundingClientRect();
+          place(r.left, r.bottom + 6);
+        });
+        ref.addEventListener('blur', hide);
       });
     })();
   </script>
