@@ -104,6 +104,21 @@ Parameters:
 - `alpha = elementof(posreals)`: transition point (in units of $\sigma$).
 - `n = elementof(posreals)`: power-law exponent.
 
+Density w.r.t. `Lebesgue(reals)`:
+
+$$\frac{1}{\mathcal{M}}\begin{cases}
+A\left(B - \frac{x - m_0}{\sigma}\right)^{-n}, & \quad \frac{x - m_0}{\sigma} < -\alpha\\
+\exp\left(-\frac{1}{2}\left(\frac{x - m_0}{\sigma}\right)^2\right), & \quad \frac{x - m_0}{\sigma} \leq 0\\
+\exp\left(-\frac{1}{2}\left(\frac{x - m_0}{\sigma}\right)^2\right), & \quad \frac{x - m_0}{\sigma} \leq \alpha\\
+A\left(B - \frac{x - m_0}{\sigma}\right)^{-n}, & \quad \text{otherwise}
+\end{cases} \quad \text{for } x \in \mathbb{R}$$
+
+where 
+
+$$A = \left(\frac{n}{|\alpha|}\right)^{n}\exp\left(-\frac{|\alpha|^2}{2}\right), \quad B = \frac{n}{|\alpha|} - |\alpha|,$$
+ 
+$\mathcal{M}$ is a normalizing constant, and $(m_0, \sigma, \alpha, n)$ is equal to `(m0, sigma, alpha, n)`.
+
 <a id="doublesidedcrystalball"></a>**`DoubleSidedCrystalBall(m0, sigmaL, sigmaR, alphaL, nL, alphaR, nR)`** — The double-sided [Crystal Ball distribution](https://en.wikipedia.org/wiki/Crystal_Ball_function): Gaussian core with independent power-law tails on both sides.
 
 Domain/Support: `reals`/`reals`.
@@ -115,6 +130,20 @@ Parameters:
 - `alphaL = elementof(posreals)`, `alphaR = elementof(posreals)`: left/right transition points.
 - `nL = elementof(posreals)`, `nR = elementof(posreals)`: left/right power-law exponents.
 
+Density w.r.t. `Lebesgue(reals)`:
+
+$$\frac{1}{\mathcal{M}}\begin{cases}
+A_L\left(B_L - \frac{x - m_0}{\sigma_L}\right)^{-n_L}, & \quad \frac{x - m_0}{\sigma_L} < -\alpha_L\\
+\exp\left(-\frac{1}{2}\left(\frac{x - m_0}{\sigma_R}\right)^2\right), & \quad \frac{x - m_0}{\sigma_R} \leq \alpha_R\\
+A_R\left(B_R - \frac{x - m_0}{\sigma_R}\right)^{-n_R}, & \quad \text{otherwise}
+\end{cases} \quad \text{for } x \in \mathbb{R}$$
+
+where 
+
+$$A_i = \left(\frac{n_i}{|\alpha_i|}\right)^{n_i}\exp\left(-\frac{|\alpha_i|^2}{2}\right), \quad B_i = \frac{n_i}{|\alpha_i|} - |\alpha_i|,$$
+ 
+$\mathcal{M}$ is a normalizing constant, and $(m_0, \sigma_L, \sigma_R, \alpha_L, \alpha_R, n_l, n_r)$ is equal to `(m0, sigmaL, sigmaR, alphaL, alphaR, nL, nR)`.
+
 <a id="argus"></a>**`Argus(resonance, slope, power)`** — The [ARGUS distribution](https://en.wikipedia.org/wiki/ARGUS_distribution).
 
 Domain/Support: `reals`/`interval(0, resonance)`.
@@ -125,6 +154,12 @@ Parameters:
 - `slope = elementof(reals)`: slope parameter.
 - `power = elementof(posreals)`: power parameter (typically 0.5).
 
+Density w.r.t. `Lebesgue(reals)`:
+
+$$\frac{1}{\mathcal{M}} \cdot x \cdot \left[ 1 - \left( \frac{x}{m_0} \right)^2 \right]^p \cdot \exp\left[ c \cdot \left(1 - \left(\frac{x}{m_0}\right)^2 \right) \right] \quad \text{for } x > 0,$$
+
+where $(m_0, c, p)$ is equal to `(resonance, slope, power)`, and $\mathcal{M}$ is a normalizing constant.
+
 <a id="relativisticbreitwigner"></a>**`RelativisticBreitWigner(mean, width)`** — The [relativistic Breit-Wigner distribution](https://en.wikipedia.org/wiki/Relativistic_Breit%E2%80%93Wigner_distribution).
 
 Domain/Support: `reals`/`posreals`.
@@ -133,6 +168,11 @@ Parameters:
 
 - `mean = elementof(posreals)`: resonance mass $m$.
 - `width = elementof(posreals)`: full width $\Gamma$.
+
+Density w.r.t. `Lebesgue(reals)`:
+
+$$\frac{1}{\mathcal{M}}\frac{1}{\left(x^2 - m^2\right)^2 + m^2w^2}, \quad \text{for } x > 0,$$
+where $\mathcal{M} = \frac{\pi\sqrt{m^2 + \gamma}}{2\sqrt{2}mw\gamma}, \gamma = \sqrt{m^2\left(m^2 + w^2\right)},$ with $(m, w)$ equal to `(mean, width)`.
 
 <a id="voigtian"></a>**`Voigtian(mean, width, sigma)`** — The [Voigt profile](https://en.wikipedia.org/wiki/Voigt_profile): convolution of a Cauchy (Lorentzian) and a Gaussian.
 
@@ -144,6 +184,11 @@ Parameters:
 - `width = elementof(posreals)`: Cauchy full width $\Gamma$.
 - `sigma = elementof(posreals)`: Gaussian resolution.
 
+Density w.r.t. `Lebesgue(reals)`:
+
+$$\frac{\mathrm{Re}\left(w\left(\frac{x - \mu + i\Gamma}{\sigma \sqrt{2}}\right)\right)}{\sigma \sqrt{2\pi}},$$
+where $w(z) = \exp\left(-z^2\right)\mathrm{erfc}\left(-iz\right)$ is the Faddeeva function, and $(\mu, \Gamma, \sigma)$ is equal to `(mean, width, sigma)`.
+
 <a id="bifurcatedgaussian"></a>**`BifurcatedGaussian(mean, sigmaL, sigmaR)`** — [Split normal distribution](https://en.wikipedia.org/wiki/Split_normal_distribution): Gaussian with different widths on left and right sides.
 
 Domain/Support: `reals`/`reals`.
@@ -153,6 +198,11 @@ Parameters:
 - `mean = elementof(reals)`: peak position.
 - `sigmaL = elementof(posreals)`: left-side width.
 - `sigmaR = elementof(posreals)`: right-side width.
+
+Density w.r.t. `Lebesgue(reals)`
+
+$$\frac{\sqrt{2/\pi}}{\sigma_L + \sigma_R}\exp\left(-\frac{\left(x - \mu\right)^2}{2\left(\mathbf{I}_{x<\mu}\sigma_L^2 + \mathbf{I}_{x\geq\mu}\sigma_R^2\right)}\right),$$
+where $(\mu, \sigma_L, \sigma_R)$ is equal to `(mean, sigmaL, sigmaR)`.
 
 <a id="continuedpoisson"></a>**`ContinuedPoisson(rate)`** — Continuous extension of `Poisson` to the reals.
 `ContinuedPoisson` is not normalized, and so not a probability measure. At
@@ -168,6 +218,10 @@ Domain/Support: `reals`/`nonnegreals`.
 Parameters:
 
 - `rate = elementof(nonnegreals)`: expected count $\lambda$.
+
+Density w.r.t. `Lebesgue(reals)`:
+
+$$\frac{\lambda^x e^{-\lambda}}{\Gamma(k+1)} \quad \text{for } x > 0$$
 
 ### Module `generalized-linear-models`
 
