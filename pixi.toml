@@ -36,7 +36,7 @@ build-pdf = { cmd = "typst compile build/flatppl-design.typ build/flatppl-design
 build-md = { cmd = "pandoc docs/0[0-9]-*.md docs/1[0-9]-*.md -t markdown -o build/flatppl-design.md --standalone --lua-filter=docs/templates/strip-file-refs.lua --lua-filter=docs/templates/html-anchors.lua && sed -i 's/^``` /```/g' build/flatppl-design.md", depends-on = [
     "_mkdir",
 ] }
-build-typst = { cmd = "pandoc build/flatppl-design.md -t typst -o build/flatppl-design.typ --standalone --toc --toc-depth=2 --number-sections --shift-heading-level-by=-1 --lua-filter=docs/templates/typst-code-blocks.lua --include-in-header=docs/templates/typst-header.typ", depends-on = [
+build-typst = { cmd = "pandoc build/flatppl-design.md -t typst -o build/flatppl-design.typ --standalone --toc --toc-depth=2 --number-sections --shift-heading-level-by=-1 --lua-filter=docs/templates/typst-code-blocks.lua --include-in-header=docs/templates/typst-header.typ && sed -i 's/times\\.circle/times.o/g' build/flatppl-design.typ && sed -i 's/\\bsect\\b/inter/g' build/flatppl-design.typ && sed -i '/^<references>$/d' build/flatppl-design.typ", depends-on = [
     "build-md",
 ] }
 build = { depends-on = ["build-html", "build-pdf", "build-md", "build-typst"] }
