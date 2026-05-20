@@ -88,17 +88,38 @@ body {
     flex-direction: column;
     scrollbar-width: thin;
     scrollbar-color: var(--border-color) transparent;
-    transition: background-color 0.15s ease, border-color 0.15s ease;
+    transition: background-color 0.15s ease, border-color 0.15s ease, transform 0.2s ease;
 }
 
 #sidebar-title {
     font-weight: 700;
     font-size: 0.9em;
-    padding: 0 1em 0.8em;
+    padding: 0 0.5em 0.8em 1em;
     border-bottom: 1px solid var(--sidebar-border);
     margin-bottom: 0.5em;
     color: var(--heading-color);
     line-height: 1.4;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.5em;
+}
+
+#sidebar-collapse {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--sidebar-sub-text);
+    font-size: 1.3em;
+    line-height: 1;
+    padding: 0;
+    flex-shrink: 0;
+    opacity: 0.6;
+    transition: opacity 0.15s ease;
+}
+
+#sidebar-collapse:hover {
+    opacity: 1;
 }
 
 #sidebar-nav {
@@ -204,7 +225,6 @@ body {
 }
 
 #sidebar-toggle {
-    display: none;
     position: fixed;
     top: 0.5em;
     left: 0.5em;
@@ -216,6 +236,12 @@ body {
     font-size: 1.2em;
     cursor: pointer;
     color: var(--text-color);
+    opacity: 0.6;
+    transition: left 0.2s ease, opacity 0.15s ease;
+}
+
+#sidebar-toggle:hover {
+    opacity: 1;
 }
 
 /* ── Content ──────────────────────────────────────────── */
@@ -223,6 +249,14 @@ body {
     margin-left: 16em;
     max-width: 52rem;
     padding: 2em 2em 4em 3em;
+}
+
+body.sidebar-hidden #sidebar {
+    transform: translateX(-100%);
+}
+
+body.sidebar-hidden #content {
+    margin-left: 0;
 }
 
 /* ── Typography ───────────────────────────────────────── */
@@ -790,6 +824,29 @@ section.footnotes ol {
     }
 }
 
+/* On wide screens, collapse btn (inside sidebar) handles closing;
+   toggle only shown as reopen button when sidebar is hidden */
+@media (min-width: 60em) {
+    #sidebar-toggle {
+        display: none;
+    }
+
+    body.sidebar-hidden #sidebar-toggle {
+        display: block;
+        left: 0.5em;
+    }
+
+    #sidebar-collapse {
+        display: block;
+    }
+}
+
+@media (max-width: 60em) {
+    #sidebar-collapse {
+        display: none;
+    }
+}
+
 /* ── Responsive ───────────────────────────────────────── */
 @media (max-width: 60em) {
     #sidebar {
@@ -802,8 +859,8 @@ section.footnotes ol {
         box-shadow: 4px 0 16px rgba(0, 0, 0, 0.2);
     }
 
-    #sidebar-toggle {
-        display: block;
+    #sidebar.open ~ #sidebar-toggle {
+        left: calc(16em + 0.5em);
     }
 
     #content {
@@ -818,6 +875,8 @@ section.footnotes ol {
 
     body,
     #sidebar,
+    #sidebar-toggle,
+    #sidebar-collapse,
     #sidebar-nav>li>a,
     .sidebar-subsections li a,
     .sidebar-subsections,

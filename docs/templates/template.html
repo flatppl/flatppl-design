@@ -48,7 +48,7 @@
 <body>
   <a class="skip-to-content" href="#content">Skip to content</a>
   <nav id="sidebar" role="navigation" aria-label="Section navigation">
-    <div id="sidebar-title">$pagetitle$</div>
+    <div id="sidebar-title">$pagetitle$<button id="sidebar-collapse" aria-label="Collapse sidebar">&#x2039;</button></div>
     <ul id="sidebar-nav"></ul>
     <div id="theme-toggle-container">
       <button id="theme-toggle" aria-label="Toggle color theme">Theme</button>
@@ -203,32 +203,57 @@
       window.addEventListener('scroll', updateActive, { passive: true });
       updateActive();
 
-      // Toggle sidebar on mobile
+      // Sidebar toggle (mobile hamburger / wide-screen reopen)
       var toggle = document.getElementById('sidebar-toggle');
       var sidebar = document.getElementById('sidebar');
+      var collapseBtn = document.getElementById('sidebar-collapse');
       var mobileMediaQuery = window.matchMedia('(max-width: 60em)');
       toggle.setAttribute('aria-controls', 'sidebar');
       toggle.setAttribute('aria-expanded', 'false');
 
       function updateSidebarInert() {
-        if (mobileMediaQuery.matches && !sidebar.classList.contains('open')) {
-          sidebar.setAttribute('inert', '');
-        } else {
-          sidebar.removeAttribute('inert');
-        }
+        var narrow = mobileMediaQuery.matches;
+        var hidden = narrow
+          ? !sidebar.classList.contains('open')
+          : document.body.classList.contains('sidebar-hidden');
+        if (hidden) { sidebar.setAttribute('inert', ''); }
+        else { sidebar.removeAttribute('inert'); }
       }
 
+      // Mobile: toggle open/close; Wide: always opens (collapse btn handles closing)
       toggle.addEventListener('click', function () {
-        var isOpen = sidebar.classList.toggle('open');
-        toggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+        if (mobileMediaQuery.matches) {
+          var isOpen = sidebar.classList.toggle('open');
+          toggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+        } else {
+          document.body.classList.remove('sidebar-hidden');
+          toggle.setAttribute('aria-expanded', 'true');
+        }
         updateSidebarInert();
       });
+
+      // Wide-screen collapse button (lives inside sidebar)
+      collapseBtn.addEventListener('click', function () {
+        document.body.classList.add('sidebar-hidden');
+        toggle.setAttribute('aria-expanded', 'false');
+        updateSidebarInert();
+      });
+
       nav.addEventListener('click', function () {
         sidebar.classList.remove('open');
         toggle.setAttribute('aria-expanded', 'false');
         updateSidebarInert();
       });
-      mobileMediaQuery.addEventListener('change', updateSidebarInert);
+      mobileMediaQuery.addEventListener('change', function (e) {
+        if (e.matches) {
+          document.body.classList.remove('sidebar-hidden');
+          toggle.setAttribute('aria-expanded', sidebar.classList.contains('open') ? 'true' : 'false');
+        } else {
+          sidebar.classList.remove('open');
+          toggle.setAttribute('aria-expanded', document.body.classList.contains('sidebar-hidden') ? 'false' : 'true');
+        }
+        updateSidebarInert();
+      });
       updateSidebarInert();
 
       // Theme toggle
