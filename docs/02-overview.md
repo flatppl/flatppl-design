@@ -184,7 +184,7 @@ highlights, not exhaustive — see the linked sections for complete listings.
 | [Linear algebra](07-functions.md#sec:functions) | `transpose`, `adjoint`, `det`, `logabsdet`, `inv`, `trace`, `linsolve`, `lower_cholesky` |
 | [Operator functions](07-functions.md#sec:functions) | `add`, `sub`, `mul`, `divide`, `neg`, `equal`, `unequal`, `lt`, `le`, `gt`, `ge` |
 | [Complex arithmetic](07-functions.md#sec:functions) | `complex`, `real`, `imag`, `conj`, `abs2`, `cis` |
-| [Reductions](07-functions.md#sec:functions) | `sum`, `mean`, `var`, `prod`, `maximum`, `minimum`, `length` |
+| [Reductions](07-functions.md#sec:functions) | `sum`, `mean`, `var`, `prod`, `maximum`, `minimum`, `lengthof` |
 | [Norms and normalization](07-functions.md#sec:functions) | `l1norm`, `l2norm`, `l1unit`, `l2unit`, `logsumexp`, `softmax`, `logsoftmax` |
 | [Distributions](08-distributions.md#sec:distributions) | `Normal`, `Poisson`, `PoissonProcess`, `BinnedPoissonProcess`, `Exponential`, `Dirichlet`, ... |
 | [Fundamental measures](06-measure-algebra.md#sec:measure-algebra) | `Lebesgue`, `Counting`, `Dirac` |

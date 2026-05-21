@@ -501,10 +501,7 @@ with the same normalization constant $c_n(\eta)$ as the [`LKJ`](#lkj) distributi
 
 $$c_n(\eta) = 2^{\sum_{k=1}^{n-1} (2\eta - 2 + n - k)(n - k)} \prod_{k=1}^{n-1} \left[ B\!\left(\eta + \tfrac{n - k - 1}{2}, \, \eta + \tfrac{n - k - 1}{2}\right) \right]^{n - k}$$
 
-The density is parameterized by the strictly-lower-triangular off-diagonal entries; the diagonal entries are determined by the unit-norm constraint $L_{ii} = \sqrt{1 - \sum_{j<i} L_{ij}^2}$
-
-<!-- 
-The shared $c_n(\eta)$ follows from the change-of-variables Jacobian for the bijection $\mathbf{C} = \mathbf{L}\mathbf{L}^\dagger$: the determinant $\det(\mathbf{C}) = \prod_i L_{ii}^2$ converts the $\det(\mathbf{C})^{\eta - 1}$ factor of the `LKJ` density into the $L_{ii}^{2\eta - 2}$ exponent above, and the Jacobian itself accounts for the additional $L_{ii}^{n - i}$ contributions (see [Lewandowski, Kurowicka, Joe (2009)](https://doi.org/10.1016/j.jmva.2009.04.008); Stan reference manual). -->
+The density is parameterized by the strictly-lower-triangular off-diagonal entries; the diagonal entries are determined by the unit-norm constraint $L_{ii} = \sqrt{1 - \sum_{j<i} L_{ij}^2}$.
 
 <a id="dirichlet"></a>**`Dirichlet(alpha)`** — The [Dirichlet distribution](https://en.wikipedia.org/wiki/Dirichlet_distribution), the multivariate generalization of the Beta distribution.
 

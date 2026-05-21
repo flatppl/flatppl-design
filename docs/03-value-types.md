@@ -155,7 +155,7 @@ semantics.
   with that name as a vector.
 - Row access by integer index: `t[i]`, equivalent to `get(t, i)`, returns the `i`-th row as a record (`i` starts at 1).
 
-`length(t)` returns the number of table rows.
+`lengthof(t)` returns the number of table rows.
 
 **Broadcasting.** When a table is passed to `broadcast`, it is traversed row-wise and each
 row treated as a record passed to the function used in the broadcast.

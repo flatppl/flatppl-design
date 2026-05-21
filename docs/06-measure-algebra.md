@@ -388,7 +388,7 @@ obs_values = [1.2, 3.4, 5.1, -1.5, 2.8]
 
 R = interval(-3.0, 3.0)
 obs_R = filter(fn(_ in R), obs_values)
-n = length(obs_R)
+n = lengthof(obs_R)
 model_R = normalize(truncate(model, R))
 L_R = likelihoodof(functionof(iid(model_R, n)), obs_R)
 ```

@@ -19,12 +19,12 @@ value-level operations in FlatPPL. For measure-level operations, see [measure al
   - `data`: a flat vector of array elements.
   - `size`: a vector of positive integers giving the array dimensions. Must
     be fixed-phase.
-  - `dimorder`: a permutation of `[1, ..., length(size)]` listing axes from
+  - `dimorder`: a permutation of `[1, ..., lengthof(size)]` listing axes from
     slowest-varying to fastest-varying as `data` is traversed. Must be
     fixed-phase. `dimorder` does not imply actual memory layout in FlatPPL
     implementations.
 
-  Invariants: `prod(size) == length(data)` and `length(dimorder) == length(size)`.
+  Invariants: `prod(size) == lengthof(data)` and `lengthof(dimorder) == lengthof(size)`.
 
   Examples:
 
@@ -40,10 +40,10 @@ value-level operations in FlatPPL. For measure-level operations, see [measure al
   value `x` (e.g., `fill(0.0, 10)`).
 
 - **`zeros(n, m, ...)`** — creates a real-valued array of shape `n × m × ...` filled
-  with zeros. Equivalent to `fill(0.0, n, m, ...)`.
+  with zeros. Equivalent to `fill(0, n, m, ...)`.
 
 - **`ones(n, m, ...)`** — creates a real-valued array of shape `n × m × ...` filled
-  with ones. Equivalent to `fill(1.0, n, m, ...)`.
+  with ones. Equivalent to `fill(1, n, m, ...)`.
 
 - **`eye(n)`** — creates the $n \times n$ real-valued identity matrix $\mathbf{I}_n$.
 
@@ -189,19 +189,19 @@ returns
 
 $$\mathbf{M} = \begin{pmatrix} 1 & 4 \\ 2 & 5 \\ 3 & 6 \end{pmatrix}$$
 
-**`repeat(A, reps, dim)`** constructs an array by repeating `A` `reps` times along dimension `dim`. `reps` is a positive integer; `dim` is a fixed positive integer in $\{1, \ldots, \mathrm{ndims}(A) + 1\}$. When `dim == ndims(A) + 1`, a new trailing axis of size `reps` is appended.
+**`repeat(A, n, m, ...)`** constructs an array by tiling `A` `n` times along the first axis, `m` times along the second axis, and so on. Each repetition count is a positive integer, and the number of repetition arguments must equal `ndims(A)`. To insert singleton dimensions before tiling, combine with `addaxes`.
 
-For example, `repeat([1, 2, 3], 3, 1)` produces `[1, 2, 3, 1, 2, 3, 1, 2, 3]`. For a matrix `M` of shape `(1, 3)`, `repeat(M, 2, 1)` produces a shape-`(2, 3)` matrix (rows repeated); `repeat(M, 2, 2)` produces a shape-`(1, 6)` matrix (columns repeated); and `repeat(M, 2, 3)` appends a new trailing axis, producing a shape-`(1, 3, 2)` tensor.
+For example, `repeat([1, 2, 3], 3)` produces `[1, 2, 3, 1, 2, 3, 1, 2, 3]`. For a matrix `M` of shape `(1, 3)`, `repeat(M, 2, 1)` produces a shape-`(2, 3)` matrix (rows repeated) and `repeat(M, 1, 2)` produces a shape-`(1, 6)` matrix (columns repeated).
 
 **`partition(xs, spec)`** splits a vector `xs` into a vector of sub-vectors. The
 second argument `spec` may be:
 
 - A positive integer `n`: split `xs` into equal groups of size `n`. Requires
-  `length(xs)` to be divisible by `n`.
+  `lengthof(xs)` to be divisible by `n`.
 - A vector of positive integers `[n1, n2, ...]`: split `xs` into groups of the
-  given sizes in order. Requires `sum([n1, n2, ...])` to equal `length(xs)`.
+  given sizes in order. Requires `sum([n1, n2, ...])` to equal `lengthof(xs)`.
 
-`partition(xs, n)` is equivalent to `partition(xs, fill(n, div(length(xs), n)))`.
+`partition(xs, n)` is equivalent to `partition(xs, fill(n, div(lengthof(xs), n)))`.
 
 For example:
 
@@ -222,7 +222,7 @@ Given an array `A` of size `(3, 4, 5)`, `addaxes(A, 2, 3)` will return an array
 of size `(1, 1, 3, 4, 5, 1, 1, 1)` with the same content as `A`.
 
 
-**`block_diag_mat(mats)`** constructs a block-diagonal matrix from a vector of matrices `mats`.
+**`blockdiagmat(mats)`** constructs a block-diagonal matrix from a vector of matrices `mats`.
 Each matrix appears on a diagonal block in the output, and all off-diagonal blocks are zero.
 The resulting matrix has row and column dimensions equal to the sums of the corresponding
 dimensions of the input matrices.
@@ -230,7 +230,7 @@ dimensions of the input matrices.
 ```flatppl
 A = rowstack([[1, 2], [3, 4]])
 B = rowstack([[5, 6, 7], [8, 9, 10]])
-M = block_diag_mat([A, B])
+M = blockdiagmat([A, B])
 ```
 
 returns a matrix equivalent to:
@@ -242,12 +242,12 @@ $$\begin{pmatrix}
 0 & 0 & 8 & 9 & 10
 \end{pmatrix}$$
 
-**`banded_mat(v, rows)`** constructs a matrix with `rows` rows in which every row `i`
+**`bandedmat(v, rows)`** constructs a matrix with `rows` rows in which every row `i`
 contains the vector `v` starting at column `i` and zeros elsewhere. 
 
 ```flatppl
 v = [1, 2, 3]
-A = banded_mat(v, 4)
+A = bandedmat(v, 4)
 ```
 
 produces the `4 x 6` matrix:
@@ -263,21 +263,15 @@ $$\begin{pmatrix}
 
 | Function | Arguments | Description | Domains |
 | --- | --- | --- | --- |
-| `conv` | `v`, `filter` | convolves `v` with the filter `f` | vector, vector |
-| `crosscorr` | `v`, `filter` | compute the cross correlations of `v` with the filter `f` | vector, vector |
+| `conv` | `v`, `kernel` | convolves `v` with `kernel` | vector, vector |
+| `crosscorr` | `v`, `kernel` | cross-correlates `v` with `kernel` | vector, vector |
 
-- **`conv(v, filter)`** — computes the (valid) 1D convolution of vector $\mathbf{v}$ with
-  vector `filter`, producing a shorter vector.
+- **`conv(v, kernel)`** — computes the (valid) 1D convolution of vector $\mathbf{v}$ with vector `kernel`.
 
-  - `v`: input vector of numeric values.
-  - `filter`: convolution kernel vector of numeric values.
+  Returns a vector of length `lengthof(v) - lengthof(kernel) + 1` whose $i$-th element is the inner product of a consecutive window of `v` with the reverse of `kernel`:
+  $$\mathrm{conv}(\mathbf{v}, \mathbf{k})_i = \left\langle \mathbf{v}_{i:i+\mathrm{lengthof}(k)-1}, \mathrm{reverse}(\mathbf{k}) \right\rangle$$
 
-  The output is a vector of length `length(v) - length(filter) + 1`, where each
-  element is the dot product of a consecutive window of `v` with the reverse of `filter`: 
-  $$\mathrm{conv}(\mathbf{v}, \mathbf{f})_i = \left\langle \mathbf{v}_{i:i+\mathrm{length}(f)-1}, \mathrm{reverse}(\mathbf{f}) \right\rangle$$
-
-  `conv` performs no padding, no striding, and no windowing. 
-  It must be the case that `length(filter) <= length(v)`, otherwise an error is raised.
+  `conv` performs no padding, no striding, and no windowing and requires `lengthof(kernel) <= lengthof(v)`.
 
   Example:
 
@@ -285,18 +279,12 @@ $$\begin{pmatrix}
   conv([1, 2, 3, 4], [1, 0, -1])  # [2, 2]
   ```
 
-- **`crosscorr(v, filter)`** — computes the (valid) 1D cross correlation of vector $\mathbf{v}$ with
-  vector `filter`, producing a shorter vector.
+- **`crosscorr(v, kernel)`** — computes the (valid) 1D cross-correlation of vector $\mathbf{v}$ with vector `kernel`.
 
-  - `v`: input vector of numeric values.
-  - `filter`: correlation kernel vector of numeric values.
+  Returns a vector of length `lengthof(v) - lengthof(kernel) + 1` whose $i$-th element is the inner product of a consecutive window of `v` with `kernel`:
+  $$\mathrm{crosscorr}(\mathbf{v}, \mathbf{k})_i = \left\langle \mathbf{v}_{i:i+\mathrm{lengthof}(k)-1}, \mathbf{k} \right\rangle$$
 
-  The output is a vector of length `length(v) - length(filter) + 1`, where each
-  element is the dot product of a consecutive window of `v` with `filter`: 
-  $$\mathrm{crosscorr}(\mathbf{v}, \mathbf{f})_i = \left\langle \mathbf{v}_{i:i+\mathrm{length}(f)-1}, \mathbf{f} \right\rangle$$
-
-  `crosscorr` performs no padding, no striding, and no windowing. 
-  It must be the case that `length(filter) <= length(v)`, otherwise an error is raised.
+  `crosscorr` performs no padding, no striding, and no windowing and requires `lengthof(kernel) <= lengthof(v)`.
 
   Example:
 
@@ -364,7 +352,7 @@ order.
 | `invprobit` | `x` | $\Phi(x)$, standard-normal CDF | `reals` |
 
 For complex arguments, `log` and `sqrt` use the principal branch ($\arg(z) \in (-\pi, \pi]$).
-`pow` (listed in the [operator-equivalent functions](#operator-equivalent-functions) table below) extends via $z^w = e^{w \log z}$ (principal branch); either or both arguments may be complex.
+`pow` (see [operator-equivalent functions](#operator-equivalent-functions) below) extends via $z^w = e^{w \log z}$ (principal branch); either or both arguments may be complex.
 `logit` and `probit` evaluate to `-inf` at $p = 0$ and `inf` at $p = 1$.
 `log1p` evaluates to `-inf` at $x = -1$.
 `atan2(0, 0)` returns `0`.
@@ -425,7 +413,7 @@ unchanged if `condition` evaluates to `true`, and raises a static error otherwis
 ```flatppl
 n_raw = external(integers)
 data = load_data(source = "...", valueset = reals)
-n = checked(value = n_raw, condition = equal(n_raw, length(data)))
+n = checked(value = n_raw, condition = equal(n_raw, lengthof(data)))
 # n is n_raw with the dimension check attached; use n downstream.
 ```
 
@@ -476,16 +464,15 @@ complex-conjugated elements.
 | `cumprod` | `xs` | cumulative product $(x_1, x_1 x_2, \dots)$ | vectors |
 | `maximum` | `xs` | $\max_i x_i$ | real arrays |
 | `minimum` | `xs` | $\min_i x_i$ | real arrays |
-| `length` | `x` | number of elements (1D array / vector) / rows (multi-dim array or table) | vectors, arrays, tables |
-| `size` | `x` | returns the dimensions of `x` in a vector| vector, arrays |
+| `lengthof` | `x` | number of elements (vector) / rows (table) | vectors, tables |
+| `sizeof` | `x` | returns the dimensions of `x` in a vector | vectors, arrays |
 
-`length` on a multi-dimensional array returns the size of the first axis. To obtain
-shape information for higher-dimensional arrays, use `size`:
+For multi-dimensional arrays, use `sizeof` to obtain shape information:
 
 ```flatppl
 x = rowstack([[1, 2, 3], [4, 5, 6]])
-l = length(x)  # 2
-s = size(x)    # [2, 3]
+l = lengthof(x[1])  # 3
+s = sizeof(x)       # [2, 3]
 ```
 
 **Table reductions.** When `sum`, `mean`, or `var` is applied to a table, the
@@ -522,7 +509,7 @@ the reduction operation.
 |---|---|---|---|
 | `ifelse` | `cond`, `a`, `b` | returns `a` if `cond` is true, `b` otherwise | `cond`: `booleans`; `a`, `b`: `anything` |
 
-**Note.** There is no guaranteed short circuit evaluation for `ifelse`; FlatPPL is a static-DAG language and both branches of `ifelse(cond, a, b)` and both operands of `land`/`lor` are part of the computational graph and contribute to the model structure. Engines may optimize evaluation of unused branches, but expressions like `ifelse(x == 0, 0, 1/x)` are not safe — the `1/x` branch is still constructed and may produce `inf`/`nan` even when the corresponding `cond` is false. 
+**Note.** `ifelse` and `land`/`lor` do not guarantee short-circuit evaluation: engines are free to evaluate both branches/operands or only one, depending on design and use case. Expressions like `ifelse(x == 0, 0, 1/x)` are therefore not safe — the `1/x` branch may still be evaluated and produce `inf`/`nan` even when `cond` is false.
 
 ### Membership, filtering, and bin selection
 
@@ -583,7 +570,7 @@ $$p(x) = \sum_{i=0}^{n-1} c_{i+1} \, x^i = c_1 + c_2 \, x + c_3 \, x^2 + \cdots 
 
 where `coefficients` is a length-$n$ vector $[c_1, c_2, \ldots, c_n]$. The first element is the constant term; the $i$-th element is the coefficient of $x^{i-1}$. Non-negativity over the intended support is the user's responsibility.
 
-**`bernstein(coefficients, x)`** — Bernstein basis polynomial of degree $n = \mathrm{length}(\mathrm{coefficients}) - 1$, evaluated at `x`:
+**`bernstein(coefficients, x)`** — Bernstein basis polynomial of degree $n = \mathrm{lengthof}(\mathrm{coefficients}) - 1$, evaluated at `x`:
 
 $$B(x) = \sum_{k=0}^{n} c_{k+1} \binom{n}{k} x^k (1 - x)^{n-k}$$
 
