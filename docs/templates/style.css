@@ -92,7 +92,7 @@ body {
 #sidebar-title {
     font-weight: 700;
     font-size: 0.9em;
-    padding: 0 0.5em 0.8em 1em;
+    padding: 0 0 0.8em 0;
     border-bottom: 1px solid var(--sidebar-border);
     margin-bottom: 0.5em;
     color: var(--heading-color);
@@ -100,8 +100,6 @@ body {
     display: flex;
     align-items: stretch;
     justify-content: space-between;
-    gap: 0;
-    padding: 0 0 0.8em 0;
 }
 
 #sidebar-collapse {
@@ -658,13 +656,12 @@ section.footnotes ol {
 
 /* ── Text selection ───────────────────────────────────── */
 ::selection {
-    background: #b3d4ff;
+    background: rgba(9, 105, 218, 0.2);
     color: #1f2328;
 }
 
 [data-theme="dark"] ::selection {
-    background: #264f78;
-    /* One Dark / VS Code dark selection colour */
+    background: rgba(209, 154, 102, 0.3);
     color: #d7dae0;
 }
 
@@ -882,14 +879,12 @@ section.footnotes ol {
     }
 }
 
+/* ── Responsive ───────────────────────────────────────── */
 @media (max-width: 60em) {
     #sidebar-collapse {
         display: none;
     }
-}
 
-/* ── Responsive ───────────────────────────────────────── */
-@media (max-width: 60em) {
     #sidebar {
         transform: translateX(-100%);
     }
