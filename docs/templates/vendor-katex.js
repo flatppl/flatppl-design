@@ -10,11 +10,17 @@ const path = require('path');
 // Pinned for reproducible builds; bump deliberately.
 const KATEX_VERSION = '0.16.47';
 const outDir = path.join('build', 'katex');
+const stampFile = path.join(outDir, '.version');
 
-// Skip if already populated (allows incremental rebuilds)
-if (fs.existsSync(path.join(outDir, 'katex.min.js'))) {
-  process.exit(0);
+// Skip incremental rebuild only when the cached copy matches the pinned version.
+// Without this check, bumping KATEX_VERSION would silently keep stale assets.
+if (fs.existsSync(path.join(outDir, 'katex.min.js')) && fs.existsSync(stampFile)) {
+  const cached = fs.readFileSync(stampFile, 'utf8').trim();
+  if (cached === KATEX_VERSION) { process.exit(0); }
 }
+
+// Version mismatch or partial cache: wipe and reinstall.
+fs.rmSync(outDir, { recursive: true, force: true });
 
 const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'katex-'));
 try {
@@ -32,6 +38,7 @@ try {
       fs.unlinkSync(path.join(fontsDir, f));
     }
   }
+  fs.writeFileSync(stampFile, KATEX_VERSION + '\n');
 } finally {
   fs.rmSync(tmpDir, { recursive: true, force: true });
 }

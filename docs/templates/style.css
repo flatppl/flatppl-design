@@ -165,10 +165,14 @@ body {
     font-weight: 600;
 }
 
-/* Dim section when a subsection within it is active */
-#sidebar-nav>li:has(.sidebar-subsections a.active)>a.active {
-    background: transparent;
-    font-weight: 500;
+/* Dim section when a subsection within it is active.
+   :has() unsupported on Safari <15.4 / Firefox <121 — older browsers degrade to
+   showing both section and subsection highlighted, which is acceptable. */
+@supports selector(:has(*)) {
+    #sidebar-nav>li:has(.sidebar-subsections a.active)>a.active {
+        background: transparent;
+        font-weight: 500;
+    }
 }
 
 /* max-height accordion: 0 when collapsed, 50em when .expanded toggled by JS */
@@ -657,12 +661,12 @@ section.footnotes ol {
 /* ── Text selection ───────────────────────────────────── */
 ::selection {
     background: rgba(9, 105, 218, 0.2);
-    color: #1f2328;
+    color: var(--heading-color);
 }
 
 [data-theme="dark"] ::selection {
     background: rgba(209, 154, 102, 0.3);
-    color: #d7dae0;
+    color: var(--heading-color);
 }
 
 /* ── Skip-to-content ──────────────────────────────────── */

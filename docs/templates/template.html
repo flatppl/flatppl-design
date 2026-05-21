@@ -122,7 +122,7 @@
 
         var li = document.createElement('li');
         var a = document.createElement('a');
-        a.textContent = h.textContent.replace(/^[\d.]+\s+/, '').replace(/\s*#$$/, '').trim();
+        a.textContent = h.textContent.replace(/^[\d.]+\s+/, '').trim();
         a.href = '#' + h.id;
         li.appendChild(a);
 
@@ -143,7 +143,7 @@
           }
           var sli = document.createElement('li');
           var sa = document.createElement('a');
-          sa.textContent = sh.textContent.replace(/^[\d.]+\s+/, '').replace(/\s*#$$/, '').trim();
+          sa.textContent = sh.textContent.replace(/^[\d.]+\s+/, '').trim();
           sa.href = '#' + sh.id;
           sli.appendChild(sa);
           subUl.appendChild(sli);
@@ -174,7 +174,8 @@
           if (item.el.offsetTop <= scrollY + 80) current = item.id;
         });
 
-        if (current && current !== lastActive) {
+        var changed = current && current !== lastActive;
+        if (changed) {
           history.replaceState(null, '', '#' + current);
           lastActive = current;
         }
@@ -190,7 +191,8 @@
           sectionLink.classList.toggle('active', isActive);
           if (isActive) {
             sectionLink.setAttribute('aria-current', 'location');
-            sectionLink.scrollIntoView({ block: 'nearest' });
+            // Only scroll on transition, not every rAF tick while active
+            if (changed) sectionLink.scrollIntoView({ block: 'nearest' });
           } else { sectionLink.removeAttribute('aria-current'); }
 
           // Highlight subsection link
@@ -421,7 +423,9 @@
       }
 
       document.querySelectorAll('a.footnote-ref').forEach(function (ref) {
-        var targetId = ref.getAttribute('href').replace(/^#/, '');
+        var href = ref.getAttribute('href');
+        if (!href) return;
+        var targetId = href.replace(/^#/, '');
         var fn = document.getElementById(targetId);
         if (!fn) return;
         var clone = fn.cloneNode(true);
