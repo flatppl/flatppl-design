@@ -78,7 +78,7 @@ Parameters:
 
 Density w.r.t. `Lebesgue(reals)`: 
 
-$$\frac{1}{\sigma\sqrt{2\pi}} \exp\!\left(-\frac{(x - \mu)^2}{2\sigma^2}\right) \quad \text{for } x  \in \mathrm{R}$$
+$$\frac{1}{\sigma\sqrt{2\pi}} \exp\!\left(-\frac{(x - \mu)^2}{2\sigma^2}\right) \quad \text{for } x \in \mathbb{R}$$
 
 <a id="generalizednormal"></a>**`GeneralizedNormal(mean, alpha, beta)`** — The [symmetric generalized normal distribution](https://en.wikipedia.org/wiki/Generalized_normal_distribution#Symmetric_version). Recovers the normal distribution at $\beta = 2$ with $\alpha = \sigma\sqrt{2}$, and the Laplace distribution at $\beta = 1$ with $\alpha = b$.
 
@@ -243,8 +243,8 @@ Parameters:
 
 Density w.r.t. `Lebesgue(reals)`:
 
-$$\frac{e^{\kappa \cos(x - \mu)}}{2 \pi I_0(\kappa)} \quad \text{for } x \in [c - \pi, c + \pi] \text{ for } c \in \mathbb{R},$$ 
-where $I_0(\cdot)$ is the modified Bessel function of the first kind of order 0. 
+$$\frac{e^{\kappa \cos(x - \mu)}}{2 \pi I_0(\kappa)} \quad \text{for } x \in \mathbb{R},$$ 
+where $I_0(\cdot)$ is the modified Bessel function of the first kind of order 0. The density is $2\pi$-periodic in $x$; the canonical fundamental domain is $[\mu - \pi, \mu + \pi]$. 
 
 <a id="laplace"></a>**`Laplace(location, scale)`** — The [Laplace (double exponential) distribution](https://en.wikipedia.org/wiki/Laplace_distribution).
 
@@ -518,7 +518,7 @@ The dimension $n$ is the length of `alpha`; it must be a fixed-phase positive in
 
 Density w.r.t. `Lebesgue(stdsimplex(n))`:
 
-$$\frac{\Gamma(||\alpha||_1)}{\prod_i \Gamma(\alpha_i)} \prod_i x_i^{\alpha_i - 1}  \quad \text{for } \mathbf{x} \in \left\{\mathbf{p} \in \mathbb{R}^n : \sum{p_i} = 1, p_i \geq 0 \text{ for } i = 1, 2, \dots, n\right\}$$
+$$\frac{\Gamma(\|\alpha\|_1)}{\prod_i \Gamma(\alpha_i)} \prod_i x_i^{\alpha_i - 1}  \quad \text{for } \mathbf{x} \in \left\{\mathbf{p} \in \mathbb{R}^n : \sum_{i=1}^{n} p_i = 1, \, p_i \geq 0 \text{ for } i = 1, 2, \dots, n\right\}$$
 
 [Canonical transport](07-functions.md#sec:measure-eval-prims) of `Dirichlet` to/from
 standard uniform is the Connor–Mosimann stick-breaking map — the $i$-th break is
@@ -558,9 +558,9 @@ Parameters:
 
 Density w.r.t. `iid(Lebesgue, k)`:
 
-$$\prod_{i=1}^{k}\left( \lambda(t_i) \exp\left(\int_{T_0}^{T}\lambda(t) \ \mathrm{dt}\right)\right),$$
+$$\left(\prod_{i=1}^{k} \lambda(t_i)\right) \exp\!\left(-\int_{T_0}^{T}\lambda(t) \, \mathrm{d}t\right),$$
 
-where the interval of interest is $[T_0, T]$, $k$ events $\{t_0, t_1, \dots, t_k\}$ are observed with $t_0 \leq t_1 \leq t_2 \leq \dots \leq t_k$, and $\lambda(t)$ is equal to `intensity(t)`. 
+where the interval of interest is $[T_0, T]$, $k$ events $\{t_1, t_2, \dots, t_k\}$ are observed in $[T_0, T]$, and $\lambda(t)$ is equal to `intensity(t)`. 
 
 Given a normalized distribution `shape` and an expected count `n`, the intensity is
 constructed via `weighted(n, shape)`. Conversely, any intensity decomposes as

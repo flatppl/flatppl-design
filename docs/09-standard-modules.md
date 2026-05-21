@@ -108,9 +108,7 @@ Density w.r.t. `Lebesgue(reals)`:
 
 $$\frac{1}{\mathcal{M}}\begin{cases}
 A\left(B - \frac{x - m_0}{\sigma}\right)^{-n}, & \quad \frac{x - m_0}{\sigma} < -\alpha\\
-\exp\left(-\frac{1}{2}\left(\frac{x - m_0}{\sigma}\right)^2\right), & \quad \frac{x - m_0}{\sigma} \leq 0\\
-\exp\left(-\frac{1}{2}\left(\frac{x - m_0}{\sigma}\right)^2\right), & \quad \frac{x - m_0}{\sigma} \leq \alpha\\
-A\left(B - \frac{x - m_0}{\sigma}\right)^{-n}, & \quad \text{otherwise}
+\exp\left(-\frac{1}{2}\left(\frac{x - m_0}{\sigma}\right)^2\right), & \quad \text{otherwise}
 \end{cases} \quad \text{for } x \in \mathbb{R}$$
 
 where 
@@ -134,15 +132,16 @@ Density w.r.t. `Lebesgue(reals)`:
 
 $$\frac{1}{\mathcal{M}}\begin{cases}
 A_L\left(B_L - \frac{x - m_0}{\sigma_L}\right)^{-n_L}, & \quad \frac{x - m_0}{\sigma_L} < -\alpha_L\\
+\exp\left(-\frac{1}{2}\left(\frac{x - m_0}{\sigma_L}\right)^2\right), & \quad \frac{x - m_0}{\sigma_L} \leq 0\\
 \exp\left(-\frac{1}{2}\left(\frac{x - m_0}{\sigma_R}\right)^2\right), & \quad \frac{x - m_0}{\sigma_R} \leq \alpha_R\\
-A_R\left(B_R - \frac{x - m_0}{\sigma_R}\right)^{-n_R}, & \quad \text{otherwise}
+A_R\left(B_R + \frac{x - m_0}{\sigma_R}\right)^{-n_R}, & \quad \text{otherwise}
 \end{cases} \quad \text{for } x \in \mathbb{R}$$
 
 where 
 
 $$A_i = \left(\frac{n_i}{|\alpha_i|}\right)^{n_i}\exp\left(-\frac{|\alpha_i|^2}{2}\right), \quad B_i = \frac{n_i}{|\alpha_i|} - |\alpha_i|,$$
  
-$\mathcal{M}$ is a normalizing constant, and $(m_0, \sigma_L, \sigma_R, \alpha_L, \alpha_R, n_l, n_r)$ is equal to `(m0, sigmaL, sigmaR, alphaL, alphaR, nL, nR)`.
+$\mathcal{M}$ is a normalizing constant, and $(m_0, \sigma_L, \sigma_R, \alpha_L, \alpha_R, n_L, n_R)$ is equal to `(m0, sigmaL, sigmaR, alphaL, alphaR, nL, nR)`.
 
 <a id="argus"></a>**`Argus(resonance, slope, power)`** — The [ARGUS distribution](https://en.wikipedia.org/wiki/ARGUS_distribution).
 
@@ -186,8 +185,8 @@ Parameters:
 
 Density w.r.t. `Lebesgue(reals)`:
 
-$$\frac{\mathrm{Re}\left(w\left(\frac{x - \mu + i\Gamma}{\sigma \sqrt{2}}\right)\right)}{\sigma \sqrt{2\pi}},$$
-where $w(z) = \exp\left(-z^2\right)\mathrm{erfc}\left(-iz\right)$ is the Faddeeva function, and $(\mu, \Gamma, \sigma)$ is equal to `(mean, width, sigma)`.
+$$\frac{\mathrm{Re}\left(w\left(\frac{x - \mu + i\Gamma/2}{\sigma \sqrt{2}}\right)\right)}{\sigma \sqrt{2\pi}},$$
+where $w(z) = \exp\left(-z^2\right)\mathrm{erfc}\left(-iz\right)$ is the Faddeeva function, $\Gamma/2$ is the Cauchy half-width at half-maximum, and $(\mu, \Gamma, \sigma)$ is equal to `(mean, width, sigma)`.
 
 <a id="bifurcatedgaussian"></a>**`BifurcatedGaussian(mean, sigmaL, sigmaR)`** — [Split normal distribution](https://en.wikipedia.org/wiki/Split_normal_distribution): Gaussian with different widths on left and right sides.
 
@@ -221,7 +220,7 @@ Parameters:
 
 Density w.r.t. `Lebesgue(reals)`:
 
-$$\frac{\lambda^x e^{-\lambda}}{\Gamma(k+1)} \quad \text{for } x > 0$$
+$$\frac{\lambda^x e^{-\lambda}}{\Gamma(x+1)} \quad \text{for } x > 0$$
 
 ### Module `generalized-linear-models`
 
@@ -330,7 +329,7 @@ Functions yielding multiple decomposition products return them as explicitly-nam
 | `matexp` | `A` | Matrix exponential $e^{\mathbf{A}}$ | square matrices |
 | `kron` | `A`, `B` | Kronecker tensor product $\mathbf{A} \otimes \mathbf{B}$ | matrices |
 | `lstsq` | `A`, `b` | Least squares solution for $\mathbf{x}$ in $\mathbf{A}\mathbf{x} = \mathbf{b}$ | $n \times k$ matrix $\mathbf{A}$, $n$ vector $\mathbf{b}$|
-| `rank` | `A` | Compute the numerical rank of the matrix `A`| square matrices |
+| `rank` | `A` | Compute the numerical rank of the matrix `A`| matrices |
 
 - **`lu(A)`** — computes the LU decomposition of a square matrix `A`.
   Returns `record(P = P_mat, L = L_mat, U = U_mat)` such that $\mathbf{P} \mathbf{A} = \mathbf{L} \mathbf{U}$, where `P_mat` is a permutation matrix, `L_mat` is lower triangular with unit diagonal, and `U_mat` is upper triangular.
@@ -426,7 +425,7 @@ poly = standard_module("polynomials", "0.1")
 
 - **`laguerre(n, x)`** — evaluates the Laguerre polynomial of degree `n` at `x`, where `n` must be a non-negative integer.
 
-- **`chebyshev(n, x)`** — evaluates the Chebyshev polynomial of the first kind of degree `n` at `x`, where `n` must be a non-negative integer.
+- **`chebyshev(n, x)`** — evaluates the Chebyshev polynomial of the first kind of degree `n` at `x`, where `n` must be a non-negative integer. 
 
 ### Module `distances`
 

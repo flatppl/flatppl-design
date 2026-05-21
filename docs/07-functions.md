@@ -168,7 +168,7 @@ of a mix of value types (e.g. scalars with vectors, or vectors with records)
 is not permitted.
 
 **`rowstack(vs)`** constructs a matrix whose rows are the vectors in `vs`. The
-  argument `vs` is a vector of vectors, all of the same length.
+argument `vs` is a vector of vectors, all of the same length.
 
 ```flatppl
 M = rowstack([[1, 2, 3], [4, 5, 6]])
@@ -189,11 +189,9 @@ returns
 
 $$\mathbf{M} = \begin{pmatrix} 1 & 4 \\ 2 & 5 \\ 3 & 6 \end{pmatrix}$$
 
-<!-- **`reshape(A, size, dimorder...)`** returns an array with the same data as `A` but with a new shape given by `size` and optionally a new traversal order `dimorder`. -->
+**`repeat(A, reps, dim)`** constructs an array by repeating `A` `reps` times along dimension `dim`. `reps` is a positive integer; `dim` is a fixed positive integer in $\{1, \ldots, \mathrm{ndims}(A) + 1\}$. When `dim == ndims(A) + 1`, a new trailing axis of size `reps` is appended.
 
-**`repeat(A, reps, dim)`** constructs an array by repeating `A` `reps` times along dimension `dim`. `reps` is a positive integer; `dim` is a fixed positive integer in $\{1, \ldots, \mathrm{ndims}(A)\}$.
-
-For example, `repeat([1, 2, 3], 3, 1)` produces `[1, 2, 3, 1, 2, 3, 1, 2, 3]`. For a matrix `M` of shape `(1, 3)`, `repeat(M, 2, 1)` produces a shape-`(2, 3)` matrix (rows repeated); `repeat(M, 2, 2)` produces a shape-`(1, 6)` matrix (columns repeated), and `repeat(M, 2, 3)` produces a shape-`(1, 3, 2)` tensor.
+For example, `repeat([1, 2, 3], 3, 1)` produces `[1, 2, 3, 1, 2, 3, 1, 2, 3]`. For a matrix `M` of shape `(1, 3)`, `repeat(M, 2, 1)` produces a shape-`(2, 3)` matrix (rows repeated); `repeat(M, 2, 2)` produces a shape-`(1, 6)` matrix (columns repeated); and `repeat(M, 2, 3)` appends a new trailing axis, producing a shape-`(1, 3, 2)` tensor.
 
 **`partition(xs, spec)`** splits a vector `xs` into a vector of sub-vectors. The
 second argument `spec` may be:
@@ -482,12 +480,12 @@ complex-conjugated elements.
 | `size` | `x` | returns the dimensions of `x` in a vector| vector, arrays |
 
 `length` on a multi-dimensional array returns the size of the first axis. To obtain
-shape information for higher-dimensional arrays, use size;
+shape information for higher-dimensional arrays, use `size`:
 
 ```flatppl
-x = rowstack([1, 2, 3], [4, 5, 6])
+x = rowstack([[1, 2, 3], [4, 5, 6]])
 l = length(x)  # 2
-s = size(x) # [2, 3]
+s = size(x)    # [2, 3]
 ```
 
 **Table reductions.** When `sum`, `mean`, or `var` is applied to a table, the
