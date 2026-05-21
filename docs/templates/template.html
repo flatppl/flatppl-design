@@ -346,14 +346,20 @@
         btn.setAttribute('aria-label', 'Copy code to clipboard');
         btn.textContent = 'Copy';
         wrapper.appendChild(btn);
+        var resetTimer = null;
+        function flash(text) {
+          btn.textContent = text;
+          if (resetTimer !== null) { clearTimeout(resetTimer); }
+          resetTimer = setTimeout(function () {
+            btn.textContent = 'Copy';
+            resetTimer = null;
+          }, 1500);
+        }
         btn.addEventListener('click', function () {
-          navigator.clipboard.writeText(getTextFn()).then(function () {
-            btn.textContent = 'Copied!';
-            setTimeout(function () { btn.textContent = 'Copy'; }, 1500);
-          }, function () {
-            btn.textContent = 'Failed';
-            setTimeout(function () { btn.textContent = 'Copy'; }, 1500);
-          });
+          navigator.clipboard.writeText(getTextFn()).then(
+            function () { flash('Copied!'); },
+            function () { flash('Failed'); }
+          );
         });
       }
 

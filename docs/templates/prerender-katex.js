@@ -10,20 +10,22 @@ const htmlPath = path.join('build', 'index.html');
 const katex = require(path.resolve(process.cwd(), 'build', 'katex', 'katex.min.js'));
 
 function decodeEntities(str) {
+  // &amp; must be decoded last; otherwise "&amp;lt;" (literal "&lt;") becomes "<".
   return str
     .replace(/&lt;/g, '<')
     .replace(/&gt;/g, '>')
-    .replace(/&amp;/g, '&')
     .replace(/&quot;/g, '"')
-    .replace(/&#39;/g, "'");
+    .replace(/&#39;/g, "'")
+    .replace(/&amp;/g, '&');
 }
 
 let html = fs.readFileSync(htmlPath, 'utf8');
 let rendered = 0;
 let failed = 0;
 
-// Pre-render inline math (tag and content may be split across lines by Pandoc)
-html = html.replace(/<span\s+class="math inline">([\s\S]*?)<\/span>/g, function (match, raw) {
+// Pre-render inline math (tag and content may be split across lines by Pandoc).
+// Class attribute matched loosely so additional Pandoc classes don't break the regex.
+html = html.replace(/<span\s+class="[^"]*\bmath\s+inline\b[^"]*">([\s\S]*?)<\/span>/g, function (match, raw) {
   try {
     rendered++;
     return katex.renderToString(decodeEntities(raw.trim()), { displayMode: false, throwOnError: true });
@@ -34,7 +36,7 @@ html = html.replace(/<span\s+class="math inline">([\s\S]*?)<\/span>/g, function 
 });
 
 // Pre-render display math
-html = html.replace(/<span\s+class="math display">([\s\S]*?)<\/span>/g, function (match, raw) {
+html = html.replace(/<span\s+class="[^"]*\bmath\s+display\b[^"]*">([\s\S]*?)<\/span>/g, function (match, raw) {
   try {
     rendered++;
     return katex.renderToString(decodeEntities(raw.trim()), { displayMode: true, throwOnError: true });
@@ -51,4 +53,4 @@ html = html.replace(/<script defer="" src="\.\/katex\/katex\.min\.js"><\/script>
 html = html.replace(/<script>document\.addEventListener\("DOMContentLoaded"[\s\S]*?<\/script>\s*/g, '');
 
 fs.writeFileSync(htmlPath, html);
-console.log('KaTeX pre-render: ' + rendered + ' expressions rendered, ' + failed + ' left for client fallback.');
+console.log('KaTeX pre-render: ' + rendered + ' expressions rendered, ' + failed + ' failed (rendered as plain text; client-side fallback stripped).');
