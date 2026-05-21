@@ -402,7 +402,7 @@ array-valued observation kernel of independent Poisson counts.
 | [`LKJ`](#lkj) | `n`, `eta` | matrices | correlation matrices |
 | [`LKJCholesky`](#lkjcholesky) | `n`, `eta` | matrices | lower-triangular, pos. diagonal |
 | [`Dirichlet`](#dirichlet) | `alpha` | `cartpow(reals, n)` | `stdsimplex(n)` |
-| [`Multinomial`](#multinomial) | `n`, `p` | `cartpow(integers, k)` | (see below) |
+| [`Multinomial`](#multinomial) | `n`, `p` | `cartpow(nonnegintegers, k)` | (see below) |
 
 <a id="mvnormal"></a>**`MvNormal(mu, cov)`** — The [multivariate normal distribution](https://en.wikipedia.org/wiki/Multivariate_normal_distribution).
 
@@ -523,16 +523,16 @@ standard uniform is the Connor–Mosimann stick-breaking map — the $i$-th brea
 (see [Betancourt (2012)](15-references.md#betancourt2012)).
 The break ordering is fixed (descending reverse-cumsum of `alpha`).
 
-<a id="multinomial"></a>**`Multinomial(n, p)`** — The [multinomial distribution](https://en.wikipedia.org/wiki/Multinomial_distribution), the multivariate generalization of the Binomial distribution. The variate is a length-$k$ integer vector summing to $n$. 
+<a id="multinomial"></a>**`Multinomial(n, p)`** — The [multinomial distribution](https://en.wikipedia.org/wiki/Multinomial_distribution), the multivariate generalization of the Binomial distribution. The variate is a length-$k$ non-negative integer vector summing to $n$.
 
-The category count $k$ is the length of `p`; it must be a fixed-phase positive integer. 
-
-Domain/Support: `cartpow(integers, k)` / $\{x \in \mathbb{N}_0^k : \sum_i x_i = n\}$.
+Domain/Support: `cartpow(nonnegintegers, k)` / $\{x \in \mathbb{N}_0^k : \sum_i x_i = n\}$.
 
 Parameters:
 
 - `n = elementof(posintegers)`: number of trials.
 - `p = elementof(stdsimplex(k))`: probability vector.
+
+The category count $k$ is the length of `p`; it must be a fixed-phase positive integer.
 
 Density w.r.t. `iid(Counting(integers), k)`:
 

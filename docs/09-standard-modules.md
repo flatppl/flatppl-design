@@ -132,9 +132,9 @@ Density w.r.t. `Lebesgue(reals)`:
 
 $$\frac{1}{\mathcal{M}}\begin{cases}
 A_L\left(B_L - \frac{x - m_0}{\sigma_L}\right)^{-n_L}, & \quad \frac{x - m_0}{\sigma_L} < -\alpha_L\\
-\exp\left(-\frac{1}{2}\left(\frac{x - m_0}{\sigma_L}\right)^2\right), & \quad \frac{x - m_0}{\sigma_L} \leq 0\\
-\exp\left(-\frac{1}{2}\left(\frac{x - m_0}{\sigma_R}\right)^2\right), & \quad \frac{x - m_0}{\sigma_R} \leq \alpha_R\\
-A_R\left(B_R + \frac{x - m_0}{\sigma_R}\right)^{-n_R}, & \quad \text{otherwise}
+\exp\left(-\frac{1}{2}\left(\frac{x - m_0}{\sigma_L}\right)^2\right), & \quad -\alpha_L \leq \frac{x - m_0}{\sigma_L} \leq 0\\
+\exp\left(-\frac{1}{2}\left(\frac{x - m_0}{\sigma_R}\right)^2\right), & \quad 0 < \frac{x - m_0}{\sigma_R} \leq \alpha_R\\
+A_R\left(B_R + \frac{x - m_0}{\sigma_R}\right)^{-n_R}, & \quad \frac{x - m_0}{\sigma_R} > \alpha_R
 \end{cases} \quad \text{for } x \in \mathbb{R}$$
 
 where 
@@ -170,8 +170,8 @@ Parameters:
 
 Density w.r.t. `Lebesgue(reals)`:
 
-$$\frac{1}{\mathcal{M}}\frac{1}{\left(x^2 - m^2\right)^2 + m^2w^2}, \quad \text{for } x > 0,$$
-where $\mathcal{M} = \frac{\pi\sqrt{m^2 + \gamma}}{2\sqrt{2}mw\gamma}, \gamma = \sqrt{m^2\left(m^2 + w^2\right)},$ with $(m, w)$ equal to `(mean, width)`.
+$$\frac{1}{\mathcal{M}}\frac{1}{\left(x^2 - m^2\right)^2 + m^2 \Gamma^2}, \quad \text{for } x > 0,$$
+where $\mathcal{M} = \frac{\pi\sqrt{m^2 + \gamma}}{2\sqrt{2}\, m\, \Gamma\, \gamma}, \quad \gamma = \sqrt{m^2\left(m^2 + \Gamma^2\right)},$ with $(m, \Gamma)$ equal to `(mean, width)`.
 
 <a id="voigtian"></a>**`Voigtian(mean, width, sigma)`** — The [Voigt profile](https://en.wikipedia.org/wiki/Voigt_profile): convolution of a Cauchy (Lorentzian) and a Gaussian.
 
@@ -220,7 +220,7 @@ Parameters:
 
 Density w.r.t. `Lebesgue(reals)`:
 
-$$\frac{\lambda^x e^{-\lambda}}{\Gamma(x+1)} \quad \text{for } x > 0$$
+$$\frac{\lambda^x e^{-\lambda}}{\Gamma(x+1)} \quad \text{for } x \geq 0$$
 
 ### Module `generalized-linear-models`
 
@@ -267,7 +267,7 @@ Parameters:
 
 `BinomialLogitGLM(x, n, alpha, beta)` is mathematically equivalent to `Binomial(n, invlogit(alpha + transpose(x) * beta))` but is more efficient.
 
-<a id="categoricallogitglm"></a>**`CategoricalLogitGLM(x, alpha, beta)`** — An efficient implementation of the log density for an $n$ logistic (softmax) generalized linear model.
+<a id="categoricallogitglm"></a>**`CategoricalLogitGLM(x, alpha, beta)`** — An efficient implementation of the log density for an $n$-class logistic (softmax) generalized linear model.
 
 Domain/Support: `integers`/`interval(1, n)`.
 
@@ -328,7 +328,7 @@ Functions yielding multiple decomposition products return them as explicitly-nam
 | `eigmin` | `A` | Return minimal eigenvalue of $\mathbf{A}$ | square matrices |
 | `matexp` | `A` | Matrix exponential $e^{\mathbf{A}}$ | square matrices |
 | `kron` | `A`, `B` | Kronecker tensor product $\mathbf{A} \otimes \mathbf{B}$ | matrices |
-| `lstsq` | `A`, `b` | Least squares solution for $\mathbf{x}$ in $\mathbf{A}\mathbf{x} = \mathbf{b}$ | $n \times k$ matrix $\mathbf{A}$, $n$ vector $\mathbf{b}$|
+| `lstsq` | `A`, `b` | Least squares solution for $\mathbf{x}$ in $\mathbf{A}\mathbf{x} = \mathbf{b}$ | matrices, vectors |
 | `rank` | `A` | Compute the numerical rank of the matrix `A`| matrices |
 
 - **`lu(A)`** — computes the LU decomposition of a square matrix `A`.
@@ -348,7 +348,7 @@ Functions yielding multiple decomposition products return them as explicitly-nam
 
 - **`kron(A, B)`** — computes the Kronecker tensor product $\mathbf{A} \otimes \mathbf{B} = \begin{bmatrix} A_{1,1} \mathbf{B} & \cdots & A_{1,n} \mathbf{B}\\ \vdots & \ddots & \vdots \\ A_{m,1} \mathbf{B} & \cdots & A_{m,n} \mathbf{B}\end{bmatrix}$ of the $m \times n$ matrix `A` and the $p \times q$ matrix `B`, returning a $pm \times qn$ matrix.
 
-- **`lstsq(A, b)`** - computes the least squares solution of the equation $\mathbf{A}\mathbf{x} = \mathbf{b}$.
+- **`lstsq(A, b)`** - computes the least squares solution of the equation $\mathbf{A}\mathbf{x} = \mathbf{b}$ for an $n \times k$ matrix $\mathbf{A}$ and an $n$-vector $\mathbf{b}$.
 
 - **`rank(A)`** - computes the numerical rank of the matrix `A`. 
 
@@ -449,9 +449,9 @@ dist = standard_module("distances", "0.1")
 | `manhattan` | `u`, `v` | Manhattan/city-block distance | vector, vector |
 | `chebyshev` | `u`, `v` | Chebyshev (infinity norm) | vector, vector |
 | `minkowski` | `u`, `v`, `p` | Minkowski distance | vector, vector, posreals |
-| `jensenshannon`| `u`, `v` | Jensen-Shannon distance | stdsimplex, stdsimplex |
+| `jensenshannon`| `u`, `v` | Jensen-Shannon distance | `stdsimplex(n)`, `stdsimplex(n)` |
 
-- **`pairwise_distance(x, distance)`** — Computes the `distance` distance between all pairs of elements in the $N$ vector $\mathbf{x}$. Returns an $N \times N$ matrix.
+- **`pairwise_distance(x, distance)`** — Computes pairwise distances under the callable `distance` between all pairs of elements in the $N$-vector $\mathbf{x}$. Returns an $N \times N$ matrix.
 
 For example:
 
@@ -463,16 +463,16 @@ d = pairwise_distance(x, euclidean) # [[0, 1, 1.414...], [1, 0, 1], [1.414..., 1
 - **`cross_distance(x, y, distance)`** — Computes the cross-distance matrix for the `distance` distance between elements of the $N$ vector $\mathbf{x}$ and the $M$ vector $\mathbf{y}$.
   Returns an $N \times M$ matrix $\mathbf{D}$ where the $D_{i,j} = \text{distance}(\mathbf{x}_i, \mathbf{y}_j)$, noting that both $\mathbf{x}_i$ and $\mathbf{y}_j$ are themselves vectors.
 
-- **`euclidean(u, v)`** — Computes the $L_2$ Euclidean distance $\sqrt{\sum (u_i - v_i)^2}$ between two vectors.
+- **`euclidean(u, v)`** — Computes the $L_2$ Euclidean distance $\sqrt{\sum_i (u_i - v_i)^2}$ between two vectors.
 
-- **`squared_euclidean(u, v)`** — Computes the squared Euclidean distance $\sum (u_i - v_i)^2$ between two vectors. 
+- **`squared_euclidean(u, v)`** — Computes the squared Euclidean distance $\sum_i (u_i - v_i)^2$ between two vectors. 
 
-- **`cosine(u, v)`** — Computes the cosine distance $1 - \frac{u \cdot v}{\|u\|_2 \|v\|_2}$ between two vectors of non-zero magnitude.
+- **`cosine(u, v)`** — Computes the cosine distance $1 - \frac{\mathbf{u} \cdot \mathbf{v}}{\|\mathbf{u}\|_2 \|\mathbf{v}\|_2}$ between two vectors of non-zero magnitude.
 
-- **`manhattan(u, v)`** — Computes the Manhattan / $L_1$ norm distance $\sum |u_i - v_i|$ between two vectors.
+- **`manhattan(u, v)`** — Computes the Manhattan / $L_1$ norm distance $\sum_i |u_i - v_i|$ between two vectors.
 
 - **`chebyshev(u, v)`** — Computes the Chebyshev / $L_\infty$ maximum distance $\max_i |u_i - v_i|$ between two vectors.
 
-- **`minkowski(u, v, p)`** — Computes the $L_p$ Minkowski distance $(\sum |u_i - v_i|^p)^{1/p}$.
+- **`minkowski(u, v, p)`** — Computes the $L_p$ Minkowski distance $\left(\sum_i |u_i - v_i|^p\right)^{1/p}$.
 
 - **`jensenshannon(u, v)`** — Computes the Jensen-Shannon distance $\sqrt{\frac{1}{2} D_{KL}(u \parallel m) + \frac{1}{2} D_{KL}(v \parallel m)}$ between two probability vectors $u$ and $v$ where $m = \frac{u + v}{2}$. 

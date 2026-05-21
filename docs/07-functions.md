@@ -37,7 +37,7 @@ value-level operations in FlatPPL. For measure-level operations, see [measure al
   ```
 
 - **`fill(x, n, m, ...)`** — creates an array of shape `n × m × ...` filled with
-  value `x` (e.g., `fill(0.0, 10)`).
+  value `x` (e.g., `fill(0, 10)`).
 
 - **`zeros(n, m, ...)`** — creates a real-valued array of shape `n × m × ...` filled
   with zeros. Equivalent to `fill(0, n, m, ...)`.
@@ -369,7 +369,7 @@ be passed as arguments to higher-order functions like `broadcast`, `reduce` and 
 |---|---|---|---|
 | `add` | `a`, `b` | `a + b` | scalars or arrays of same shape (real or complex) |
 | `sub` | `a`, `b` | `a - b` | scalars or arrays of same shape (real or complex) |
-| `mul` | `a`, `b` | `a * b` | scalars, matrix-matrix, matrix-vector, scalar-matrix, scalar-vector, transposedvector-vector |
+| `mul` | `a`, `b` | `a * b` | scalars, matrix-matrix, matrix-vector, scalar-matrix, scalar-vector, transposed-vector–vector |
 | `divide` | `a`, `b` | `a / b` | scalars (real or complex) |
 | `neg` | `x` | `-x` | scalars or arrays (real or complex) |
 | `pow` | `base`, `exponent` | `base ^ exponent` | scalars (real or complex; complex extension via principal branch, see above) |
@@ -470,9 +470,10 @@ complex-conjugated elements.
 For multi-dimensional arrays, use `sizeof` to obtain shape information:
 
 ```flatppl
-x = rowstack([[1, 2, 3], [4, 5, 6]])
-l = lengthof(x[1])  # 3
-s = sizeof(x)       # [2, 3]
+v = [10, 20, 30]
+M = rowstack([[1, 2, 3], [4, 5, 6]])
+lv = lengthof(v)  # 3
+sM = sizeof(M)    # [2, 3]
 ```
 
 **Table reductions.** When `sum`, `mean`, or `var` is applied to a table, the
