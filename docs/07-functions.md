@@ -510,7 +510,7 @@ the reduction operation.
 |---|---|---|---|
 | `ifelse` | `cond`, `a`, `b` | returns `a` if `cond` is true, `b` otherwise | `cond`: `booleans`; `a`, `b`: `anything` |
 
-**Note.** `ifelse` and `land`/`lor` do not guarantee short-circuit evaluation: engines are free to evaluate both branches/operands or only one, depending on design and use case. Expressions like `ifelse(x == 0, 0, 1/x)` are therefore not safe — the `1/x` branch may still be evaluated and produce `inf`/`nan` even when `cond` is false.
+**Note.** `ifelse` and `land`/`lor` do not guarantee short-circuit evaluation: engines are free to evaluate both branches/operands or only one, depending on design and use case.
 
 ### Membership, filtering, and bin selection
 
