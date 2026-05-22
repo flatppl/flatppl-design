@@ -191,15 +191,38 @@ returns
 
 $$\mathbf{M} = \begin{pmatrix} 1 & 4 \\ 2 & 5 \\ 3 & 6 \end{pmatrix}$$
 
-**`tile(A, size)`** constructs an array by tiling `A` along each axis. `size`
-is a positive integer (for a 1-D `A`) or a vector of positive integers, one
-per axis of `A`; for an n-D `A`, `lengthof(size)` must equal `ndims(A)`. To
+**`tile(A, size)`** constructs an array by tiling `A` along each axis. `A`
+must be an array (tables are not accepted). `size` is a positive integer
+(for a 1-D `A`) or a vector of positive integers, one per axis of `A`; for
+an n-D `A`, `lengthof(size)` must equal the number of dimensions of `A`. To
 insert singleton axes before tiling, combine with `addaxes`.
 
 For example, `tile([1, 2, 3], 3)` produces `[1, 2, 3, 1, 2, 3, 1, 2, 3]`. For
 a matrix `M` of shape `(1, 3)`, `tile(M, [2, 1])` produces a shape-`(2, 3)`
 matrix (rows repeated) and `tile(M, [1, 2])` produces a shape-`(1, 6)` matrix
 (columns repeated).
+
+**`splitblocks(A, blocksize)`** splits an array `A` into equal-sized
+sub-arrays of shape `blocksize`, returning a nested array of arrays. `A` must
+be an array (tables are not accepted). `blocksize` is a positive integer
+(for a 1-D `A`) or a vector of positive integers, one per axis of `A`. Each
+axis of `sizeof(A)` must be divisible by the corresponding entry of
+`blocksize`; the outer-array shape is the elementwise quotient, and every
+inner array has shape `blocksize`. For example,
+`splitblocks([1, 2, 3, 4, 5, 6], 2)` produces `[[1, 2], [3, 4], [5, 6]]`.
+
+**`joinblocks(A)`** is the inverse of `splitblocks`: given an array of
+equal-shaped inner arrays, it removes one level of nesting and returns a
+single array whose shape is the elementwise product of the outer shape and
+the (common) inner shape. The outer and inner arrays must have the same
+number of dimensions, and all inner arrays must share the same shape
+(otherwise a static error). Tables are not accepted.
+
+The block operations satisfy:
+
+- `joinblocks(splitblocks(A, blocksize))` is equivalent to `A`
+- `splitblocks(tile(A, ntiles), sizeof(A))` is equivalent to `fill(A, ntiles)`
+- `tile(A, ntiles)` is equivalent to `joinblocks(fill(A, ntiles))`
 
 **`partition(xs, spec)`** splits a vector `xs` into a vector of sub-vectors. The
 second argument `spec` may be:
