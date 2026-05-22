@@ -341,8 +341,8 @@ marginalization.
 Consider a simple deterministic computation:
 
 ```flatppl
-c = a + b
-d = a - b
+c = a ^ 2
+d = max(b, 1.5)
 e = c * d
 ```
 
