@@ -213,10 +213,6 @@ FlatPPL:
 ```flatppl
 hepphys = standard_module("particle-physics", "0.1")
 
-# Broadcasted operations
-bcadd = broadcasted(add)
-bcmul = broadcasted(mul)
-
 # Nominal templates and uncertainties
 sig = [12.0, 11.0]
 bkg = [50.0, 52.0]
@@ -230,7 +226,7 @@ mu = elementof(nonnegreals)
 gamma = elementof(cartpow(posreals, 2))
 
 # Observation model
-expected = bcadd(bcmul(mu, sig), bcmul(gamma, bkg))
+expected = broadcast(add, broadcast(mul, mu, sig), broadcast(mul, gamma, bkg))
 obs_model = broadcast(Poisson, expected)
 
 # Auxiliary constraint model

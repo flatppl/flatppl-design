@@ -29,6 +29,18 @@ variates, counting measure for discrete variates. When a kernel $\kappa(\theta)$
 parameterized by $\theta$, the family is assumed dominated by a single
 $\theta$-independent reference measure.
 
+**Reference measure for product measures.** When `joint(M1, M2, ...)` (or
+`iid(M, n, ...)`, `jointchain(M, K1, ...)` etc.) combines components with
+individual reference measures $\rho_1, \rho_2, \ldots$ (each either `Lebesgue` or
+`Counting` on the corresponding component support), the reference measure of the
+product is the product $\rho_1 \otimes \rho_2 \otimes \cdots$ on the joint variate
+space, and the joint density w.r.t. this product reference is the product of the
+component densities. Mixed continuous-discrete joints are handled uniformly under
+this rule: e.g. `joint(c = Normal(mu = 0, sigma = 1), k = Poisson(rate = 3))` has
+reference measure $\mathrm{Lebesgue}(\mathbb{R}) \otimes \mathrm{Counting}(\mathbb{Z})$
+on $\mathbb{R} \times \mathbb{Z}$, with joint density $\phi(c;\,0,1) \cdot
+\mathrm{Pois}(k;\,3)$ at $(c, k)$.
+
 **Normalization convention.** Normalization is always explicit in FlatPPL. Built-in
 distribution/measure constructors do not normalize their inputs, and measure-algebra
 operations never rescale their inputs or outputs.
@@ -333,6 +345,18 @@ closed measures (i.e. nullary kernels) as inputs. `densityof(M, x)` and
   )
   ```
 
+#### Engine contract for `pushfwd` density evaluation
+
+`densityof(pushfwd(f, M), y)` and `logdensityof(pushfwd(f, M), y)` require the engine to invert `f` and apply the volume element. Engines must support density evaluation in the following three cases:
+
+1. **Known-bijection registry.** Every conforming engine must recognize a fixed set of built-in bijections by name — `exp`/`log`, affine maps composed from `add`/`sub`/`neg`/`mul`/`divide` (with positive scaling), `pow` with literal exponent, `cis`, and matrix-vector affine maps such as `mu + lower_cholesky(cov) * _` — together with every explicitly `bijection`-annotated user function. For these, density evaluation is analytic using the recorded inverse and log-volume.
+
+2. **Structural projection.** The non-bijective projection pattern `pushfwd(fn(get(_, [...])), M)` denotes a marginalization. Engines must support density evaluation when this projection acts on a measure with explicit product structure (`joint`, `iid`, `jointchain`), in which case the marginal density is closed-form. For projections of measures without explicit product structure, engines may either compute the marginal numerically or report a static error.
+
+3. **Arbitrary unannotated `f`.** For a user function that is neither in the known-bijection registry nor a structural projection, `densityof`/`logdensityof` of the pushforward is a **static error** by default. Users must explicitly wrap such functions with `bijection(f, f_inv, logvolume)` to make density evaluation well-defined. Engines may optionally provide opt-in fallbacks (term-rewriting-based symbolic inversion, autodiff Jacobian for square maps), but no engine is required to do so.
+
+The intent is that engines do not silently substitute heuristics: density-of-pushforward succeeds with closed-form math or fails loudly, matching the user-asserted-correctness model of `bijection`.
+
 ### Likelihoods and posteriors
 
 #### Likelihood construction
@@ -364,7 +388,7 @@ obs_values = [1.2, 3.4, 5.1, -1.5, 2.8]
 
 R = interval(-3.0, 3.0)
 obs_R = filter(fn(_ in R), obs_values)
-n = length(obs_R)
+n = lengthof(obs_R)
 model_R = normalize(truncate(model, R))
 L_R = likelihoodof(functionof(iid(model_R, n)), obs_R)
 ```
@@ -378,7 +402,7 @@ obs_events = [1.2, 3.4, 5.1, -1.5, 2.8]
 
 R = interval(-3.0, 3.0)
 obs_R = filter(fn(_ in R), obs_events)
-model_R = PoissonProcess(truncate(intensity, R))
+model_R = PoissonProcess(intensity = truncate(intensity, R))
 L_R = likelihoodof(functionof(model_R), obs_R)
 ```
 
