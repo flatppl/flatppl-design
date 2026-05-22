@@ -189,9 +189,9 @@ returns
 
 $$\mathbf{M} = \begin{pmatrix} 1 & 4 \\ 2 & 5 \\ 3 & 6 \end{pmatrix}$$
 
-**`repeat(A, n, m, ...)`** constructs an array by tiling `A` `n` times along the first axis, `m` times along the second axis, and so on. Each repetition count is a positive integer, and the number of repetition arguments must equal `ndims(A)`. To insert singleton dimensions before tiling, combine with `addaxes`.
+**`tile(A, n, m, ...)`** constructs an array by tiling `A` `n` times along the first axis, `m` times along the second axis, and so on. Each repetition count is a positive integer, and the number of repetition arguments must equal `ndims(A)`. To insert singleton dimensions before tiling, combine with `addaxes`.
 
-For example, `repeat([1, 2, 3], 3)` produces `[1, 2, 3, 1, 2, 3, 1, 2, 3]`. For a matrix `M` of shape `(1, 3)`, `repeat(M, 2, 1)` produces a shape-`(2, 3)` matrix (rows repeated) and `repeat(M, 1, 2)` produces a shape-`(1, 6)` matrix (columns repeated).
+For example, `tile([1, 2, 3], 3)` produces `[1, 2, 3, 1, 2, 3, 1, 2, 3]`. For a matrix `M` of shape `(1, 3)`, `tile(M, 2, 1)` produces a shape-`(2, 3)` matrix (rows repeated) and `tile(M, 1, 2)` produces a shape-`(1, 6)` matrix (columns repeated).
 
 **`partition(xs, spec)`** splits a vector `xs` into a vector of sub-vectors. The
 second argument `spec` may be:
