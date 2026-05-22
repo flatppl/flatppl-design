@@ -30,7 +30,7 @@ parameterized by $\theta$, the family is assumed dominated by a single
 $\theta$-independent reference measure.
 
 **Reference measure for product measures.** When `joint(M1, M2, ...)` (or
-`iid(M, n, ...)`, `jointchain(M, K1, ...)` etc.) combines components with
+`iid(M, size)`, `jointchain(M, K1, ...)` etc.) combines components with
 individual reference measures $\rho_1, \rho_2, \ldots$ (each either `Lebesgue` or
 `Counting` on the corresponding component support), the reference measure of the
 product is the product $\rho_1 \otimes \rho_2 \otimes \cdots$ on the joint variate
@@ -177,8 +177,9 @@ closed measures (i.e. nullary kernels) as inputs. `densityof(M, x)` and
   For kernels, `joint(K1, K2, ...)` results in a kernel that fans a single input out
   to all component kernels, so each of them receives the same input.
 
-- **`iid(M, m, n, ...)`** — the product measure $M^{\otimes (m \cdot n \cdot \ldots)}$,
-  producing a measure on arrays of shape `m × n × ...`.
+- **`iid(M, size)`** — the product measure $M^{\otimes N}$ over arrays of
+  shape `size`, where `N = prod(size)`. `size` is an integer (1-D length) or
+  a vector of positive integers (multi-axis shape).
 
   For example, to represent the draw of 100 IID samples from a normal distribution, use 
 

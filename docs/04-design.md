@@ -121,12 +121,11 @@ or may not be significant. The total number of inputs is never zero:
 - `broadcast`: One distinguished input for the function to be broadcast, plus
   named or unnamed inputs that match the inputs of that function.
 - `broadcasted`: One distinguished input.
-- `cat`, `zeros`, `ones`, `fchain`, `kchain`: Variadic unnamed inputs with
-  significant order.
+- `cat`, `fchain`, `kchain`: Variadic unnamed inputs with significant order.
 - `cartprod`, `joint`, `jointchain`: Variadic unnamed or named inputs with
   significant order.
-- `get`, `fill`, `cartpow`, `iid`: One distinguished input plus variadic unnamed input
-  with significant order.
+- `get`: One distinguished input plus variadic unnamed input with
+  significant order.
 - `superpose`: Variadic unnamed inputs with no significant order.
 - `load_module`: One distinguished input plus optional variadic named inputs with
   no significant order.

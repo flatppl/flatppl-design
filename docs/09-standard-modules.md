@@ -275,7 +275,7 @@ Parameters:
 
 - `x = elementof(cartpow(reals, k))`: $k$ dimensional data vector $\mathbf{x}$.
 - `alpha = elementof(cartpow(reals, n))`: intercept $n$ vector (one intercept per class)
-- `beta = elementof(cartpow(reals, k, n))`: $k \times n$ matrix of regression coefficients (columns correspond to classes).
+- `beta = elementof(cartpow(reals, [k, n]))`: $k \times n$ matrix of regression coefficients (columns correspond to classes).
 
 `CategoricalLogitGLM(x, alpha, beta)` is mathematically equivalent to `Categorical(softmax(alpha + transpose(x) * beta))`, but is computed in a numerically stable manner.
 

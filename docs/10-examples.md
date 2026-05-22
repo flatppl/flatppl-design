@@ -91,7 +91,7 @@ truncation, density-defined distributions, module loading, and hypothesis testin
 ```flatppl
 # Inputs used in the snippets below
 some_mean = elementof(cartpow(reals, 3))
-some_cov = elementof(cartpow(reals, 3, 3))
+some_cov = elementof(cartpow(reals, [3, 3]))
 x = elementof(reals)
 c0 = elementof(reals)
 c1 = elementof(reals)

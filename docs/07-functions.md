@@ -36,14 +36,16 @@ value-level operations in FlatPPL. For measure-level operations, see [measure al
   M2 = array(data = [1, 2, 3, 4, 5, 6], size = [2, 3], dimorder = [2, 1])
   ```
 
-- **`fill(x, n, m, ...)`** — creates an array of shape `n × m × ...` filled with
-  value `x` (e.g., `fill(0, 10)`).
+- **`fill(x, size)`** — creates an array of shape `size` filled with value `x`.
+  `size` is an integer (1-D length) or a vector of positive integers
+  (multi-axis shape); e.g. `fill(0, 10)`, `fill(0, [2, 3])`,
+  `fill(0, sizeof(A))`.
 
-- **`zeros(n, m, ...)`** — creates a real-valued array of shape `n × m × ...` filled
-  with zeros. Equivalent to `fill(0, n, m, ...)`.
+- **`zeros(size)`** — creates a real-valued array of shape `size` filled with
+  zeros. Equivalent to `fill(0, size)`.
 
-- **`ones(n, m, ...)`** — creates a real-valued array of shape `n × m × ...` filled
-  with ones. Equivalent to `fill(1, n, m, ...)`.
+- **`ones(size)`** — creates a real-valued array of shape `size` filled with
+  ones. Equivalent to `fill(1, size)`.
 
 - **`eye(n)`** — creates the $n \times n$ real-valued identity matrix $\mathbf{I}_n$.
 
@@ -189,9 +191,15 @@ returns
 
 $$\mathbf{M} = \begin{pmatrix} 1 & 4 \\ 2 & 5 \\ 3 & 6 \end{pmatrix}$$
 
-**`tile(A, n, m, ...)`** constructs an array by tiling `A` `n` times along the first axis, `m` times along the second axis, and so on. Each repetition count is a positive integer, and the number of repetition arguments must equal `ndims(A)`. To insert singleton dimensions before tiling, combine with `addaxes`.
+**`tile(A, size)`** constructs an array by tiling `A` along each axis. `size`
+is a positive integer (for a 1-D `A`) or a vector of positive integers, one
+per axis of `A`; for an n-D `A`, `lengthof(size)` must equal `ndims(A)`. To
+insert singleton axes before tiling, combine with `addaxes`.
 
-For example, `tile([1, 2, 3], 3)` produces `[1, 2, 3, 1, 2, 3, 1, 2, 3]`. For a matrix `M` of shape `(1, 3)`, `tile(M, 2, 1)` produces a shape-`(2, 3)` matrix (rows repeated) and `tile(M, 1, 2)` produces a shape-`(1, 6)` matrix (columns repeated).
+For example, `tile([1, 2, 3], 3)` produces `[1, 2, 3, 1, 2, 3, 1, 2, 3]`. For
+a matrix `M` of shape `(1, 3)`, `tile(M, [2, 1])` produces a shape-`(2, 3)`
+matrix (rows repeated) and `tile(M, [1, 2])` produces a shape-`(1, 6)` matrix
+(columns repeated).
 
 **`partition(xs, spec)`** splits a vector `xs` into a vector of sub-vectors. The
 second argument `spec` may be:
