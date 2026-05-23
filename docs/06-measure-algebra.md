@@ -558,3 +558,64 @@ DAG, `disintegrate` can be implemented via straightforward graph inspection. For
 models that involve internal marginalization, non-bijective changes of variables, or
 other transformations that destroy explicit factorization structure, the
 decomposition may be intractable and may not be supported.
+
+#### Measure restriction
+
+**`restrict(M, x)`** is the non-normalized conditional measure of `M` given
+`x`.
+
+`M` must be a closed measure over a space of records or tables and `x` must
+be a record/table so that all field/column names of `x` appear in the
+field/column names of variates of `M`.
+
+`restrict` is defined via measure disintegration:
+
+```flatppl
+x = record(a = ..., b = ...)
+nu = restrict(mu, x)
+```
+
+is equivalent to
+
+```flatppl
+x = record(a = ..., b = ...)
+kernel, marginal = disintegrate(["a", "b", ...], mu)
+nu = bayesupdate(likelihoodof(kernel, x), marginal)
+```
+
+and equivalent, in a non-Bayesian formulation, to
+
+```flatppl
+x = record(a = ..., b = ...)
+kernel, marginal = disintegrate(["a", "b", ...], mu)
+nu = logweighted(fn(logdensityof(kernel(_), x)), marginal)
+```
+
+The keyword-form is allowed as well due to
+[auto-splatting](04-design.md#sec:calling-convention):
+
+```flatppl
+nu = restrict(mu, a = ..., b = ...)
+```
+
+*Posterior construction.* `restrict` is a useful tool to construct Bayesian
+posteriors, for example
+
+```flatppl
+prior = joint(mu = Normal(0, 1), sigma = Exponential(1))
+model_kernel = (mu, sigma) -> joint(obs = iid(Normal(mu, sigma), 5))
+obs = [0.9, 0.7, -1.2, 0.3, -0.5]
+joint_model = jointchain(prior, model_kernel)
+posterior = restrict(joint_model, obs = obs)
+```
+
+*Prior parameter pinning.* `restrict` can also be used to pin parameters
+of Bayesian priors to fixed values:
+
+```flatppl
+prior = joint(mu = Normal(0, 1), sigma = Exponential(1))
+restricted_prior = restrict(prior, sigma = 0.8)
+```
+
+Note that the prior must be amenable to structural disintegration with
+respect to the pinned parameter(s).
