@@ -37,6 +37,8 @@ FlatPPL has a very lean syntax:
   `a .+ b` are syntactic sugar for `broadcast` (see [Broadcasting syntax](#broadcasting-syntax)).
 - **Lambda**: `(arg1, arg2, ...) -> expr` is shorthand for `functionof` with placeholders (see
   [Lambda syntax](#lambda-syntax)).
+- **Aggregation**: axis-indexed binding `C[.i, .k] := expr` is shorthand for
+  sum-[`aggregate`](04-design.md#sec:aggregate) (see [Axis names and aggregation](#axis-names)).
 - **Function calls**: `f(x, y)` (positional), `f(a = x, b = y)` (keyword) and
   `f(object, a = x, b = y)` (for some special operations).
 - **Indexing and field access**: `A[i]`, `A[i, j]`, `A[:, j]`, `r.field`.
@@ -128,6 +130,18 @@ the argument names refer to the lambda's inputs and shadow any module-level
 binding of the same name. See [Reification to functions and
 kernels](04-design.md#sec:functionof) for the desugaring.
 
+### <a id="axis-names"></a>Axis names and aggregation
+
+Axis names are written `.<name>` and are symbolic index labels used by
+[`aggregate`](04-design.md#sec:aggregate). They are lexically scoped to
+the enclosing aggregation and are not values: an axis name is legal only
+as an entry in `aggregate`'s `output_axes` array literal, as an index
+inside `[...]` within the body, or as a binder on the left-hand side of
+`:=`. Used anywhere else it is a static error.
+
+The aggregation form `C[.i, .j, ...] := expr` is shorthand for
+sum-[`aggregate`](04-design.md#sec:aggregate); see there for the desugaring.
+
 ### <a id="host-language-embedding"></a>Host-language embedding
 
 FlatPPL defines a recommended mechanism for embedding FlatPPL code in Python
@@ -176,12 +190,14 @@ The canonical surface syntax is defined in EBNF below (ISO 14977-style, with
 (* Top level *)
 Module          ::= Newline* (Statement (Newline+ Statement)*)? Newline* EOF
 Statement       ::= Binding | TildeBinding | Decomposition | TildeDecomposition
+                  | AggregateBinding
 
 (* Bindings *)
 Binding            ::= Name "=" Expression
 Decomposition      ::= Name ("," Name)+ "=" Expression
 TildeBinding       ::= Name "~" Expression
 TildeDecomposition ::= Name ("," Name)+ "~" Expression
+AggregateBinding   ::= Name "[" Axis ("," Axis)* "]" ":=" Expression
 
 (* Expressions — lambda at top, logical OR/AND above comparisons,
    exponentiation below multiplicative *)
@@ -195,12 +211,13 @@ Multiplicative  ::= Unary (MulOp Unary)*
 Unary           ::= ("-" | ".-") Unary | ("!" | ".!") Unary | Exponential
 Exponential     ::= Postfix (("^" | ".^") Unary)?
 Postfix         ::= Primary (FieldAccess | DotCall | Indexing | Call)*
-Primary         ::= Literal | Name | "(" Expression ")"
+Primary         ::= Literal | Name | Axis | "(" Expression ")"
 
 FieldAccess     ::= "." Name
 DotCall         ::= "." "(" CallArgs ")"
 Indexing        ::= "[" IndexExpr ("," IndexExpr)* "]"
 IndexExpr       ::= Expression | ":"
+Axis            ::= "." Name
 
 CompOp          ::= "<" | ">" | "==" | "!=" | "<=" | ">=" | "in"
                   | ".<" | ".>" | ".==" | ".!=" | ".<=" | ".>="
@@ -274,6 +291,11 @@ inside `functionof`/`kernelof`). The grammar parses both as ordinary `Name`; the
 syntactic restrictions on where they may appear are documented in
 [functions](04-design.md#sec:functionof) and [reification](04-design.md#sec:functionof).
 
+**Note on axis names.** The grammar admits `Axis` (`.<name>`) as a `Primary`,
+but `Axis` is legal only inside an [aggregation](#axis-names) — as an entry
+of `aggregate`'s `output_axes`, as an `[...]` index in its body, or as a
+binder of an `AggregateBinding`. Anywhere else it is a static error.
+
 **Note on tuples.** `(x)` is a parenthesised expression. `(x, y)` is a tuple. The
 single-element form `(x,)` is not in the grammar — single-element tuples are not
 supported (consistent with the design rule that tuples have at least two
@@ -293,4 +315,5 @@ integer-literal operand needs whitespace or an explicit fractional part —
 `1 ./ x` or `1.0 ./ x`. After a closing `)`, a one-token lookahead for `->`
 distinguishes a `Lambda` from a parenthesised expression or tuple literal; a
 lambda is well-formed only if the parenthesised content was a non-empty list
-of bare `Name`s.
+of bare `Name`s. A `.Name` token is `FieldAccess` when it follows a
+`Postfix`-able expression, and `Axis` otherwise (at the start of a `Primary`).

@@ -512,6 +512,9 @@ reduction operates column-wise and returns a record whose fields are the
 column names and values are the per-column reductions. Every column must support
 the reduction operation.
 
+For multi-axis array contraction using these reductions, see
+[multi-axis aggregation](04-design.md#sec:aggregate).
+
 ### Norms and normalization
 
 | Function | Arguments | Description | Domains |

@@ -130,6 +130,7 @@ or may not be significant. The total number of inputs is never zero:
 - `load_module`: One distinguished input plus optional variadic named inputs with
   no significant order.
 - `standard_module`: Two distinguished inputs.
+- `aggregate`: Three distinguished inputs.
 - `load_data`: One distinguished input plus optional variadic named inputs with
   significant order.
 - `checked`: Two distinguished inputs.
@@ -786,6 +787,76 @@ deterministic functions, not kernels.
 explicit initial accumulator `init`. It produces a vector (or table) of intermediate
 accumulator values, one per element/row of `xs`, of the same length as the input.
 Like `reduce`, `scan` accepts only deterministic functions.
+
+<a id="sec:aggregate"></a>
+
+**Multi-axis aggregation.** `aggregate(f_reduction, output_axes, expr)`
+generalizes vector reductions to multi-axis tensor contraction, as a
+generalization of Einstein summation.
+
+`aggregate` evaluates `expr` at every combination of values of its named axes
+and reduces the resulting scalars by `f_reduction` along the axes that do not
+appear in `output_axes`, yielding an array of the shape declared by
+`output_axes`.
+
+- `f_reduction`: an order-invariant vector-to-scalar reduction — i.e. a
+  function $f: S^n \to S$ where `f_reduction(v)` is invariant under
+  permutations of `v`. The eligible built-ins are `sum`, `prod`, `mean`,
+  `var`, `std`, `maximum` and `minimum`.
+- `output_axes`: a non-empty array literal of distinct axis names
+  `[.name1, .name2, ...]` listing the retained axes in output order.
+  Repeated names are a static error.
+- `expr`: an expression in which array indexing may contain axis
+  names, like `A[.i, 1, .j]` or `get(A, .i, 1, .j)`. Every axis
+  name in `output_axes` must occur at least once in `expr`; any further
+  axis names occurring in `expr` are reduced over with `f_reduction`. All
+  array dimensions indexed with the same axis name must have the same length.
+
+Examples:
+
+```flatppl
+# Matrix multiplication
+C = aggregate(sum, [.i, .k], A[.i, .j] * B[.j, .k])
+
+# Weighted sum of squared differences, reducing over .j
+D = aggregate(sum, [.i, .k], (A[.i, .j] - B[.j, .k])^2 * W[.j])
+
+# Column-wise variance of a matrix (var has no := shorthand)
+V = aggregate(var, [.j], M[.i, .j])
+
+# Row-wise sum with one fixed column
+S = aggregate(sum, [.i], A[.i, 1])
+```
+
+Axis names are lexically scoped to the enclosing `aggregate(...)` and are
+not values; see [axis names](05-syntax.md#axis-names) for the surface rules.
+
+*`:=` notation.* As a shorthand for sum-`aggregate`, FlatPPL provides
+`result[.name1, .name2, ...] := expr`, equivalent to
+`result = aggregate(sum, [.name1, .name2, ...], expr)`.
+
+So
+
+```flatppl
+D[.i, .k] := (A[.i, .j] - B[.j, .k])^2 * W[.j]
+```
+
+lowers to
+
+```flatppl
+D = aggregate(sum, [.i, .k], (A[.i, .j] - B[.j, .k])^2 * W[.j])
+```
+
+`aggregate` composes cleanly with `functionof` as the namespace of axis names
+is local to the enclosing `aggregate` and the namespace of placeholders is
+local to the enclosing `functionof`:
+
+```flatppl
+mymatmul = functionof(
+    aggregate(sum, [.i, .k], _A_[.i, .j] * _B_[.j, .k]),
+    A = _A_, B = _B_
+)
+```
 
 ### Lowered linear form
 

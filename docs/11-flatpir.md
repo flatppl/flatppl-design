@@ -220,6 +220,10 @@ reals  posreals  integers  booleans  pi  inf  im
 - `(%ref %local <name>)` — reference to a parameter inside `functionof` or `kernelof`.
 - `(%ref <module> <name>)` — reference to a binding in a loaded module.
 
+**Axis nodes** use `(%axis <name>)` for the symbolic axis labels of
+[`aggregate`](04-design.md#sec:aggregate). An axis reference `.i` in
+FlatPPL maps to `(%axis i)` in FlatPIR.
+
 **Calls to user-defined callables** use `(%call <ref-head> <args>...)`:
 
 ```lisp
