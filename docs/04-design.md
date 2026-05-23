@@ -416,6 +416,14 @@ to the function and decoupled from the original nodes `a` and `d`.
 
 **Identity law.** `functionof(f(a, b), ..., a = a, b = b, ...)` is equivalent to `f`.
 
+**Lambda notation.** The surface form `(arg1, arg2, ...) -> expr` is shorthand for
+`functionof(expr', arg1 = _arg1_, arg2 = _arg2_, ...)`, where `expr'` is `expr`
+with every free occurrence of each `arg_i` rewritten to the placeholder
+`_arg_i_`. Inside the body, `arg_i` refers to the lambda's input, not to any
+module binding of the same name. There is no nullary lambda. For example,
+`(x, y) -> x * y + 1` is equivalent to
+`functionof(_x_ * _y_ + 1, x = _x_, y = _y_)`.
+
 #### <a id="sec:kernelof"></a>Kernels and `kernelof`
 
 `kernelof(x, kwargs...)` reifies (typically stochastic) value nodes to Markov

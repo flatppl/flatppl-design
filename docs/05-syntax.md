@@ -35,6 +35,8 @@ FlatPPL has a very lean syntax:
   see [Logic and conditionals](07-functions.md#logic-and-conditionals)).
 - **Broadcasting**: Dot-call `f.(...)` and dot-prefixed operator application
   `a .+ b` are syntactic sugar for `broadcast` (see [Broadcasting syntax](#broadcasting-syntax)).
+- **Lambda**: `(arg1, arg2, ...) -> expr` is shorthand for `functionof` with placeholders (see
+  [Lambda syntax](#lambda-syntax)).
 - **Function calls**: `f(x, y)` (positional), `f(a = x, b = y)` (keyword) and
   `f(object, a = x, b = y)` (for some special operations).
 - **Indexing and field access**: `A[i]`, `A[i, j]`, `A[:, j]`, `r.field`.
@@ -103,7 +105,7 @@ Their semantics are defined in [language design](04-design.md#sec:design).
 
 ### <a id="broadcasting-syntax"></a>Broadcasting syntax
 
-FlatPPL provides dot-prefixed sugar for
+FlatPPL provides dot-prefixed shorthand for
 [`broadcast`](04-design.md#sec:higher-order):
 
 - **`f.(<args>)`** — dot-call.
@@ -114,6 +116,17 @@ Each dotted operator has the same precedence as its plain counterpart. `in`
 has no dotted form (its right operand is a set, not a broadcastable value).
 See [Higher-order operations](04-design.md#sec:higher-order) for dot-notation
 lowering.
+
+### <a id="lambda-syntax"></a>Lambda syntax
+
+`(arg1, arg2, ...) -> expr` is syntactic sugar for
+[`functionof`](04-design.md#sec:functionof). At least one argument is
+required (no nullary lambdas). The body extends as far right as possible —
+lambdas have lower precedence than every other expression form, so
+`(a, b) -> a^2 + b^2` parses with `a^2 + b^2` as the body. Inside the body,
+the argument names refer to the lambda's inputs and shadow any module-level
+binding of the same name. See [Reification to functions and
+kernels](04-design.md#sec:functionof) for the desugaring.
 
 ### <a id="host-language-embedding"></a>Host-language embedding
 
@@ -170,9 +183,10 @@ Decomposition      ::= Name ("," Name)+ "=" Expression
 TildeBinding       ::= Name "~" Expression
 TildeDecomposition ::= Name ("," Name)+ "~" Expression
 
-(* Expressions — logical OR/AND above comparisons,
+(* Expressions — lambda at top, logical OR/AND above comparisons,
    exponentiation below multiplicative *)
-Expression      ::= Or
+Expression      ::= Lambda | Or
+Lambda          ::= "(" Name ("," Name)* ")" "->" Expression
 Or              ::= And (("||" | ".||") And)*
 And             ::= Comparison (("&&" | ".&&") Comparison)*
 Comparison      ::= Additive (CompOp Additive)*       (* chained *)
@@ -276,4 +290,7 @@ single tokens, recognized by maximal munch. Maximal munch also resolves the
 trailing-dot real literal against a dotted operator: in `1./x` the `1.` is the
 real literal `1.0` (so this is `1.0 / x`), as in Julia. A dotted operator on an
 integer-literal operand needs whitespace or an explicit fractional part —
-`1 ./ x` or `1.0 ./ x`.
+`1 ./ x` or `1.0 ./ x`. After a closing `)`, a one-token lookahead for `->`
+distinguishes a `Lambda` from a parenthesised expression or tuple literal; a
+lambda is well-formed only if the parenthesised content was a non-empty list
+of bare `Name`s.
