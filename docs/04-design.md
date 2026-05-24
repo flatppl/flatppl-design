@@ -417,12 +417,18 @@ to the function and decoupled from the original nodes `a` and `d`.
 
 **Identity law.** `functionof(f(a, b), ..., a = a, b = b, ...)` is equivalent to `f`.
 
-**Lambda notation.** The surface form `(arg1, arg2, ...) -> expr` is shorthand for
-`functionof(expr', arg1 = _arg1_, arg2 = _arg2_, ...)`, where `expr'` is `expr`
-with every free occurrence of each `arg_i` rewritten to the placeholder
-`_arg_i_`. Inside the body, `arg_i` refers to the lambda's input, not to any
-module binding of the same name. There is no nullary lambda. For example,
-`(x, y) -> x * y + 1` is equivalent to
+**Lambda notation.** A lambda function is a shorthand notation for `functionof`
+with placeholders. A single-argument lambda is written `arg -> expr`; two or
+more arguments are listed in parentheses: `(arg1, arg2, ...) -> expr` (the
+single-argument parenthesised form `(arg) -> expr` is not valid).
+
+Either form resolves to `functionof(expr', arg1 = _arg1_, ...)`, where
+`expr'` is `expr` with every
+free occurrence of each `arg_i` rewritten to the placeholder `_arg_i_`.
+Inside the body, `arg_i` refers to the lambda's input, not to any module
+binding of the same name. There is no nullary lambda.
+
+For example, `x -> 2 * x + 1` is equivalent to `functionof(2 * _x_ + 1, x = _x_)`, and `(x, y) -> x * y + 1` is equivalent to
 `functionof(_x_ * _y_ + 1, x = _x_, y = _y_)`.
 
 #### <a id="sec:kernelof"></a>Kernels and `kernelof`

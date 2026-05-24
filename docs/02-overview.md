@@ -324,7 +324,7 @@ named = relabel(some_array, ["a", "b", "c"])
 mvmodel = relabel(MvNormal(mu = some_mean, cov = some_cov), ["a", "b", "c"])
 
 # Variable transformation
-log_normal = pushfwd((x) -> exp(x), Normal(mu = 0, sigma = 1))
+log_normal = pushfwd(x -> exp(x), Normal(mu = 0, sigma = 1))
 
 # Projection (marginalizes out b)
 marginal_ac = pushfwd(fn(get(_, ["a", "c"])), mvmodel)

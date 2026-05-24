@@ -35,7 +35,8 @@ FlatPPL has a very lean syntax:
   see [Logic and conditionals](07-functions.md#logic-and-conditionals)).
 - **Broadcasting**: Dot-call `f.(...)` and dot-prefixed operator application
   `a .+ b` are syntactic sugar for `broadcast` (see [Broadcasting syntax](#broadcasting-syntax)).
-- **Lambda**: `(arg1, arg2, ...) -> expr` is shorthand for `functionof` with placeholders (see
+- **Lambda**: `arg -> expr` (single arg) or `(arg1, arg2, ...) -> expr`
+  (multi-arg) is shorthand for `functionof` with placeholders (see
   [Lambda syntax](#lambda-syntax)).
 - **Aggregation**: axis-indexed binding `C[.i, .k] := expr` is shorthand for
   sum-[`aggregate`](04-design.md#sec:aggregate) (see [Axis names and aggregation](#axis-names)).
@@ -121,14 +122,17 @@ lowering.
 
 ### <a id="lambda-syntax"></a>Lambda syntax
 
-`(arg1, arg2, ...) -> expr` is syntactic sugar for
-[`functionof`](04-design.md#sec:functionof). At least one argument is
-required (no nullary lambdas). The body extends as far right as possible —
-lambdas have lower precedence than every other expression form, so
-`(a, b) -> a^2 + b^2` parses with `a^2 + b^2` as the body. Inside the body,
-the argument names refer to the lambda's inputs and shadow any module-level
-binding of the same name. See [Reification to functions and
-kernels](04-design.md#sec:functionof) for the desugaring.
+Lambda functions, denoted as `arg -> expr` and `(arg1, arg2, ...) -> expr`,
+are syntactic sugar for [`functionof`](04-design.md#sec:functionof).
+`(arg) -> expr` is not legal syntax (no parentheses around the argument in
+single-argument lambdas). At least one argument is required (no nullary
+lambdas).
+
+The body extends as far right as possible — lambdas have lower precedence than
+every other expression form, so `(a, b) -> a^2 + b^2` parses with `a^2 + b^2`
+as the body. Inside the body, the argument names refer to the lambda's inputs
+and shadow any module-level binding of the same name. See [Reification to
+functions and kernels](04-design.md#sec:functionof) for the desugaring.
 
 ### <a id="axis-names"></a>Axis names and aggregation
 
@@ -202,7 +206,8 @@ AggregateBinding   ::= Name "[" Axis ("," Axis)* "]" ":=" Expression
 (* Expressions — lambda at top, logical OR/AND above comparisons,
    exponentiation below multiplicative *)
 Expression      ::= Lambda | Or
-Lambda          ::= "(" Name ("," Name)* ")" "->" Expression
+Lambda          ::= LambdaParams "->" Expression
+LambdaParams    ::= Name | "(" Name "," Name ("," Name)* ")"
 Or              ::= And (("||" | ".||") And)*
 And             ::= Comparison (("&&" | ".&&") Comparison)*
 Comparison      ::= Additive (CompOp Additive)*       (* chained *)
@@ -313,7 +318,9 @@ trailing-dot real literal against a dotted operator: in `1./x` the `1.` is the
 real literal `1.0` (so this is `1.0 / x`), as in Julia. A dotted operator on an
 integer-literal operand needs whitespace or an explicit fractional part —
 `1 ./ x` or `1.0 ./ x`. After a closing `)`, a one-token lookahead for `->`
-distinguishes a `Lambda` from a parenthesised expression or tuple literal; a
-lambda is well-formed only if the parenthesised content was a non-empty list
-of bare `Name`s. A `.Name` token is `FieldAccess` when it follows a
-`Postfix`-able expression, and `Axis` otherwise (at the start of a `Primary`).
+distinguishes a `Lambda` from a parenthesised expression or tuple literal;
+a parenthesised lambda is well-formed only if the parenthesised content
+was a list of two or more bare `Name`s. A bare `Name` immediately
+followed by `->` is a single-argument `Lambda`. A `.Name` token is
+`FieldAccess` when it follows a `Postfix`-able expression, and `Axis`
+otherwise (at the start of a `Primary`).
