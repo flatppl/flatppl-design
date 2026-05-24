@@ -262,7 +262,7 @@ closed measures (i.e. nullary kernels) as inputs. `densityof(M, x)` and
   is equivalent to
 
   ```flatppl
-  kchain(M, functionof(joint(Dirac(value = _a_), K(_a_)), a = _a_))
+  kchain(M, (a) -> joint(Dirac(value = a), K(a)))
   ```
 
 #### Support restriction
