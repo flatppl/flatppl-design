@@ -141,6 +141,11 @@ value-level operations in FlatPPL. For measure-level operations, see [measure al
   keyword `all` selects an entire axis: `get(M, i, all)` returns row i, `get(M, all, j)`
   returns column j. Surface syntax `M[:, j]` lowers to `get(M, all, j)`.
 
+  **Singleton-axis indexing with `only`.** The keyword `only` selects
+  the unique element of an axis of size 1: `get(v, only)` returns the
+  sole element of a length-1 vector. Surface syntax `B[.i, !]` lowers to
+  `get(B, .i, only)`. The indexed axis must be of length one.
+
 - **`get0(container, selectors...)`** — zero-based variant of `get`. Behaves like
   `get` except that integer indices count from `0` instead of `1`. So `get0(v, 0)` returns the first element of vector `v`.
 
@@ -252,6 +257,10 @@ singular axes after them.
 Given an array `A` of size `(3, 4, 5)`, `addaxes(A, 2, 3)` will return an array
 of size `(1, 1, 3, 4, 5, 1, 1, 1)` with the same content as `A`.
 
+Inverse property:
+`addaxes(A, m, n)[only, ..., all, ..., only, ...]` is equivalent to `A`,
+where the index list has `m` leading `only`s, `l` middle `all`s, and `n`
+trailing `only`s (`l` being the number of dimensions of `A`).
 
 **`blockdiagmat(mats)`** constructs a block-diagonal matrix from a vector of matrices `mats`.
 Each matrix appears on a diagonal block in the output, and all off-diagonal blocks are zero.

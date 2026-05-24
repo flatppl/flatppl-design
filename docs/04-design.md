@@ -864,6 +864,28 @@ mymatmul = functionof(
 )
 ```
 
+**Relationship to broadcasting.** Aggregation overlaps with broadcasting
+when no reduction takes place. For example, given
+
+```flatppl
+v = some_vector
+A = some_matrix  # with first axis of same length as v
+B = addaxes(v, 0, 1)
+```
+
+an aggregation (using
+[singleton-axis indexing](07-functions.md#field-and-element-access))
+
+```flatppl
+aggregate(any_f_reduction, [.i, .j], A[.i, .j] * B[.i, !])
+```
+
+is equivalent to
+
+```flatppl
+broadcast((a, b) -> a * b, A, B)
+```
+
 ### Lowered linear form
 
 A FlatPPL module admits a stable lowering to a linear SSA-style core form in which

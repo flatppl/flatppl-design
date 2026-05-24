@@ -221,7 +221,7 @@ Primary         ::= Literal | Name | Axis | "(" Expression ")"
 FieldAccess     ::= "." Name
 DotCall         ::= "." "(" CallArgs ")"
 Indexing        ::= "[" IndexExpr ("," IndexExpr)* "]"
-IndexExpr       ::= Expression | ":"
+IndexExpr       ::= Expression | ":" | "!"
 Axis            ::= "." Name
 
 CompOp          ::= "<" | ">" | "==" | "!=" | "<=" | ">=" | "in"
@@ -287,8 +287,8 @@ only the special operations `functionof`, `kernelof`, `broadcast`, `load_module`
 take exactly one leading positional argument; only `broadcast` accepts multiple
 positional arguments before the keyword arguments.
 
-**Note on reserved words.** The keywords `in`, `true`, and `false` are
-recognized before `Name` and cannot be used as bindings.
+**Note on reserved words.** The keywords `in`, `true`, `false`, `all`,
+and `only` are recognized before `Name` and cannot be used as bindings.
 
 **Note on holes and placeholders.** The lexical rule for `Name` admits `_` (the hole
 used inside `fn(...)`) and trailing-underscore identifiers `_x_` (placeholders used
@@ -323,4 +323,6 @@ a parenthesised lambda is well-formed only if the parenthesised content
 was a list of two or more bare `Name`s. A bare `Name` immediately
 followed by `->` is a single-argument `Lambda`. A `.Name` token is
 `FieldAccess` when it follows a `Postfix`-able expression, and `Axis`
-otherwise (at the start of a `Primary`).
+otherwise (at the start of a `Primary`). Inside `[...]`, a `!` token
+followed immediately by `,` or `]` is the `only` axis keyword;
+otherwise it is the unary logical-not operator starting an Expression.
