@@ -19,9 +19,55 @@ semicolons (equivalent). One statement per line is the recommended style;
 semicolons exist primarily as a fallback for channels that may not preserve
 line breaks.
 
-### Comments
+### <a id="comments"></a>Comments
 
-Lines beginning with `#` (after optional whitespace) are comments and are ignored. Inline comments (`x = 3.14  # a comment`) are supported as well.
+`#` starts a line comment; `###` alone on a line opens a block comment
+closed by a matching `###` alone on a line. Both forms are discarded by
+the parser. Line comments are terminated by the next newline or `;`,
+whichever comes first. Block fences may have leading horizontal
+whitespace (so embedded FlatPPL inside an indented host block is fine).
+
+```flatppl
+x = 3.14  # Inline comment.
+
+###
+Block comment.
+###
+```
+
+For documentation that attaches to bindings and survives into
+[FlatPIR](11-flatpir.md), see below.
+
+### <a id="documentation"></a>Documentation
+
+Doc-comments are lexically symmetric to plain comments (`%` ↔ `#`, `%%%` ↔ `###`)
+but attach to bindings and survive into [FlatPIR](11-flatpir.md). Semantics, attachment rules, default markup, and module-level documentation are specified in
+[Code documentation](04-design.md#sec:documentation); this section covers the
+surface lexical forms only.
+
+- **Single-line:** `%[<markup>]? <content>` runs to end of line or
+  to the next `;`, whichever comes first.
+- **Block:** `%%%[<markup>]?` alone on a line opens; a matching
+  `%%%` alone on a line closes. Content is verbatim, line by line.
+  Fence lines may have leading horizontal whitespace, which is ignored;
+  content lines are taken as written.
+- **Markup tag** (optional, no space after the leading `%` / `%%%`):
+  `md` (default, GitHub-Flavored Markdown with `$...$` / `$$...$$`
+  math) or `typ` (Typst). An unrecognized tag is a parse error. The
+  naming convention is "typical file extension"; additional tags may
+  be added in future spec versions.
+
+```flatppl
+% Prior mean.
+mu = 0
+
+sigma = 1  % Prior std. dev.
+
+%%%
+The observation model: independent Gaussians, shared unknown scale.
+%%%
+obs ~ iid(Normal(mu, sigma), 5)
+```
 
 ### Supported constructs
 
@@ -190,6 +236,11 @@ does not capture host-language variables, and host string interpolation should
 not be used to splice values into a model, as that would bake constants into
 the graph instead of creating input nodes.
 
+The only sequence that cannot appear inside embedded FlatPPL source — including
+inside doc-comments — is a literal `"""`, which would terminate the host
+string. Markdown fenced code inside doc-comments should use triple-backticks
+(` ``` `).
+
 ### <a id="formal-grammar"></a>Formal grammar
 
 The canonical surface syntax is defined in EBNF below (ISO 14977-style, with
@@ -270,8 +321,21 @@ Digit           ::= "0" .. "9"
 Newline         ::= LF | CR | CRLF
 StmtSep         ::= Newline | ";"
 
-(* Comments (treated as whitespace) *)
-Comment         ::= "#" { any character except newline }
+(* Plain comments — discarded by the parser *)
+LineComment     ::= "#" { any character except newline or ";" }
+BlockComment    ::= HWS* "###" HWS* Newline
+                    { any line whose trimmed content is not "###" }
+                    HWS* "###" HWS* Newline
+
+(* Doc-comments — attached to bindings; see "Documentation" *)
+DocLine         ::= "%" MarkupTag? { any character except newline or ";" }
+DocBlock        ::= HWS* "%%%" MarkupTag? HWS* Newline
+                    DocBlockLine*
+                    HWS* "%%%" HWS* Newline
+DocBlockLine    ::= { any character except newline } Newline
+                  ; a line whose trimmed content equals "%%%" closes the block
+MarkupTag       ::= "md" | "typ"
+HWS             ::= " " | "\t"            (* horizontal whitespace *)
 ```
 
 

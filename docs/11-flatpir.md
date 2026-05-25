@@ -10,12 +10,15 @@ FlatPIR is FlatPPL with operators, field access and indexing lowered to function
 FlatPPL maps directly to FlatPIR and FlatPIR maps back directly to FlatPPL.
 Metadata is dropped when converting FlatPIR to FlatPPL.
 
-Like FlatPPL, FlatPIR comes with a canonical syntax. The canonical FlatPIR syntax
-uses standard S-expressions (compatible with Lisp/Scheme readers), including
-`;` line comments. Initial FlatPPL to FlatPIR lowering should preserve comments,
-though subsequent FlatPIR code transformations will often drop them.
-FlatPIR source files in this canonical syntax use the filename extension
+Like FlatPPL, FlatPIR comes with a canonical syntax. The canonical FlatPIR
+syntax uses standard S-expressions (compatible with Lisp/Scheme readers).
+FlatPIR source files in the canonical syntax use the filename extension
 `.flatpir`; alternative representations must use different filename extensions.
+
+FlatPIR in S-expression representation allows for Lisp-like `;` comments.
+These are intended for tooling annotations and similar use and not a property
+of the IR data model. Canonical FlatPPL `#` comments do not propagate to
+FlatPIR. Non-textual encodings of FlatPIR (binary, etc.) carry no comments.
 
 FlatPIR is designed to support term-rewriting, with two main use cases:
 
@@ -52,8 +55,10 @@ A FlatPIR file contains exactly one `(%module ...)` form with these elements:
 
 - `(%public <name1> <name2> ...)` — the module's public interface. Bindings listed here
   are the root set for rewriting passes; unlisted bindings may be elided during term-rewriting.
-- `(%bind <name> <expression>)` — pairs a name with an expression. Type and
-  phase live on the RHS expression when the RHS is a call (see
+- `(%bind <name> <expression> [(%doc <markup> <line>...)])` — pairs a name
+  with an expression and an optional documentation form. The `(%doc ...)`
+  sub-form, when present, is always last; see [Documentation](#documentation)
+  below. Type and phase live on the RHS expression when the RHS is a call (see
   [Type and phase annotations](#type-and-phase-annotations)).
   Module loads are ordinary bindings whose right-hand side is a `(load_module ...)`
   or `(standard_module ...)` call; engines must resolve such bindings before
@@ -86,6 +91,37 @@ compatibility version string (same grammar as `flatppl_compat`):
 
 Each substitution takes the form `(%assign <input-name> <expression>)`. The
 expression is resolved in the loading module's namespace.
+
+### Documentation
+
+A `(%bind ...)` form may carry an optional trailing
+`(%doc <markup-tag> <line-string>...)` sub-form recording the binding's
+documentation.
+
+- `<markup-tag>` is a bare symbol: `md` (default, GitHub-Flavored Markdown
+  with `$...$` / `$$...$$` math) or `typ` (Typst). Unrecognized tags are
+  a parse error; future versions may add tags.
+- Each `<line-string>` is one line of doc content. The full text is the
+  lines joined by `\n`; the `\n` escape never appears inside a
+  `<line-string>` — line structure is carried by the list shape. A blank
+  source line becomes `""`. Only `\"` and `\\` escapes apply within a
+  line-string.
+- `(%doc md)` with zero content lines is semantically equivalent to
+  omitting `(%doc ...)` entirely; the absent form is canonical for
+  undocumented bindings.
+
+Documentation is metadata and code transformations may strip it fully or
+selectively. The surface distinctions between `% ...` and `%%% ... %%%`, and
+between leading and trailing doc-comments, are erased at lowering.
+
+Surface FlatPPL → FlatPIR examples:
+
+| Surface FlatPPL | FlatPIR |
+|---|---|
+| `mu = 0` | `(%bind mu 0)` |
+| `% Prior mean.\nmu = 0` | `(%bind mu 0 (%doc md "Prior mean."))` |
+| `mu = 0 % Prior mean.` | `(%bind mu 0 (%doc md "Prior mean."))` |
+| `%%%\nA\n\nB\n%%%\nmu = 0` | `(%bind mu 0 (%doc md "A" "" "B"))` |
 
 ### <a id="type-and-phase-annotations"></a>Type and phase annotations
 

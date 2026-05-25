@@ -73,11 +73,23 @@ measurement where the observed spectrum is a superposition of signal and backgro
 events, with a systematic uncertainty on the signal resolution:
 
 ```flatppl
+%%%
+# Particle mass measurement
+
+Unbinned Poisson-process model: a Gaussian signal peak at known mass on a
+falling exponential background, with a Gaussian-shifted resolution
+systematic. Returns a likelihood object `L` parameterized by the expected
+signal and background counts.
+%%%
+flatppl_compat = "0.3"
+
 # Inputs: expected signal and background event counts
+% Expected number of signal events.
 n_sig = elementof(reals)
+% Expected number of background events.
 n_bkg = elementof(reals)
 
-# Systematic: uncertain detector resolution
+% Standard-normal systematic shift applied to the detector resolution.
 raw_syst ~ Normal(mu = 0.0, sigma = 1.0)
 resolution = 2.5 + 0.3 * raw_syst
 
@@ -99,9 +111,13 @@ intensity = superpose(
 # Unbinned model: Poisson process over scalar mass values
 events ~ PoissonProcess(intensity = intensity)
 
-# Observed data and likelihood
+% Likelihood as a function of the expected event counts.
 L = likelihoodof(kernelof(events), observed_data)
 ```
+
+The example uses both kinds of textual annotation: `#` for plain
+[comments](05-syntax.md#comments) (parser-discarded) and `%` / `%%%`
+for [doc-comments](05-syntax.md#documentation).
 
 Reading top to bottom, this is a generative recipe: declare inputs, draw a systematic shift, compute the
 resolution, define signal and background shapes, combine them as an unnormalized

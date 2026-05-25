@@ -1001,3 +1001,55 @@ include a compatibility declaration.
 
 The compatibility declaration of a loaded module is accessible via dot syntax
 (like any other bound value in the module): `some_module.flatppl_compat`.
+
+### <a id="sec:documentation"></a>Code documentation
+
+FlatPPL treats documentation as a first-class property of bindings, not as
+ambient commentary. **Doc-comments** in surface FlatPPL (`%`, `%%%`; see
+section [Syntax](05-syntax.md#documentation)) attach to bindings
+and are preserved when lowering to [FlatPIR](11-flatpir.md#documentation).
+
+**Default markup and markup tags.** By default, documentation is written in
+Markdown. The markup language can be explicitly selected with a markup tag.
+FlatPPL tooling should know how to handle the following tags:
+
+- `%md`/`%%%md`: GitHub-Flavored Markdown with math (`$...$`,
+`$$...$$`)
+- `%typ`/`%%%typ`: Typst
+
+Markup tags should reflect the canonical file extension of the markup language.
+
+**Attachment.** A doc-comment attaches to at most one binding, in one
+of two positions:
+
+- *Leading*: before a FlatPPL binding (only whitespace, newlines and
+`;` statement separators between).
+- *Trailing*: a single-line `% ...` after a binding's right-hand side,
+  before the next newline or `;` statement separator. Block `%%%` forms
+  must not be in trailing position.
+
+Each binding may carry at most one doc-comment (leading or trailing, not
+both). Two leading `% ...` lines on the same binding are an error — use
+a `%%%` block for multi-line content. A doc-comment that doesn't attach to
+a binding is invalid code.
+
+**Module-level documentation.** A doc-comment attached to the
+`flatppl_compat` binding serves to document the module itself:
+
+```flatppl
+%%%
+# Eight-schools model
+
+Hierarchical Normal model after Rubin (1981).
+%%%
+flatppl_compat = "0.3"
+```
+
+**Comments are not documentation.** Plain comments (`#`, `###`) are
+discarded at parse time and do not appear in FlatPIR. They are
+author-eyes-only notes on the surface source. Anything intended to
+outlive the surface file — for tools, for downstream readers via
+FlatPIR, or for export to external systems — must use a doc-comment.
+([FlatPIR](11-flatpir.md) has its own `;` line comments in the
+canonical text syntax, but those are reserved for tooling
+annotations and do not carry user-written surface comments.)
