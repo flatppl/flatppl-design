@@ -12,6 +12,13 @@ directly to and from canonical FlatPPL without change in semantics.
 
 Canonical FlatPPL uses the filename extension `.flatppl`.
 
+### Statements
+
+A FlatPPL module is a sequence of statements separated by newlines or
+semicolons (equivalent). One statement per line is the recommended style;
+semicolons exist primarily as a fallback for channels that may not preserve
+line breaks.
+
 ### Comments
 
 Lines beginning with `#` (after optional whitespace) are comments and are ignored. Inline comments (`x = 3.14  # a comment`) are supported as well.
@@ -192,7 +199,7 @@ The canonical surface syntax is defined in EBNF below (ISO 14977-style, with
 
 ```ebnf
 (* Top level *)
-Module          ::= Newline* (Statement (Newline+ Statement)*)? Newline* EOF
+Module          ::= StmtSep* (Statement (StmtSep+ Statement)*)? StmtSep* EOF
 Statement       ::= Binding | TildeBinding | Decomposition | TildeDecomposition
                   | AggregateBinding
 
@@ -261,16 +268,18 @@ EscapeChar      ::= '"' | '\' | "n" | "t" | "r" | "0"
 Letter          ::= "a" .. "z" | "A" .. "Z"
 Digit           ::= "0" .. "9"
 Newline         ::= LF | CR | CRLF
+StmtSep         ::= Newline | ";"
 
 (* Comments (treated as whitespace) *)
 Comment         ::= "#" { any character except newline }
 ```
 
 
-**Statement separation.** Statements are separated by one or more `Newline`s.
-Blank lines and comment-only files are permitted. Newlines inside an unclosed
-`(` or `[` (paren/bracket depth > 0) are treated as whitespace (implicit line
-continuation), letting expressions span multiple lines:
+**Statement separation.** Statements are separated by one or more newlines
+or semicolons; the two are fully equivalent. Blank lines and comment-only
+files are permitted. Newlines inside an unclosed `(` or `[` (paren/bracket
+depth > 0) are treated as whitespace (implicit line continuation), letting
+expressions span multiple lines:
 
 ```flatppl
 rate = superpose(
