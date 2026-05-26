@@ -840,6 +840,10 @@ V = aggregate(var, [.j], A[.i, .j])
 # Row-wise sum with one fixed column
 S = aggregate(sum, [.i], A[.i, 1])
 # → S = [1, 9]
+
+# Product over .j of (A + B) entries: prod-reduction over two matrices
+P = aggregate(prod, [.i, .k], A[.i, .j] + B[.j, .k])
+# → P = [[36, 24], [100, 108]]
 ```
 
 Axis names are lexically scoped to the enclosing `aggregate(...)` and are
