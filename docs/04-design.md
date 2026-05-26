@@ -821,17 +821,25 @@ appear in `output_axes`, yielding an array of the shape declared by
 Examples:
 
 ```flatppl
+A = rowstack([[1, 3, 5], [9, 5, 1]])
+B = rowstack([[1, 0], [0, 1], [1, 1]])
+
 # Matrix multiplication
 C = aggregate(sum, [.i, .k], A[.i, .j] * B[.j, .k])
+# → C = [[6, 8], [10, 6]]
 
 # Weighted sum of squared differences, reducing over .j
-D = aggregate(sum, [.i, .k], (A[.i, .j] - B[.j, .k])^2 * W[.j])
+w = [1, 2, 1]
+D = aggregate(sum, [.i, .k], (A[.i, .j] - B[.j, .k])^2 * w[.j])
+# → D = [[34, 25], [114, 113]]
 
-# Column-wise variance of a matrix (var has no := shorthand)
-V = aggregate(var, [.j], M[.i, .j])
+# Column-wise variance of a matrix
+V = aggregate(var, [.j], A[.i, .j])
+# → V = [32, 2, 8]
 
 # Row-wise sum with one fixed column
 S = aggregate(sum, [.i], A[.i, 1])
+# → S = [1, 9]
 ```
 
 Axis names are lexically scoped to the enclosing `aggregate(...)` and are
