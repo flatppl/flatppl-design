@@ -265,6 +265,11 @@ closed measures (i.e. nullary kernels) as inputs. `densityof(M, x)` and
   kchain(M, a -> joint(Dirac(value = a), K(a)))
   ```
 
+Like [`fchain`](04-design.md#function-composition-and-annotation),
+`kchain` and `jointchain` combine well with auto-splatting: a
+record-shaped variate from step $i$ splats into step $i+1$'s keyword
+inputs by field name.
+
 #### Support restriction
 
 - **`truncate(M, S)`** — restricts the support of measure `M` to the set `S`:
