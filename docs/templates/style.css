@@ -33,7 +33,7 @@
     --link-color: #d19a66;
     --sidebar-link-text: #abb2bf;
     --sidebar-link-hover-bg: #2c313a;
-    --sidebar-active-bg: #3a2500;
+    --sidebar-active-bg: #4a2e0d;
     --sidebar-sub-text: #9099a8;
     --code-bg: #2c313a;
     --pre-bg: #21252b;
@@ -175,7 +175,7 @@ body {
     }
 }
 
-/* max-height accordion: 0 when collapsed, 50em when .expanded toggled by JS */
+/* max-height accordion: 0 when collapsed, 100em when .expanded toggled by JS */
 .sidebar-subsections {
     list-style: none;
     margin: 0;
@@ -185,7 +185,7 @@ body {
 }
 
 #sidebar-nav li.expanded>.sidebar-subsections {
-    max-height: 50em;
+    max-height: 100em;
 }
 
 .sidebar-subsections li a {
@@ -431,6 +431,13 @@ div.sourceCode>pre {
 .copy-btn:hover {
     background: var(--sidebar-link-hover-bg);
     border-color: var(--link-color);
+}
+
+/* Touch devices have no hover; keep button visible so it's reachable */
+@media (hover: none) {
+    .copy-btn {
+        opacity: 0.85;
+    }
 }
 
 /* ── Blockquote ───────────────────────────────────────── */

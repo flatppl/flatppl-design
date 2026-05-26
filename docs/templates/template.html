@@ -167,14 +167,15 @@
         });
       });
 
+      // Scroll spy via IntersectionObserver. rootMargin '-80px 0px 0px 0px'
+      // shifts the trigger line 80px below the viewport top: a heading is in
+      // `passed` once its top has crossed above that line. Avoids reading
+      // offsetTop on every scroll tick (layout thrash on long docs) and adapts
+      // automatically to resize, font load, theme change, sidebar collapse.
+      var passed = new Set();
       var lastActive = '';
-      function updateActive() {
-        var scrollY = window.scrollY || window.pageYOffset;
-        var current = '';
-        allEls.forEach(function (item) {
-          if (item.el.offsetTop <= scrollY + 80) current = item.id;
-        });
 
+      function applyActive(current) {
         var changed = current && current !== lastActive;
         if (changed) {
           history.replaceState(null, '', '#' + current);
@@ -185,18 +186,14 @@
           var sectionLink = s.li.querySelector(':scope > a');
           var isActive = current === s.id || s.subIds.indexOf(current) !== -1;
 
-          // Expand/collapse subsections
           s.li.classList.toggle('expanded', isActive);
 
-          // Highlight section link
           sectionLink.classList.toggle('active', isActive);
           if (isActive) {
             sectionLink.setAttribute('aria-current', 'location');
-            // Only scroll on transition, not every rAF tick while active
             if (changed) sectionLink.scrollIntoView({ block: 'nearest' });
           } else { sectionLink.removeAttribute('aria-current'); }
 
-          // Highlight subsection link
           var subLinks = s.li.querySelectorAll('.sidebar-subsections a');
           subLinks.forEach(function (sa) {
             var subActive = sa.getAttribute('href') === '#' + current;
@@ -206,14 +203,28 @@
           });
         });
       }
-      var rafPending = false;
-      window.addEventListener('scroll', function () {
-        if (!rafPending) {
-          rafPending = true;
-          requestAnimationFrame(function () { rafPending = false; updateActive(); });
+
+      function recomputeActive() {
+        var current = '';
+        for (var i = 0; i < allEls.length; i++) {
+          if (passed.has(allEls[i].id)) current = allEls[i].id;
         }
-      }, { passive: true });
-      updateActive();
+        applyActive(current);
+      }
+
+      var io = new IntersectionObserver(function (entries) {
+        entries.forEach(function (entry) {
+          // boundingClientRect.top < 80 → heading is above the trigger line
+          if (entry.boundingClientRect.top < 80) {
+            passed.add(entry.target.id);
+          } else {
+            passed.delete(entry.target.id);
+          }
+        });
+        recomputeActive();
+      }, { rootMargin: '-80px 0px 0px 0px', threshold: [0, 1] });
+
+      allEls.forEach(function (item) { io.observe(item.el); });
 
       // Sidebar toggle (mobile hamburger / wide-screen reopen)
       var toggle = document.getElementById('sidebar-toggle');

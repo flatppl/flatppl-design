@@ -27,7 +27,9 @@ try {
   // Use spawnSync with an args array (not a shell string) to avoid injection
   // issues with paths that may contain spaces on some systems.
   const npmCmd = process.platform === 'win32' ? 'npm.cmd' : 'npm';
-  const result = spawnSync(npmCmd, ['install', '--prefix', tmpDir, 'katex@' + KATEX_VERSION], { stdio: 'inherit' });
+  // --ignore-scripts: defense-in-depth against a compromised transitive dep
+  // executing postinstall code. KaTeX itself has no install scripts.
+  const result = spawnSync(npmCmd, ['install', '--ignore-scripts', '--prefix', tmpDir, 'katex@' + KATEX_VERSION], { stdio: 'inherit' });
   if (result.status !== 0) { throw new Error('npm install katex exited with code ' + result.status); }
   fs.mkdirSync(outDir, { recursive: true });
   fs.cpSync(path.join(tmpDir, 'node_modules', 'katex', 'dist'), outDir, { recursive: true });
