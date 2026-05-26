@@ -478,6 +478,7 @@ passes — ensuring the invariant is always validated.
 | `row_gram` | `A` | $\mathbf{A} \mathbf{A}^\dagger$ | matrices |
 | `col_gram` | `A` | $\mathbf{A}^\dagger \mathbf{A}$ | matrices |
 | `self_outer` | `x` | $\mathbf{x} \cdot \mathbf{x}^\dagger$ (outer product) | vectors |
+| `cross` | `a`, `b` | $\mathbf{a} \times \mathbf{b}$ (vector cross product) | real or complex vectors with `lengthof(a) == lengthof(b) == 3` |
 | `diagmat` | `x` | $\mathrm{diag}(x_1, \ldots, x_n)$ | vectors |
 | `diag` | `A`, `k` | extracts the $k$th diagonal of $\mathbf{A}$ as a vector ($k=0$ for the main diagonal, $k>0$ for super-diagonals, $k<0$ for sub-diagonals); when called as `diag(A)`, `k` defaults to `0` | matrices, integer |
 | `quadform` | `A`, `x` | $\mathbf{x}^\dagger \mathbf{A} \mathbf{x}$ | square `A`, vector `x` |
@@ -490,6 +491,14 @@ the product of a transposed vector and a non-transposed vector is a scalar.
 a transposed vector (see [arrays](03-value-types.md#arrays)), not a
 single-row matrix. The adjoint of a vector is a transposed vector with
 complex-conjugated elements.
+
+`cross(a, b)` is the 3-D vector cross product:
+
+$$\mathrm{cross}(\mathbf{a}, \mathbf{b}) = [a_2 b_3 - a_3 b_2,\ a_3 b_1 - a_1 b_3,\ a_1 b_2 - a_2 b_1]$$
+
+Both inputs must have length 3. On complex inputs `cross` is **bilinear over
+$\mathbb{C}$** (no conjugation): $\mathrm{cross}(\alpha\mathbf{a}, \beta\mathbf{b}) = \alpha\beta\,\mathrm{cross}(\mathbf{a}, \mathbf{b})$;
+the Hermitian variant is `cross(conj(a), b)`.
 
 ### Reductions
 

@@ -197,7 +197,7 @@ highlights, not exhaustive — see the linked sections for complete listings.
 | [Shape functions](07-functions.md#sec:functions) | `polynomial`, `bernstein`, `stepwise` |
 | [Math and logic](07-functions.md#sec:functions) | `identity`, `exp`, `log`, `pow`, `sqrt`, `abs`, `sin`, `cos`, `min`, `max`, `floor`, `ceil`, `round`, `div`, `mod`, `gamma`, `loggamma`, `logit`, `invlogit`, `probit`, `invprobit`, `ifelse`, `land`, `lor`, `lnot`, `lxor` |
 | [Predicates](07-functions.md#sec:functions) | `isfinite`, `isinf`, `isnan`, `iszero` |
-| [Linear algebra](07-functions.md#sec:functions) | `transpose`, `adjoint`, `det`, `logabsdet`, `inv`, `trace`, `linsolve`, `lower_cholesky` |
+| [Linear algebra](07-functions.md#sec:functions) | `transpose`, `adjoint`, `det`, `logabsdet`, `inv`, `trace`, `linsolve`, `lower_cholesky`, `cross` |
 | [Operator functions](07-functions.md#sec:functions) | `add`, `sub`, `mul`, `divide`, `neg`, `equal`, `unequal`, `lt`, `le`, `gt`, `ge` |
 | [Complex arithmetic](07-functions.md#sec:functions) | `complex`, `real`, `imag`, `conj`, `abs2`, `cis` |
 | [Reductions](07-functions.md#sec:functions) | `sum`, `mean`, `var`, `prod`, `maximum`, `minimum`, `lengthof` |
