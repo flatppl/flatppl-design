@@ -404,7 +404,13 @@ back to the parameterized-phase ancestor leaves of the reified expression
 `load_data`) are closed over instead. The reified function then only supports
 keyword arguments, as no argument order can be inferred. A specified boundary
 node `a` can be thought of as being substituted with a new node, generated via
-`elementof(valueset(a))`, in the reified graph.
+`elementof(valueset(a))`, in the reified graph. Substitution applies to all
+boundary nodes before the ancestor trace runs, so a boundary node whose only
+paths to the output pass through another boundary node becomes disconnected
+from the output in the substituted graph — the resulting callable is constant
+in that input. This is permitted, not an error, and is what enables
+hierarchical-model composition (see
+[Kernels and `kernelof`](#sec:kernelof)).
 
 The function argument names do not have to differ from the boundary node names:
 
@@ -494,6 +500,34 @@ Here `forward_kernel` is built directly from the measure-valued expression
 `obs_dist` via `functionof` (see [above](#sec:functionof-measure)), and
 `joint_model` and `prior_predictive` are assembled from `prior` and
 `forward_kernel` using measure combinators.
+
+**Reification with interdependent boundary nodes.** Reification places
+no constraint on the DAG-dependency structure among the chosen boundary
+nodes: a boundary may be an ancestor or descendant of another.
+Substitution (see [reification boundaries](#sec:functionof)) replaces
+every designated node with a fresh independent input *before* the
+ancestor trace runs, so original dependencies between boundaries are
+erased and the reified callable takes all of them as independent inputs.
+A boundary whose only paths to the output went through another boundary
+then has no occurrence in the lowered body — the callable is constant
+in that input.
+
+The eight-schools model (D. Rubin, 1981) is a typical instance:
+
+```flatppl
+mu ~ Normal(0, 5)
+tau ~ normalize(truncate(Cauchy(0, 5), interval(0, inf)))
+theta ~ iid(Normal(mu, tau), J)
+y ~ Normal.(theta, std_errs_data)
+
+prior = lawof(record(mu = mu, tau = tau, theta = theta))
+forward_kernel = kernelof(record(y = y), mu = mu, tau = tau, theta = theta)
+joint_model = jointchain(prior, forward_kernel)
+```
+
+After substitution, `mu`, `tau`, `theta` are independent inputs of
+`forward_kernel`. In this specific example `y` depends only on `theta`, so
+the output of `forward_kernel` does not depend on `mu` or `tau`.
 
 ### Interface adaptation
 
