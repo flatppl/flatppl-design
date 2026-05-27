@@ -1,5 +1,8 @@
 ---
 author:
+  - name: "Benjamin Cox"
+    affiliation: "Max Planck Institute for Physics, Garching/Munich, Germany"
+    email: "bcox@mpp.mpg.de"
   - name: "Oliver Schulz"
     affiliation: "Max Planck Institute for Physics, Garching/Munich, Germany"
     email: "oschulz@mpp.mpg.de"
