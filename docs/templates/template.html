@@ -50,7 +50,13 @@
   <nav id="sidebar" role="navigation" aria-label="Section navigation">
     <div id="sidebar-title"><span id="sidebar-title-text">$pagetitle$</span><button id="sidebar-collapse"
         aria-label="Collapse sidebar">&#x2039;</button></div>
+    <div id="sidebar-search">
+      <input type="search" id="sidebar-search-input" placeholder="Search the docs&hellip;"
+        aria-label="Search the documentation" autocomplete="off" spellcheck="false" />
+    </div>
     <ul id="sidebar-nav"></ul>
+    <ul id="sidebar-results" hidden aria-label="Search results"></ul>
+    <p id="sidebar-search-empty" hidden>No matches</p>
     <div id="theme-toggle-container">
       <button id="theme-toggle" aria-label="Toggle color theme">Theme</button>
     </div>
@@ -349,6 +355,140 @@
         var current = document.documentElement.getAttribute('data-theme') || 'light';
         setTheme(current === 'light' ? 'dark' : 'light', true);
       });
+
+      // Sidebar full-text search. Single-page doc, so the entire corpus is
+      // already in the DOM: index content blocks once, then match the query
+      // against their text and render result snippets that jump to the block.
+      var searchInput = document.getElementById('sidebar-search-input');
+      var resultsList = document.getElementById('sidebar-results');
+      var emptyMsg = document.getElementById('sidebar-search-empty');
+
+      var sidebarNav = document.getElementById('sidebar-nav');
+
+      if (searchInput && resultsList) {
+        // One entry per leaf content block. Each remembers the nearest
+        // preceding heading (for a result label) and its own id or its
+        // heading's id (for the jump target). Headings themselves are indexed
+        // too, so a query that only matches a title still surfaces.
+        var BLOCK_SEL = 'p, li, pre, blockquote, td, th, dt, dd, figcaption, h1, h2, h3, h4, h5, h6';
+        var HEAD_SEL = ' H1 H2 H3 H4 H5 H6 ';
+        var index = [];
+        var currentHeading = null; // {id, text}
+
+        [].forEach.call(document.querySelectorAll('#content ' + BLOCK_SEL), function (el) {
+          var isHeading = HEAD_SEL.indexOf(' ' + el.tagName + ' ') !== -1;
+          // Track section context on every heading, even ones we then skip.
+          // Heading text minus the trailing '#' anchor injected at build time.
+          var text = el.textContent.replace(/\s*#\s*$$/, '').trim();
+          if (isHeading) {
+            currentHeading = { id: el.id || '', text: text.replace(/^[\d.]+\s+/, '') };
+          }
+          if (!text) return;
+          // Index leaf blocks only: a container (e.g. <li> wrapping a <p>, or a
+          // <blockquote>) would otherwise duplicate the text of its children.
+          if (!isHeading && el.querySelector(BLOCK_SEL)) return;
+          var targetId = el.id || (currentHeading && currentHeading.id) || '';
+          index.push({
+            el: el,
+            text: text,
+            lower: text.toLowerCase(),
+            heading: currentHeading ? currentHeading.text : '',
+            targetId: targetId,
+            isHeading: isHeading
+          });
+        });
+
+        function escapeHtml(s) {
+          return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        }
+
+        // Snippet of ~140 chars centered on the first match, query <mark>ed.
+        function snippet(entry, q) {
+          var i = entry.lower.indexOf(q);
+          var text = entry.text;
+          var radius = 60;
+          var start = Math.max(0, i - radius);
+          var end = Math.min(text.length, i + q.length + radius);
+          var pre = (start > 0 ? '…' : '') + text.slice(start, i);
+          var hit = text.slice(i, i + q.length);
+          var post = text.slice(i + q.length, end) + (end < text.length ? '…' : '');
+          return escapeHtml(pre) + '<mark>' + escapeHtml(hit) + '</mark>' + escapeHtml(post);
+        }
+
+        var pulseTimer = null;
+        function jumpTo(entry) {
+          entry.el.scrollIntoView({ block: 'center' });
+          if (entry.targetId) { history.replaceState(null, '', '#' + entry.targetId); }
+          // Brief highlight so the eye lands on the matched block.
+          if (pulseTimer !== null) { clearTimeout(pulseTimer); }
+          document.querySelectorAll('.search-hit').forEach(function (e) {
+            e.classList.remove('search-hit');
+          });
+          entry.el.classList.add('search-hit');
+          pulseTimer = setTimeout(function () {
+            entry.el.classList.remove('search-hit');
+            pulseTimer = null;
+          }, 1600);
+        }
+
+        var MAX_RESULTS = 40;
+        function runSearch() {
+          var q = searchInput.value.trim().toLowerCase();
+          resultsList.innerHTML = '';
+          if (!q) {
+            resultsList.hidden = true;
+            emptyMsg.hidden = true;
+            sidebarNav.hidden = false;
+            return;
+          }
+          sidebarNav.hidden = true;
+          resultsList.hidden = false;
+
+          var hits = 0;
+          for (var k = 0; k < index.length && hits < MAX_RESULTS; k++) {
+            var entry = index[k];
+            if (entry.lower.indexOf(q) === -1) continue;
+            hits++;
+
+            var li = document.createElement('li');
+            var a = document.createElement('a');
+            a.href = entry.targetId ? '#' + entry.targetId : '#';
+            a.className = 'search-result';
+            if (entry.heading) {
+              var h = document.createElement('span');
+              h.className = 'search-result-heading';
+              h.textContent = entry.heading;
+              a.appendChild(h);
+            }
+            var sn = document.createElement('span');
+            sn.className = 'search-result-snippet' + (entry.isHeading ? ' is-heading' : '');
+            sn.innerHTML = snippet(entry, q);
+            a.appendChild(sn);
+
+            (function (e) {
+              a.addEventListener('click', function (ev) {
+                ev.preventDefault();
+                jumpTo(e);
+                // Mobile: close the drawer after picking a result.
+                if (mobileMediaQuery.matches) {
+                  sidebar.classList.remove('open');
+                  toggle.setAttribute('aria-expanded', 'false');
+                  updateSidebarInert();
+                }
+              });
+            })(entry);
+
+            li.appendChild(a);
+            resultsList.appendChild(li);
+          }
+          emptyMsg.hidden = hits > 0;
+        }
+
+        searchInput.addEventListener('input', runSearch);
+        searchInput.addEventListener('keydown', function (e) {
+          if (e.key === 'Escape') { searchInput.value = ''; runSearch(); searchInput.blur(); }
+        });
+      }
 
     })();
 

@@ -127,6 +127,40 @@ body {
     opacity: 1;
 }
 
+#sidebar-search {
+    padding: 0 1em 0.6em 1em;
+    border-bottom: 1px solid var(--sidebar-border);
+    margin-bottom: 0.5em;
+}
+
+#sidebar-search-input {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 0.4em 0.6em;
+    font-size: 0.85em;
+    color: var(--sidebar-link-text);
+    background: var(--bg-color);
+    border: 1px solid var(--sidebar-border);
+    border-radius: 4px;
+}
+
+#sidebar-search-input:focus {
+    outline: none;
+    border-color: var(--link-color);
+}
+
+#sidebar-search-input::placeholder {
+    color: var(--sidebar-sub-text);
+    opacity: 0.8;
+}
+
+#sidebar-search-empty {
+    padding: 0 1em;
+    margin: 0.5em 0;
+    font-size: 0.8em;
+    color: var(--sidebar-sub-text);
+}
+
 #sidebar-nav {
     list-style: none;
     margin: 0;
@@ -187,6 +221,72 @@ body {
 
 #sidebar-nav li.expanded>.sidebar-subsections {
     max-height: 100em;
+}
+
+/* Full-text search results (replaces the nav while a query is active) */
+#sidebar-results {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    flex: 1;
+}
+
+#sidebar-results>li {
+    border-top: 1px solid var(--border-light);
+}
+
+#sidebar-results>li:first-child {
+    border-top: none;
+}
+
+.search-result {
+    display: block;
+    padding: 0.5em 1em;
+    text-decoration: none;
+    border-left: 3px solid transparent;
+}
+
+.search-result:hover {
+    background: var(--sidebar-link-hover-bg);
+    border-left-color: var(--link-color);
+}
+
+.search-result-heading {
+    display: block;
+    font-size: 0.72em;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: var(--sidebar-sub-text);
+    margin-bottom: 0.15em;
+}
+
+.search-result-snippet {
+    display: block;
+    font-size: 0.8em;
+    line-height: 1.4;
+    color: var(--sidebar-link-text);
+}
+
+.search-result-snippet.is-heading {
+    font-weight: 600;
+}
+
+.search-result-snippet mark {
+    background: var(--sidebar-active-bg);
+    color: inherit;
+    border-radius: 2px;
+    padding: 0 1px;
+}
+
+/* Transient highlight on the block a search result jumps to */
+.search-hit {
+    animation: search-hit-pulse 1.6s ease-out;
+}
+
+@keyframes search-hit-pulse {
+    0%, 25% { background: var(--sidebar-active-bg); }
+    100% { background: transparent; }
 }
 
 .sidebar-subsections li a {
