@@ -515,6 +515,8 @@ the Hermitian variant is `cross(conj(a), b)`.
 | `minimum` | `xs` | $\min_i x_i$ | real arrays |
 | `lengthof` | `x` | number of elements (vector) / rows (table) | vectors, tables |
 | `sizeof` | `x` | returns the dimensions of `x` in a vector | vectors, arrays |
+| `indicesof` | `x` | 1-based axis indices | vectors, arrays, tables |
+| `indicesof0` | `x` | 0-based axis indices | vectors, arrays, tables |
 
 For multi-dimensional arrays, use `sizeof` to obtain shape information:
 
@@ -523,7 +525,18 @@ v = [10, 20, 30]
 M = rowstack([[1, 2, 3], [4, 5, 6]])
 lv = lengthof(v)  # 3
 sM = sizeof(M)    # [2, 3]
+iv = indicesof(v)  # [1, 2, 3]
+iM = indicesof(M)  # ([1, 2], [1, 2, 3])
+i0 = indicesof0(v) # [0, 1, 2]
 ```
+
+**`indicesof(x)`** — for a vector, returns `[1, 2, ..., lengthof(x)]`. For an
+array with $n$ axes, returns an $n$-tuple of integer vectors, the $i$-th of
+which runs from $1$ to the size of `x` along axis $i$. For a table, returns
+the row indices.
+
+**`indicesof0(x)`** — zero-based variant of `indicesof`, returning indices
+that start at `0` rather than `1`.
 
 **Table reductions.** When `sum`, `mean`, or `var` is applied to a table, the
 reduction operates column-wise and returns a record whose fields are the
