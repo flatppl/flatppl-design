@@ -1,187 +1,476 @@
 <!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml"$if(lang)$ lang="$lang$" xml:lang="$lang$"$endif$$if(dir)$ dir="$dir$"$endif$>
+<html xmlns="http://www.w3.org/1999/xhtml" $if(lang)$ lang="$lang$" xml:lang="$lang$" $endif$$if(dir)$ dir="$dir$"
+  $endif$>
+
 <head>
   <meta charset="utf-8" />
   <meta name="generator" content="pandoc" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
-$for(author-meta)$
+  $for(author-meta)$
   <meta name="author" content="$author-meta$" />
-$endfor$
-$if(date-meta)$
+  $endfor$
+  $if(date-meta)$
   <meta name="dcterms.date" content="$date-meta$" />
-$endif$
-$if(keywords)$
+  $endif$
+  $if(keywords)$
   <meta name="keywords" content="$for(keywords)$$keywords$$sep$, $endfor$" />
-$endif$
-$if(description-meta)$
+  $endif$
+  $if(description-meta)$
   <meta name="description" content="$description-meta$" />
-$endif$
+  $endif$
   <title>$if(title-prefix)$$title-prefix$ – $endif$$pagetitle$</title>
   <link rel="icon" href="favicon.ico" type="image/x-icon" />
+  <script>
+    /* Applied synchronously to prevent flash of wrong theme before CSS loads */
+    (function () {
+      var t;
+      /* Storage may be blocked (opaque origins, private mode restrictions, etc.);
+         silence the error and fall through to the system preference. */
+      try { t = localStorage.getItem('theme'); } catch (e) { }
+      if (!t) { t = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'; }
+      document.documentElement.setAttribute('data-theme', t);
+    })();
+  </script>
   <style>
     $styles.html()$
   </style>
-$for(css)$
+  $for(css)$
   <link rel="stylesheet" href="$css$" />
-$endfor$
-$for(header-includes)$
+  $endfor$
+  $for(header-includes)$
   $header-includes$
-$endfor$
-$if(math)$
+  $endfor$
+  $if(math)$
   $math$
-$endif$
+  $endif$
 </head>
+
 <body>
-<nav id="sidebar" role="navigation" aria-label="Section navigation">
-  <div id="sidebar-title">$pagetitle$</div>
-  <ul id="sidebar-nav"></ul>
-</nav>
-<button id="sidebar-toggle" aria-label="Toggle navigation">&#9776;</button>
-<div id="content">
-$for(include-before)$
-$include-before$
-$endfor$
-$if(title)$
-<header id="title-block-header">
-<h1 class="title">$title$</h1>
-$if(subtitle)$
-<p class="subtitle">$subtitle$</p>
-$endif$
-$for(author)$
-<div class="author">
-$if(author.name)$
-<span class="author-name">$author.name$</span>
-$if(author.affiliation)$
-<br><span class="author-affiliation">$author.affiliation$</span>
-$endif$
-$if(author.email)$
-<br><span class="author-email"><a href="mailto:$author.email$">$author.email$</a></span>
-$endif$
-$else$
-$author$
-$endif$
-</div>
-$endfor$
-$if(date)$
-<p class="date">$date$</p>
-$endif$
-$if(abstract)$
-<div class="abstract">
-<div class="abstract-title">$abstract-title$</div>
-$abstract$
-</div>
-$endif$
-</header>
-$endif$
-$if(toc)$
-<details id="full-toc" open>
-<summary><strong>Table of Contents</strong></summary>
-<nav id="$idprefix$TOC" role="doc-toc">
-$table-of-contents$
-</nav>
-</details>
-$endif$
-$body$
-$for(include-after)$
-$include-after$
-$endfor$
-</div>
-<script>
-// Build sidebar nav from section headings, with expandable subsections
-(function() {
-  var nav = document.getElementById('sidebar-nav');
+  <a class="skip-to-content" href="#content">Skip to content</a>
+  <nav id="sidebar" role="navigation" aria-label="Section navigation">
+    <div id="sidebar-title"><span id="sidebar-title-text">$pagetitle$</span><button id="sidebar-collapse"
+        aria-label="Collapse sidebar">&#x2039;</button></div>
+    <ul id="sidebar-nav"></ul>
+    <div id="theme-toggle-container">
+      <button id="theme-toggle" aria-label="Toggle color theme">Theme</button>
+    </div>
+  </nav>
+  <button id="sidebar-toggle" aria-label="Toggle navigation">&#9776;</button>
+  <div id="sidebar-backdrop"></div>
+  <main id="content" tabindex="-1">
+    $for(include-before)$
+    $include-before$
+    $endfor$
+    $if(title)$
+    <header id="title-block-header">
+      <h1 class="title">$title$</h1>
+      $if(subtitle)$
+      <p class="subtitle">$subtitle$</p>
+      $endif$
+      $for(author)$
+      <div class="author">
+        $if(author.name)$
+        <span class="author-name">$author.name$</span>
+        $if(author.affiliation)$
+        <br><span class="author-affiliation">$author.affiliation$</span>
+        $endif$
+        $if(author.email)$
+        <br><span class="author-email"><a href="mailto:$author.email$">$author.email$</a></span>
+        $endif$
+        $else$
+        $author$
+        $endif$
+      </div>
+      $endfor$
+      $if(date)$
+      <p class="date">$date$</p>
+      $endif$
+      $if(abstract)$
+      <div class="abstract">
+        <div class="abstract-title">$abstract-title$</div>
+        $abstract$
+      </div>
+      $endif$
+    </header>
+    $endif$
+    $if(toc)$
+    <details id="full-toc" open aria-label="Table of contents">
+      <summary><strong>Table of Contents</strong></summary>
+      <nav id="$idprefix$TOC" role="doc-toc">
+        $table-of-contents$
+      </nav>
+    </details>
+    $endif$
+    $body$
+    $for(include-after)$
+    $include-after$
+    $endfor$
+  </main>
+  <script>
+    // Build sidebar nav from section headings, with expandable subsections
+    (function () {
+      var nav = document.getElementById('sidebar-nav');
 
-  // Collect top-level sections (h1 with single-number data-number)
-  var sections = document.querySelectorAll('#content h1[data-number]');
-  var sectionItems = []; // {li, id, subIds}
+      // Collect top-level sections (h1 with single-number data-number)
+      var sections = document.querySelectorAll('#content h1[data-number]');
+      var sectionItems = []; // {li, id, subIds}
 
-  sections.forEach(function(h) {
-    if (!h.id) return;
-    var num = h.getAttribute('data-number');
-    if (num.indexOf('.') !== -1) return;
+      sections.forEach(function (h) {
+        if (!h.id) return;
+        var num = h.getAttribute('data-number');
+        if (num.indexOf('.') !== -1) return;
 
-    var li = document.createElement('li');
-    var a = document.createElement('a');
-    a.textContent = h.textContent.replace(/^[\d.]+\s+/, '').replace(/\s*#$$/, '').trim();
-    a.href = '#' + h.id;
-    li.appendChild(a);
+        var li = document.createElement('li');
+        var a = document.createElement('a');
+        // Strip trailing '#' injected by html-anchors.lua at build time
+        a.textContent = h.textContent.replace(/^[\d.]+\s+/, '').replace(/\s*#$$/, '').trim();
+        a.href = '#' + h.id;
+        li.appendChild(a);
 
-    // Find subsections (h2 with data-number starting with this section's number + ".")
-    var prefix = num + '.';
-    var subHeadings = document.querySelectorAll('#content h2[data-number]');
-    var subUl = null;
-    var subIds = [];
-    subHeadings.forEach(function(sh) {
-      var snum = sh.getAttribute('data-number');
-      if (!sh.id || !snum || !snum.startsWith(prefix)) return;
-      // Only direct children (e.g. "2.1" not "2.1.1")
-      var rest = snum.slice(prefix.length);
-      if (rest.indexOf('.') !== -1) return;
-      if (!subUl) {
-        subUl = document.createElement('ul');
-        subUl.className = 'sidebar-subsections';
-      }
-      var sli = document.createElement('li');
-      var sa = document.createElement('a');
-      sa.textContent = sh.textContent.replace(/^[\d.]+\s+/, '').replace(/\s*#$$/, '').trim();
-      sa.href = '#' + sh.id;
-      sli.appendChild(sa);
-      subUl.appendChild(sli);
-      subIds.push(sh.id);
-    });
-    if (subUl) li.appendChild(subUl);
+        // Find subsections (h2 with data-number starting with this section's number + ".")
+        var prefix = num + '.';
+        var subHeadings = document.querySelectorAll('#content h2[data-number]');
+        var subUl = null;
+        var subIds = [];
+        subHeadings.forEach(function (sh) {
+          var snum = sh.getAttribute('data-number');
+          if (!sh.id || !snum || !snum.startsWith(prefix)) return;
+          // Only direct children (e.g. "2.1" not "2.1.1")
+          var rest = snum.slice(prefix.length);
+          if (rest.indexOf('.') !== -1) return;
+          if (!subUl) {
+            subUl = document.createElement('ul');
+            subUl.className = 'sidebar-subsections';
+          }
+          var sli = document.createElement('li');
+          var sa = document.createElement('a');
+          sa.textContent = sh.textContent.replace(/^[\d.]+\s+/, '').replace(/\s*#$$/, '').trim();
+          sa.href = '#' + sh.id;
+          sli.appendChild(sa);
+          subUl.appendChild(sli);
+          subIds.push(sh.id);
+        });
+        if (subUl) li.appendChild(subUl);
 
-    nav.appendChild(li);
-    sectionItems.push({ li: li, id: h.id, subIds: subIds });
-  });
-
-  // Collect all trackable ids for scroll spy
-  var allIds = [];
-  sectionItems.forEach(function(s) {
-    allIds.push(s.id);
-    s.subIds.forEach(function(sid) { allIds.push(sid); });
-  });
-
-  function updateActive() {
-    var scrollY = window.scrollY || window.pageYOffset;
-    var current = '';
-    allIds.forEach(function(id) {
-      var el = document.getElementById(id);
-      if (el && el.offsetTop <= scrollY + 80) {
-        current = id;
-      }
-    });
-
-    sectionItems.forEach(function(s) {
-      var sectionLink = s.li.querySelector(':scope > a');
-      var isActive = current === s.id || s.subIds.indexOf(current) !== -1;
-
-      // Expand/collapse subsections
-      s.li.classList.toggle('expanded', isActive);
-
-      // Highlight section link
-      sectionLink.classList.toggle('active', isActive);
-
-      // Highlight subsection link
-      var subLinks = s.li.querySelectorAll('.sidebar-subsections a');
-      subLinks.forEach(function(sa) {
-        sa.classList.toggle('active', sa.getAttribute('href') === '#' + current);
+        nav.appendChild(li);
+        sectionItems.push({ li: li, id: h.id, subIds: subIds });
       });
-    });
-  }
-  window.addEventListener('scroll', updateActive);
-  updateActive();
 
-  // Toggle sidebar on mobile
-  var toggle = document.getElementById('sidebar-toggle');
-  var sidebar = document.getElementById('sidebar');
-  toggle.addEventListener('click', function() {
-    sidebar.classList.toggle('open');
-  });
-  nav.addEventListener('click', function() {
-    sidebar.classList.remove('open');
-  });
-})();
-</script>
+      // Cache element refs once — no getElementById on every scroll tick
+      var allEls = [];
+      sectionItems.forEach(function (s) {
+        var el = document.getElementById(s.id);
+        if (el) allEls.push({ id: s.id, el: el });
+        s.subIds.forEach(function (sid) {
+          var subEl = document.getElementById(sid);
+          if (subEl) allEls.push({ id: sid, el: subEl });
+        });
+      });
+
+      // Scroll spy via IntersectionObserver. rootMargin '-80px 0px 0px 0px'
+      // shifts the trigger line 80px below the viewport top: a heading is in
+      // `passed` once its top has crossed above that line. Avoids reading
+      // offsetTop on every scroll tick (layout thrash on long docs) and adapts
+      // automatically to resize, font load, theme change, sidebar collapse.
+      var passed = new Set();
+      var lastActive = '';
+
+      function applyActive(current) {
+        var changed = current && current !== lastActive;
+        if (changed) {
+          history.replaceState(null, '', '#' + current);
+          lastActive = current;
+        }
+
+        sectionItems.forEach(function (s) {
+          var sectionLink = s.li.querySelector(':scope > a');
+          var isActive = current === s.id || s.subIds.indexOf(current) !== -1;
+
+          s.li.classList.toggle('expanded', isActive);
+
+          sectionLink.classList.toggle('active', isActive);
+          if (isActive) {
+            sectionLink.setAttribute('aria-current', 'location');
+            if (changed) sectionLink.scrollIntoView({ block: 'nearest' });
+          } else { sectionLink.removeAttribute('aria-current'); }
+
+          var subLinks = s.li.querySelectorAll('.sidebar-subsections a');
+          subLinks.forEach(function (sa) {
+            var subActive = sa.getAttribute('href') === '#' + current;
+            sa.classList.toggle('active', subActive);
+            if (subActive) { sa.setAttribute('aria-current', 'location'); }
+            else { sa.removeAttribute('aria-current'); }
+          });
+        });
+      }
+
+      function recomputeActive() {
+        var current = '';
+        for (var i = 0; i < allEls.length; i++) {
+          if (passed.has(allEls[i].id)) current = allEls[i].id;
+        }
+        applyActive(current);
+      }
+
+      var io = new IntersectionObserver(function (entries) {
+        entries.forEach(function (entry) {
+          // boundingClientRect.top < 80 → heading is above the trigger line
+          if (entry.boundingClientRect.top < 80) {
+            passed.add(entry.target.id);
+          } else {
+            passed.delete(entry.target.id);
+          }
+        });
+        recomputeActive();
+      }, { rootMargin: '-80px 0px 0px 0px', threshold: [0, 1] });
+
+      allEls.forEach(function (item) { io.observe(item.el); });
+
+      // Sidebar toggle (mobile hamburger / wide-screen reopen)
+      var toggle = document.getElementById('sidebar-toggle');
+      var sidebar = document.getElementById('sidebar');
+      var collapseBtn = document.getElementById('sidebar-collapse');
+      var backdrop = document.getElementById('sidebar-backdrop');
+      var mobileMediaQuery = window.matchMedia('(max-width: 60em)');
+      toggle.setAttribute('aria-controls', 'sidebar');
+      toggle.setAttribute('aria-expanded', 'false');
+
+      function updateSidebarInert() {
+        var narrow = mobileMediaQuery.matches;
+        var hidden = narrow
+          ? !sidebar.classList.contains('open')
+          : document.body.classList.contains('sidebar-hidden');
+        if (hidden) { sidebar.setAttribute('inert', ''); }
+        else { sidebar.removeAttribute('inert'); }
+      }
+
+      function saveSidebarState(hidden) {
+        try {
+          if (hidden) { localStorage.setItem('sidebar-hidden', '1'); }
+          else { localStorage.removeItem('sidebar-hidden'); }
+        } catch (e) { }
+      }
+
+      // Mobile: toggle open/close; Wide: always opens (collapse btn handles closing)
+      toggle.addEventListener('click', function () {
+        if (mobileMediaQuery.matches) {
+          var isOpen = sidebar.classList.toggle('open');
+          toggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+        } else {
+          document.body.classList.remove('sidebar-hidden');
+          toggle.setAttribute('aria-expanded', 'true');
+          saveSidebarState(false);
+        }
+        updateSidebarInert();
+      });
+
+      // Wide-screen collapse button (lives inside sidebar)
+      collapseBtn.addEventListener('click', function () {
+        document.body.classList.add('sidebar-hidden');
+        toggle.setAttribute('aria-expanded', 'false');
+        saveSidebarState(true);
+        updateSidebarInert();
+      });
+
+      // Backdrop tap closes sidebar on mobile
+      backdrop.addEventListener('click', function () {
+        sidebar.classList.remove('open');
+        toggle.setAttribute('aria-expanded', 'false');
+        updateSidebarInert();
+      });
+
+      nav.addEventListener('click', function () {
+        sidebar.classList.remove('open');
+        toggle.setAttribute('aria-expanded', 'false');
+        updateSidebarInert();
+      });
+      mobileMediaQuery.addEventListener('change', function (e) {
+        if (e.matches) {
+          document.body.classList.remove('sidebar-hidden');
+          toggle.setAttribute('aria-expanded', sidebar.classList.contains('open') ? 'true' : 'false');
+        } else {
+          sidebar.classList.remove('open');
+          toggle.setAttribute('aria-expanded', document.body.classList.contains('sidebar-hidden') ? 'false' : 'true');
+        }
+        updateSidebarInert();
+      });
+
+      // Restore persisted sidebar collapse (wide screen only)
+      try {
+        if (!mobileMediaQuery.matches && localStorage.getItem('sidebar-hidden') === '1') {
+          document.body.classList.add('sidebar-hidden');
+          toggle.setAttribute('aria-expanded', 'false');
+        }
+      } catch (e) { }
+
+      updateSidebarInert();
+
+      // Theme toggle
+      var themeToggle = document.getElementById('theme-toggle');
+      var mq = window.matchMedia('(prefers-color-scheme: dark)');
+
+      // localStorage may be unavailable (opaque origins, private-mode restrictions, etc.)
+      function storageGet(key) {
+        try { return localStorage.getItem(key); } catch (e) { return null; }
+      }
+      function storageSet(key, val) {
+        try { localStorage.setItem(key, val); } catch (e) { }
+      }
+
+      function applyThemeUI(theme) {
+        themeToggle.textContent = theme === 'dark' ? 'Light' : 'Dark';
+        themeToggle.setAttribute('aria-label', theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode');
+      }
+
+      function setTheme(theme, save) {
+        document.documentElement.setAttribute('data-theme', theme);
+        if (save) { storageSet('theme', theme); }
+        applyThemeUI(theme);
+      }
+
+      // data-theme already set by inline head script; sync button UI
+      var initialTheme = document.documentElement.getAttribute('data-theme') || 'light';
+      applyThemeUI(initialTheme);
+
+      // Track system preference changes (only when user has no saved preference)
+      mq.addEventListener('change', function (e) {
+        if (!storageGet('theme')) {
+          setTheme(e.matches ? 'dark' : 'light', false);
+        }
+      });
+
+      themeToggle.addEventListener('click', function () {
+        var current = document.documentElement.getAttribute('data-theme') || 'light';
+        setTheme(current === 'light' ? 'dark' : 'light', true);
+      });
+
+    })();
+
+    // Copy buttons for code blocks (div.sourceCode and plain pre blocks)
+    (function () {
+      if (!navigator.clipboard) return;
+
+      function addCopyButton(block, getTextFn) {
+        var wrapper = document.createElement('div');
+        wrapper.className = 'code-wrapper';
+        block.parentNode.insertBefore(wrapper, block);
+        wrapper.appendChild(block);
+        var btn = document.createElement('button');
+        btn.className = 'copy-btn';
+        btn.setAttribute('aria-label', 'Copy code to clipboard');
+        btn.textContent = 'Copy';
+        wrapper.appendChild(btn);
+        var resetTimer = null;
+        function flash(text) {
+          btn.textContent = text;
+          if (resetTimer !== null) { clearTimeout(resetTimer); }
+          resetTimer = setTimeout(function () {
+            btn.textContent = 'Copy';
+            resetTimer = null;
+          }, 1500);
+        }
+        btn.addEventListener('click', function () {
+          navigator.clipboard.writeText(getTextFn()).then(
+            function () { flash('Copied!'); },
+            function () { flash('Failed'); }
+          );
+        });
+      }
+
+      document.querySelectorAll('div.sourceCode').forEach(function (block) {
+        addCopyButton(block, function () {
+          var pre = block.querySelector('pre');
+          return pre ? pre.innerText : '';
+        });
+      });
+
+      // Plain pre blocks not already wrapped by div.sourceCode
+      document.querySelectorAll('pre').forEach(function (block) {
+        if (block.closest('div.sourceCode')) return;
+        addCopyButton(block, function () { return block.innerText; });
+      });
+    })();
+
+    // Heading anchor links (#)
+    (function () {
+      document.querySelectorAll('#content h1[id], #content h2[id], #content h3[id], #content h4[id], #content h5[id], #content h6[id]').forEach(function (h) {
+        var a = document.createElement('a');
+        a.className = 'heading-anchor';
+        a.href = '#' + h.id;
+        a.setAttribute('aria-label', 'Link to this section');
+        a.textContent = '#';
+        h.appendChild(a);
+      });
+    })();
+
+    // Wrap tables for horizontal scroll on narrow viewports
+    (function () {
+      document.querySelectorAll('#content table').forEach(function (table) {
+        var wrapper = document.createElement('div');
+        wrapper.className = 'table-wrapper';
+        table.parentNode.insertBefore(wrapper, table);
+        wrapper.appendChild(table);
+      });
+    })();
+
+    // Footnote hover tooltips
+    (function () {
+      var tip = document.createElement('div');
+      tip.className = 'footnote-tooltip';
+      tip.setAttribute('role', 'tooltip');
+      tip.id = 'fn-tooltip';
+      document.body.appendChild(tip);
+
+      var activeFn = null;
+      var tipW = 0, tipH = 0;
+
+      function hide() { tip.style.display = 'none'; activeFn = null; }
+
+      function showTip(text) {
+        tip.textContent = text;
+        tip.style.display = 'block';
+        tip.style.left = '0'; tip.style.top = '0';
+        tipW = tip.offsetWidth; tipH = tip.offsetHeight; // read once after display:block
+      }
+
+      function place(x, y) {
+        if (x + tipW + 16 > window.innerWidth) x = x - tipW - 12;
+        if (y + tipH + 16 > window.innerHeight) y = y - tipH - 8;
+        tip.style.left = Math.max(4, x) + 'px';
+        tip.style.top = Math.max(4, y) + 'px';
+      }
+
+      document.querySelectorAll('a.footnote-ref').forEach(function (ref) {
+        var href = ref.getAttribute('href');
+        if (!href) return;
+        var targetId = href.replace(/^#/, '');
+        var fn = document.getElementById(targetId);
+        if (!fn) return;
+        var clone = fn.cloneNode(true);
+        var back = clone.querySelector('.footnote-back');
+        if (back) back.parentNode.removeChild(back);
+        var text = clone.textContent.trim();
+        ref.setAttribute('aria-describedby', 'fn-tooltip');
+
+        ref.addEventListener('mouseenter', function (e) {
+          activeFn = ref;
+          showTip(text);
+          place(e.clientX + 14, e.clientY + 14);
+        });
+        ref.addEventListener('mousemove', function (e) {
+          if (activeFn === ref) place(e.clientX + 14, e.clientY + 14);
+        });
+        ref.addEventListener('mouseleave', hide);
+        ref.addEventListener('focus', function () {
+          activeFn = ref;
+          showTip(text);
+          var r = ref.getBoundingClientRect();
+          place(r.left, r.bottom + 6);
+        });
+        ref.addEventListener('blur', hide);
+      });
+    })();
+  </script>
 </body>
+
 </html>
