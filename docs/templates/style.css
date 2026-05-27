@@ -19,7 +19,7 @@
     --border-light: #eaeef2;
     --quote-color: #57606a;
     --author-aff: #57606a;
-    --anchor-color: #9aa3af;
+    --anchor-color: #8e9199;
     --th-bg: #f6f8fa;
     --syntax-red: #a31515;
     --syntax-yellow: #b07800;
@@ -49,7 +49,7 @@
     --border-light: #2c313a;
     --quote-color: #8892a0;
     --author-aff: #8892a0;
-    --anchor-color: #4b5263;
+    --anchor-color: #717b87;
     --th-bg: #21252b;
     --syntax-red: #e06c75;
     --syntax-yellow: #e5c07b;
@@ -167,6 +167,20 @@ body {
     text-align: left;
     cursor: pointer;
     opacity: 0.8;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.4em;
+}
+
+#sidebar-search-trigger kbd {
+    font-size: 0.85em;
+    background: transparent;
+    border-color: var(--sidebar-border);
+    border-bottom-width: 1px;
+    padding: 0.05em 0.35em;
+    opacity: 0.75;
+    flex-shrink: 0;
 }
 
 #sidebar-search-trigger:hover {
@@ -608,7 +622,7 @@ div.sourceCode>pre {
     background: var(--sidebar-bg);
     border: 1px solid var(--border-color);
     color: var(--text-color);
-    padding: 0.2em 0.6em;
+    padding: 0.35em 0.7em;
     border-radius: 6px;
     font-size: 0.75em;
     cursor: pointer;
