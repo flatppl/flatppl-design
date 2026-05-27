@@ -116,6 +116,7 @@
     $include-after$
     $endfor$
   </main>
+  <script src="./fuse.min.js"></script>
   <script>
     // Build sidebar nav from section headings, with expandable subsections
     (function () {
@@ -388,7 +389,6 @@
           index.push({
             el: el,
             text: text,
-            lower: text.toLowerCase(),
             heading: currentHeading ? currentHeading.text : '',
             targetId: targetId,
             isHeading: isHeading
@@ -399,16 +399,48 @@
           return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
         }
 
-        function snippet(entry, q) {
-          var i = entry.lower.indexOf(q);
+        var fuseSearch = null;
+        function getFuse() {
+          if (!fuseSearch) fuseSearch = new Fuse(index, {
+            keys: ['text'],
+            includeScore: true,
+            includeMatches: true,
+            threshold: 0.3,
+            ignoreLocation: true,
+            minMatchCharLength: 2,
+          });
+          return fuseSearch;
+        }
+
+        // Snippet centered on the first Fuse match range; adjacent highlighted
+        // chars merged into single <mark> spans.
+        function fuseSnippet(entry, matchRanges) {
+          if (!matchRanges.length) return escapeHtml(entry.text.slice(0, 140));
           var text = entry.text;
           var radius = 60;
-          var start = Math.max(0, i - radius);
-          var end = Math.min(text.length, i + q.length + radius);
-          var pre = (start > 0 ? '…' : '') + text.slice(start, i);
-          var hit = text.slice(i, i + q.length);
-          var post = text.slice(i + q.length, end) + (end < text.length ? '…' : '');
-          return escapeHtml(pre) + '<mark>' + escapeHtml(hit) + '</mark>' + escapeHtml(post);
+          var first = matchRanges[0][0];
+          var last = matchRanges[matchRanges.length - 1][1];
+          var start = Math.max(0, first - radius);
+          var end = Math.min(text.length, last + radius);
+          var marked = {};
+          for (var i = 0; i < matchRanges.length; i++) {
+            for (var p = matchRanges[i][0]; p <= matchRanges[i][1]; p++) marked[p] = true;
+          }
+          var html = (start > 0 ? '…' : '');
+          var seg = start, inMark = false;
+          for (var j = start; j < end; j++) {
+            var nowMark = !!marked[j];
+            if (nowMark !== inMark) {
+              html += escapeHtml(text.slice(seg, j));
+              seg = j;
+              html += inMark ? '</mark>' : '<mark>';
+              inMark = nowMark;
+            }
+          }
+          html += escapeHtml(text.slice(seg, end));
+          if (inMark) html += '</mark>';
+          if (end < text.length) html += '…';
+          return html;
         }
 
         var pulseTimer = null;
@@ -428,17 +460,18 @@
 
         var MAX_RESULTS = 40;
         function runSearch() {
-          var q = searchInput.value.trim().toLowerCase();
+          var q = searchInput.value.trim();
           resultsList.innerHTML = '';
           if (emptyMsg) { emptyMsg.hidden = true; }
           if (searchStatus) { searchStatus.textContent = ''; }
           if (!q) { return; }
 
-          var hits = 0;
-          for (var k = 0; k < index.length && hits < MAX_RESULTS; k++) {
-            var entry = index[k];
-            if (entry.lower.indexOf(q) === -1) continue;
-            hits++;
+          var results = getFuse().search(q, { limit: MAX_RESULTS });
+
+          for (var r = 0; r < results.length; r++) {
+            var entry = results[r].item;
+            var _m = results[r].matches && results[r].matches.find(function (m) { return m.key === 'text'; });
+            var matchRanges = _m ? _m.indices : null;
 
             var li = document.createElement('li');
             var a = document.createElement('a');
@@ -452,7 +485,9 @@
             }
             var sn = document.createElement('span');
             sn.className = 'search-result-snippet' + (entry.isHeading ? ' is-heading' : '');
-            sn.innerHTML = snippet(entry, q);
+            sn.innerHTML = matchRanges
+              ? fuseSnippet(entry, matchRanges)
+              : escapeHtml(entry.text.slice(0, 140));
             a.appendChild(sn);
 
             (function (e) {
@@ -466,9 +501,10 @@
             li.appendChild(a);
             resultsList.appendChild(li);
           }
-          if (emptyMsg) { emptyMsg.hidden = hits > 0; }
+          if (emptyMsg) { emptyMsg.hidden = results.length > 0; }
           if (searchStatus) {
-            searchStatus.textContent = hits === 0 ? 'No matches' : hits + ' result' + (hits === 1 ? '' : 's');
+            var n = results.length;
+            searchStatus.textContent = n === 0 ? 'No matches' : n + ' result' + (n === 1 ? '' : 's');
           }
         }
 
