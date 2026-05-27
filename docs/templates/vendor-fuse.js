@@ -11,7 +11,7 @@ const FUSE_VERSION = '6.6.2';
 const outFile = path.join('build', 'fuse.min.js');
 const stampFile = path.join('build', '.fuse-version');
 
-if (fs.existsSync(outFile) && fs.existsSync(stampFile)) {
+if (fs.existsSync(outFile) && fs.statSync(outFile).size > 0 && fs.existsSync(stampFile)) {
   const cached = fs.readFileSync(stampFile, 'utf8').trim();
   if (cached === FUSE_VERSION) { process.exit(0); }
 }
