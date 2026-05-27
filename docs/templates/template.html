@@ -169,9 +169,11 @@
 
       // Scroll spy via IntersectionObserver. rootMargin '-80px 0px 0px 0px'
       // shifts the trigger line 80px below the viewport top: a heading is in
-      // `passed` once its top has crossed above that line. Avoids reading
-      // offsetTop on every scroll tick (layout thrash on long docs) and adapts
-      // automatically to resize, font load, theme change, sidebar collapse.
+      // `passed` once its top has crossed above that line. The observer is the
+      // trigger; `passed` is rebuilt from live positions on each callback (see
+      // below). Avoids polling on every scroll tick (layout thrash on long
+      // docs) and adapts automatically to resize, font load, theme change,
+      // sidebar collapse.
       var passed = new Set();
       var lastActive = '';
 
@@ -212,15 +214,19 @@
         applyActive(current);
       }
 
-      var io = new IntersectionObserver(function (entries) {
-        entries.forEach(function (entry) {
-          // boundingClientRect.top < 80 → heading is above the trigger line
-          if (entry.boundingClientRect.top < 80) {
-            passed.add(entry.target.id);
-          } else {
-            passed.delete(entry.target.id);
-          }
-        });
+      var io = new IntersectionObserver(function () {
+        // Rebuild `passed` from each heading's current position rather than
+        // patching the fired entries. An anchor-jump (clicking a sidebar
+        // link) moves scroll discontinuously: headings that leap from below
+        // the viewport to above it never cross a threshold, so IO fires no
+        // entry for them and incremental updates desync. A jump always pushes
+        // previously-visible content out of view, firing at least one entry,
+        // so this full resync runs. Layout reads happen only on crossing
+        // events (rare), not every scroll tick.
+        passed.clear();
+        for (var i = 0; i < allEls.length; i++) {
+          if (allEls[i].el.getBoundingClientRect().top < 80) passed.add(allEls[i].id);
+        }
         recomputeActive();
       }, { rootMargin: '-80px 0px 0px 0px', threshold: [0, 1] });
 
