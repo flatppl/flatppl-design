@@ -527,6 +527,19 @@ sup {
 }
 
 /* ── Code ─────────────────────────────────────────────── */
+kbd {
+    display: inline-block;
+    padding: 0.1em 0.45em;
+    font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+    font-size: 0.8em;
+    background: var(--code-bg);
+    border: 1px solid var(--border-color);
+    border-bottom-width: 2px;
+    border-radius: 4px;
+    color: var(--text-color);
+    vertical-align: baseline;
+}
+
 code {
     background: var(--code-bg);
     padding: 0.15em 0.35em;
@@ -1042,7 +1055,7 @@ section.footnotes ol {
     }
 
     pre {
-        border: 1px solid #ccc;
+        border: 1px solid var(--pre-border);
         white-space: pre-wrap;
     }
 }
@@ -1090,5 +1103,16 @@ section.footnotes ol {
     #content {
         margin-left: 0;
         padding: 3.5em 1.2em 2em;
+    }
+}
+
+/* ── Motion ───────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
     }
 }
