@@ -51,18 +51,22 @@
     <div id="sidebar-title"><span id="sidebar-title-text">$pagetitle$</span><button id="sidebar-collapse"
         aria-label="Collapse sidebar">&#x2039;</button></div>
     <div id="sidebar-search">
-      <input type="search" id="sidebar-search-input" placeholder="Search the docs&hellip;"
-        aria-label="Search the documentation" autocomplete="off" spellcheck="false" />
+      <button id="sidebar-search-trigger" aria-haspopup="dialog">Search the docs&hellip;</button>
     </div>
     <ul id="sidebar-nav"></ul>
-    <ul id="sidebar-results" hidden aria-label="Search results"></ul>
-    <p id="sidebar-search-empty" hidden>No matches</p>
     <div id="theme-toggle-container">
       <button id="theme-toggle" aria-label="Toggle color theme">Theme</button>
     </div>
   </nav>
   <button id="sidebar-toggle" aria-label="Toggle navigation">&#9776;</button>
   <div id="sidebar-backdrop"></div>
+  <dialog id="search-dialog" aria-label="Search the documentation">
+    <input type="search" id="search-dialog-input" placeholder="Search the docs&hellip;" aria-label="Search"
+      autocomplete="off" spellcheck="false" />
+    <ul id="search-dialog-results" aria-label="Search results"></ul>
+    <p id="search-dialog-empty" hidden>No matches</p>
+    <span id="search-dialog-status" aria-live="polite" aria-atomic="true" class="sr-only"></span>
+  </dialog>
   <main id="content" tabindex="-1">
     $for(include-before)$
     $include-before$
@@ -356,36 +360,29 @@
         setTheme(current === 'light' ? 'dark' : 'light', true);
       });
 
-      // Sidebar full-text search. Single-page doc, so the entire corpus is
-      // already in the DOM: index content blocks once, then match the query
-      // against their text and render result snippets that jump to the block.
-      var searchInput = document.getElementById('sidebar-search-input');
-      var resultsList = document.getElementById('sidebar-results');
-      var emptyMsg = document.getElementById('sidebar-search-empty');
+      // Full-text search. Index content blocks once on load; open a centred
+      // dialog on demand so the main nav is never displaced.
+      var searchTrigger = document.getElementById('sidebar-search-trigger');
+      var searchDialog = document.getElementById('search-dialog');
+      var searchInput = document.getElementById('search-dialog-input');
+      var resultsList = document.getElementById('search-dialog-results');
+      var emptyMsg = document.getElementById('search-dialog-empty');
+      var searchStatus = document.getElementById('search-dialog-status');
 
-      var sidebarNav = document.getElementById('sidebar-nav');
-
-      if (searchInput && resultsList) {
-        // One entry per leaf content block. Each remembers the nearest
-        // preceding heading (for a result label) and its own id or its
-        // heading's id (for the jump target). Headings themselves are indexed
-        // too, so a query that only matches a title still surfaces.
+      if (searchTrigger && searchDialog && searchInput && resultsList) {
         var BLOCK_SEL = 'p, li, pre, blockquote, td, th, dt, dd, figcaption, h1, h2, h3, h4, h5, h6';
         var HEAD_SEL = ' H1 H2 H3 H4 H5 H6 ';
         var index = [];
-        var currentHeading = null; // {id, text}
+        var currentHeading = null;
 
-        [].forEach.call(document.querySelectorAll('#content ' + BLOCK_SEL), function (el) {
+        var contentEl = document.getElementById('content');
+        [].forEach.call(contentEl ? contentEl.querySelectorAll(BLOCK_SEL) : [], function (el) {
           var isHeading = HEAD_SEL.indexOf(' ' + el.tagName + ' ') !== -1;
-          // Track section context on every heading, even ones we then skip.
-          // Heading text minus the trailing '#' anchor injected at build time.
           var text = el.textContent.replace(/\s*#\s*$$/, '').trim();
           if (isHeading) {
             currentHeading = { id: el.id || '', text: text.replace(/^[\d.]+\s+/, '') };
           }
           if (!text) return;
-          // Index leaf blocks only: a container (e.g. <li> wrapping a <p>, or a
-          // <blockquote>) would otherwise duplicate the text of its children.
           if (!isHeading && el.querySelector(BLOCK_SEL)) return;
           var targetId = el.id || (currentHeading && currentHeading.id) || '';
           index.push({
@@ -402,7 +399,6 @@
           return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
         }
 
-        // Snippet of ~140 chars centered on the first match, query <mark>ed.
         function snippet(entry, q) {
           var i = entry.lower.indexOf(q);
           var text = entry.text;
@@ -419,7 +415,6 @@
         function jumpTo(entry) {
           entry.el.scrollIntoView({ block: 'center' });
           if (entry.targetId) { history.replaceState(null, '', '#' + entry.targetId); }
-          // Brief highlight so the eye lands on the matched block.
           if (pulseTimer !== null) { clearTimeout(pulseTimer); }
           document.querySelectorAll('.search-hit').forEach(function (e) {
             e.classList.remove('search-hit');
@@ -435,14 +430,9 @@
         function runSearch() {
           var q = searchInput.value.trim().toLowerCase();
           resultsList.innerHTML = '';
-          if (!q) {
-            resultsList.hidden = true;
-            emptyMsg.hidden = true;
-            sidebarNav.hidden = false;
-            return;
-          }
-          sidebarNav.hidden = true;
-          resultsList.hidden = false;
+          if (emptyMsg) { emptyMsg.hidden = true; }
+          if (searchStatus) { searchStatus.textContent = ''; }
+          if (!q) { return; }
 
           var hits = 0;
           for (var k = 0; k < index.length && hits < MAX_RESULTS; k++) {
@@ -452,7 +442,7 @@
 
             var li = document.createElement('li');
             var a = document.createElement('a');
-            a.href = entry.targetId ? '#' + entry.targetId : '#';
+            a.href = entry.targetId ? '#' + entry.targetId : '';
             a.className = 'search-result';
             if (entry.heading) {
               var h = document.createElement('span');
@@ -468,26 +458,48 @@
             (function (e) {
               a.addEventListener('click', function (ev) {
                 ev.preventDefault();
+                searchDialog.close();
                 jumpTo(e);
-                // Mobile: close the drawer after picking a result.
-                if (mobileMediaQuery.matches) {
-                  sidebar.classList.remove('open');
-                  toggle.setAttribute('aria-expanded', 'false');
-                  updateSidebarInert();
-                }
               });
             })(entry);
 
             li.appendChild(a);
             resultsList.appendChild(li);
           }
-          emptyMsg.hidden = hits > 0;
+          if (emptyMsg) { emptyMsg.hidden = hits > 0; }
+          if (searchStatus) {
+            searchStatus.textContent = hits === 0 ? 'No matches' : hits + ' result' + (hits === 1 ? '' : 's');
+          }
         }
 
-        searchInput.addEventListener('input', runSearch);
-        searchInput.addEventListener('keydown', function (e) {
-          if (e.key === 'Escape') { searchInput.value = ''; runSearch(); searchInput.blur(); }
+        function clearSearch() {
+          searchInput.value = '';
+          resultsList.innerHTML = '';
+          if (emptyMsg) { emptyMsg.hidden = true; }
+          if (searchStatus) { searchStatus.textContent = ''; }
+        }
+
+        var searchDebounceTimer = null;
+        function debouncedSearch() {
+          if (searchDebounceTimer !== null) { clearTimeout(searchDebounceTimer); }
+          searchDebounceTimer = setTimeout(function () { searchDebounceTimer = null; runSearch(); }, 120);
+        }
+
+        searchTrigger.addEventListener('click', function () {
+          searchDialog.showModal();
+          searchInput.focus();
         });
+
+        // Close when clicking the backdrop (click lands on the dialog element
+        // itself, not any of its children).
+        searchDialog.addEventListener('click', function (e) {
+          if (e.target === searchDialog) { searchDialog.close(); }
+        });
+
+        // Clear state when dialog closes (covers Escape and backdrop click).
+        searchDialog.addEventListener('close', clearSearch);
+
+        searchInput.addEventListener('input', debouncedSearch);
       }
 
     })();
