@@ -159,7 +159,7 @@ exhaustive.
 | `PoissonProcess` | `rate_extended_dist` / `rate_density_dist` | `RooExtendPdf` + base PDF | Decompose via `normalize`/`totalmass` |
 | `Uniform` | `uniform_dist` | `RooUniform` | |
 | `hepphys.Argus` | `argus_dist` | `RooArgusBG` | HS³: names match; RooFit: `resonance` → `m0`, `slope` → `c`, `power` → `p` |
-| `hepphys.BifurcatedGaussian` | — | `RooBifurGauss` | |
+| `hepphys.BifurcatedNormal` | — | `RooBifurGauss` | |
 | `hepphys.ContinuedPoisson` | `poisson_dist` (implicit) | `RooPoisson` (`noRounding=true`) | Same parameter mapping as `Poisson`; density only, not generative |
 | `hepphys.CrystalBall` | `crystalball_dist` | `RooCBShape` | Names match directly |
 | `hepphys.DoubleSidedCrystalBall` | `crystalball_dist` (double-sided) | `RooCrystalBall` | `sigmaL` → `sigma_L` (HS³), etc. |
