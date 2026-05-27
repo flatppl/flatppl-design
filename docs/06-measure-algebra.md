@@ -573,7 +573,12 @@ decomposition may be intractable and may not be supported.
 be a record/table so that all field/column names of `x` appear in the
 field/column names of variates of `M`.
 
-`restrict` is defined via measure disintegration:
+`restrict` is defined via measure disintegration. There are two
+equivalent formulations, differing in which disintegration direction
+is taken; both yield the same conditional measure.
+
+**Selector disintegration.** Disintegrate `mu` along the field names
+of `x`:
 
 ```flatppl
 x = record(a = ..., b = ...)
@@ -595,6 +600,27 @@ x = record(a = ..., b = ...)
 kernel, marginal = disintegrate(["a", "b", ...], mu)
 nu = logweighted(fn(logdensityof(kernel(_), x)), marginal)
 ```
+
+**Complement disintegration.** Alternatively, disintegrate `mu` along
+the *complement* of `x`'s fields:
+
+```flatppl
+x = record(a = ..., b = ...)
+nu = restrict(mu, x)
+```
+
+is equivalent to
+
+```flatppl
+x = record(a = ..., b = ...)
+kernel, marginal = disintegrate([...complement of "a", "b", ...], mu)
+nu = logweighted(logdensityof(marginal, x), kernel(x))
+```
+
+Often only one of the two disintegration directions will be viable via
+structural disintegration. If both are viable, complement disintegration
+should be preferred as it only requires homogenous instead of inhomogenous
+weighting of a measure.
 
 The keyword-form is allowed as well due to
 [auto-splatting](04-design.md#sec:calling-convention):
