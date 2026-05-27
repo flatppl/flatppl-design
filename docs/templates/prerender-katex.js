@@ -7,6 +7,10 @@ const fs = require('fs');
 const path = require('path');
 
 const htmlPath = path.join('build', 'index.html');
+if (!fs.existsSync(htmlPath)) {
+  console.error('KaTeX pre-render: ' + htmlPath + ' not found. Run pandoc first (pixi run _pandoc-html).');
+  process.exit(1);
+}
 const katex = require(path.resolve(process.cwd(), 'build', 'katex', 'katex.min.js'));
 
 function decodeEntities(str) {
@@ -49,7 +53,9 @@ html = html.replace(/<span\s+class="[^"]*\bmath\s+display\b[^"]*">([\s\S]*?)<\/s
 // Pandoc may emit defer with or without an attribute value depending on version.
 html = html.replace(/<script\s+(?:defer(?:="[^"]*")?\s+)?src="\.\/katex\/katex\.min\.js"(?:\s+defer(?:="[^"]*")?)?\s*><\/script>\s*/g, '');
 
-// Strip the inline DOMContentLoaded render script (Pandoc-generated)
+// Strip the inline DOMContentLoaded render script (Pandoc-generated, validated against pandoc >=3.9,<4).
+// If pandoc is bumped and this pattern stops matching, the client-side KaTeX loader will remain
+// in the output (duplicate rendering) rather than silently breaking math.
 html = html.replace(/<script>document\.addEventListener\("DOMContentLoaded"[\s\S]*?<\/script>\s*/g, '');
 
 fs.writeFileSync(htmlPath, html);
