@@ -49,9 +49,10 @@
   <a class="skip-to-content" href="#content">Skip to content</a>
   <nav id="sidebar" role="navigation" aria-label="Section navigation">
     <div id="sidebar-title"><span id="sidebar-title-text">$pagetitle$</span><button id="sidebar-collapse"
-        aria-label="Collapse sidebar">&#x2039;</button></div>
+        aria-label="Collapse sidebar" aria-controls="sidebar" aria-expanded="true">&#x2039;</button></div>
     <div id="sidebar-search">
-      <button id="sidebar-search-trigger" aria-haspopup="dialog">Search the docs&hellip;</button>
+      <button id="sidebar-search-trigger" aria-haspopup="dialog" aria-keyshortcuts="Meta+k Control+k"><span>Search the
+          docs&hellip;</span><kbd id="search-shortcut-hint"></kbd></button>
     </div>
     <ul id="sidebar-nav"></ul>
     <div id="theme-toggle-container">
@@ -285,6 +286,7 @@
       collapseBtn.addEventListener('click', function () {
         document.body.classList.add('sidebar-hidden');
         toggle.setAttribute('aria-expanded', 'false');
+        collapseBtn.setAttribute('aria-expanded', 'false');
         saveSidebarState(true);
         updateSidebarInert();
       });
@@ -369,6 +371,11 @@
       var resultsList = document.getElementById('search-dialog-results');
       var emptyMsg = document.getElementById('search-dialog-empty');
       var searchStatus = document.getElementById('search-dialog-status');
+
+      var shortcutHint = document.getElementById('search-shortcut-hint');
+      if (shortcutHint) {
+        shortcutHint.textContent = /Mac|iPhone|iPad|iPod/.test(navigator.platform) ? '⌘K' : 'Ctrl+K';
+      }
 
       if (searchTrigger && searchDialog && searchInput && resultsList) {
         var BLOCK_SEL = 'p, li, pre, blockquote, td, th, dt, dd, figcaption, h1, h2, h3, h4, h5, h6';
@@ -521,9 +528,48 @@
           searchDebounceTimer = setTimeout(function () { searchDebounceTimer = null; runSearch(); }, 120);
         }
 
-        searchTrigger.addEventListener('click', function () {
+        function openSearch() {
           searchDialog.showModal();
           searchInput.focus();
+        }
+
+        searchTrigger.addEventListener('click', openSearch);
+
+        // Cmd/Ctrl+K or '/' opens search from anywhere on the page.
+        document.addEventListener('keydown', function (e) {
+          if (searchDialog.open) return;
+          if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+            e.preventDefault();
+            openSearch();
+            return;
+          }
+          var tag = document.activeElement ? document.activeElement.tagName : '';
+          var editable = document.activeElement && document.activeElement.isContentEditable;
+          if (e.key === '/' && tag !== 'INPUT' && tag !== 'TEXTAREA' && tag !== 'SELECT' && !editable) {
+            e.preventDefault();
+            openSearch();
+          }
+        });
+
+        // Arrow-key navigation: Down from input enters results; Up/Down in results;
+        // Up on first result returns focus to input.
+        searchInput.addEventListener('keydown', function (e) {
+          if (e.key === 'ArrowDown') {
+            var first = resultsList.querySelector('a.search-result');
+            if (first) { e.preventDefault(); first.focus(); }
+          }
+        });
+
+        resultsList.addEventListener('keydown', function (e) {
+          if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp') return;
+          e.preventDefault();
+          var items = resultsList.querySelectorAll('a.search-result');
+          var idx = [].indexOf.call(items, document.activeElement);
+          if (e.key === 'ArrowDown') {
+            if (idx < items.length - 1) { items[idx + 1].focus(); }
+          } else {
+            if (idx > 0) { items[idx - 1].focus(); } else { searchInput.focus(); }
+          }
         });
 
         // Close when clicking the backdrop (click lands on the dialog element
@@ -552,6 +598,7 @@
         var btn = document.createElement('button');
         btn.className = 'copy-btn';
         btn.setAttribute('aria-label', 'Copy code to clipboard');
+        btn.setAttribute('aria-live', 'polite');
         btn.textContent = 'Copy';
         wrapper.appendChild(btn);
         var resetTimer = null;
