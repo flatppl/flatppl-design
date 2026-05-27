@@ -75,6 +75,8 @@ body {
     line-height: 1.7;
     background-color: var(--bg-color);
     color: var(--text-color);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
 }
 
 /* ── Sidebar ──────────────────────────────────────────── */
@@ -469,18 +471,22 @@ h6 {
 
 h1 {
     font-size: 1.8em;
+    margin-top: 2.2em;
+    letter-spacing: -0.01em;
     border-bottom: 2px solid var(--border-color);
     padding-bottom: 0.3em;
 }
 
 h2 {
     font-size: 1.4em;
+    margin-top: 1.8em;
     border-bottom: 1px solid var(--border-light);
     padding-bottom: 0.2em;
 }
 
 h3 {
-    font-size: 1.15em;
+    font-size: 1.2em;
+    margin-top: 1.4em;
 }
 
 .title {
@@ -495,7 +501,7 @@ h3 {
 
 a {
     color: var(--link-color);
-    text-underline-offset: 2px;
+    text-underline-offset: 3px;
 }
 
 #content a:hover {
@@ -631,7 +637,7 @@ div.sourceCode>pre {
 blockquote {
     border-left: 4px solid var(--border-color);
     margin: 1.2em 0;
-    padding: 0.4em 1em;
+    padding: 0.6em 1em;
     color: var(--quote-color);
     background: var(--pre-bg);
     border-radius: 0 10px 10px 0;
@@ -648,12 +654,13 @@ table {
     width: 100%;
     margin: 0;
     font-size: 0.95em;
+    font-variant-numeric: tabular-nums;
 }
 
 th,
 td {
     border: 1px solid var(--border-color);
-    padding: 0.5em 0.75em;
+    padding: 0.5em 0.9em;
     text-align: left;
 }
 
