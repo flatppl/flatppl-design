@@ -116,7 +116,7 @@
     $include-after$
     $endfor$
   </main>
-  <script src="fuse.min.js"></script>
+  <script src="./fuse.min.js"></script>
   <script>
     // Build sidebar nav from section headings, with expandable subsections
     (function () {
@@ -405,7 +405,7 @@
             keys: ['text'],
             includeScore: true,
             includeMatches: true,
-            threshold: 0.4,
+            threshold: 0.3,
             ignoreLocation: true,
             minMatchCharLength: 2,
           });
@@ -426,12 +426,18 @@
           for (var i = 0; i < matchRanges.length; i++) {
             for (var p = matchRanges[i][0]; p <= matchRanges[i][1]; p++) marked[p] = true;
           }
-          var html = (start > 0 ? '…' : ''), inMark = false;
+          var html = (start > 0 ? '…' : '');
+          var seg = start, inMark = false;
           for (var j = start; j < end; j++) {
-            if (marked[j] && !inMark) { html += '<mark>'; inMark = true; }
-            if (!marked[j] && inMark) { html += '</mark>'; inMark = false; }
-            html += escapeHtml(text[j]);
+            var nowMark = !!marked[j];
+            if (nowMark !== inMark) {
+              html += escapeHtml(text.slice(seg, j));
+              seg = j;
+              html += inMark ? '</mark>' : '<mark>';
+              inMark = nowMark;
+            }
           }
+          html += escapeHtml(text.slice(seg, end));
           if (inMark) html += '</mark>';
           if (end < text.length) html += '…';
           return html;
@@ -464,8 +470,8 @@
 
           for (var r = 0; r < results.length; r++) {
             var entry = results[r].item;
-            var matchRanges = (results[r].matches && results[r].matches[0])
-              ? results[r].matches[0].indices : null;
+            var _m = results[r].matches && results[r].matches.find(function (m) { return m.key === 'text'; });
+            var matchRanges = _m ? _m.indices : null;
 
             var li = document.createElement('li');
             var a = document.createElement('a');
