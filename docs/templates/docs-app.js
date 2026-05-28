@@ -318,7 +318,6 @@
         threshold: 0.35,
         ignoreLocation: true,
         minMatchCharLength: 2,
-        useTokenSearch: true,
       });
       return fuseSearch;
     }
