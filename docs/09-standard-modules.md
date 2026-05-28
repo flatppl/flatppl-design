@@ -285,7 +285,7 @@ We can construct a distribution by reweighting Lebesgue with $|A|^2$, normalizin
 ```flatppl
 hepphys = standard_module("particle-physics", "0.1")
 
-amp = fn(hepphys.breit_wigner(_, 1.5, 0.1, 0, 0, 0, 1.0)) # σ ↦ BW(σ)
+amp = fn(hepphys.BreitWignerLineshape(_, 1.5, 0.1, 0, 0, 0, 1.0)) # σ ↦ BW(σ)
 
 p_sigma  = normalize(weighted(fn(abs2(amp(_))), Lebesgue(support = interval(0.25, 6.25))))
 
