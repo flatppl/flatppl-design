@@ -222,17 +222,17 @@ Density w.r.t. `Lebesgue(reals)`:
 
 $$\frac{\lambda^x e^{-\lambda}}{\Gamma(x+1)} \quad \text{for } x \geq 0$$
 
-#### Lineshape functions
+#### Resonance functions
 
-| Function | Parameters | Description |
-|---|---|---|
-| [`lineshape_breitwigner`](#breitwignerlineshape) | `sigma`, `m`, `width`, `ma`, `mb`, `l`, `d` | Breit-Wigner amplitude for a two-body decay |
+| Function | Arguments | Description | Domains |
+|---|---|---|---|
+| [`resonance_breitwigner`](#resonancebreitwigner) | `sigma`, `m`, `width`, `ma`, `mb`, `l`, `d` | Breit-Wigner amplitude for a two-body decay | `posreals`, `posreals`, `posreals`, `nonnegreals`, `nonnegreals`, `nonnegintegers`, `posreals` |
 
-<a id="breitwignerlineshape"></a>**`lineshape_breitwigner(sigma, m, width, ma, mb, l, d)`** — complex-valued
+<a id="resonancebreitwigner"></a>**`resonance_breitwigner(sigma, m, width, ma, mb, l, d)`** — complex-valued
 mass-dependent-width relativistic Breit-Wigner amplitude for a resonance
 $R \to a\, b$ with orbital angular momentum $\ell$.
 
-Parameters:
+Arguments:
 
 - `sigma = elementof(posreals)`: invariant mass squared $\sigma$.
 - `m = elementof(posreals)`: pole mass.
@@ -243,33 +243,13 @@ Parameters:
 
 Definition:
 
-$$\mathrm{BW}(\sigma) = \frac{1}{m^2 - \sigma - i\, m\, \Gamma(\sigma)},$$
+$$\mathrm{BW}(\sigma) = \frac{1}{m^2 - \sigma - i m \Gamma(\sigma)},$$
 
 with mass-dependent width
 
 $$\Gamma(\sigma) = \Gamma \frac{m}{\sqrt{\sigma}} \frac{p(\sigma)}{p_0} \left(\frac{F_\ell(p(\sigma))}{F_\ell(p_0)}\right)^2,$$
 
 where $p(\sigma)$, $\lambda(x, y, z)$, and $F_\ell(p)^2$ the breakup momentum, Källén function, and Blatt-Weisskopf barrier factor respectively, as given in Section 50 (Resonances) of [Navas et al. (2024)](15-references.md#navas2024).
-
-<!-- where $p(\sigma)$ is the two-body breakup momentum
-
-$$p(\sigma) = \frac{1}{2\sqrt{\sigma}}\sqrt{\lambda(\sigma,\, m_a^2,\, m_b^2)},$$
-
-$\lambda(x, y, z) = x^2 + y^2 + z^2 - 2(xy + yz + zx)$ is the Källén function,
-$p_0 = p(m^2)$, and $F_\ell$ is the Blatt-Weisskopf barrier factor
-
-$$F_\ell(p)^2 = \frac{(p\, d)^{2\ell}}{\chi_\ell\left((p\, d)^2\right)}$$
-
-with denominator polynomials
-
-$$\begin{aligned}
-\chi_0(z) &= 1, \\
-\chi_1(z) &= 1 + z, \\
-\chi_2(z) &= 9 + 3 z + z^2, \\
-\chi_3(z) &= 225 + 45 z + 6 z^2 + z^3,
-\end{aligned}$$ -->
-
-and so on (see [Blatt and Weisskopf (1952)](15-references.md#blatt1952)).
 
 Note that when $\ell = 0, m_a = m_b = 0$, we have
 
