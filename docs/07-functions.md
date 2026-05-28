@@ -621,11 +621,11 @@ For multi-axis array contraction using these reductions, see
 
 | Function | Arguments | Description | Domains |
 |---|---|---|---|
-| `in` | `x, S` | `true` if `x ∈ S`, else `false` (operator syntax `x in S`) | scalar matching element type of `S`, set |
+| [`in`](#in) | `x, S` | `true` if `x ∈ S`, else `false` (operator syntax `x in S`) | scalar matching element type of `S`, set |
 | [`filter`](#filter) | `pred, data` | keep only elements/rows for which `pred` returns `true` | function, arrays or tables |
 | [`selectbins`](#selectbins) | `edges, region, counts` | select whole-bin counts whose intervals intersect `region` | vector, set, vector |
 
-- **`x in S`** — returns `true` if `x` lies in set `S`, else `false`. The type of `x` must match the element type of set `S`.
+<a id="in"></a>**`x in S`** — returns `true` if `x` lies in set `S`, else `false`. The type of `x` must match the element type of set `S`.
 
 <a id="filter"></a>**`filter(pred, data)`** — filters an array or table by a boolean predicate, returning
 a shorter array or table containing only elements/rows for which `pred` returns `true`.
@@ -682,7 +682,7 @@ Data points outside all bins are ignored.
 
 | Function | Arguments | Description | Domains |
 |---|---|---|---|
-| [`polynomial`](#polynomial) | `coefficients, x` | power-series polynomial $\sum_{i=0}^{n-1} c_{i+1} x^i$ | vector, real or complex|
+| [`polynomial`](#polynomial) | `coefficients, x` | power-series polynomial $\sum_{i=0}^{n-1} c_{i+1} x^i$ | vector, real or complex |
 | [`bernstein`](#bernstein) | `coefficients, x` | Bernstein basis polynomial of degree $n - 1$ on $[0, 1]$ | vector, `unitinterval` |
 | [`stepwise`](#stepwise) | `edges, values, x` | piecewise-constant step function | vector, vector, real |
 
@@ -781,13 +781,16 @@ input value, not on the resulting measure `kernel(kernel_input)`:
 <a id="builtin_logdensityof"></a>**`builtin_logdensityof(kernel, kernel_input, x)`** — log-density of
 `kernel(kernel_input)` at `x` w.r.t. the kernel's reference measure;
 `-inf` outside the support.
+
 <a id="builtin_sample"></a>**`builtin_sample(rngstate, kernel, kernel_input, n, m, ...)`** — draws
 from `kernel(kernel_input)`. Returns `(X, new_rngstate)` with an IID-sampled
 array `X` of size `(n, m, ...)`, or a scalar `X` if no `n, m, ...` are given.
+
 <a id="builtin_touniform"></a>**`builtin_touniform(kernel, kernel_input, x)`** /
 <a id="builtin_fromuniform"></a>**`builtin_fromuniform(kernel, kernel_input, u)`** — the canonical
 measurable transport of `kernel(kernel_input)` to / from the
 standard uniform reference of matching dimension.
+
 <a id="builtin_tonormal"></a>**`builtin_tonormal(kernel, kernel_input, x)`** /
 <a id="builtin_fromnormal"></a>**`builtin_fromnormal(kernel, kernel_input, z)`** — the same
 transport to / from the standard normal reference.
