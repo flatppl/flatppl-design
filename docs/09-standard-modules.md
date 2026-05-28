@@ -277,6 +277,24 @@ Note that when $\ell = 0, m_a = m_b = 0$, we have
 
 $$\mathrm{BW}(\sigma) \;=\; \frac{1}{m^2 - \sigma - i\, m\, \Gamma}.$$
 
+##### Example: lineshape to probability measure
+
+A lineshape is a complex amplitude $A(\sigma)$, not a probability measure. 
+We can construct a distribution by reweighting Lebesgue with $|A|^2$, normalizing, then pushing forward to the desired observable:
+
+```flatppl
+hepphys = standard_module("particle-physics", "0.1")
+
+amp = fn(hepphys.breit_wigner(_, 1.5, 0.1, 0, 0, 0, 1.0)) # σ ↦ BW(σ)
+
+p_sigma  = normalize(weighted(fn(abs2(amp(_))), Lebesgue(support = interval(0.25, 6.25))))
+
+p_m  = pushfwd(fn(sqrt(_)), p_sigma) # density ∝ 2m·|BW(m²)|²
+```
+
+For coherent sums, take $|A_1 + A_2 + \dots|^2$ before reweighting so
+interference terms are retained.
+
 ### Module `generalized-linear-models`
 
 The `generalized-linear-models` module contains efficient and stable implementations of log densities for common generalized linear models.
