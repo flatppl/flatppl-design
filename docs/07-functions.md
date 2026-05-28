@@ -622,7 +622,7 @@ For multi-axis array contraction using these reductions, see
 | Function | Arguments | Description | Domains |
 |---|---|---|---|
 | [`in`](#in) | `x, S` | `true` if `x ∈ S`, else `false` (operator syntax `x in S`) | scalar matching element type of `S`, set |
-| [`filter`](#filter) | `pred, data` | keep only elements/rows for which `pred` returns `true` | function, arrays or tables |
+| [`filter`](#filter) | `pred, data` | keep only elements/rows for which `pred` returns `true` | function, array or table |
 | [`selectbins`](#selectbins) | `edges, region, counts` | select whole-bin counts whose intervals intersect `region` | vector, set, vector |
 
 <a id="in"></a>**`x in S`** — returns `true` if `x` lies in set `S`, else `false`. The type of `x` must match the element type of set `S`.
