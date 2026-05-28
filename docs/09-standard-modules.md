@@ -224,10 +224,6 @@ $$\frac{\lambda^x e^{-\lambda}}{\Gamma(x+1)} \quad \text{for } x \geq 0$$
 
 #### Lineshape functions
 
-These are deterministic, complex-valued amplitude functions used to build hadronic
-decay models. They are *not* probability densities; their squared modulus typically
-enters user-defined likelihoods via amplitude analyses.
-
 | Function | Parameters | Description |
 |---|---|---|
 | [`lineshape_breitwigner`](#breitwignerlineshape) | `sigma`, `m`, `width`, `ma`, `mb`, `l`, `d` | Breit-Wigner amplitude for a two-body decay |
@@ -276,24 +272,6 @@ and so on (see [Blatt and Weisskopf (1952)](15-references.md#blatt1952)).
 Note that when $\ell = 0, m_a = m_b = 0$, we have
 
 $$\mathrm{BW}(\sigma) \;=\; \frac{1}{m^2 - \sigma - i\, m\, \Gamma}.$$
-
-##### Example: lineshape to probability measure
-
-A lineshape is a complex amplitude $A(\sigma)$, not a probability measure. 
-We can construct a distribution by reweighting Lebesgue with $|A|^2$, normalizing, then pushing forward to the desired observable:
-
-```flatppl
-hepphys = standard_module("particle-physics", "0.1")
-
-amp = fn(hepphys.lineshape_breitwigner(_, 1.5, 0.1, 0, 0, 0, 1.0)) # σ ↦ BW(σ)
-
-p_sigma  = normalize(weighted(fn(abs2(amp(_))), Lebesgue(support = interval(0.25, 6.25))))
-
-p_m  = pushfwd(fn(sqrt(_)), p_sigma) # density ∝ 2m·|BW(m²)|²
-```
-
-For coherent sums, take $|A_1 + A_2 + \dots|^2$ before reweighting so
-interference terms are retained.
 
 ### Module `generalized-linear-models`
 
