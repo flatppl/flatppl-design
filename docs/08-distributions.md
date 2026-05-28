@@ -59,7 +59,7 @@ Parameters:
 Density w.r.t. [`Lebesgue(support = S)`](06-measure-algebra.md#fundamental-measures) inside of `S`:
 
 $$
-\frac{1}{\lambda(S)},
+\frac{1}{\lambda(S)} \quad \text{for } x \in S,
 $$
 
 where $\lambda = \mathrm{Lebesgue}(\mathrm{support} = S)$ is the canonical
