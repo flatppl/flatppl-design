@@ -222,6 +222,39 @@ Density w.r.t. `Lebesgue(reals)`:
 
 $$\frac{\lambda^x e^{-\lambda}}{\Gamma(x+1)} \quad \text{for } x \geq 0$$
 
+#### Resonance functions
+
+| Function | Arguments | Description | Domains |
+|---|---|---|---|
+| [`resonance_breitwigner`](#resonancebreitwigner) | `sigma`, `m`, `width`, `ma`, `mb`, `l`, `d` | Breit-Wigner amplitude for a two-body decay | `posreals`, `posreals`, `posreals`, `nonnegreals`, `nonnegreals`, `nonnegintegers`, `posreals` |
+
+<a id="resonancebreitwigner"></a>**`resonance_breitwigner(sigma, m, width, ma, mb, l, d)`** — complex-valued
+mass-dependent-width relativistic Breit-Wigner amplitude for a resonance
+$R \to a\, b$ with orbital angular momentum $\ell$.
+
+Arguments:
+
+- `sigma = elementof(posreals)`: invariant mass squared $\sigma$.
+- `m = elementof(posreals)`: pole mass.
+- `width = elementof(posreals)`: on-shell width $\Gamma$.
+- `ma = elementof(nonnegreals)`, `mb = elementof(nonnegreals)`: daughter masses.
+- `l = elementof(nonnegintegers)`: orbital angular momentum $\ell$.
+- `d = elementof(posreals)`: Blatt-Weisskopf radius.
+
+Definition:
+
+$$\mathrm{BW}(\sigma) = \frac{1}{m^2 - \sigma - i m \Gamma(\sigma)},$$
+
+with mass-dependent width
+
+$$\Gamma(\sigma) = \Gamma \frac{m}{\sqrt{\sigma}} \frac{p(\sigma)}{p_0} \left(\frac{F_\ell(p(\sigma))}{F_\ell(p_0)}\right)^2,$$
+
+where $p(\sigma)$, $\lambda(x, y, z)$, and $F_\ell(p)^2$ the breakup momentum, Källén function, and Blatt-Weisskopf barrier factor respectively, as given in Section 50 (Resonances) of [Navas et al. (2024)](15-references.md#navas2024).
+
+Note that when $\ell = 0, m_a = m_b = 0$, we have
+
+$$\mathrm{BW}(\sigma) \;=\; \frac{1}{m^2 - \sigma - i\, m\, \Gamma}.$$
+
 ### Module `generalized-linear-models`
 
 The `generalized-linear-models` module contains efficient and stable implementations of log densities for common generalized linear models.

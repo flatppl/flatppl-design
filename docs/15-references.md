@@ -6,6 +6,9 @@ BAT.jl — Bayesian Analysis Toolkit in Julia. <https://github.com/bat/BAT.jl>
 <a id="betancourt2012"></a>
 Betancourt, M. (2012). Cruising the simplex: Hamiltonian Monte Carlo and the Dirichlet distribution. *AIP Conf. Proc.* 1443, 157–164. <https://doi.org/10.1063/1.3703631>
 
+<a id="blatt1952"></a>
+Blatt, J. M., Weisskopf, V. F. (1952). *Theoretical Nuclear Physics.* Springer, New York. ISBN 9780471080190.
+
 <a id="carpenter2017"></a>
 Carpenter, B. et al. (2017). Stan: A probabilistic programming language. *J. Stat. Softw.* 76(1). <https://mc-stan.org/>
 
@@ -29,6 +32,9 @@ Keras Functional API. <https://keras.io/guides/functional_api/>
 
 <a id="narayanan2016"></a>
 Narayanan, P. et al. (2016). Probabilistic inference by program transformation in Hakaru. FLOPS. <https://github.com/hakaru-dev/hakaru>
+
+<a id="navas2024"></a>
+Navas, S. et al. (Particle Data Group) (2024). Review of Particle Physics. *Phys. Rev. D* 110, 030001. <https://doi.org/10.1103/PhysRevD.110.030001>
 
 <a id="pyhf"></a>
 pyhf — pure-Python HistFactory implementation. <https://github.com/scikit-hep/pyhf>
