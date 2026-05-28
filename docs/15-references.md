@@ -33,6 +33,9 @@ Keras Functional API. <https://keras.io/guides/functional_api/>
 <a id="narayanan2016"></a>
 Narayanan, P. et al. (2016). Probabilistic inference by program transformation in Hakaru. FLOPS. <https://github.com/hakaru-dev/hakaru>
 
+<a id="navas2024"></a>
+Navas, S. et al. (Particle Data Group) (2024). Review of Particle Physics. *Phys. Rev. D* 110, 030001. <https://doi.org/10.1103/PhysRevD.110.030001>
+
 <a id="pyhf"></a>
 pyhf — pure-Python HistFactory implementation. <https://github.com/scikit-hep/pyhf>
 

@@ -249,7 +249,9 @@ with mass-dependent width
 
 $$\Gamma(\sigma) = \Gamma \frac{m}{\sqrt{\sigma}} \frac{p(\sigma)}{p_0} \left(\frac{F_\ell(p(\sigma))}{F_\ell(p_0)}\right)^2,$$
 
-where $p(\sigma)$ is the two-body breakup momentum
+where $p(\sigma)$, $\lambda(x, y, z)$, and $F_\ell(p)^2$ the breakup momentum, Källén function, and Blatt-Weisskopf barrier factor respectively, as given in Section 50 (Resonances) of [Navas et al. (2024)](15-references.md#navas2024).
+
+<!-- where $p(\sigma)$ is the two-body breakup momentum
 
 $$p(\sigma) = \frac{1}{2\sqrt{\sigma}}\sqrt{\lambda(\sigma,\, m_a^2,\, m_b^2)},$$
 
@@ -265,7 +267,7 @@ $$\begin{aligned}
 \chi_1(z) &= 1 + z, \\
 \chi_2(z) &= 9 + 3 z + z^2, \\
 \chi_3(z) &= 225 + 45 z + 6 z^2 + z^3,
-\end{aligned}$$
+\end{aligned}$$ -->
 
 and so on (see [Blatt and Weisskopf (1952)](15-references.md#blatt1952)).
 
