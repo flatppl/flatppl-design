@@ -155,7 +155,7 @@ Parameters:
 
 Density w.r.t. `Lebesgue(reals)`:
 
-$$\frac{1}{\mathcal{M}} \cdot x \cdot \left[ 1 - \left( \frac{x}{m_0} \right)^2 \right]^p \cdot \exp\left[ c \cdot \left(1 - \left(\frac{x}{m_0}\right)^2 \right) \right] \quad \text{for } x > 0,$$
+$$\frac{1}{\mathcal{M}} \cdot x \cdot \left[ 1 - \left( \frac{x}{m_0} \right)^2 \right]^p \cdot \exp\left[ c \cdot \left(1 - \left(\frac{x}{m_0}\right)^2 \right) \right] \quad \text{for } 0 < x < m_0,$$
 
 where $(m_0, c, p)$ is equal to `(resonance, slope, power)`, and $\mathcal{M}$ is a normalizing constant.
 
@@ -185,7 +185,7 @@ Parameters:
 
 Density w.r.t. `Lebesgue(reals)`:
 
-$$\frac{\mathrm{Re}\left(w\left(\frac{x - \mu + i\Gamma/2}{\sigma \sqrt{2}}\right)\right)}{\sigma \sqrt{2\pi}},$$
+$$\frac{\mathrm{Re}\left(w\left(\frac{x - \mu + i\Gamma/2}{\sigma \sqrt{2}}\right)\right)}{\sigma \sqrt{2\pi}} \quad \text{for } x \in \mathbb{R},$$
 where $w(z) = \exp\left(-z^2\right)\mathrm{erfc}\left(-iz\right)$ is the Faddeeva function, $\Gamma/2$ is the Cauchy half-width at half-maximum, and $(\mu, \Gamma, \sigma)$ is equal to `(mean, width, sigma)`.
 
 <a id="bifurcatednormal"></a>**`BifurcatedNormal(mean, sigmaL, sigmaR)`** — [Split normal distribution](https://en.wikipedia.org/wiki/Split_normal_distribution): Gaussian with different widths on left and right sides.
@@ -200,7 +200,7 @@ Parameters:
 
 Density w.r.t. `Lebesgue(reals)`
 
-$$\frac{\sqrt{2/\pi}}{\sigma_L + \sigma_R}\exp\left(-\frac{\left(x - \mu\right)^2}{2\left(\mathbf{I}_{x<\mu}\sigma_L^2 + \mathbf{I}_{x\geq\mu}\sigma_R^2\right)}\right),$$
+$$\frac{\sqrt{2/\pi}}{\sigma_L + \sigma_R}\exp\left(-\frac{\left(x - \mu\right)^2}{2\left(\mathbf{I}_{x<\mu}\sigma_L^2 + \mathbf{I}_{x\geq\mu}\sigma_R^2\right)}\right) \quad \text{for } x \in \mathbb{R},$$
 where $(\mu, \sigma_L, \sigma_R)$ is equal to `(mean, sigmaL, sigmaR)`.
 
 <a id="continuedpoisson"></a>**`ContinuedPoisson(rate)`** — Continuous extension of `Poisson` to the reals.
