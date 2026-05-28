@@ -230,9 +230,9 @@ enters user-defined likelihoods via amplitude analyses.
 
 | Function | Parameters | Description |
 |---|---|---|
-| [`BreitWignerLineshape`](#breit_wigner_lineshape) | `sigma`, `m`, `width`, `ma`, `mb`, `l`, `d` | Breit-Wigner amplitude for a two-body decay |
+| [`lineshape_breitwigner`](#breitwignerlineshape) | `sigma`, `m`, `width`, `ma`, `mb`, `l`, `d` | Breit-Wigner amplitude for a two-body decay |
 
-<a id="breit_wigner_lineshape"></a>**`BreitWignerLineshape(sigma, m, width, ma, mb, l, d)`** — complex-valued
+<a id="breitwignerlineshape"></a>**`lineshape_breitwigner(sigma, m, width, ma, mb, l, d)`** — complex-valued
 mass-dependent-width relativistic Breit-Wigner amplitude for a resonance
 $R \to a\, b$ with orbital angular momentum $\ell$.
 
@@ -285,7 +285,7 @@ We can construct a distribution by reweighting Lebesgue with $|A|^2$, normalizin
 ```flatppl
 hepphys = standard_module("particle-physics", "0.1")
 
-amp = fn(hepphys.BreitWignerLineshape(_, 1.5, 0.1, 0, 0, 0, 1.0)) # σ ↦ BW(σ)
+amp = fn(hepphys.lineshape_breitwigner(_, 1.5, 0.1, 0, 0, 0, 1.0)) # σ ↦ BW(σ)
 
 p_sigma  = normalize(weighted(fn(abs2(amp(_))), Lebesgue(support = interval(0.25, 6.25))))
 
