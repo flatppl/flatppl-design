@@ -1054,6 +1054,37 @@ section.footnotes ol {
 
 /* Warning */
 
+/* ── FlatPPL semantic palette ─────────────────────────────
+   Scoped to code.flatppl so other languages keep the shared token palette
+   above. Higher specificity than the generic `code span.*` rules, so these
+   win for FlatPPL blocks. The shared palette is dark-only and collapses
+   kernels/analysis/builtins/keywords onto one colour and leaves combinators
+   (bu), higher-order (im), set-ctors (ex) and holes (re) undefined; here each
+   FlatPPL category gets a distinct hue, in both themes.
+   Mapping: dt=distribution kernels, bu=measure combinators, cf=analysis ops,
+   im=higher-order, ex=set constructors, cn=constants, do=doc-comments,
+   re=holes. (vs=predefined-sets and va=reserved inherit the shared palette.) */
+
+/* Light theme (the shared palette leaves code monochrome here). */
+code.flatppl span.dt { color: #b58900; }            /* distribution kernels */
+code.flatppl span.bu { color: #9c27b0; }            /* measure combinators  */
+code.flatppl span.cf { color: #1f6feb; }            /* analysis operations  */
+code.flatppl span.im { color: #0b7285; }            /* higher-order         */
+code.flatppl span.ex { color: #2e7d32; }            /* set constructors     */
+code.flatppl span.cn { color: #b5651d; }            /* constants            */
+code.flatppl span.do { color: #6a737d; font-style: italic; } /* doc-comment */
+code.flatppl span.re { color: #999; }               /* holes                */
+
+/* Dark theme overrides (the shared palette folds these into --link-color). */
+[data-theme="dark"] code.flatppl span.dt { color: #e5c07b; } /* kernels     */
+[data-theme="dark"] code.flatppl span.bu { color: #c678dd; } /* combinators */
+[data-theme="dark"] code.flatppl span.cf { color: #61afef; } /* analysis    */
+[data-theme="dark"] code.flatppl span.im { color: #56b6c2; } /* higher-order*/
+[data-theme="dark"] code.flatppl span.ex { color: #98c379; } /* set ctors   */
+[data-theme="dark"] code.flatppl span.cn { color: #d19a66; } /* constants   */
+[data-theme="dark"] code.flatppl span.do { color: #7f848e; font-style: italic; } /* doc */
+[data-theme="dark"] code.flatppl span.re { color: #7f848e; } /* holes       */
+
 /* ── Print ────────────────────────────────────────────── */
 @media print {
 
