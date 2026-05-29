@@ -258,23 +258,6 @@ local function heading_permalink(el)
   return el
 end
 
--- Phase 4: rewrite the FlatPPL code-block class to a host-language alias for
--- syntax highlighting. FlatPPL has no dedicated highlighter, so it reuses
--- Julia-flavored highlighting. Only applies to HTML output; Markdown output
--- keeps the original label (useful for AI chats), and Typst handles the alias
--- via typst-code-blocks.lua.
-local flatppl_alias = {
-  flatppl = "julia",
-}
-
-local function flatppl_to_host(el)
-  if FORMAT:match("html") then
-    local alias = flatppl_alias[el.classes[1]]
-    if alias then el.classes[1] = alias end
-  end
-  return el
-end
-
 -- Phase 5: sanitize raw HTML blocks and inlines.
 -- Strip <script>, <iframe>, <object>, <embed>, <form>, <link>, <meta> tags
 -- and on* event handler attributes to prevent code injection via malicious
@@ -337,14 +320,14 @@ local function inject_section_rules(doc)
 end
 
 -- Return a filter list: sanitization first, then metadata extraction,
--- then headers, then inlines, then heading permalinks, then code-block
--- class rewriting, then section rule injection.
+-- then headers, then inlines, then heading permalinks, then section rule
+-- injection. (FlatPPL blocks keep their `flatppl` class and are highlighted
+-- by the dedicated skylighting definition passed via --syntax-definition.)
 return {
   { RawBlock = sanitize_raw_block, RawInline = sanitize_raw_inline },
   { Pandoc = extract_metadata },
   { Header = header_filter },
   { Inlines = inlines_filter },
   { Header = heading_permalink },
-  { CodeBlock = flatppl_to_host },
   { Pandoc = inject_section_rules },
 }
