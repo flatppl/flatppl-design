@@ -12,21 +12,29 @@
 --
 -- We use a filter list to ensure Header runs before Inlines.
 
+-- Helper: if `el` is an opening `<a id="...">` RawInline, return its id; else nil.
+local function anchor_open_id(el)
+  if el and el.tag == "RawInline" and el.format == "html" then
+    return el.text:match('^<a%s+id="([^"]+)"%s*>$')
+  end
+  return nil
+end
+
+-- Helper: true if `el` is a closing `</a>` RawInline.
+local function is_anchor_close(el)
+  return el ~= nil and el.tag == "RawInline" and el.format == "html"
+    and el.text:match('^</a>$') ~= nil
+end
+
 -- Helper: find a <a id="..."></a> pair in an Inlines list, remove it,
 -- and return the extracted id (or nil).
 local function extract_anchor_id(inlines)
   for i = 1, #inlines - 1 do
-    local el = inlines[i]
-    if el.tag == "RawInline" and el.format == "html" then
-      local id = el.text:match('^<a%s+id="([^"]+)"%s*>$')
-      if id
-          and inlines[i + 1].tag == "RawInline"
-          and inlines[i + 1].format == "html"
-          and inlines[i + 1].text:match('^</a>$') then
-        inlines:remove(i + 1)
-        inlines:remove(i)
-        return id
-      end
+    local id = anchor_open_id(inlines[i])
+    if id and is_anchor_close(inlines[i + 1]) then
+      inlines:remove(i + 1)
+      inlines:remove(i)
+      return id
     end
   end
   return nil
@@ -47,18 +55,10 @@ local function inlines_filter(inlines)
   local i = 1
   while i <= #inlines do
     local el = inlines[i]
-    if el.tag == "RawInline" and el.format == "html" then
-      local id = el.text:match('^<a%s+id="([^"]+)"%s*>$')
-      if id and inlines[i + 1]
-          and inlines[i + 1].tag == "RawInline"
-          and inlines[i + 1].format == "html"
-          and inlines[i + 1].text:match('^</a>$') then
-        out:insert(pandoc.Span({}, pandoc.Attr(id)))
-        i = i + 2
-      else
-        out:insert(el)
-        i = i + 1
-      end
+    local id = anchor_open_id(el)
+    if id and is_anchor_close(inlines[i + 1]) then
+      out:insert(pandoc.Span({}, pandoc.Attr(id)))
+      i = i + 2
     else
       out:insert(el)
       i = i + 1
@@ -262,10 +262,12 @@ end
 -- syntax highlighting. FlatPPL has no dedicated highlighter, so it reuses
 -- Julia-flavored highlighting. Only applies to HTML output; Markdown output
 -- keeps the original label (useful for AI chats), and Typst handles the alias
--- via typst-code-blocks.lua.
-local flatppl_alias = {
-  flatppl = "julia",
-}
+-- via typst-code-blocks.lua. The alias map is shared (flatppl-aliases.lua),
+-- required relative to this filter since pandoc's package.path omits the
+-- filter directory by default.
+local script_dir = PANDOC_SCRIPT_FILE:match("^(.*[/\\])") or "./"
+package.path = script_dir .. "?.lua;" .. package.path
+local flatppl_alias = require("flatppl-aliases")
 
 local function flatppl_to_host(el)
   if FORMAT:match("html") then
@@ -287,7 +289,7 @@ local dangerous_tags = {
 local function is_dangerous_html(text)
   local lower = text:lower()
   for _, tag in ipairs(dangerous_tags) do
-    if lower:match("<" .. tag .. "[%s>]") or lower:match("<" .. tag .. "$")
+    if lower:match("<" .. tag .. "[%s/>]") or lower:match("<" .. tag .. "$")
         or lower:match("</" .. tag .. "%s*>") then
       return true
     end

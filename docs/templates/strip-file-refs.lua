@@ -3,10 +3,18 @@
 -- Also verifies that referenced files exist in the source directory.
 -- Used after concatenating split source files into a single document.
 
-local source_dir = "docs/"
+local source_dir = os.getenv("FLATPPL_DOCS_DIR") or "docs/"
 
 function Link(el)
-  local filename = el.target:match("^(%d%d%-[%w%-]+%.md)#")
+  -- Match both anchored (05-syntax.md#sec) and bare (11-flatpir.md) cross-file
+  -- links so that a reference to a non-existent file is caught in either form.
+  -- Two anchored matches keep the boundary strict: a trailing fragment must be
+  -- a real "#anchor", so e.g. "05-foo.markdown" is not mis-parsed as a .md ref.
+  local filename, anchor = el.target:match("^(%d%d%-[%w%-]+%.md)(#.*)$")
+  if not filename then
+    filename = el.target:match("^(%d%d%-[%w%-]+%.md)$")
+    anchor = ""
+  end
   if filename then
     local path = source_dir .. filename
     local f = io.open(path, "r")
@@ -18,7 +26,11 @@ function Link(el)
         .. el.target .. ")\n")
       os.exit(1)
     end
-    el.target = el.target:gsub("^%d%d%-[%w%-]+%.md(#.+)$", "%1")
+    -- Strip the filename prefix only when an anchor is present; rewriting a
+    -- bare-file link to "" would produce an empty (dead) link target.
+    if anchor ~= "" then
+      el.target = anchor
+    end
   end
   return el
 end
