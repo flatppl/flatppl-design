@@ -22,7 +22,7 @@ _katex = { cmd = "node docs/templates/vendor-katex.js", depends-on = [
     "_mkdir",
 ] }
 _fuse = { cmd = "node docs/templates/vendor-fuse.js", depends-on = ["_mkdir"] }
-_pandoc-html = { cmd = "pandoc docs/0[0-9]-*.md docs/1[0-9]-*.md -o build/index.html --standalone --template=docs/templates/template.html --toc --toc-depth=2 --number-sections --shift-heading-level-by=-1 --syntax-highlighting=tango --css=style.css --katex=./katex/ -B docs/templates/header.html --lua-filter=docs/templates/strip-file-refs.lua --lua-filter=docs/templates/html-anchors.lua --metadata lang=en", depends-on = [
+_pandoc-html = { cmd = "pandoc docs/0[0-9]-*.md docs/1[0-9]-*.md -o build/index.html --standalone --template=docs/templates/template.html --toc --toc-depth=2 --number-sections --shift-heading-level-by=-1 --syntax-definition=docs/templates/flatppl.xml --syntax-highlighting=tango --css=style.css --katex=./katex/ -B docs/templates/header.html --lua-filter=docs/templates/strip-file-refs.lua --lua-filter=docs/templates/html-anchors.lua --metadata lang=en", depends-on = [
     "_copy-assets",
     "_katex",
     "_fuse",

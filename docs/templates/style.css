@@ -1054,6 +1054,30 @@ section.footnotes ol {
 
 /* Warning */
 
+/* ── FlatPPL semantic palette ─────────────────────────────
+   Scoped to code.flatppl, overriding BOTH the inline tango palette (which
+   governs light mode via `$styles.html()$`) and the shared One-Dark overrides
+   above (dark mode). Both base palettes collapse kernels/analysis/builtins/
+   keywords onto one colour and leave combinators (bu), higher-order (im) and
+   set-ctors (ex) unstyled, so the semantic categories are indistinguishable
+   without these rules. Colours come from the theme-aware --syntax-* vars
+   (defined for light in :root and for dark in [data-theme="dark"]), so one
+   un-gated rule set covers both themes and tracks the site palette. These
+   selectors (0,2,2) tie the shared dark rules and beat the tango rules, and
+   sit later in the file, so they win in both themes.
+   Mapping: dt=distribution kernels, bu=measure combinators, cf=analysis ops,
+   im=higher-order, ex=set constructors, cn=constants, do=doc-comments,
+   re=holes. (vs=predefined-sets, va=reserved, st/op/numbers keep their base
+   palette colours.) */
+code.flatppl span.dt { color: var(--syntax-yellow); }  /* distribution kernels */
+code.flatppl span.bu { color: var(--syntax-purple); }  /* measure combinators  */
+code.flatppl span.cf { color: var(--syntax-blue); }    /* analysis operations  */
+code.flatppl span.im { color: var(--syntax-cyan); }    /* higher-order         */
+code.flatppl span.ex { color: var(--syntax-green); }   /* set constructors     */
+code.flatppl span.cn { color: var(--syntax-red); }     /* constants            */
+code.flatppl span.do { color: var(--syntax-comment); font-style: italic; } /* doc-comments */
+code.flatppl span.re { color: var(--syntax-comment); } /* holes                */
+
 /* ── Print ────────────────────────────────────────────── */
 @media print {
 
