@@ -1054,28 +1054,29 @@ section.footnotes ol {
 
 /* Warning */
 
-/* ── FlatPPL semantic palette (dark theme) ────────────────
-   Dark-only, matching the scope of the shared token palette above (code is
-   intentionally monochrome in light mode site-wide, so FlatPPL stays
-   monochrome there too — colouring only some categories in light mode while
-   strings/numbers/operators stay black would read as broken). Scoped to
-   code.flatppl with higher specificity than the shared `[data-theme="dark"]
-   code span.X` rules, so these win for FlatPPL blocks. The shared dark palette
-   collapses kernels/analysis/builtins/keywords onto one colour and leaves
-   combinators (bu), higher-order (im), set-ctors (ex) and holes (re)
-   undefined; here the semantic categories get distinct hues.
+/* ── FlatPPL semantic palette ─────────────────────────────
+   Scoped to code.flatppl, overriding BOTH the inline tango palette (which
+   governs light mode via `$styles.html()$`) and the shared One-Dark overrides
+   above (dark mode). Both base palettes collapse kernels/analysis/builtins/
+   keywords onto one colour and leave combinators (bu), higher-order (im) and
+   set-ctors (ex) unstyled, so the semantic categories are indistinguishable
+   without these rules. Colours come from the theme-aware --syntax-* vars
+   (defined for light in :root and for dark in [data-theme="dark"]), so one
+   un-gated rule set covers both themes and tracks the site palette. These
+   selectors (0,2,2) tie the shared dark rules and beat the tango rules, and
+   sit later in the file, so they win in both themes.
    Mapping: dt=distribution kernels, bu=measure combinators, cf=analysis ops,
    im=higher-order, ex=set constructors, cn=constants, do=doc-comments,
-   re=holes. (vs=predefined-sets, va=reserved, st/op/numbers keep the shared
-   dark palette.) */
-[data-theme="dark"] code.flatppl span.dt { color: #e5c07b; } /* kernels     */
-[data-theme="dark"] code.flatppl span.bu { color: #c678dd; } /* combinators */
-[data-theme="dark"] code.flatppl span.cf { color: #61afef; } /* analysis    */
-[data-theme="dark"] code.flatppl span.im { color: #56b6c2; } /* higher-order*/
-[data-theme="dark"] code.flatppl span.ex { color: #98c379; } /* set ctors   */
-[data-theme="dark"] code.flatppl span.cn { color: #d19a66; } /* constants   */
-[data-theme="dark"] code.flatppl span.do { color: #7f848e; font-style: italic; } /* doc */
-[data-theme="dark"] code.flatppl span.re { color: #7f848e; } /* holes       */
+   re=holes. (vs=predefined-sets, va=reserved, st/op/numbers keep their base
+   palette colours.) */
+code.flatppl span.dt { color: var(--syntax-yellow); }  /* distribution kernels */
+code.flatppl span.bu { color: var(--syntax-purple); }  /* measure combinators  */
+code.flatppl span.cf { color: var(--syntax-blue); }    /* analysis operations  */
+code.flatppl span.im { color: var(--syntax-cyan); }    /* higher-order         */
+code.flatppl span.ex { color: var(--syntax-green); }   /* set constructors     */
+code.flatppl span.cn { color: var(--syntax-red); }     /* constants            */
+code.flatppl span.do { color: var(--syntax-comment); font-style: italic; } /* doc-comments */
+code.flatppl span.re { color: var(--syntax-comment); } /* holes                */
 
 /* ── Print ────────────────────────────────────────────── */
 @media print {
