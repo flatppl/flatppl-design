@@ -5,16 +5,33 @@ value-level operations in FlatPPL. For measure-level operations, see [measure al
 
 ### Identities
 
-- **`identity(x)`** — the identity function: returns its argument unchanged.
-  Equivalent to `fn(_)`.
+| Function | Arguments | Description | Domains |
+|---|---|---|---|
+| [`identity`](#identity) | `x` | returns `x` unchanged | any |
+
+<a id="identity"></a>**`identity(x)`** — the identity function: returns its argument unchanged.
+Equivalent to `fn(_)`.
 
 ### Array and table generation
 
-- **`vector(x1, x2, ...)`** — constructs a 1D array (vector) from the given elements.
-  Equivalent to the array literal syntax `[x1, x2, ...]`.
+| Function | Arguments | Description | Domains |
+|---|---|---|---|
+| [`vector`](#vector) | `x1, x2, ...` | 1D array from given elements | scalars |
+| [`array`](#array) | `data, size, dimorder` | n-D array from flat vector | vector, integer vector, integer vector |
+| [`fill`](#fill) | `x, size` | array of shape `size` filled with `x` | scalar, integer or integer vector |
+| [`zeros`](#zeros) | `size` | real-valued zero array of shape `size` | integer or integer vector |
+| [`ones`](#ones) | `size` | real-valued one array of shape `size` | integer or integer vector |
+| [`eye`](#eye) | `n` | $n \times n$ identity matrix $\mathbf{I}_n$ | positive integer |
+| [`onehot`](#onehot) | `i, n` | length-$n$ basis vector $\mathbf{e}_i$ | positive integer, positive integer |
+| [`linspace`](#linspace) | `from, to, n` | `n` evenly spaced reals from `from` to `to` | reals, reals, positive integer |
+| [`extlinspace`](#extlinspace) | `from, to, n` | `linspace` with `-inf`/`inf` overflow edges | reals, reals, positive integer |
+| [`load_data`](#load_data) | `source, valueset` | load vector or table from external file/URL | string, valueset |
 
-- **`array(data, size, dimorder)`** — constructs an n-dimensional array from a
-  flat vector.
+<a id="vector"></a>**`vector(x1, x2, ...)`** — constructs a 1D array (vector) from the given elements.
+Equivalent to the array literal syntax `[x1, x2, ...]`.
+
+<a id="array"></a>**`array(data, size, dimorder)`** — constructs an n-dimensional array from a
+flat vector.
 
   - `data`: a flat vector of array elements.
   - `size`: a vector of positive integers giving the array dimensions. Must
@@ -36,25 +53,25 @@ value-level operations in FlatPPL. For measure-level operations, see [measure al
   M2 = array(data = [1, 2, 3, 4, 5, 6], size = [2, 3], dimorder = [2, 1])
   ```
 
-- **`fill(x, size)`** — creates an array of shape `size` filled with value `x`.
-  `size` is an integer (1-D length) or a vector of positive integers
-  (multi-axis shape); e.g. `fill(0, 10)`, `fill(0, [2, 3])`,
-  `fill(0, sizeof(A))`.
+<a id="fill"></a>**`fill(x, size)`** — creates an array of shape `size` filled with value `x`.
+`size` is an integer (1-D length) or a vector of positive integers
+(multi-axis shape); e.g. `fill(0, 10)`, `fill(0, [2, 3])`,
+`fill(0, sizeof(A))`.
 
-- **`zeros(size)`** — creates a real-valued array of shape `size` filled with
-  zeros. Equivalent to `fill(0, size)`.
+<a id="zeros"></a>**`zeros(size)`** — creates a real-valued array of shape `size` filled with
+zeros. Equivalent to `fill(0, size)`.
 
-- **`ones(size)`** — creates a real-valued array of shape `size` filled with
-  ones. Equivalent to `fill(1, size)`.
+<a id="ones"></a>**`ones(size)`** — creates a real-valued array of shape `size` filled with
+ones. Equivalent to `fill(1, size)`.
 
-- **`eye(n)`** — creates the $n \times n$ real-valued identity matrix $\mathbf{I}_n$.
+<a id="eye"></a>**`eye(n)`** — creates the $n \times n$ real-valued identity matrix $\mathbf{I}_n$.
 
-- **`onehot(i, n)`** — length-$n$ real-valued basis vector $\mathbf{e}_i$ with one at position $i$ and zero
-  elsewhere, for $i \in \{1, \ldots, n\}$.
+<a id="onehot"></a>**`onehot(i, n)`** — length-$n$ real-valued basis vector $\mathbf{e}_i$ with one at position $i$ and zero
+elsewhere, for $i \in \{1, \ldots, n\}$.
 
-- **`linspace(from, to, n)`** — returns an endpoint-inclusive range of `n` real numbers,
-  evenly spaced from `from` to `to` (both included). The range is semantically a vector
-  of reals.
+<a id="linspace"></a>**`linspace(from, to, n)`** — returns an endpoint-inclusive range of `n` real numbers,
+evenly spaced from `from` to `to` (both included). The range is semantically a vector
+of reals.
 
   ```flatppl
   linspace(0.0, 10.0, 5)     # equivalent to [0.0, 2.5, 5.0, 7.5, 10.0]
@@ -62,9 +79,9 @@ value-level operations in FlatPPL. For measure-level operations, see [measure al
 
   Note: When used to specify a binning, `n` is the number of bin **edges** (producing n-1 bins).
 
-- **`extlinspace(from, to, n)`** — extended `linspace` with overflow edges.
-  Semantically equivalent to `cat([-inf], linspace(from, to, n), [inf])`,
-  producing n+2 edge points and n+1 bins (n-1 finite bins plus 2 overflow bins).
+<a id="extlinspace"></a>**`extlinspace(from, to, n)`** — extended `linspace` with overflow edges.
+Semantically equivalent to `cat([-inf], linspace(from, to, n), [inf])`,
+producing n+2 edge points and n+1 bins (n-1 finite bins plus 2 overflow bins).
 
   ```flatppl
   extlinspace(0.0, 10.0, 5)  # equivalent to [-inf, 0.0, 2.5, 5.0, 7.5, 10.0, inf]
@@ -75,10 +92,10 @@ value-level operations in FlatPPL. For measure-level operations, see [measure al
   points; `extlinspace(from, to, n)` produces `n + 2` total edge points (adding `-inf` and
   `inf`) and a total of `n + 1` bins (including the overflow bins).
 
-- **`load_data(source, valueset)`** — loads a collection of data entries from an
-  external source and returns a vector or table. The shape of the result is determined
-  by the declared `valueset`, which defines the set that governs each vector entry or
-  table row.
+<a id="load_data"></a>**`load_data(source, valueset)`** — loads a collection of data entries from an
+external source and returns a vector or table. The shape of the result is determined
+by the declared `valueset`, which defines the set that governs each vector entry or
+table row.
 
   - `source`: a file path or URL identifying the data source. File path resolution follows
     the same rules as with `load_module`.
@@ -111,9 +128,14 @@ value-level operations in FlatPPL. For measure-level operations, see [measure al
 
 ### Field and element access
 
-- **`get(container, selectors...)`** — unified element access and subset selection.
-  `selectors` may be a single name or array of names, or a single or multiple integer
-  indices, or arrays of integer indices. Tuples use a single integer literal index.
+| Function | Arguments | Description | Domains |
+|---|---|---|---|
+| [`get`](#get) | `container, selectors...` | element access or subset selection (1-based indices) | records, arrays, tables, tuples |
+| [`get0`](#get0) | `container, selectors...` | zero-based variant of `get` | records, arrays, tables, tuples |
+
+<a id="get"></a>**`get(container, selectors...)`** — unified element access and subset selection.
+`selectors` may be a single name or array of names, or a single or multiple integer
+indices, or arrays of integer indices. Tuples use a single integer literal index.
 
   **Element access** (single selection — returns a single element):
   ```flatppl
@@ -146,8 +168,8 @@ value-level operations in FlatPPL. For measure-level operations, see [measure al
   sole element of a length-1 vector. Surface syntax `B[.i, !]` lowers to
   `get(B, .i, only)`. The indexed axis must be of length one.
 
-- **`get0(container, selectors...)`** — zero-based variant of `get`. Behaves like
-  `get` except that integer indices count from `0` instead of `1`. So `get0(v, 0)` returns the first element of vector `v`.
+<a id="get0"></a>**`get0(container, selectors...)`** — zero-based variant of `get`. Behaves like
+`get` except that integer indices count from `0` instead of `1`. So `get0(v, 0)` returns the first element of vector `v`.
 
   Note that bracket indexing `xs[i]` is one-based and lowers to `get`, *not* to
   `get0`. The intended role of `get0` is to support term-rewriting to languages
@@ -155,7 +177,21 @@ value-level operations in FlatPPL. For measure-level operations, see [measure al
 
 ### Array and table operations
 
-**`cat(x, y, ...)`** concatenates values of the same structural kind:
+| Function | Arguments | Description | Domains |
+|---|---|---|---|
+| [`cat`](#cat) | `x, y, ...` | concatenate values of same structural kind | scalars, vectors, or records |
+| [`rowstack`](#rowstack) | `vs` | matrix with input vectors as rows | vector of equal-length vectors |
+| [`colstack`](#colstack) | `vs` | matrix with input vectors as columns | vector of equal-length vectors |
+| [`tile`](#tile) | `A, size` | tile array along each axis | array, integer or integer vector |
+| [`splitblocks`](#splitblocks) | `A, blocksize` | split array into equal sub-arrays of shape `blocksize` | array, integer or integer vector |
+| [`joinblocks`](#joinblocks) | `A` | inverse of `splitblocks` (remove one level of nesting) | array of equal-shaped arrays |
+| [`partition`](#partition) | `xs, spec` | split vector into sub-vectors | vector, positive integer or integer vector |
+| [`reverse`](#reverse) | `xs` | reverse element/row order | vectors, tables |
+| [`addaxes`](#addaxes) | `A, n_leading, n_trailing` | add singular axes before/after array axes | array, non-negative integer, non-negative integer |
+| [`blockdiagmat`](#blockdiagmat) | `mats` | block-diagonal matrix from a vector of matrices | vector of matrices |
+| [`bandedmat`](#bandedmat) | `v, rows` | banded matrix with `v` shifted along each row | vector, positive integer |
+
+<a id="cat"></a>**`cat(x, y, ...)`** concatenates values of the same structural kind:
 
 - **`cat(scalar1, scalar2, ...)`** with all scalar arguments produces a vector of
   those scalars. Equivalent to `vector(scalar1, scalar2, ...)`.
@@ -174,7 +210,7 @@ Duplicate field names across the input records are a static error. Concatenation
 of a mix of value types (e.g. scalars with vectors, or vectors with records)
 is not permitted.
 
-**`rowstack(vs)`** constructs a matrix whose rows are the vectors in `vs`. The
+<a id="rowstack"></a>**`rowstack(vs)`** constructs a matrix whose rows are the vectors in `vs`. The
 argument `vs` is a vector of vectors, all of the same length.
 
 ```flatppl
@@ -185,7 +221,7 @@ returns
 
 $$\mathbf{M} = \begin{pmatrix} 1 & 2 & 3 \\ 4 & 5 & 6 \end{pmatrix}$$
 
-**`colstack(vs)`** constructs a matrix whose columns are the vectors in `vs`. The
+<a id="colstack"></a>**`colstack(vs)`** constructs a matrix whose columns are the vectors in `vs`. The
 argument `vs` is a vector of vectors, all of the same length.
 
 ```flatppl
@@ -196,7 +232,7 @@ returns
 
 $$\mathbf{M} = \begin{pmatrix} 1 & 4 \\ 2 & 5 \\ 3 & 6 \end{pmatrix}$$
 
-**`tile(A, size)`** constructs an array by tiling `A` along each axis. `A`
+<a id="tile"></a>**`tile(A, size)`** constructs an array by tiling `A` along each axis. `A`
 must be an array (tables are not accepted). `size` is a positive integer
 (for a 1-D `A`) or a vector of positive integers, one per axis of `A`; for
 an n-D `A`, `lengthof(size)` must equal the number of dimensions of `A`. To
@@ -207,7 +243,7 @@ a matrix `M` of shape `(1, 3)`, `tile(M, [2, 1])` produces a shape-`(2, 3)`
 matrix (rows repeated) and `tile(M, [1, 2])` produces a shape-`(1, 6)` matrix
 (columns repeated).
 
-**`splitblocks(A, blocksize)`** splits an array `A` into equal-sized
+<a id="splitblocks"></a>**`splitblocks(A, blocksize)`** splits an array `A` into equal-sized
 sub-arrays of shape `blocksize`, returning a nested array of arrays. `A` must
 be an array (tables are not accepted). `blocksize` is a positive integer
 (for a 1-D `A`) or a vector of positive integers, one per axis of `A`. Each
@@ -216,7 +252,7 @@ axis of `sizeof(A)` must be divisible by the corresponding entry of
 inner array has shape `blocksize`. For example,
 `splitblocks([1, 2, 3, 4, 5, 6], 2)` produces `[[1, 2], [3, 4], [5, 6]]`.
 
-**`joinblocks(A)`** is the inverse of `splitblocks`: given an array of
+<a id="joinblocks"></a>**`joinblocks(A)`** is the inverse of `splitblocks`: given an array of
 equal-shaped inner arrays, it removes one level of nesting and returns a
 single array whose shape is the elementwise product of the outer shape and
 the (common) inner shape. The outer and inner arrays must have the same
@@ -229,7 +265,7 @@ The block operations satisfy:
 - `splitblocks(tile(A, ntiles), sizeof(A))` is equivalent to `fill(A, ntiles)`
 - `tile(A, ntiles)` is equivalent to `joinblocks(fill(A, ntiles))`
 
-**`partition(xs, spec)`** splits a vector `xs` into a vector of sub-vectors. The
+<a id="partition"></a>**`partition(xs, spec)`** splits a vector `xs` into a vector of sub-vectors. The
 second argument `spec` may be:
 
 - A positive integer `n`: split `xs` into equal groups of size `n`. Requires
@@ -246,9 +282,9 @@ partition([1, 2, 3, 4, 5, 6], 3)    # [[1, 2, 3], [4, 5, 6]]
 partition([1, 2, 3, 4, 5], [2, 3])  # [[1, 2], [3, 4, 5]]
 ```
 
-**`reverse(xs)`** reverses the order of elements in a vector or rows in a table.
+<a id="reverse"></a>**`reverse(xs)`** reverses the order of elements in a vector or rows in a table.
 
-**`addaxes(A, n_leading, n_trailing)`** reshapes array `A` by adding
+<a id="addaxes"></a>**`addaxes(A, n_leading, n_trailing)`** reshapes array `A` by adding
 `n_leading` singular (size-one) axes before the axes of `A` and `n_trailing`
 singular axes after them.
 
@@ -262,7 +298,7 @@ Inverse property:
 where the index list has `m` leading `only`s, `l` middle `all`s, and `n`
 trailing `only`s (`l` being the number of dimensions of `A`).
 
-**`blockdiagmat(mats)`** constructs a block-diagonal matrix from a vector of matrices `mats`.
+<a id="blockdiagmat"></a>**`blockdiagmat(mats)`** constructs a block-diagonal matrix from a vector of matrices `mats`.
 Each matrix appears on a diagonal block in the output, and all off-diagonal blocks are zero.
 The resulting matrix has row and column dimensions equal to the sums of the corresponding
 dimensions of the input matrices.
@@ -282,7 +318,7 @@ $$\begin{pmatrix}
 0 & 0 & 8 & 9 & 10
 \end{pmatrix}$$
 
-**`bandedmat(v, rows)`** constructs a matrix with `rows` rows in which every row `i`
+<a id="bandedmat"></a>**`bandedmat(v, rows)`** constructs a matrix with `rows` rows in which every row `i`
 contains the vector `v` starting at column `i` and zeros elsewhere. 
 
 ```flatppl
@@ -303,10 +339,10 @@ $$\begin{pmatrix}
 
 | Function | Arguments | Description | Domains |
 | --- | --- | --- | --- |
-| `conv` | `v`, `kernel` | convolves `v` with `kernel` | vector, vector |
-| `crosscorr` | `v`, `kernel` | cross-correlates `v` with `kernel` | vector, vector |
+| [`conv`](#conv) | `v`, `kernel` | convolves `v` with `kernel` | vector, vector |
+| [`crosscorr`](#crosscorr) | `v`, `kernel` | cross-correlates `v` with `kernel` | vector, vector |
 
-- **`conv(v, kernel)`** — computes the (valid) 1D convolution of vector $\mathbf{v}$ with vector `kernel`.
+<a id="conv"></a>**`conv(v, kernel)`** — computes the (valid) 1D convolution of vector $\mathbf{v}$ with vector `kernel`.
 
   Returns a vector of length `lengthof(v) - lengthof(kernel) + 1` whose $i$-th element is the inner product of a consecutive window of `v` with the reverse of `kernel`:
   $$\mathrm{conv}(\mathbf{v}, \mathbf{k})_i = \left\langle \mathbf{v}_{i:i+\mathrm{lengthof}(k)-1}, \mathrm{reverse}(\mathbf{k}) \right\rangle$$
@@ -319,7 +355,7 @@ $$\begin{pmatrix}
   conv([1, 2, 3, 4], [1, 0, -1])  # [2, 2]
   ```
 
-- **`crosscorr(v, kernel)`** — computes the (valid) 1D cross-correlation of vector $\mathbf{v}$ with vector `kernel`.
+<a id="crosscorr"></a>**`crosscorr(v, kernel)`** — computes the (valid) 1D cross-correlation of vector $\mathbf{v}$ with vector `kernel`.
 
   Returns a vector of length `lengthof(v) - lengthof(kernel) + 1` whose $i$-th element is the inner product of a consecutive window of `v` with `kernel`:
   $$\mathrm{crosscorr}(\mathbf{v}, \mathbf{k})_i = \left\langle \mathbf{v}_{i:i+\mathrm{lengthof}(k)-1}, \mathbf{k} \right\rangle$$
@@ -444,7 +480,11 @@ argument is exactly zero, with no tolerance for numerical precision.
 
 ### Checked values
 
-**`checked(value, condition)`** is a value-preserving assertion: it returns `value`
+| Function | Arguments | Description | Domains |
+|---|---|---|---|
+| [`checked`](#checked) | `value, condition` | returns `value` if `condition` is `true`, else static error | any, fixed-phase `booleans` |
+
+<a id="checked"></a>**`checked(value, condition)`** is a value-preserving assertion: it returns `value`
 unchanged if `condition` evaluates to `true`, and raises a static error otherwise.
 
 - `value` — any expression; `checked` returns it with identical type and phase.
@@ -515,8 +555,8 @@ the Hermitian variant is `cross(conj(a), b)`.
 | `minimum` | `xs` | $\min_i x_i$ | real arrays |
 | `lengthof` | `x` | number of elements (vector) / rows (table) | vectors, tables |
 | `sizeof` | `x` | returns the dimensions of `x` in a vector | vectors, arrays |
-| `indicesof` | `x` | 1-based axis indices | vectors, arrays, tables |
-| `indicesof0` | `x` | 0-based axis indices | vectors, arrays, tables |
+| [`indicesof`](#indicesof) | `x` | 1-based axis indices | vectors, arrays, tables |
+| [`indicesof0`](#indicesof0) | `x` | 0-based axis indices | vectors, arrays, tables |
 
 For multi-dimensional arrays, use `sizeof` to obtain shape information:
 
@@ -530,12 +570,12 @@ iM = indicesof(M)  # ([1, 2], [1, 2, 3])
 i0 = indicesof0(v) # [0, 1, 2]
 ```
 
-**`indicesof(x)`** — for a vector, returns `[1, 2, ..., lengthof(x)]`. For an
+<a id="indicesof"></a>**`indicesof(x)`** — for a vector, returns `[1, 2, ..., lengthof(x)]`. For an
 array with $n$ axes, returns an $n$-tuple of integer vectors, the $i$-th of
 which runs from $1$ to the size of `x` along axis $i$. For a table, returns
 the row indices.
 
-**`indicesof0(x)`** — zero-based variant of `indicesof`, returning indices
+<a id="indicesof0"></a>**`indicesof0(x)`** — zero-based variant of `indicesof`, returning indices
 that start at `0` rather than `1`.
 
 **Table reductions.** When `sum`, `mean`, or `var` is applied to a table, the
@@ -579,18 +619,24 @@ For multi-axis array contraction using these reductions, see
 
 ### Membership, filtering, and bin selection
 
-- **`x in S`** — returns `true` if `x` lies in set `S`, else `false`. The type of `x` must match the element type of set `S`.
+| Function | Arguments | Description | Domains |
+|---|---|---|---|
+| [`in`](#in) | `x, S` | `true` if `x ∈ S`, else `false` (operator syntax `x in S`) | scalar matching element type of `S`, set |
+| [`filter`](#filter) | `pred, data` | keep only elements/rows for which `pred` returns `true` | function, array or table |
+| [`selectbins`](#selectbins) | `edges, region, counts` | select whole-bin counts whose intervals intersect `region` | vector, set, vector |
 
-- **`filter(pred, data)`** — filters an array or table by a boolean predicate, returning
-  a shorter array or table containing only elements/rows for which `pred` returns `true`.
+<a id="in"></a>**`x in S`** — returns `true` if `x` lies in set `S`, else `false`. The type of `x` must match the element type of set `S`.
+
+<a id="filter"></a>**`filter(pred, data)`** — filters an array or table by a boolean predicate, returning
+a shorter array or table containing only elements/rows for which `pred` returns `true`.
 
   ```flatppl
   data_in_range = filter(fn(_ in interval(2.0, 8.0)), data)
   ```
 
-- **`selectbins(edges, region, counts)`** — selects whole-bin counts for bins whose
-  intervals intersect `region`. Returns a shorter count array. No fractional-bin clipping
-  or rebinning is applied, bins are either fully included or excluded.
+<a id="selectbins"></a>**`selectbins(edges, region, counts)`** — selects whole-bin counts for bins whose
+intervals intersect `region`. Returns a shorter count array. No fractional-bin clipping
+or rebinning is applied, bins are either fully included or excluded.
 
   ```flatppl
   restricted_counts = selectbins(edges, interval(2.0, 8.0), observed_counts)
@@ -598,8 +644,12 @@ For multi-axis array contraction using these reductions, see
 
 ### Binning
 
-- **`bincounts(bins, data)`** — counts data points falling into the given bins.
-  Data points outside all bins are ignored.
+| Function | Arguments | Description | Domains |
+|---|---|---|---|
+| [`bincounts`](#bincounts) | `bins, data` | count data points falling into the given bins | vector or record of edge vectors, array or record |
+
+<a id="bincounts"></a>**`bincounts(bins, data)`** — counts data points falling into the given bins.
+Data points outside all bins are ignored.
 
   **1D case:** `bins` is a vector of bin edges (n+1 edges define n bins).
   
@@ -630,25 +680,37 @@ For multi-axis array contraction using these reductions, see
 
 ### Approximation functions
 
-**`polynomial(coefficients, x)`** — power-series polynomial evaluated at `x`:
+| Function | Arguments | Description | Domains |
+|---|---|---|---|
+| [`polynomial`](#polynomial) | `coefficients, x` | power-series polynomial $\sum_{i=0}^{n-1} c_{i+1} x^i$ | vector, real or complex |
+| [`bernstein`](#bernstein) | `coefficients, x` | Bernstein basis polynomial of degree $n - 1$ on $[0, 1]$ | vector, `unitinterval` |
+| [`stepwise`](#stepwise) | `edges, values, x` | piecewise-constant step function | vector, vector, real |
+
+<a id="polynomial"></a>**`polynomial(coefficients, x)`** — power-series polynomial evaluated at `x`:
 
 $$p(x) = \sum_{i=0}^{n-1} c_{i+1} \, x^i = c_1 + c_2 \, x + c_3 \, x^2 + \cdots + c_n \, x^{n-1}$$
 
 where `coefficients` is a length-$n$ vector $[c_1, c_2, \ldots, c_n]$. The first element is the constant term; the $i$-th element is the coefficient of $x^{i-1}$. Non-negativity over the intended support is the user's responsibility.
 
-**`bernstein(coefficients, x)`** — Bernstein basis polynomial of degree $n = \mathrm{lengthof}(\mathrm{coefficients}) - 1$, evaluated at `x`:
+<a id="bernstein"></a>**`bernstein(coefficients, x)`** — Bernstein basis polynomial of degree $n = \mathrm{lengthof}(\mathrm{coefficients}) - 1$, evaluated at `x`:
 
 $$B(x) = \sum_{k=0}^{n} c_{k+1} \binom{n}{k} x^k (1 - x)^{n-k}$$
 
 where `coefficients` is a length-$(n+1)$ vector $[c_1, \ldots, c_{n+1}]$ giving the Bernstein-basis coefficients in degree order. Defined on $x \in [0, 1]$; the support interval of the surrounding `Lebesgue` (in `normalize(weighted(fn(bernstein(...)), Lebesgue(support = interval(lo, hi))))`) provides the rescaling range. Guaranteed non-negative on $[0, 1]$ when all coefficients are non-negative.
 
-**`stepwise(edges, values, x)`** — piecewise-constant step function. Strictly
+<a id="stepwise"></a>**`stepwise(edges, values, x)`** — piecewise-constant step function. Strictly
 piecewise constant (no implicit interpolation). The length of vector `values`
 must be one less than the length of vector `edges`.
 
 For edges $e_1 < e_2 < \ldots < e_{n+1}$ and values $v_1, \ldots, v_n$, the function returns $v_i$ when $x \in [e_i, e_{i+1})$ for $i \in \{1, \ldots, n-1\}$, and $v_n$ when $x \in [e_n, e_{n+1}]$ (last bin closed on the right; same convention as [`bincounts`](#binning)). 
 
 ### <a id="sec:random"></a>Random value generation
+
+| Function | Arguments | Description | Domains |
+|---|---|---|---|
+| [`rnginit`](#rnginit) | `rngseed` | fresh RNG state from a seed byte vector | byte vector (`integers` in `interval(0, 255)`) |
+| [`rand`](#rand) | `rstate, m` | draw a value from closed measure `m`; returns `(value, new_rstate)` | `rngstates`, closed measure |
+| [`rngstate`](#rngstate) | `bytes` | (re-)construct an RNG state from a byte serialization | byte vector (`integers` in `interval(0, 255)`) |
 
 FlatPPL provides explicit, state-threaded random value generation. All randomness
 flows through an explicit RNG state; there is no hidden global random source.
@@ -673,25 +735,25 @@ random_data, rstate2 = rand(rstate, iid(Normal(0, 1), 10))
 more_random_data, rstate3 = rand(rstate2, iid(Exponential(1), 5))
 ```
 
-- **`rnginit(rngseed)`** — initializes a fresh RNG state from a seed byte vector.
-  Returns a value in the set `rngstates`.
+<a id="rnginit"></a>**`rnginit(rngseed)`** — initializes a fresh RNG state from a seed byte vector.
+Returns a value in the set `rngstates`.
 
   `rngseed` must be a seed vector of bytes (integers in $\{0, \ldots, 255\}$).
   Any non-empty vector is accepted; a seed length of 32 bytes provides sufficient entropy
   for virtually all modern RNG algorithms.
 
-- **`rand(rstate, m)`** — generates a random value from a closed measure `m` using RNG
-  state `rstate`. Returns a tuple `(value, new_rstate)` where `value` is the generated pseudo-random value (in the domain of `m`) and `new_rstate` is the updated RNG
-  state that can be used for another `rand` call.
+<a id="rand"></a>**`rand(rstate, m)`** — generates a random value from a closed measure `m` using RNG
+state `rstate`. Returns a tuple `(value, new_rstate)` where `value` is the generated pseudo-random value (in the domain of `m`) and `new_rstate` is the updated RNG
+state that can be used for another `rand` call.
 
   `rand` implies efficient IID pseudorandom value generation. Therefore `rand`
   does not support measures for which this is an intractable problem, especially
   measures involving non-constant weighting (via `weighted(f, base)`,
   `logweighted(g, base)`, or `bayesupdate(L, prior)`) or multivariate truncation.
 
-- **`rngstate(bytes)`** — (re-)constructs an RNG state from a byte-serialization.
-  The `rngstate` function is primarily a serialization tool and will rarely be
-  used by user code, as binary RNG state representations are engine-dependent.
+<a id="rngstate"></a>**`rngstate(bytes)`** — (re-)constructs an RNG state from a byte-serialization.
+The `rngstate` function is primarily a serialization tool and will rarely be
+used by user code, as binary RNG state representations are engine-dependent.
 
   `bytes` must be a non-empty vector of integers in $\{0, \ldots, 255\}$. In addition to
   a binary serialization of the RNG state, engines should encode information in
@@ -700,6 +762,15 @@ more_random_data, rstate3 = rand(rstate2, iid(Exponential(1), 5))
 
 ### <a id="sec:measure-eval-prims"></a>Measure kernel evaluation primitives
 
+| Function | Arguments | Description | Domains |
+|---|---|---|---|
+| [`builtin_logdensityof`](#builtin_logdensityof) | `kernel, kernel_input, x` | log-density of `kernel(kernel_input)` at `x` w.r.t. the kernel's reference measure | kernel, kernel input, value |
+| [`builtin_sample`](#builtin_sample) | `rngstate, kernel, kernel_input, n, m, ...` | IID samples from `kernel(kernel_input)`; returns `(X, new_rngstate)` | `rngstates`, kernel, kernel input, non-negative integers |
+| [`builtin_touniform`](#builtin_touniform) | `kernel, kernel_input, x` | canonical transport of variate to standard uniform | kernel, kernel input, value |
+| [`builtin_fromuniform`](#builtin_fromuniform) | `kernel, kernel_input, u` | inverse transport from standard uniform | kernel, kernel input, uniform variate |
+| [`builtin_tonormal`](#builtin_tonormal) | `kernel, kernel_input, x` | canonical transport of variate to standard normal | kernel, kernel input, value |
+| [`builtin_fromnormal`](#builtin_fromnormal) | `kernel, kernel_input, z` | inverse transport from standard normal | kernel, kernel input, normal variate |
+
 These functions provide building blocks for sampling measures, calculating
 densities and transporting variate values. They are mainly intended for
 engine use and term-rewriting, but are fully part of FlatPPL.
@@ -707,19 +778,22 @@ engine use and term-rewriting, but are fully part of FlatPPL.
 Each function operates directly on a FlatPPL kernel object and a valid kernel
 input value, not on the resulting measure `kernel(kernel_input)`:
 
-- **`builtin_logdensityof(kernel, kernel_input, x)`** — log-density of
-  `kernel(kernel_input)` at `x` w.r.t. the kernel's reference measure;
-  `-inf` outside the support.
-- **`builtin_sample(rngstate, kernel, kernel_input, n, m, ...)`** — draws
-  from `kernel(kernel_input)`. Returns `(X, new_rngstate)` with an IID-sampled
-  array `X` of size `(n, m, ...)`, or a scalar `X` if no `n, m, ...` are given.
-- **`builtin_touniform(kernel, kernel_input, x)`** /
-  **`builtin_fromuniform(kernel, kernel_input, u)`** — the canonical
-  measurable transport of `kernel(kernel_input)` to / from the
-  standard uniform reference of matching dimension.
-- **`builtin_tonormal(kernel, kernel_input, x)`** /
-  **`builtin_fromnormal(kernel, kernel_input, z)`** — the same
-  transport to / from the standard normal reference.
+<a id="builtin_logdensityof"></a>**`builtin_logdensityof(kernel, kernel_input, x)`** — log-density of
+`kernel(kernel_input)` at `x` w.r.t. the kernel's reference measure;
+`-inf` outside the support.
+
+<a id="builtin_sample"></a>**`builtin_sample(rngstate, kernel, kernel_input, n, m, ...)`** — draws
+from `kernel(kernel_input)`. Returns `(X, new_rngstate)` with an IID-sampled
+array `X` of size `(n, m, ...)`, or a scalar `X` if no `n, m, ...` are given.
+
+<a id="builtin_touniform"></a>**`builtin_touniform(kernel, kernel_input, x)`** /
+<a id="builtin_fromuniform"></a>**`builtin_fromuniform(kernel, kernel_input, u)`** — the canonical
+measurable transport of `kernel(kernel_input)` to / from the
+standard uniform reference of matching dimension.
+
+<a id="builtin_tonormal"></a>**`builtin_tonormal(kernel, kernel_input, x)`** /
+<a id="builtin_fromnormal"></a>**`builtin_fromnormal(kernel, kernel_input, z)`** — the same
+transport to / from the standard normal reference.
 
 The transport functions implement the change of variables to/from the
 uni- or multivariate uniform/normal measure with the same degrees of
