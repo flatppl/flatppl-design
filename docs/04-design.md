@@ -885,7 +885,8 @@ not values; see [axis names](05-syntax.md#axis-names) for the surface rules.
 
 *`:=` notation.* As a shorthand for sum-`aggregate`, FlatPPL provides
 `result[.name1, .name2, ...] := expr`, equivalent to
-`result = aggregate(sum, [.name1, .name2, ...], expr)`.
+`result = aggregate(sum, [.name1, .name2, ...], expr)`. The bracketed
+axis list may be empty for full reduction to a scalar.
 
 So
 
@@ -897,6 +898,18 @@ lowers to
 
 ```flatppl
 D = aggregate(sum, [.i, .k], (A[.i, .j] - B[.j, .k])^2 * W[.j])
+```
+
+and the scalar (full-reduction) case
+
+```flatppl
+s[] := A[.i] * B[.i]
+```
+
+lowers to
+
+```flatppl
+s = aggregate(sum, [], A[.i] * B[.i])
 ```
 
 `aggregate` composes cleanly with `functionof` as the namespace of axis names

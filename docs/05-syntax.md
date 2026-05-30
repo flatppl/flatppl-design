@@ -198,6 +198,8 @@ inside `[...]` within the body, or as a binder on the left-hand side of
 
 The aggregation form `C[.i, .j, ...] := expr` is shorthand for
 sum-[`aggregate`](04-design.md#sec:aggregate); see there for the desugaring.
+The bracketed axis list may be empty (`x[] := expr`) for full reduction
+to a scalar.
 
 ### <a id="host-language-embedding"></a>Host-language embedding
 
@@ -259,7 +261,7 @@ Binding            ::= Name "=" Expression
 Decomposition      ::= Name ("," Name)+ "=" Expression
 TildeBinding       ::= Name "~" Expression
 TildeDecomposition ::= Name ("," Name)+ "~" Expression
-AggregateBinding   ::= Name "[" Axis ("," Axis)* "]" ":=" Expression
+AggregateBinding   ::= Name "[" (Axis ("," Axis)*)? "]" ":=" Expression
 
 (* Expressions — lambda at top, logical OR/AND above comparisons,
    exponentiation below multiplicative *)
