@@ -92,7 +92,10 @@ FlatPPL has a very lean syntax:
   (multi-arg) is shorthand for `functionof` with placeholders (see
   [Lambda syntax](#lambda-syntax)).
 - **Aggregation**: axis-indexed binding `C[.i, .k] := expr` is shorthand for
-  sum-[`aggregate`](04-design.md#sec:aggregate) (see [Axis names and aggregation](#axis-names)).
+  sum-[`aggregate`](04-design.md#sec:aggregate); the metric-prefixed form
+  `g: C[.mu^, .nu_] := expr` is the [`metricsum`](04-design.md#sec:metricsum)
+  shorthand for metric-aware Einstein summation. (See
+  [Axis names and aggregation](#axis-names).)
 - **Function calls**: `f(x, y)` (positional), `f(a = x, b = y)` (keyword) and
   `f(object, a = x, b = y)` (for some special operations).
 - **Indexing and field access**: `A[i]`, `A[i, j]`, `A[:, j]`, `r.field`.
@@ -162,7 +165,7 @@ Their semantics are defined in [language design](04-design.md#sec:design).
 ### <a id="broadcasting-syntax"></a>Broadcasting syntax
 
 FlatPPL provides dot-prefixed shorthand for
-[`broadcast`](04-design.md#sec:higher-order):
+[`broadcast`](04-design.md#sec:broadcasting):
 
 - **`f.(<args>)`** — dot-call.
 - **`a .op b`** — dotted binary operators.
@@ -170,7 +173,7 @@ FlatPPL provides dot-prefixed shorthand for
 
 Each dotted operator has the same precedence as its plain counterpart. `in`
 has no dotted form (its right operand is a set, not a broadcastable value).
-See [Higher-order operations](04-design.md#sec:higher-order) for dot-notation
+See [Broadcasting](04-design.md#sec:broadcasting) for dot-notation
 lowering.
 
 ### <a id="lambda-syntax"></a>Lambda syntax
@@ -200,6 +203,13 @@ The aggregation form `C[.i, .j, ...] := expr` is shorthand for
 sum-[`aggregate`](04-design.md#sec:aggregate); see there for the desugaring.
 The bracketed axis list may be empty (`x[] := expr`) for full reduction
 to a scalar.
+
+Axes may carry a variance marker — `.<name>^` (upper / contravariant) or
+`.<name>_` (lower / covariant) — inside
+[`metricsum`](04-design.md#sec:metricsum) for metric-aware Einstein
+summation. The marker form `metric: C[...] := expr` is the shorthand
+for `metricsum`. Axis names themselves may not end in `_`, since
+trailing `_` is reserved as the lower-variance marker.
 
 ### <a id="host-language-embedding"></a>Host-language embedding
 
@@ -254,7 +264,7 @@ The canonical surface syntax is defined in EBNF below (ISO 14977-style, with
 (* Top level *)
 Module          ::= StmtSep* (Statement (StmtSep+ Statement)*)? StmtSep* EOF
 Statement       ::= Binding | TildeBinding | Decomposition | TildeDecomposition
-                  | AggregateBinding
+                  | AggregateBinding | MetricsumBinding
 
 (* Bindings *)
 Binding            ::= Name "=" Expression
@@ -262,6 +272,7 @@ Decomposition      ::= Name ("," Name)+ "=" Expression
 TildeBinding       ::= Name "~" Expression
 TildeDecomposition ::= Name ("," Name)+ "~" Expression
 AggregateBinding   ::= Name "[" (Axis ("," Axis)*)? "]" ":=" Expression
+MetricsumBinding   ::= Name ":" Name "[" (Axis ("," Axis)*)? "]" ":=" Expression
 
 (* Expressions — lambda at top, logical OR/AND above comparisons,
    exponentiation below multiplicative *)
@@ -282,7 +293,12 @@ FieldAccess     ::= "." Name
 DotCall         ::= "." "(" CallArgs ")"
 Indexing        ::= "[" IndexExpr ("," IndexExpr)* "]"
 IndexExpr       ::= Expression | ":" | "!"
-Axis            ::= "." Name
+Axis            ::= "." AxisName VarianceMarker?
+AxisName        ::= Letter
+                  | Letter (Letter | Digit | "_")* (Letter | Digit)
+                    (* Identifier that must not start with "_" or end with "_";
+                       trailing "_" is reserved as the lower-variance marker. *)
+VarianceMarker  ::= "^" | "_"
 
 CompOp          ::= "<" | ">" | "==" | "!=" | "<=" | ">=" | "in"
                   | ".<" | ".>" | ".==" | ".!=" | ".<=" | ".>="

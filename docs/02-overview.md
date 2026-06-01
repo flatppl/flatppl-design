@@ -190,7 +190,8 @@ highlights, not exhaustive — see the linked sections for complete listings.
 | [Measure combinators](06-measure-algebra.md#sec:measure-algebra) | `weighted`, `logweighted`, `normalize`, `totalmass`, `superpose`, `joint`, `jointchain`, `kchain`, `iid`, `truncate`, `pushfwd` |
 | [Likelihoods and posteriors](06-measure-algebra.md#likelihoods-and-posteriors) | `likelihoodof`, `joint_likelihood`, `densityof`, `logdensityof`, `bayesupdate` |
 | [Structural disintegration](06-measure-algebra.md#structural-disintegration) | `disintegrate`, `restrict` |
-| [Higher-order operations](04-design.md#sec:higher-order) | `broadcast`, `broadcasted`, `reduce`, `scan` |
+| [Broadcasting](04-design.md#sec:broadcasting) | `broadcast`, `broadcasted` |
+| [Reductions and aggregation](04-design.md#sec:aggregate) | `reduce`, `scan`, `aggregate`, `metricsum` |
 | [Data access and reshaping](07-functions.md#sec:functions) | `get`, `get0`, `cat`, `record`, `tuple`, `all`, `filter`, `selectbins`, `reverse` |
 | [Array and table generation](07-functions.md#sec:functions) | `array`, `table`, `rowstack`, `colstack`, `partition`, `linspace`, `extlinspace`, `fill`, `zeros`, `ones`, `eye`, `onehot`, `load_data` |
 | [Binning](07-functions.md#sec:functions) | `bincounts` |

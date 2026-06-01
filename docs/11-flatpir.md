@@ -258,7 +258,11 @@ reals  posreals  integers  booleans  pi  inf  im
 
 **Axis nodes** use `(%axis <name>)` for the symbolic axis labels of
 [`aggregate`](04-design.md#sec:aggregate). An axis reference `.i` in
-FlatPPL maps to `(%axis i)` in FlatPIR.
+FlatPPL maps to `(%axis i)` in FlatPIR. Variance-marked axes inside
+[`metricsum`](04-design.md#sec:metricsum) map to `(%uaxis <name>)`
+for upper (contravariant) and `(%laxis <name>)` for lower (covariant)
+indices: surface `.mu^` maps to `(%uaxis mu)` and `.mu_` to
+`(%laxis mu)`.
 
 **Calls to user-defined callables** use `(%call <ref-head> <args>...)`:
 

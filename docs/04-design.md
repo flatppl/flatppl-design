@@ -130,7 +130,7 @@ or may not be significant. The total number of inputs is never zero:
 - `load_module`: One distinguished input plus optional variadic named inputs with
   no significant order.
 - `standard_module`: Two distinguished inputs.
-- `aggregate`: Three distinguished inputs.
+- `aggregate`, `metricsum`: Three distinguished inputs.
 - `load_data`: One distinguished input plus optional variadic named inputs with
   significant order.
 - `checked`: Two distinguished inputs.
@@ -685,9 +685,9 @@ _tmp2 = elementof(anything)
 g = functionof(f(_tmp1, b, _tmp2), arg1 = _tmp1, arg2 = _tmp2)
 ```
 
-### <a id="sec:higher-order"></a>Higher-order operations
+### <a id="sec:broadcasting"></a>Broadcasting
 
-**Broadcasting.** `broadcast(f_or_K, name = array, ...)` or
+`broadcast(f_or_K, name = array, ...)` or
 `broadcast(f_or_K, array, ...)` maps a function or kernel elementwise over
 arrays (and row-wise over tables; see [tables](03-value-types.md#tables)).
 Keyword arguments bind inputs by name. If the callable has a declared
@@ -816,6 +816,8 @@ tuple of arrays (componentwise), not an array of tuples.
 **`broadcasted(f)`** returns a callable that is equivalent to applying `broadcast` to
 `f` — that is, `broadcasted(f)(args...)` is equivalent to `broadcast(f, args...)`.
 
+### Reductions
+
 **`reduce(f, xs)`** is a fold over `xs` using the binary function `f`. For a vector
 `xs = [x0, x1, ..., xn-1]`, it computes `f(...f(f(x0, x1), x2)..., xn-1)`. For a table,
 `xs` is traversed row-wise and `f` takes two records (the accumulator and the next row).
@@ -828,9 +830,9 @@ explicit initial accumulator `init`. It produces a vector (or table) of intermed
 accumulator values, one per element/row of `xs`, of the same length as the input.
 Like `reduce`, `scan` accepts only deterministic functions.
 
-<a id="sec:aggregate"></a>
+### <a id="sec:aggregate"></a>Multi-axis aggregation
 
-**Multi-axis aggregation.** `aggregate(f_reduction, output_axes, expr)`
+`aggregate(f_reduction, output_axes, expr)`
 generalizes vector reductions to multi-axis tensor contraction, as a
 generalization of Einstein summation.
 
@@ -943,6 +945,99 @@ is equivalent to
 
 ```flatppl
 broadcast((a, b) -> a * b, A, B)
+```
+
+### <a id="sec:metricsum"></a>Metric-aware Einstein summation
+
+**`metricsum(metric, output_axes, expr)`** is a metric-aware variant of
+sum-`aggregate` for tensor expressions with upper (contravariant)
+and lower (covariant) indices.
+
+**Variance-marked axis names** are required inside `metricsum`:
+`.<name>^` denotes an upper-index and `.<name>_` denotes a lower-index axis
+(see [axis names](05-syntax.md#axis-names)). Axis-names with variance markers
+are lexically scoped to the enclosing `metricsum`.
+
+**All-contravariant canonical storage.** Outside `metricsum`, arrays carry no tensor metadata and are interpreted to contain the elements of the
+all-contravariant tensor. So a vector `v` outside of `metricsum` represents $v^\mu$, and `v[.mu^]` inside of `metricsum` accesses the stored vector
+entries directly. Likewise the array `metric` stores the elements of the contravariant tensor $g^{\mu\nu}$. So within `metricsum`, the
+covariant vector `v[.mu_]` accesses `v` transformed via the metric:
+$v_\mu = g_{\mu\nu} v^\nu$, where $g_{\mu\nu}$ is equivalent to the contents
+of `inv(metric)`. 
+
+**The `metric` argument** is interpreted as upper-upper $g^{ij}$, consistent
+with the rule above. It must be a square, symmetric, and invertible rank-2
+array. Lower-index access of the metric (`metric[.i_, .j_]`) denotes the
+inverse $g_{ij}$; mixed access (`metric[.i^, .j_]`) denotes the Kronecker
+delta $\delta^i{}_j$.
+
+**Output variance** specifies the variance of the *components computed*
+by `expr`, not the stored layout. The actual result returned by `metricsum`
+is automatically raised to all-upper canonical storage. Reading the result later inside another
+`metricsum` with the same metric recovers the originally defined
+components.
+
+*`:=` notation.* As a shorthand, `metric: result[output_indices...] := expr` lowers to `result = metricsum(metric, [output_indices...], expr)`.
+
+**Expression restrictions.** `metric` itself and all arrays indexed with
+co-/contravariant axis names in `expr` must be arrays of scalars. `expr` must produce scalar values for all combinations of axis index values.
+
+**Static checks.** Every repeated non-output index in `expr` must occur
+exactly twice — once upper and once lower; every output index must
+occur in `expr` with the same variance and may not also be contracted;
+bare neutral aggregate axes (`.i` without a variance marker) are not
+allowed inside `metricsum`.
+
+**Equivalence to `aggregate` under identity metric.** `metricsum(eye(n), ...)`
+is equivalent to an `aggregate(sum, ...)` with co-/contravariant axis names
+replaced by `aggregate` axis names.
+
+**Lowering to `aggregate`.** Each `_` (lower-variance) axis name in
+`expr` becomes an `inv(metric)` contraction; each `_` output axis
+becomes a `metric` contraction after the sum, raising the result to
+all-upper canonical storage. The whole lowering may be expressed as a
+single `aggregate(sum, ...)` with metric factors inlined, or as a chain
+that precomputes mixed-variance intermediates as common subexpressions;
+both forms are semantically equivalent.
+
+**Example.** Composition of three Lorentz transformations
+$L^\mu{}_\rho = L_1{}^\mu{}_\nu \, L_2{}^\nu{}_\sigma \, L_3{}^\sigma{}_\rho$
+as (1,1)-tensors, under metric `g`:
+
+```flatppl
+g: L[.mu^, .rho_] := L1[.mu^, .nu_] * L2[.nu^, .sigma_] * L3[.sigma^, .rho_]
+```
+
+Equivalent non-shorthand form:
+
+```flatppl
+L = metricsum(g, [.mu^, .rho_],
+    L1[.mu^, .nu_] * L2[.nu^, .sigma_] * L3[.sigma^, .rho_])
+```
+
+Lowering to `aggregate`, inline metric insertion:
+
+```flatppl
+__g_down = inv(g)
+L = aggregate(sum, [.mu, .rho_up],
+    L1[.mu, .a] * __g_down[.a, .nu] *
+    L2[.nu, .b] * __g_down[.b, .sigma] *
+    L3[.sigma, .c] * __g_down[.c, .rho] *
+    g[.rho, .rho_up]
+)
+```
+
+Lowering to `aggregate`, precomputed mixed-variance intermediates:
+
+```flatppl
+__g_down = inv(g)
+__L1_mixed = L1 * __g_down
+__L2_mixed = L2 * __g_down
+__L3_mixed = L3 * __g_down
+__L_mixed = aggregate(sum, [.mu, .rho],
+    __L1_mixed[.mu, .nu] * __L2_mixed[.nu, .sigma] * __L3_mixed[.sigma, .rho]
+)
+L = __L_mixed * g
 ```
 
 ### Lowered linear form
