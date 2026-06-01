@@ -1,5 +1,4 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- VENDORED from flatppl-grammars/kate/flatppl.xml. Do not edit here; re-copy from source. -->
 <!--
   FlatPPL syntax definition for KSyntaxHighlighting / skylighting (Pandoc).
   Hand-ported from textmate/flatppl.tmLanguage.json. Keep the two in sync.
@@ -15,74 +14,34 @@
           license="MIT">
   <highlighting>
     <list name="specialops">
-      <item>draw</item><item>lawof</item><item>functionof</item><item>kernelof</item>
-      <item>fn</item><item>elementof</item><item>external</item><item>valueset</item>
-      <item>load_module</item><item>standard_module</item><item>load_data</item>
+      <item>draw</item><item>lawof</item><item>functionof</item><item>kernelof</item><item>fn</item><item>elementof</item><item>external</item><item>valueset</item><item>load_module</item><item>standard_module</item><item>load_data</item>
     </list>
     <list name="kernels">
-      <item>Uniform</item><item>Normal</item><item>GeneralizedNormal</item><item>Cauchy</item>
-      <item>StudentT</item><item>Logistic</item><item>LogNormal</item><item>Exponential</item>
-      <item>Gamma</item><item>Weibull</item><item>InverseGamma</item><item>Beta</item>
-      <item>ChiSquared</item><item>VonMises</item><item>Laplace</item><item>Bernoulli</item>
-      <item>Categorical</item><item>Categorical0</item><item>Binomial</item><item>Poisson</item>
-      <item>Geometric</item><item>NegativeBinomial</item><item>NegativeBinomial2</item>
-      <item>MvNormal</item><item>Wishart</item><item>InverseWishart</item><item>LKJ</item>
-      <item>LKJCholesky</item><item>Dirichlet</item><item>Multinomial</item>
-      <item>PoissonProcess</item><item>BinnedPoissonProcess</item><item>Dirac</item>
-      <item>Lebesgue</item><item>Counting</item>
+      <item>Uniform</item><item>Normal</item><item>GeneralizedNormal</item><item>Cauchy</item><item>StudentT</item><item>Logistic</item><item>LogNormal</item><item>Exponential</item><item>Gamma</item><item>Weibull</item><item>InverseGamma</item><item>Beta</item><item>ChiSquared</item><item>VonMises</item><item>Laplace</item><item>Bernoulli</item><item>Categorical</item><item>Categorical0</item><item>Binomial</item><item>Poisson</item><item>Geometric</item><item>NegativeBinomial</item><item>NegativeBinomial2</item><item>MvNormal</item><item>Wishart</item><item>InverseWishart</item><item>LKJ</item><item>LKJCholesky</item><item>Dirichlet</item><item>Multinomial</item><item>PoissonProcess</item><item>BinnedPoissonProcess</item><item>Dirac</item><item>Lebesgue</item><item>Counting</item>
     </list>
     <list name="combinators">
-      <item>weighted</item><item>logweighted</item><item>normalize</item><item>totalmass</item>
-      <item>superpose</item><item>joint</item><item>jointchain</item><item>kchain</item>
-      <item>iid</item><item>truncate</item><item>pushfwd</item>
+      <item>weighted</item><item>logweighted</item><item>normalize</item><item>totalmass</item><item>superpose</item><item>joint</item><item>jointchain</item><item>kchain</item><item>iid</item><item>truncate</item><item>pushfwd</item>
     </list>
     <list name="analysis">
-      <item>likelihoodof</item><item>joint_likelihood</item><item>densityof</item>
-      <item>logdensityof</item><item>bayesupdate</item><item>disintegrate</item><item>restrict</item>
+      <item>likelihoodof</item><item>joint_likelihood</item><item>densityof</item><item>logdensityof</item><item>bayesupdate</item><item>disintegrate</item><item>restrict</item>
     </list>
     <list name="higherorder">
-      <item>broadcast</item><item>broadcasted</item><item>reduce</item><item>scan</item>
-      <item>fchain</item><item>bijection</item><item>aggregate</item>
+      <item>broadcast</item><item>broadcasted</item><item>reduce</item><item>scan</item><item>fchain</item><item>bijection</item><item>aggregate</item><item>metricsum</item>
     </list>
     <list name="setctors">
       <item>interval</item><item>cartprod</item><item>cartpow</item><item>stdsimplex</item>
     </list>
     <list name="builtins">
-      <item>identity</item><item>vector</item><item>array</item><item>fill</item><item>zeros</item>
-      <item>ones</item><item>eye</item><item>onehot</item><item>linspace</item><item>extlinspace</item>
-      <item>get</item><item>get0</item><item>cat</item><item>rowstack</item><item>colstack</item>
-      <item>record</item><item>table</item><item>tuple</item><item>partition</item><item>reverse</item>
-      <item>relabel</item><item>fixed</item><item>boolean</item><item>integer</item><item>real</item>
-      <item>complex</item><item>string</item><item>imag</item><item>exp</item><item>expm1</item>
-      <item>log</item><item>log10</item><item>log1p</item><item>pow</item><item>sqrt</item><item>abs</item>
-      <item>abs2</item><item>sin</item><item>cos</item><item>tan</item><item>asin</item><item>acos</item>
-      <item>atan</item><item>atan2</item><item>sinh</item><item>cosh</item><item>tanh</item><item>asinh</item>
-      <item>acosh</item><item>atanh</item><item>min</item><item>max</item><item>floor</item><item>ceil</item>
-      <item>round</item><item>div</item><item>mod</item><item>conj</item><item>cis</item><item>gamma</item>
-      <item>loggamma</item><item>logit</item><item>invlogit</item><item>probit</item><item>invprobit</item>
-      <item>add</item><item>sub</item><item>mul</item><item>divide</item><item>neg</item><item>equal</item>
-      <item>unequal</item><item>lt</item><item>le</item><item>gt</item><item>ge</item><item>isfinite</item>
-      <item>isinf</item><item>isnan</item><item>iszero</item><item>transpose</item><item>adjoint</item>
-      <item>det</item><item>logabsdet</item><item>inv</item><item>trace</item><item>linsolve</item>
-      <item>lower_cholesky</item><item>row_gram</item><item>col_gram</item><item>self_outer</item>
-      <item>cross</item><item>diagmat</item><item>sum</item><item>mean</item><item>var</item><item>std</item>
-      <item>prod</item><item>maximum</item><item>minimum</item><item>cumsum</item><item>cumprod</item>
-      <item>lengthof</item><item>sizeof</item><item>indicesof</item><item>indicesof0</item><item>l1norm</item>
-      <item>l2norm</item><item>l1unit</item><item>l2unit</item><item>logsumexp</item><item>softmax</item>
-      <item>logsoftmax</item><item>land</item><item>lor</item><item>lnot</item><item>lxor</item><item>ifelse</item>
-      <item>filter</item><item>selectbins</item><item>bincounts</item><item>polynomial</item>
-      <item>bernstein</item><item>stepwise</item><item>rngstate</item><item>rnginit</item><item>rand</item>
-      <item>builtin_logdensityof</item><item>builtin_sample</item><item>builtin_touniform</item>
-      <item>builtin_fromuniform</item><item>builtin_tonormal</item><item>builtin_fromnormal</item>
-      <item>checked</item>
+      <item>identity</item><item>vector</item><item>array</item><item>fill</item><item>zeros</item><item>ones</item><item>eye</item><item>onehot</item><item>linspace</item><item>extlinspace</item><item>get</item><item>get0</item><item>cat</item><item>rowstack</item><item>colstack</item><item>record</item><item>table</item><item>tuple</item><item>partition</item><item>reverse</item><item>relabel</item><item>fixed</item><item>tile</item><item>splitblocks</item><item>joinblocks</item><item>addaxes</item><item>blockdiagmat</item><item>bandedmat</item><item>conv</item><item>crosscorr</item><item>boolean</item><item>integer</item><item>real</item><item>complex</item><item>string</item><item>imag</item><item>exp</item><item>expm1</item><item>log</item><item>log10</item><item>log1p</item><item>pow</item><item>sqrt</item><item>abs</item><item>abs2</item><item>sin</item><item>cos</item><item>tan</item><item>asin</item><item>acos</item><item>atan</item><item>atan2</item><item>sinh</item><item>cosh</item><item>tanh</item><item>asinh</item><item>acosh</item><item>atanh</item><item>min</item><item>max</item><item>floor</item><item>ceil</item><item>round</item><item>div</item><item>mod</item><item>conj</item><item>cis</item><item>gamma</item><item>loggamma</item><item>logit</item><item>invlogit</item><item>probit</item><item>invprobit</item><item>add</item><item>sub</item><item>mul</item><item>divide</item><item>neg</item><item>equal</item><item>unequal</item><item>lt</item><item>le</item><item>gt</item><item>ge</item><item>isfinite</item><item>isinf</item><item>isnan</item><item>iszero</item><item>transpose</item><item>adjoint</item><item>det</item><item>logabsdet</item><item>inv</item><item>trace</item><item>linsolve</item><item>lower_cholesky</item><item>row_gram</item><item>col_gram</item><item>self_outer</item><item>cross</item><item>diagmat</item><item>qr</item><item>diag</item><item>quadform</item><item>sum</item><item>mean</item><item>var</item><item>std</item><item>prod</item><item>maximum</item><item>minimum</item><item>cumsum</item><item>cumprod</item><item>lengthof</item><item>sizeof</item><item>indicesof</item><item>indicesof0</item><item>l1norm</item><item>l2norm</item><item>l1unit</item><item>l2unit</item><item>logsumexp</item><item>softmax</item><item>logsoftmax</item><item>land</item><item>lor</item><item>lnot</item><item>lxor</item><item>ifelse</item><item>filter</item><item>selectbins</item><item>bincounts</item><item>polynomial</item><item>bernstein</item><item>stepwise</item><item>rngstate</item><item>rnginit</item><item>rand</item><item>builtin_logdensityof</item><item>builtin_sample</item><item>builtin_touniform</item><item>builtin_fromuniform</item><item>builtin_tonormal</item><item>builtin_fromnormal</item><item>checked</item>
     </list>
     <list name="constants">
       <item>true</item><item>false</item><item>inf</item><item>pi</item><item>im</item>
     </list>
     <list name="predefsets">
-      <item>reals</item><item>posreals</item><item>nonnegreals</item><item>unitinterval</item>
-      <item>posintegers</item><item>nonnegintegers</item><item>integers</item><item>booleans</item>
-      <item>complexes</item><item>rngstates</item><item>anything</item>
+      <item>reals</item><item>posreals</item><item>nonnegreals</item><item>unitinterval</item><item>posintegers</item><item>nonnegintegers</item><item>integers</item><item>booleans</item><item>complexes</item><item>rngstates</item><item>anything</item>
+    </list>
+    <list name="selectors">
+      <item>all</item><item>only</item>
     </list>
     <list name="reserved">
       <item>self</item><item>base</item><item>flatppl_compat</item>
@@ -126,13 +85,27 @@
         <RegExpr String="\^" attribute="Operator" context="#stay"/>
         <AnyChar String="+-*/" attribute="Operator" context="#stay"/>
         <RegExpr String="\bin\b" attribute="Operator" context="#stay"/>
-        <RegExpr String=":|!(?=[,\]])|\b(all|only)\b" attribute="Operator" context="#stay"/>
+        <keyword String="selectors" attribute="Operator" context="#stay"/>
+        <RegExpr String=":|!(?=[,\]])" attribute="Operator" context="#stay"/>
         <RegExpr String="(=|~)(?!=)" attribute="Operator" context="#stay"/>
         <!-- Members, identifiers (must be last). NB: skylighting's dsOther emits
              no HTML class, so generic function-calls are intentionally left
              un-highlighted (plain identifiers) rather than mapped to a dead style. -->
-        <RegExpr String="\.[a-zA-Z_][a-zA-Z0-9_]*" attribute="Member" context="#stay"/>
+        <!-- Axis/field member. The name must NOT swallow a trailing '_' so that
+             a §05 axis variance marker ('.name^' upper / '.name_' lower) lands in
+             AxisMaybeVariance and is coloured separately. -->
+        <RegExpr String="\.([a-zA-Z_][a-zA-Z0-9_]*[a-zA-Z0-9]|[a-zA-Z_])" attribute="Member" context="AxisMaybeVariance"/>
         <RegExpr String="[a-zA-Z_][a-zA-Z0-9_]*" attribute="Normal Text" context="#stay"/>
+      </context>
+
+      <!-- Reached right after an axis/field name: colour a trailing variance
+           marker ('^'/'_') with the SAME style as the axis name (Variance ->
+           dsAttribute) so '.sigma^' reads as one unit and the '^' is not
+           mistaken for arithmetic exponentiation; then pop. Otherwise pop
+           immediately (plain field access). The empty fallback RegExpr never
+           consumes input. -->
+      <context name="AxisMaybeVariance" attribute="Normal Text" lineEndContext="#pop" fallthrough="true" fallthroughContext="#pop">
+        <RegExpr String="[\^_]" attribute="Variance" context="#pop"/>
       </context>
 
       <context name="DocBlock" attribute="Documentation" lineEndContext="#stay">
@@ -163,6 +136,7 @@
       <itemData name="Reserved"      defStyleNum="dsVariable"/>
       <itemData name="Member"        defStyleNum="dsAttribute"/>
       <itemData name="Operator"      defStyleNum="dsOperator"/>
+      <itemData name="Variance"      defStyleNum="dsAttribute"/>
       <itemData name="Placeholder"   defStyleNum="dsAnnotation"/>
       <itemData name="Hole"          defStyleNum="dsRegionMarker"/>
       <itemData name="Comment"       defStyleNum="dsComment"/>
