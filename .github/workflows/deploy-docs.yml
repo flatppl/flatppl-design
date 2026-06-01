@@ -31,7 +31,8 @@ jobs:
         run: |
           set -euo pipefail
           url="https://raw.githubusercontent.com/flatppl/flatppl-grammars/main/kate/flatppl.xml"
-          curl -fsSL "$url" -o docs/templates/flatppl.xml
+          curl -fsSL --retry 5 --retry-delay 2 --retry-connrefused --retry-all-errors \
+            "$url" -o docs/templates/flatppl.xml
           grep -q '<language name="FlatPPL"' docs/templates/flatppl.xml \
             || { echo "::error::fetched flatppl.xml is not the FlatPPL Kate grammar"; exit 1; }
           echo "Fetched kate/flatppl.xml from flatppl-grammars@main ($(wc -c < docs/templates/flatppl.xml) bytes)"
