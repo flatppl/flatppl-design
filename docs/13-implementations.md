@@ -36,6 +36,9 @@ FlatPPL `base`, not exact constructor names. This table may well be incomplete:
 | `Cauchy` | `Cauchy` | `Cauchy` | `Cauchy` |
 | `StudentT` | `StudentT` | `StudentT` | `TDist` |
 | `Logistic` | `Logistic` | `Logistic` | `Logistic` |
+| `Laplace` | `Laplace` | `Laplace` | `Laplace` |
+| `VonMises` | `VonMises` | `VonMises` | `VonMises` |
+| `ChiSquared` | `Chi2` | `Chi2` | `Chisq` |
 | `LogNormal` | `LogNormal` | `LogNormal` | `LogNormal` |
 | `Exponential` | `Exponential` | `Exponential` | `Exponential` |
 | `Gamma` | `Gamma` | `Gamma` | `Gamma` |
@@ -46,6 +49,8 @@ FlatPPL `base`, not exact constructor names. This table may well be incomplete:
 | `Categorical` | `Categorical` | `Categorical` | `Categorical` |
 | `Binomial` | `Binomial` | `Binomial` | `Binomial` |
 | `Poisson` | `Poisson` | `Poisson` | `Poisson` |
+| `Geometric` | `Geometric` | `Geometric` | `Geometric` |
+| `NegativeBinomial` | `GammaPoisson` | `NegativeBinomial` | `NegativeBinomial` |
 | `MvNormal` | `MultivariateNormal` | `MultivariateNormalTriL` | `MvNormal` |
 | `Wishart` | `WishartCholesky` (via TFP) | `WishartTriL` | `Wishart` |
 | `InverseWishart` | `InverseWishart` (via TFP) | `InverseWishart` | `InverseWishart` |
