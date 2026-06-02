@@ -68,17 +68,18 @@ Outside $[-1, +1]$, the function continues linearly with slope $S + 2A$ (right) 
 $S - 2A$ (left).
 
 <a id="interp_poly6_lin"></a>**`interp_poly6_lin(left, center, right, alpha)`** — 6th-order polynomial inside
-$[-1, +1]$, linear extrapolation outside. The polynomial satisfies five constraints:
-$f(-1) = \mathrm{left}$, $f(0) = \mathrm{center}$, $f(+1) = \mathrm{right}$, and
-$C^1$ continuity at $\alpha = \pm 1$ (matching the linear extrapolation slopes).
+$[-1, +1]$, linear extrapolation outside. With $f(0) = \mathrm{center}$ fixing the
+constant term, the six polynomial coefficients are determined by $C^2$ continuity at
+$\alpha = \pm 1$ — matching the value, first, and second derivatives to the linear
+extrapolation (so $f(-1) = \mathrm{left}$, $f(+1) = \mathrm{right}$).
 
 <a id="interp_poly6_exp"></a>**`interp_poly6_exp(left, center, right, alpha)`** — 6th-order polynomial inside
 $[-1, +1]$, exponential extrapolation outside. For $|\alpha| > 1$:
 
 $$f(\alpha) = f(\pm 1) \cdot \exp\!\left((\alpha \mp 1) \cdot f'(\pm 1) / f(\pm 1)\right)$$
 
-The polynomial coefficients differ from `interp_poly6_lin` because the
-derivative-matching conditions at $\alpha = \pm 1$ target the exponential slopes.
+The polynomial coefficients differ from `interp_poly6_lin` because the $C^2$ conditions
+at $\alpha = \pm 1$ match the value and derivatives of the exponential extrapolation.
 The result stays positive, making this appropriate for multiplicative factors.
 
 #### Distributions
