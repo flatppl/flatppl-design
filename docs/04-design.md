@@ -331,7 +331,8 @@ Boundary inputs themselves may be of parametric or stochastic phase, but not
 fixed phase. `functionof` effectively substitutes each boundary node `a` with
 an input node `elementof(valueset(a))` under the given name.
 
-The sub-graph to be reified by `functionof` must not contain stochastic nodes
+Referential transparency is a core property of FlatPPL. This requires that
+the sub-graph to be reified by `functionof` must not contain stochastic nodes
 that are not reified to measures. This means that the sub-graph must not contain
 `draw` nodes and nodes derived from them which are not ancestors of `lawof` nodes
 in that subgraph (since `lawof` absorbs stochastic phase). `lawof` nodes in the
