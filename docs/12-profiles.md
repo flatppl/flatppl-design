@@ -371,12 +371,36 @@ binned model maps to one `poisson` contribution per bin.
 
 | FlatPPL | Stan | Notes |
 |---|---|---|
-| `exp`, `log`, `sqrt`, `abs`, `sin`, `cos` | same names | |
+| `exp`, `log`, `log10`, `sqrt`, `abs` | same names | |
+| `sin`, `cos`, `tan`, `asin`, `acos`, `atan` | same names | |
+| `atan2` | `atan2` | |
+| `sinh`, `cosh`, `tanh`, `asinh`, `acosh`, `atanh` | same names | |
+| `log1p`, `expm1` | `log1p`, `expm1` | |
+| `floor`, `ceil`, `round` | same names | |
+| `min`, `max` (binary) | `fmin`, `fmax` | scalar pairwise min/max |
 | `pow` | `^` operator | |
-| `sum`, `prod` | `sum`, `prod` | |
+| `gamma`, `loggamma` | `tgamma`, `lgamma` | |
+| `logit`, `invlogit` | `logit`, `inv_logit` | |
+| `probit`, `invprobit` | `inv_Phi`, `Phi` | standard-normal quantile / CDF |
+| `add`, `sub`, `mul`, `divide`, `neg` | `+`, `-`, `*`, `/`, unary `-` | |
+| `lt`, `le`, `gt`, `ge`, `equal`, `unequal` | `<`, `<=`, `>`, `>=`, `==`, `!=` | |
 | `ifelse` | ternary `? :` | |
-| `lower_cholesky` | `cholesky_decompose` | |
+| `sum`, `prod`, `mean` | `sum`, `prod`, `mean` | |
+| `var`, `std` | `variance`, `sd` | both use the $1/(n-1)$ convention |
+| `maximum`, `minimum` | `max`, `min` | array reductions |
+| `cumsum` | `cumulative_sum` | Stan has no `cumprod` equivalent |
+| `logsumexp`, `softmax` | `log_sum_exp`, `softmax` | |
+| `transpose`, `adjoint` | `'` (postfix transpose) | Stan transpose is real-only |
 | `det`, `inv`, `trace` | `determinant`, `inverse`, `trace` | |
+| `logabsdet` | `log_determinant` | Stan returns $\log\det$, not $\log\lvert\det\rvert$; differ for negative determinant |
+| `lower_cholesky` | `cholesky_decompose` | |
+| `qr` | `qr_thin_Q`, `qr_thin_R` | FlatPPL returns one `record(Q, R)`; Stan splits into two calls |
+| `diagmat`, `diag` | `diag_matrix`, `diagonal` | `diagonal` extracts the main diagonal only (no `k` offset) |
+| `quadform` | `quad_form` | |
+| `linsolve` | `\` (left division) | |
+| `eye` | `identity_matrix` | |
+| `zeros`, `ones`, `fill` | `rep_vector` / `rep_matrix` | with `0`, `1`, or the fill value |
+| `linspace` | `linspaced_vector` | |
 | `broadcast` | vectorized operations | Stan auto-vectorizes for standard distributions; general `broadcast` may require explicit loops |
 
 ### Future profiles
