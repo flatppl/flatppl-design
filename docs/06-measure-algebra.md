@@ -353,7 +353,11 @@ inputs by field name.
 
 #### Engine contract for `pushfwd` density evaluation
 
-`densityof(pushfwd(f, M), y)` and `logdensityof(pushfwd(f, M), y)` require the engine to invert `f` and apply the volume element. Engines must support density evaluation in the following three cases:
+`densityof(pushfwd(f, M), y)` and `logdensityof(pushfwd(f, M), y)` require the engine to invert `f` and apply the volume element. For a bijection `f` with inverse `f_inv` and forward log-volume `logvolume`, the density is given by the change-of-variables formula
+
+$$\log \mathrm{densityof}(\mathrm{pushfwd}(f, M), y) = \log \mathrm{densityof}(M, f^{-1}(y)) - \mathrm{logvolume}(f^{-1}(y))$$
+
+equivalently $\mathrm{densityof}(\mathrm{pushfwd}(f, M), y) = \mathrm{densityof}(M, f^{-1}(y)) \cdot \exp\!\left(-\mathrm{logvolume}(f^{-1}(y))\right)$. The forward log-volume is evaluated at the preimage $f^{-1}(y)$ and **subtracted** (e.g. for `exp_bijection`, `logvolume = identity`, giving the log-normal density $\log \mathrm{densityof}(M, \log y) - \log y$). Engines must support density evaluation in the following three cases:
 
 1. **Known-bijection registry.** Every conforming engine must recognize a fixed set of built-in bijections by name — `exp`/`log`, affine maps composed from `add`/`sub`/`neg`/`mul`/`divide` (with positive scaling), `pow` with literal exponent, `cis`, and matrix-vector affine maps such as `mu + lower_cholesky(cov) * _` — together with every explicitly `bijection`-annotated user function. For these, density evaluation is analytic using the recorded inverse and log-volume.
 
@@ -467,6 +471,8 @@ $$\nu(A) = \int_A L(\theta) \, d\pi(\theta)$$
 with density
 
 $$d\nu(\theta) = L(\theta) \cdot d\pi(\theta)$$
+
+where $L(\theta) := \mathrm{densityof}(L, \theta)$ is the likelihood value at $\theta$ (the likelihood object is evaluated via `densityof`, not applied directly as a function).
 
 For example
 
