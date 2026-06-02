@@ -818,17 +818,25 @@ tuple of arrays (componentwise), not an array of tuples.
 
 ### Reductions
 
-**`reduce(f, xs)`** is a fold over `xs` using the binary function `f`. For a vector
-`xs = [x0, x1, ..., xn-1]`, it computes `f(...f(f(x0, x1), x2)..., xn-1)`. For a table,
-`xs` is traversed row-wise and `f` takes two records (the accumulator and the next row).
-The first element (or row) is used as the initial accumulator value. Implementations may
-evaluate in parallel when `f` is associative. Unlike `broadcast`, `reduce` accepts only
-deterministic functions, not kernels.
+**`reduce(f, xs)`** is a fold over `xs` using the binary associative function
+`f`, called positionally as `f(acc, next)`. For a vector
+`xs = [x1, x2, ..., xn]`, it computes `f(...f(f(x1, x2), x3)..., xn)`.
+For a table, `xs` is traversed row-wise and `f` takes two records (the
+accumulator and the next row). The first element (or row) is used as the
+initial accumulator value, so `xs` must be non-empty and `f` must return a
+value of the same type as the elements (or rows) of `xs`. Since `f` is
+required to be associative, implementations may evaluate in parallel.
+Unlike `broadcast`, `reduce` accepts only a deterministic function `f`,
+not a kernel.
 
-**`scan(f, init, xs)`** is a left scan over `xs` using the binary function `f` with
-explicit initial accumulator `init`. It produces a vector (or table) of intermediate
-accumulator values, one per element/row of `xs`, of the same length as the input.
-Like `reduce`, `scan` accepts only deterministic functions.
+**`scan(f, init, xs)`** is a left scan over `xs` using the binary function `f`
+with explicit initial accumulator `init`. `f` is called positionally as
+`f(acc, next)`: the running accumulator (of the type of `init`) and the next
+element of `xs` (or row record, for tables), returning the new accumulator
+value of the same type as `init`. Output entry `i` is
+`f(...f(f(init, x1), x2)..., xi)`, i.e. the accumulator after consuming
+`xs[i]`; the result has the same length (or row count) as `xs` and does not
+include `init` itself. `f` must be a deterministic function, not a kernel.
 
 ### <a id="sec:aggregate"></a>Multi-axis aggregation
 
