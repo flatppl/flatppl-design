@@ -130,7 +130,7 @@ or may not be significant. The total number of inputs is never zero:
 - `load_module`: One distinguished input plus optional variadic named inputs with
   no significant order.
 - `standard_module`: Two distinguished inputs.
-- `aggregate`, `metricsum`: Three distinguished inputs.
+- `aggregate`, `metricsum`, `markovchain`, `kscan`: Three distinguished inputs.
 - `load_data`: One distinguished input plus optional variadic named inputs with
   significant order.
 - `checked`: Two distinguished inputs.

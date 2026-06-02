@@ -265,10 +265,49 @@ closed measures (i.e. nullary kernels) as inputs. `densityof(M, x)` and
   kchain(M, a -> joint(Dirac(value = a), K(a)))
   ```
 
-Like [`fchain`](04-design.md#function-composition-and-annotation),
-`kchain` and `jointchain` combine well with auto-splatting: a
-record-shaped variate from step $i$ splats into step $i+1$'s keyword
-inputs by field name.
+  Like [`fchain`](04-design.md#function-composition-and-annotation),
+  `kchain` and `jointchain` combine well with auto-splatting: a
+  record-shaped variate from step $i$ splats into step $i+1$'s keyword
+  inputs by field name.
+
+- **`markovchain(kernel, init, n)`** — measure over length-`n` trajectories
+  of a time-homogeneous Markov chain.
+  
+  `kernel` is a Markov kernel `(state) -> measure_over_state`; `init` is a
+  value in the state space; `n` is a positive integer. Step $i$ is
+  $\text{traj}_i \sim \kappa(\text{traj}_{i-1})$ with
+  $\text{traj}_0 = \text{init}$. The initial value is not part of the
+  trajectory. The resulting measure is a measure over arrays
+  `[traj[1], ..., traj[n]]`, excluding the initial state.
+  If `init` and `traj[i]` are records, then the trajectories are tables, not
+  arrays.
+
+  Example — Brownian motion (100 steps of $\Delta t = 0.01$, starting at zero):
+
+  ```flatppl
+  D = 4.1    % Diffusion constant
+  dt = 0.01  % Time step
+  f_step = x -> Normal(x, sqrt(2*D * dt))
+  traj ~ markovchain(f_step, 0.0, 100)
+  ```
+
+- **`kscan(kernel, init, xs)`** — Kleisli scan that generalizes `markovchain`
+  with exogenous inputs threaded through each step, also a stochastic
+  version of [`scan`](04-design.md#reductions).
+  
+  `kernel` is a Markov kernel `(state, x) -> measure_over_state`; step $i$ is
+  $\text{traj}_i \sim \kappa(\text{traj}_{i-1}, \text{xs}_i)$ with
+  $\text{traj}_0 = \text{init}$. Trajectories have length `lengthof(xs)`. As
+  with `markovchain`, `init` is a value in the state space and not part of the trajectory.
+
+  Example — Brownian motion with variable timesteps:
+
+  ```flatppl
+  D = 4.1  % Diffusion constant
+  dts = [0.01, 0.02, 0.015, 0.018, 0.012]  % Time steps
+  f_step = (x, dt) -> Normal(x, sqrt(2*D * dt))
+  traj ~ kscan(f_step, 0.0, dts)
+  ```
 
 #### Support restriction
 
