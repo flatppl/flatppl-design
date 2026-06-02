@@ -337,11 +337,14 @@ exhaustive.
 | `Uniform` | `uniform` | `support` → `(alpha, beta)` bounds |
 | `Normal` | `normal` | `mu` → `mu`, `sigma` → `sigma` |
 | `Cauchy` | `cauchy` | `location` → `mu`, `scale` → `sigma` |
+| `Laplace` | `double_exponential` | `location` → `mu`, `scale` → `sigma` |
+| `VonMises` | `von_mises` | `mu` → `mu`, `kappa` → `kappa` |
 | `StudentT` | `student_t` | `nu` → `nu`; Stan has location-scale form |
 | `Logistic` | `logistic` | `mu` → `mu`, `s` → `sigma` |
 | `LogNormal` | `lognormal` | `mu` → `mu`, `sigma` → `sigma` |
 | `Exponential` | `exponential` | `rate` → `beta` (Stan uses rate) |
 | `Gamma` | `gamma` | `shape` → `alpha`, `rate` → `beta` |
+| `ChiSquared` | `chi_square` | `k` → `nu`; equivalently `Gamma(shape = k/2, rate = 0.5)` |
 | `Weibull` | `weibull` | `shape` → `alpha`, `scale` → `sigma` |
 | `InverseGamma` | `inv_gamma` | `shape` → `alpha`, `scale` → `beta` |
 | `Beta` | `beta` | `alpha` → `alpha`, `beta` → `beta` |
@@ -349,12 +352,20 @@ exhaustive.
 | `Categorical` | `categorical` | `p` → `theta` |
 | `Binomial` | `binomial` | `n` → `N`, `p` → `theta` |
 | `Poisson` | `poisson` | `rate` → `lambda` |
+| `NegativeBinomial` | `neg_binomial` | `alpha` → `alpha`, `beta` → `beta` |
+| `Geometric` | `neg_binomial` | special case `alpha = 1`, `beta = p/(1 - p)` |
 | `MvNormal` | `multi_normal` | `mu` → `mu`, `cov` → `Sigma` |
 | `Wishart` | `wishart` | `nu` → `nu`, `scale` → `S` |
 | `InverseWishart` | `inv_wishart` | `nu` → `nu`, `scale` → `S` |
+| `LKJ` | `lkj_corr` | `eta` → `eta`; correlation-matrix form (vs. Cholesky-factor `LKJCholesky`) |
 | `LKJCholesky` | `lkj_corr_cholesky` | `eta` → `eta` |
 | `Dirichlet` | `dirichlet` | `alpha` → `alpha` |
 | `Multinomial` | `multinomial` | `n` → `N`, `p` → `theta` |
+
+**No direct Stan equivalent.** `GeneralizedNormal` has no built-in Stan distribution; express
+it via explicit `target +=` log-density contributions. `PoissonProcess` and
+`BinnedPoissonProcess` are point-process measures with no first-class Stan counterpart; a
+binned model maps to one `poisson` contribution per bin.
 
 #### Stan function mapping
 
