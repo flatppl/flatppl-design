@@ -255,6 +255,96 @@ Note that when $\ell = 0, m_a = m_b = 0$, we have
 
 $$\mathrm{BW}(\sigma) \;=\; \frac{1}{m^2 - \sigma - i\, m\, \Gamma}.$$
 
+#### Kinematics functions
+
+These functions provide the two-body decay kinematics underlying the mass-dependent
+width of [`resonance_breitwigner`](#resonancebreitwigner), following Section 50
+(Resonances) of [Navas et al. (2024)](15-references.md#navas2024).
+
+| Function | Arguments | Description | Domains |
+|---|---|---|---|
+| [`kallen`](#kallen) | `x`, `y`, `z` | Källén (triangle) function $\lambda(x, y, z)$ | `reals`, `reals`, `reals` |
+| [`breakup_momentum`](#breakup_momentum) | `m`, `ma`, `mb` | Two-body breakup momentum | `posreals`, `nonnegreals`, `nonnegreals` |
+| [`blatt_weisskopf`](#blatt_weisskopf) | `l`, `p`, `d` | Blatt-Weisskopf barrier factor $F_\ell$ | `nonnegintegers`, `nonnegreals`, `posreals` |
+
+<a id="kallen"></a>**`kallen(x, y, z)`** — the [Källén (triangle) function](https://en.wikipedia.org/wiki/K%C3%A4ll%C3%A9n_function),
+
+$$\lambda(x, y, z) = x^2 + y^2 + z^2 - 2xy - 2yz - 2zx.$$
+
+<a id="breakup_momentum"></a>**`breakup_momentum(m, ma, mb)`** — the magnitude of the
+momentum of either daughter, in the rest frame of a state of invariant mass $m$
+decaying to two particles of masses $m_a$ and $m_b$:
+
+$$p = \frac{\sqrt{(m - (m_a + m_b))(m + (m_a + m_b))}\,\sqrt{(m - (m_a - m_b))(m + (m_a - m_b))}}{2m},$$
+
+equivalently $p = \sqrt{\lambda(m^2, m_a^2, m_b^2)} / (2m)$.
+
+Arguments:
+
+- `m = elementof(posreals)`: invariant mass (not squared).
+- `ma = elementof(nonnegreals)`, `mb = elementof(nonnegreals)`: daughter masses.
+
+Above threshold ($m \geq m_a + m_b$) the result is real and non-negative.
+In [`resonance_breitwigner`](#resonancebreitwigner) it is evaluated at $m = \sqrt{\sigma}$.
+
+<a id="blatt_weisskopf"></a>**`blatt_weisskopf(l, p, d)`** — the Blatt-Weisskopf
+centrifugal-barrier factor $F_\ell$ for orbital angular momentum $\ell$, breakup momentum
+$p$, and barrier radius $d$. With $z = (d\,p)^2$,
+
+$$F_\ell = \sqrt{\frac{z^{\ell}}{\chi_\ell(z)}},$$
+
+where $\chi_\ell$ is the degree-$\ell$ barrier polynomial:
+
+$$\chi_0 = 1, \quad \chi_1 = 1 + z, \quad \chi_2 = 9 + 3z + z^2, \quad \chi_3 = 225 + 45z + 6z^2 + z^3,$$
+
+continuing through $\ell = 7$. Defined for $0 \leq \ell \leq 7$.
+
+Arguments:
+
+- `l = elementof(nonnegintegers)`: orbital angular momentum $\ell$ (with $\ell \leq 7$).
+- `p = elementof(nonnegreals)`: breakup momentum (see [`breakup_momentum`](#breakup_momentum)).
+- `d = elementof(posreals)`: barrier radius.
+
+In [`resonance_breitwigner`](#resonancebreitwigner), $F_\ell$ enters the mass-dependent
+width through the ratio $F_\ell(p(\sigma)) / F_\ell(p_0)$.
+
+#### Wigner rotation functions
+
+The Wigner $d$- and $D$-functions are elements of the $(2j+1)$-dimensional irreducible
+representation of the rotation group, used in angular-distribution and partial-wave
+amplitudes. The conventions follow Section 50 (Resonances) and the Clebsch-Gordan /
+$d$-function tables of [Navas et al. (2024)](15-references.md#navas2024). The small
+$d$-function takes the **cosine** of the polar angle, $\cos\beta$, as its argument.
+
+| Function | Arguments | Description | Domains |
+|---|---|---|---|
+| [`wignerd`](#wignerd) | `j`, `m1`, `m2`, `cosbeta` | small Wigner $d$-function $d^{j}_{m_1 m_2}(\beta)$ | `integers`, `integers`, `integers`, `interval(-1, 1)` |
+| [`wignerD`](#wignerD) | `j`, `m1`, `m2`, `alpha`, `cosbeta`, `gamma` | Wigner $D$-function $D^{j}_{m_1 m_2}(\alpha, \beta, \gamma)$ | `integers`, `integers`, `integers`, `reals`, `interval(-1, 1)`, `reals` |
+| [`wignerd_doublearg`](#wignerd_doublearg) | `two_j`, `two_m1`, `two_m2`, `cosbeta` | small $d$-function, doubled momenta (half-integer spin) | `integers`, `integers`, `integers`, `interval(-1, 1)` |
+| [`wignerD_doublearg`](#wignerD_doublearg) | `two_j`, `two_m1`, `two_m2`, `alpha`, `cosbeta`, `gamma` | $D$-function, doubled momenta (half-integer spin) | `integers`, `integers`, `integers`, `reals`, `interval(-1, 1)`, `reals` |
+
+<a id="wignerd"></a>**`wignerd(j, m1, m2, cosbeta)`** — the real-valued small Wigner
+$d$-function, i.e. the matrix element of a rotation by $\beta$ about the $y$-axis:
+
+$$d^{j}_{m_1 m_2}(\beta) = \langle\, j\, m_1 \,|\, e^{-i \beta J_y} \,|\, j\, m_2 \,\rangle.$$
+
+`j`, `m1`, `m2` are integers with $|m_1|, |m_2| \leq j$; `cosbeta` $= \cos\beta$.
+
+<a id="wignerD"></a>**`wignerD(j, m1, m2, alpha, cosbeta, gamma)`** — the complex Wigner
+$D$-function, the matrix element of a general rotation in the $z$-$y$-$z$ Euler convention:
+
+$$D^{j}_{m_1 m_2}(\alpha, \beta, \gamma) = \langle\, j\, m_1 \,|\, e^{-i \alpha J_z}\, e^{-i \beta J_y}\, e^{-i \gamma J_z} \,|\, j\, m_2 \,\rangle = e^{-i(m_1 \alpha + m_2 \gamma)}\, d^{j}_{m_1 m_2}(\beta).$$
+
+<a id="wignerd_doublearg"></a>**`wignerd_doublearg(two_j, two_m1, two_m2, cosbeta)`** — the
+small $d$-function for possibly half-integer angular momenta, with the momenta passed as
+**doubled** integer values ($2j$, $2m_1$, $2m_2$). Equals `wignerd(j, m1, m2, cosbeta)`
+when $2j$, $2m_1$, $2m_2$ are even.
+
+<a id="wignerD_doublearg"></a>**`wignerD_doublearg(two_j, two_m1, two_m2, alpha, cosbeta, gamma)`** —
+the $D$-function for half-integer angular momenta with doubled-integer momenta:
+
+$$D = e^{-i(m_1 \alpha + m_2 \gamma)}\, d^{j}_{m_1 m_2}(\beta) = \mathrm{cis}\!\left(-\tfrac{2m_1\,\alpha + 2m_2\,\gamma}{2}\right) \cdot \texttt{wignerd\_doublearg}(2j, 2m_1, 2m_2, \cos\beta).$$
+
 ### Module `generalized-linear-models`
 
 The `generalized-linear-models` module contains efficient and stable implementations of log densities for common generalized linear models.
