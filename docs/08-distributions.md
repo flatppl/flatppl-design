@@ -436,7 +436,7 @@ Parameters:
 
 The dimension $n$ is the row/column count of `scale`; it must be a fixed-phase positive integer. The constraint $\nu \geq n$ is a validity condition for a proper density; tooling may enforce it via `checked(...)` when both $\nu$ and $n$ are fixed-phase.
 
-Density w.r.t. Lebesgue on the space of $n \times n$ positive semi-definite matrices:
+Density w.r.t. Lebesgue on the space of $n \times n$ positive definite matrices:
 
 $$\frac{|\mathbf{X}|^{(\nu-n-1)/2} \exp\!\left(-\tfrac{1}{2}\operatorname{tr}(\mathbf{V}^{-1}\mathbf{X})\right)}{2^{\nu n/2} |\mathbf{V}|^{\nu/2} \Gamma_n(\nu/2)} \quad \text{for } \mathbf{X} \in \mathbf{S}_{+}^{n}$$
 
