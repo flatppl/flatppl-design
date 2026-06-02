@@ -250,7 +250,7 @@ with mass-dependent width
 
 $$\Gamma(\sigma) = \Gamma \frac{m}{\sqrt{\sigma}} \frac{p(\sigma)}{p_0} \left(\frac{F_\ell(p(\sigma))}{F_\ell(p_0)}\right)^2,$$
 
-where $p(\sigma)$, $\lambda(x, y, z)$, and $F_\ell(p)^2$ the breakup momentum, Källén function, and Blatt-Weisskopf barrier factor respectively, as given in Section 50 (Resonances) of [Navas et al. (2024)](15-references.md#navas2024).
+where $p_0 = p(m^2)$ is the breakup momentum at the pole, and $p(\sigma)$, $\lambda(x, y, z)$, and $F_\ell(p)^2$ the breakup momentum, Källén function, and Blatt-Weisskopf barrier factor respectively, as given in Section 50 (Resonances) of [Navas et al. (2024)](15-references.md#navas2024).
 
 Note that when $\ell = 0, m_a = m_b = 0$, we have
 
