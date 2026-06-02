@@ -353,10 +353,10 @@ exhaustive.
 | `Binomial` | `binomial` | `n` → `N`, `p` → `theta` |
 | `Poisson` | `poisson` | `rate` → `lambda` |
 | `NegativeBinomial` | `neg_binomial` | `alpha` → `alpha`, `beta` → `beta` |
-| `Geometric` | `neg_binomial` | special case `alpha = 1`, `beta = p/(1 - p)` |
+| `Geometric` | `neg_binomial` | special case `alpha = 1`, `beta = p/(1 - p)` (both on support {0,1,2,…}; not Stan's native trials-based `geometric`) |
 | `MvNormal` | `multi_normal` | `mu` → `mu`, `cov` → `Sigma` |
-| `Wishart` | `wishart` | `nu` → `nu`, `scale` → `S` |
-| `InverseWishart` | `inv_wishart` | `nu` → `nu`, `scale` → `S` |
+| `Wishart` | `wishart` | `nu` → `nu`, `scale` → `Sigma` |
+| `InverseWishart` | `inv_wishart` | `nu` → `nu`, `scale` → `Sigma` |
 | `LKJ` | `lkj_corr` | `eta` → `eta`; correlation-matrix form (vs. Cholesky-factor `LKJCholesky`) |
 | `LKJCholesky` | `lkj_corr_cholesky` | `eta` → `eta` |
 | `Dirichlet` | `dirichlet` | `alpha` → `alpha` |
