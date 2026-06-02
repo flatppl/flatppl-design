@@ -32,7 +32,7 @@ FlatPPL `base`, not exact constructor names. This table may well be incomplete:
 |---|---|---|---|
 | `Uniform` | `Uniform` | `Uniform` | `Uniform` |
 | `Normal` | `Normal` | `Normal` | `Normal` |
-| `GeneralizedNormal` | — | `GeneralizedNormal` | — |
+| `GeneralizedNormal` | — | `GeneralizedNormal` | `PGeneralizedGaussian` |
 | `Cauchy` | `Cauchy` | `Cauchy` | `Cauchy` |
 | `StudentT` | `StudentT` | `StudentT` | `TDist` |
 | `Logistic` | `Logistic` | `Logistic` | `Logistic` |
