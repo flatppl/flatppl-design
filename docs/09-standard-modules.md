@@ -398,7 +398,7 @@ Domain/Support: `integers`/`interval(1, n)`.
 Parameters:
 
 - `x = elementof(cartpow(reals, k))`: $k$ dimensional data vector $\mathbf{x}$.
-- `alpha = elementof(cartpow(reals, n))`: intercept $n$ vector (one intercept per class)
+- `alpha = elementof(cartpow(reals, n))`: intercept $n$ vector (one intercept per class), where $n$ is the number of classes (so $n = $ `lengthof(alpha)`).
 - `beta = elementof(cartpow(reals, [k, n]))`: $k \times n$ matrix of regression coefficients (columns correspond to classes).
 
 `CategoricalLogitGLM(x, alpha, beta)` is mathematically equivalent to `Categorical(softmax(alpha + transpose(x) * beta))`, but is computed in a numerically stable manner.
