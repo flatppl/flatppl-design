@@ -52,8 +52,8 @@ FlatPPL `base`, not exact constructor names. This table may well be incomplete:
 | `Geometric` | `Geometric` | `Geometric` | `Geometric` |
 | `NegativeBinomial` | `GammaPoisson` | `NegativeBinomial` | `NegativeBinomial` |
 | `MvNormal` | `MultivariateNormal` | `MultivariateNormalTriL` | `MvNormal` |
-| `Wishart` | `WishartCholesky` (via TFP) | `WishartTriL` | `Wishart` |
-| `InverseWishart` | `InverseWishart` (via TFP) | `InverseWishart` | `InverseWishart` |
+| `Wishart` | `Wishart` | `WishartTriL` | `Wishart` |
+| `InverseWishart` | `InverseWishart` | — | `InverseWishart` |
 | `LKJ` | `LKJ` | `LKJ` | `LKJ` |
 | `LKJCholesky` | `LKJCholesky` | `CholeskyLKJ` | `LKJCholesky` |
 | `Dirichlet` | `Dirichlet` | `Dirichlet` | `Dirichlet` |

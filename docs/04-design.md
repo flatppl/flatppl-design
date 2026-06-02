@@ -1145,7 +1145,7 @@ Multiple ranges are comma-separated and combined with OR:
 flatppl_compat = "0.8, 0.9.2, 1.0.0, 2"
 ```
 
-declares compatibility with versions v0.8.x, v0.9.2 upwards to v1, v1.x.y, and v2.x.y.
+declares compatibility with versions v0.8.x, v0.9.2 up to (excluding) v0.10, v1.x.y, and v2.x.y.
 
 The declaration is optional. Short-lived models, didactic examples and the like may omit it.
 For embedded FlatPPL blocks, version compatibility may be managed at the host-language level

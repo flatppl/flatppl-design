@@ -155,6 +155,14 @@ T[:, :, k]       # → get(T, all, all, k)
 T[i, :, k]       # → get(T, i, all, k)
 ```
 
+`!` is the `only` selector: it extracts the unique element of a length-1 axis. This
+lowers to `get(A, only, ...)`. The indexed axis must have length one.
+
+```flatppl
+A[!, j]          # → get(A, only, j)
+v[!]             # → get(v, only)
+```
+
 ### Special operations
 
 `elementof(S)`, `valueset(x)`, `draw(M)`, `lawof(x)`, `functionof(...)`, `kernelof(...)`, and `fn(...)` are
@@ -314,10 +322,11 @@ KeywordArg      ::= Name "=" Expression
 MixedArgs       ::= Expression ("," Expression)* ("," KeywordArg)+
 
 (* Literals *)
-Literal         ::= Number | String | Boolean | ArrayLiteral | TupleLiteral
+Literal         ::= Number | String | Boolean | ArrayLiteral | RecordLiteral | TupleLiteral
 Boolean         ::= "true" | "false"
 Number          ::= IntegerLit | RealLit
 ArrayLiteral    ::= "[" (Expression ("," Expression)* ","?)? "]"
+RecordLiteral   ::= "record" "(" KeywordArg ("," KeywordArg)* ","? ")"
 TupleLiteral    ::= "(" Expression "," Expression ("," Expression)* ","? ")"
 
 (* Lexical *)

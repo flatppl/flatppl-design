@@ -173,7 +173,7 @@ row treated as a record passed to the function used in the broadcast.
 FlatPPL has a limited notion of sets, used to specify input domains, supports, truncation
 regions, and analysis regions. The predefined sets are:
 
-- `reals` — $\mathbb{R}$, the set of all real numbers.
+- `reals` — $\mathbb{R}$, the real numbers ($\pm\infty$ admitted).
 - `posreals` — $(0, +\infty]$, the positive reals including $+\infty$.
 - `nonnegreals` — $[0, +\infty]$, the non-negative reals including $+\infty$.
 - `unitinterval` — $[0, 1]$, the unit interval.
@@ -195,7 +195,7 @@ Additional sets may be constructed using the following language constructs:
 **Cartesian product.** `cartprod(S1, S2, ...)` produces a Cartesian product of sets `S1`, `S2`, etc., mirroring `joint(M1, M2, ...)` for measures. The result is the set of arrays whose
 elements lie in the respective component sets. For example, `cartprod(reals, posreals)`
 is the set of 2-element arrays with the first element in $\mathbb{R}$ and the second in
-$(0, \infty)$.
+$(0, +\infty]$.
 
 The keyword form `cartprod(a = S1, b = S2, ...)` produces a set of records with
 field `a` in `S1`, field `b` in `S2`, etc., mirroring `joint(a = M1, b = M2, ...)`.

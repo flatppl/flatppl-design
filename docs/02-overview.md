@@ -136,7 +136,7 @@ inference-agnostic design.
 
 ### Core concepts
 
-FlatPPL has four kinds of first-class objects.
+FlatPPL has five kinds of first-class objects.
 
 **Abstract values** denote real numbers, integers, booleans, complex numbers,
 fixed-size arrays, and records. They may be deterministic (literal constants,

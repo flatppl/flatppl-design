@@ -68,17 +68,18 @@ Outside $[-1, +1]$, the function continues linearly with slope $S + 2A$ (right) 
 $S - 2A$ (left).
 
 <a id="interp_poly6_lin"></a>**`interp_poly6_lin(left, center, right, alpha)`** — 6th-order polynomial inside
-$[-1, +1]$, linear extrapolation outside. The polynomial satisfies five constraints:
-$f(-1) = \mathrm{left}$, $f(0) = \mathrm{center}$, $f(+1) = \mathrm{right}$, and
-$C^1$ continuity at $\alpha = \pm 1$ (matching the linear extrapolation slopes).
+$[-1, +1]$, linear extrapolation outside. With $f(0) = \mathrm{center}$ fixing the
+constant term, the six polynomial coefficients are determined by $C^2$ continuity at
+$\alpha = \pm 1$ — matching the value, first, and second derivatives to the linear
+extrapolation (so $f(-1) = \mathrm{left}$, $f(+1) = \mathrm{right}$).
 
 <a id="interp_poly6_exp"></a>**`interp_poly6_exp(left, center, right, alpha)`** — 6th-order polynomial inside
 $[-1, +1]$, exponential extrapolation outside. For $|\alpha| > 1$:
 
 $$f(\alpha) = f(\pm 1) \cdot \exp\!\left((\alpha \mp 1) \cdot f'(\pm 1) / f(\pm 1)\right)$$
 
-The polynomial coefficients differ from `interp_poly6_lin` because the
-derivative-matching conditions at $\alpha = \pm 1$ target the exponential slopes.
+The polynomial coefficients differ from `interp_poly6_lin` because the $C^2$ conditions
+at $\alpha = \pm 1$ match the value and derivatives of the exponential extrapolation.
 The result stays positive, making this appropriate for multiplicative factors.
 
 #### Distributions
@@ -249,7 +250,7 @@ with mass-dependent width
 
 $$\Gamma(\sigma) = \Gamma \frac{m}{\sqrt{\sigma}} \frac{p(\sigma)}{p_0} \left(\frac{F_\ell(p(\sigma))}{F_\ell(p_0)}\right)^2,$$
 
-where $p(\sigma)$, $\lambda(x, y, z)$, and $F_\ell(p)^2$ the breakup momentum, Källén function, and Blatt-Weisskopf barrier factor respectively, as given in Section 50 (Resonances) of [Navas et al. (2024)](15-references.md#navas2024).
+where $p(\sigma)$ is the [breakup momentum](#breakup_momentum), $p_0$ its on-shell value, and $F_\ell$ the [Blatt-Weisskopf barrier factor](#blatt_weisskopf).
 
 Note that when $\ell = 0, m_a = m_b = 0$, we have
 
@@ -397,7 +398,7 @@ Domain/Support: `integers`/`interval(1, n)`.
 Parameters:
 
 - `x = elementof(cartpow(reals, k))`: $k$ dimensional data vector $\mathbf{x}$.
-- `alpha = elementof(cartpow(reals, n))`: intercept $n$ vector (one intercept per class)
+- `alpha = elementof(cartpow(reals, n))`: intercept $n$ vector (one intercept per class), where $n$ is the number of classes (so $n = $ `lengthof(alpha)`).
 - `beta = elementof(cartpow(reals, [k, n]))`: $k \times n$ matrix of regression coefficients (columns correspond to classes).
 
 `CategoricalLogitGLM(x, alpha, beta)` is mathematically equivalent to `Categorical(softmax(alpha + transpose(x) * beta))`, but is computed in a numerically stable manner.
