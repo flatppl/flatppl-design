@@ -565,8 +565,8 @@ dist = standard_module("distances", "0.1")
 
 | Function | Arguments | Description | Domains |
 |---|---|---|---|
-| [`pairwise_distance`](#pairwise_distance) | `x`, `distance` | Pairwise distances between vectors | vector of vectors, functions |
-| [`cross_distance`](#cross_distance) | `x`, `y`, `distance` | Cross-distances between vector elements of vectors | vector of vectors, vector of vectors, functions |
+| [`pairwise_distance`](#pairwise_distance) | `distance`, `x` | Pairwise distances between vectors | functions, vector of vectors |
+| [`cross_distance`](#cross_distance) | `distance`, `x`, `y` | Cross-distances between vector elements of vectors | functions, vector of vectors, vector of vectors |
 | [`euclidean`](#euclidean) | `u`, `v` | Euclidean distance | vector, vector |
 | [`squared_euclidean`](#squared_euclidean)| `u`, `v` | Squared Euclidean distance | vector, vector |
 | [`cosine`](#cosine) | `u`, `v` | Cosine distance | vector, vector |
@@ -575,16 +575,16 @@ dist = standard_module("distances", "0.1")
 | [`minkowski`](#minkowski) | `u`, `v`, `p` | Minkowski distance | vector, vector, posreals |
 | [`jensenshannon`](#jensenshannon)| `u`, `v` | Jensen-Shannon distance | `stdsimplex(n)`, `stdsimplex(n)` |
 
-<a id="pairwise_distance"></a>**`pairwise_distance(x, distance)`** — Computes pairwise distances under the callable `distance` between all pairs of elements in the $N$-vector $\mathbf{x}$. Returns an $N \times N$ matrix.
+<a id="pairwise_distance"></a>**`pairwise_distance(distance, x)`** — Computes pairwise distances under the callable `distance` between all pairs of elements in the $N$-vector $\mathbf{x}$. Returns an $N \times N$ matrix.
 
 For example:
 
 ```flatppl
 x = [[0, 0], [0, 1], [1, 1]]
-d = pairwise_distance(x, euclidean) # [[0, 1, 1.414...], [1, 0, 1], [1.414..., 1, 0]]
+d = pairwise_distance(euclidean, x) # [[0, 1, 1.414...], [1, 0, 1], [1.414..., 1, 0]]
 ```
 
-<a id="cross_distance"></a>**`cross_distance(x, y, distance)`** — Computes the cross-distance matrix for the `distance` distance between elements of the $N$ vector $\mathbf{x}$ and the $M$ vector $\mathbf{y}$.
+<a id="cross_distance"></a>**`cross_distance(distance, x, y)`** — Computes the cross-distance matrix for the `distance` distance between elements of the $N$ vector $\mathbf{x}$ and the $M$ vector $\mathbf{y}$.
 Returns an $N \times M$ matrix $\mathbf{D}$ where the $D_{i,j} = \text{distance}(\mathbf{x}_i, \mathbf{y}_j)$, noting that both $\mathbf{x}_i$ and $\mathbf{y}_j$ are themselves vectors.
 
 <a id="euclidean"></a>**`euclidean(u, v)`** — Computes the $L_2$ Euclidean distance $\sqrt{\sum_i (u_i - v_i)^2}$ between two vectors.
