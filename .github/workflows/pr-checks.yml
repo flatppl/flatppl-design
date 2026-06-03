@@ -20,8 +20,9 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 2
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       # Match the deploy workflow: the FlatPPL Kate/skylighting grammar lives in
       # flatppl-grammars and is the single source of truth. Fetch the current
@@ -36,7 +37,17 @@ jobs:
             || { echo "::error::fetched flatppl.xml is not the FlatPPL Kate grammar"; exit 1; }
 
       - name: Install pixi
-        uses: prefix-dev/setup-pixi@v0.8.8
+        uses: prefix-dev/setup-pixi@v0.9.0
 
       - name: Build docs and run validators
         run: pixi run build
+
+      # Publish the rendered docs so reviewers can download and inspect the
+      # output (HTML + PDF) for the PR. Runs even if the build/validators fail.
+      - name: Upload built docs
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: docs-build
+          path: build/
+          if-no-files-found: ignore
