@@ -38,6 +38,13 @@ jobs:
 
       - name: Install pixi
         uses: prefix-dev/setup-pixi@v0.9.0
+        with:
+          # Cache the resolved conda env, keyed on pixi.lock; the dominant cold
+          # CI cost is solving + downloading pandoc/typst/node each run.
+          cache: true
+          # Fail if pixi.lock is out of date with pixi.toml — keeps the
+          # committed lock authoritative and the build reproducible.
+          locked: true
 
       # Cache the vendored web assets (KaTeX dist + the Fuse bundle). They are
       # pinned in the vendor scripts, so key on those scripts; a version bump

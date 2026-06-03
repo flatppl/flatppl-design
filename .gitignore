@@ -3,7 +3,6 @@ build/
 
 # Pixi
 .pixi/
-pixi.lock
 *.egg-info/
 
 # Editor files

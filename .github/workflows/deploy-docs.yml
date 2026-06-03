@@ -39,6 +39,9 @@ jobs:
 
       - name: Install pixi
         uses: prefix-dev/setup-pixi@v0.9.0
+        with:
+          cache: true
+          locked: true
 
       # Cache the vendored web assets (KaTeX dist + Fuse bundle); keyed on the
       # vendor scripts (which pin the versions). On a hit the vendor steps no-op.

@@ -1,0 +1,11 @@
+version: 2
+updates:
+  # Keep the GitHub Actions used by the docs workflows current (e.g. the
+  # Node 20 -> 24 runtime bumps), so action deprecations surface as PRs
+  # instead of a manual scramble.
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: ci
