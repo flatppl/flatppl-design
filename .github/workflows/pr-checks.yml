@@ -2,8 +2,9 @@ name: PR Checks
 
 # Builds the docs and runs the cross-reference / anchor / math validators
 # (check-html.js, check-typst.js, run as part of `pixi run build`) on every
-# pull request. Make the `build` job a required status check in the branch
-# protection rules for `main` so a PR cannot merge unless it passes.
+# pull request, so the build output can be inspected on each PR. This is
+# informational and does not block merging; to gate merges, mark the `build`
+# job as a required status check in the branch protection rules for `main`.
 
 on:
   pull_request:
