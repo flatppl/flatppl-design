@@ -56,10 +56,16 @@ The Giry-style measure monad is defined by two operations:
 
 #### Fundamental measures
 
+| Construct | Arguments | Description |
+|---|---|---|
+| [`Lebesgue`](#lebesgue) | `support` | canonical continuous reference measure on `support` |
+| [`Counting`](#counting) | `support` | counting measure on integers, restricted to `support`; discrete reference |
+| [`Dirac`](#dirac) | `value` | point-mass probability measure at `value` (monad unit) |
+
 FlatPPL provides three fundamental measures: the reference measures `Lebesgue` and
 `Counting`, and the point-mass measure `Dirac`.
 
-- `Lebesgue(support = S)` — the canonical continuous reference measure on
+- `Lebesgue(support = S)`<a id="lebesgue"></a> — the canonical continuous reference measure on
   the support set `S`, restricted to `S`. For full-dimensional subsets of
   Euclidean or product spaces this is the ordinary Lebesgue measure on the
   ambient space. For lower-dimensional embedded affine sets such as
@@ -73,9 +79,9 @@ FlatPPL provides three fundamental measures: the reference measures `Lebesgue` a
   [sets](03-value-types.md#sets)).
   
   `iid(Lebesgue(reals), n)` is equivalent to `Lebesgue(cartpow(reals, n))`.
-- `Counting(support = S)` — the counting measure on $\mathbb{Z}$, restricted to support
+- `Counting(support = S)`<a id="counting"></a> — the counting measure on $\mathbb{Z}$, restricted to support
   `S`. Mass 1 at every integer in `S`. Reference measure for all discrete distributions.
-- `Dirac(value = v)` — point-mass probability measure at `v` for any variate type.
+- `Dirac(value = v)`<a id="dirac"></a> — point-mass probability measure at `v` for any variate type.
 
 The predefined constants `reals` (equivalent to `interval(-inf, inf)`) and `integers`
 (the set of all integers) serve as the default supports for the Lebesgue and counting
@@ -102,34 +108,49 @@ closed measures (i.e. nullary kernels) as inputs. `densityof(M, x)` and
 
 #### Density reweighting
 
-- **`weighted(weight, base)`** — produces the measure $\nu(A) = \int_A f(x)\, dM(x)$, with
+| Construct | Arguments | Description |
+|---|---|---|
+| [`weighted`](#weighted) | `weight`, `base` | reweight `base`: $\mathrm{d}\nu = \text{weight} \cdot \mathrm{d}M$ |
+| [`logweighted`](#logweighted) | `logweight`, `base` | reweight `base` in log-space: $\mathrm{d}\nu = e^{\text{logweight}} \cdot \mathrm{d}M$ |
+| [`bayesupdate`](#bayesupdate) | `L`, `prior` | unnormalized posterior: `prior` reweighted by likelihood `L` (see [posterior construction](#posterior-construction)) |
+
+- **`weighted(weight, base)`**<a id="weighted"></a> — produces the measure $\nu(A) = \int_A f(x)\, dM(x)$, with
   $d\nu = f \cdot dM$, where $f$ is a non-negative weight (a constant or a function
   of the variate $x$ of $M$) and $M$ the base measure.
   `normalize(weighted(f, Lebesgue(support = S)))` produces a probability distribution
   whose density w.r.t. Lebesgue on $S$ is proportional to $f$.
 
-- **`logweighted(logweight, base)`** — like `weighted`, but the weight
+- **`logweighted(logweight, base)`**<a id="logweighted"></a> — like `weighted`, but the weight
  or weighting function is given in
   log-space: $d\nu = \exp(g) \cdot dM$.
 
-- **`bayesupdate(L, prior)`** — reweights a prior measure by a likelihood object,
+- **`bayesupdate(L, prior)`**<a id="bayesupdate"></a> — reweights a prior measure by a likelihood object,
   producing the unnormalized posterior: $d\nu(\theta) = L(\theta) \cdot d\pi(\theta)$.
   Lowers to `logweighted(fn(logdensityof(L, _)), prior)`. See
   [posterior construction](#posterior-construction) for details.
 
 #### Normalization and mass
 
-- **`normalize(M)`** — given a measure $M$ with finite total mass
+| Construct | Arguments | Description |
+|---|---|---|
+| [`normalize`](#normalize) | `M` | rescale finite-mass `M` to the probability measure $M / Z$ |
+| [`totalmass`](#totalmass) | `M` | total mass $Z = \int \mathrm{d}M$, as a scalar (closed measure only) |
+
+- **`normalize(M)`**<a id="normalize"></a> — given a measure $M$ with finite total mass
   $Z = \mathrm{totalmass}(M) > 0$, returns the probability measure $M / Z$.
   If $Z = 0$ or $Z = \infty$, the result is undefined. On a non-nullary kernel, normalizes the
   output measures.
 
-- **`totalmass(M)`** — returns the total mass $Z = \int dM(x)$ as a scalar value.
+- **`totalmass(M)`**<a id="totalmass"></a> — returns the total mass $Z = \int dM(x)$ as a scalar value.
   Requires a closed measure (not a non-nullary kernel).
 
 #### Additive superposition
 
-- **`superpose(M1, M2, ...)`** — measure addition:
+| Construct | Arguments | Description |
+|---|---|---|
+| [`superpose`](#superpose) | `M1, M2, ...` | measure addition $M_1 + M_2 + \cdots$ |
+
+- **`superpose(M1, M2, ...)`**<a id="superpose"></a> — measure addition:
   $\nu(A) = M_1(A) + M_2(A) + \ldots$ All components must share the same variate
   space. The result is generally not normalized. For example:
 
@@ -147,7 +168,12 @@ closed measures (i.e. nullary kernels) as inputs. `densityof(M, x)` and
 
 #### Independent composition
 
-- **`joint(M1, M2, ...)`** — independent product measure:
+| Construct | Arguments | Description |
+|---|---|---|
+| [`joint`](#joint) | `M1, M2, ...` | independent product measure; keyword form names variates |
+| [`iid`](#iid) | `M`, `size` | product $M^{\otimes N}$ over arrays of shape `size`, $N = \mathrm{prod}(\text{size})$ |
+
+- **`joint(M1, M2, ...)`**<a id="joint"></a> — independent product measure:
   $(M_1 \otimes M_2)(A \times B) = M_1(A) \cdot M_2(B)$.
 
   The output variate is formed by combining the component variates via `cat`
@@ -177,7 +203,7 @@ closed measures (i.e. nullary kernels) as inputs. `densityof(M, x)` and
   For kernels, `joint(K1, K2, ...)` results in a kernel that fans a single input out
   to all component kernels, so each of them receives the same input.
 
-- **`iid(M, size)`** — the product measure $M^{\otimes N}$ over arrays of
+- **`iid(M, size)`**<a id="iid"></a> — the product measure $M^{\otimes N}$ over arrays of
   shape `size`, where `N = prod(size)`. `size` is an integer (1-D length) or
   a vector of positive integers (multi-axis shape).
 
@@ -189,7 +215,14 @@ closed measures (i.e. nullary kernels) as inputs. `densityof(M, x)` and
 
 #### Dependent composition
 
-- **`kchain(M, K1, K2, ...)`** — left-associative Kleisli composition (monadic bind).
+| Construct | Arguments | Description |
+|---|---|---|
+| [`kchain`](#kchain) | `M, K1, K2, ...` | Kleisli bind; marginalizes intermediate variates, keeps the last |
+| [`jointchain`](#jointchain) | `M, K1, K2, ...` | dependent joint; concatenates all variates (no marginalization) |
+| [`markovchain`](#markovchain) | `kernel`, `init`, `n` | measure over a length-`n` time-homogeneous Markov trajectory |
+| [`kscan`](#kscan) | `kernel`, `init`, `xs` | Kleisli scan; `markovchain` with per-step exogenous inputs `xs` |
+
+- **`kchain(M, K1, K2, ...)`**<a id="kchain"></a> — left-associative Kleisli composition (monadic bind).
   Keeps only the last kernel's variates, marginalizing out all intermediate variates.
   In contrast to standard Kleisli composition, the first argument may also be a measure
   (a nullary kernel). See `jointchain` below for the variant that retains all variates.
@@ -220,7 +253,7 @@ closed measures (i.e. nullary kernels) as inputs. `densityof(M, x)` and
   model = lawof(c)
   ```
 
-- **`jointchain(M, K1, K2, ...)`** — dependent joint measure. The first argument is a
+- **`jointchain(M, K1, K2, ...)`**<a id="jointchain"></a> — dependent joint measure. The first argument is a
   base measure or kernel; the remaining arguments are non-nullary kernels whose inputs
   bind to the variates of everything to their left.
 
@@ -270,7 +303,7 @@ closed measures (i.e. nullary kernels) as inputs. `densityof(M, x)` and
   record-shaped variate from step $i$ splats into step $i+1$'s keyword
   inputs by field name.
 
-- **`markovchain(kernel, init, n)`** — measure over length-`n` trajectories
+- **`markovchain(kernel, init, n)`**<a id="markovchain"></a> — measure over length-`n` trajectories
   of a time-homogeneous Markov chain.
   
   `kernel` is a Markov kernel `(state) -> measure_over_state`; `init` is a
@@ -291,7 +324,7 @@ closed measures (i.e. nullary kernels) as inputs. `densityof(M, x)` and
   traj ~ markovchain(f_step, 0.0, 100)
   ```
 
-- **`kscan(kernel, init, xs)`** — Kleisli scan that generalizes `markovchain`
+- **`kscan(kernel, init, xs)`**<a id="kscan"></a> — Kleisli scan that generalizes `markovchain`
   with exogenous inputs threaded through each step, also a stochastic
   version of [`scan`](04-design.md#reductions).
   
@@ -311,7 +344,11 @@ closed measures (i.e. nullary kernels) as inputs. `densityof(M, x)` and
 
 #### Support restriction
 
-- **`truncate(M, S)`** — restricts the support of measure `M` to the set `S`:
+| Construct | Arguments | Description |
+|---|---|---|
+| [`truncate`](#truncate) | `M`, `S` | restrict support of `M` to `S`: $\nu(A) = M(A \cap S)$ (does not normalize) |
+
+- **`truncate(M, S)`**<a id="truncate"></a> — restricts the support of measure `M` to the set `S`:
   $\nu(A) = M(A \cap S)$. Does not normalize automatically.
 
   ```flatppl
@@ -320,7 +357,12 @@ closed measures (i.e. nullary kernels) as inputs. `densityof(M, x)` and
 
 #### Transformation and projection
 
-- **`pushfwd(f, M)`** — pushforward of measure $M$ through function $f$:
+| Construct | Arguments | Description |
+|---|---|---|
+| [`pushfwd`](#pushfwd) | `f`, `M` | pushforward of `M` through `f`: $(f_* M)(Y) = M(f^{-1}(Y))$ |
+| [`bijection`](#bijection) | `f`, `f_inv`, `logvolume` | annotate `f` with inverse and log-volume for density evaluation |
+
+- **`pushfwd(f, M)`**<a id="pushfwd"></a> — pushforward of measure $M$ through function $f$:
   
   $$(f_* M)(Y) = M(f^{-1}(Y))$$
 
@@ -349,7 +391,7 @@ closed measures (i.e. nullary kernels) as inputs. `densityof(M, x)` and
   pushfwd(fn(get(_, ["a", "c"])), mu)   # marginalizes out b
   ```
 
-- **`bijection(f, f_inv, logvolume)`** annotates a function `f` with its
+- **`bijection(f, f_inv, logvolume)`**<a id="bijection"></a> annotates a function `f` with its
   inverse `f_inv` and the log-volume-element `logvolume` of the forward
   map. The result is a function that is semantically `f`.
 
@@ -410,7 +452,11 @@ The intent is that engines do not silently substitute heuristics: density-of-pus
 
 #### Likelihood construction
 
-**`likelihoodof(K, obs)`** takes a kernel `K` and observed data `obs`, and produces a
+| Construct | Arguments | Description |
+|---|---|---|
+| [`likelihoodof`](#likelihoodof) | `K`, `obs` | likelihood object: density of kernel `K` at observed `obs`, as a function of `K`'s input |
+
+<a id="likelihoodof"></a>**`likelihoodof(K, obs)`** takes a kernel `K` and observed data `obs`, and produces a
 **likelihood object**: the density of `K` evaluated at `obs`, as a function of the
 kernel's input parameters. The result is a semantic object, not a plain function — this
 prevents accidental confusion between density and log-density values. Likelihood values
@@ -473,7 +519,11 @@ L_R = likelihoodof(functionof(model_R), obs_R)
 
 #### Combining likelihoods
 
-**`joint_likelihood(L1, L2, ...)`** combines multiple likelihoods into a single likelihood
+| Construct | Arguments | Description |
+|---|---|---|
+| [`joint_likelihood`](#joint_likelihood) | `L1, L2, ...` | combine likelihoods by multiplying densities (summing log-densities) |
+
+<a id="joint_likelihood"></a>**`joint_likelihood(L1, L2, ...)`** combines multiple likelihoods into a single likelihood
 by multiplying their density values (equivalently, summing log-densities):
 
 $$\log L(\theta) = \log L_1(\theta) + \log L_2(\theta) + \ldots$$
@@ -502,6 +552,10 @@ L = likelihoodof(model, obs)
 ```
 
 #### Posterior construction
+
+| Construct | Arguments | Description |
+|---|---|---|
+| [`bayesupdate`](#bayesupdate) | `L`, `prior` | unnormalized posterior: `prior` reweighted by likelihood `L` |
 
 **`bayesupdate(L, prior)`** produces the **unnormalized** posterior measure:
 
@@ -545,6 +599,10 @@ Z = totalmass(pstr)
 though it is typically not tractable.
 
 #### Structural disintegration
+
+| Construct | Arguments | Description |
+|---|---|---|
+| [`disintegrate`](#disintegrate) | `selector`, `joint_measure` | split a joint into a `(forward kernel, marginal)` tuple along `selector` |
 
 Bayesian models are sometimes expressed by direct construction of the joint probability measure
 over parameters and observations. Stan-like probabilistic languages primarily or exclusively
@@ -592,7 +650,7 @@ L = likelihoodof(forward_kernel, obs)
 posterior = bayesupdate(L, prior)
 ```
 
-**`disintegrate(selector, joint_measure)`** returns a tuple `(kernel, base_measure)`,
+<a id="disintegrate"></a>**`disintegrate(selector, joint_measure)`** returns a tuple `(kernel, base_measure)`,
 where `kernel` is the conditional kernel for the selected variates and `base_measure`
 is the marginal base measure — the measure obtained by marginalizing the selected
 variates out of the joint.
@@ -611,7 +669,11 @@ decomposition may be intractable and may not be supported.
 
 #### Measure restriction
 
-**`restrict(M, x)`** is the non-normalized conditional measure of `M` given
+| Construct | Arguments | Description |
+|---|---|---|
+| [`restrict`](#restrict) | `M`, `x` | unnormalized conditional measure of `M` given record/table `x` |
+
+<a id="restrict"></a>**`restrict(M, x)`** is the non-normalized conditional measure of `M` given
 `x`.
 
 `M` must be a closed measure over a space of records or tables and `x` must
