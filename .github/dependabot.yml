@@ -1,0 +1,30 @@
+version: 2
+updates:
+  # Workflow action versions (e.g. the Node 20 -> 24 runtime bumps).
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+    commit-message:
+      prefix: ci
+    groups:
+      actions:
+        patterns: ["*"]
+    cooldown:
+      # github-actions has no semver-level cooldown; only default-days is valid.
+      default-days: 7
+
+  # Vendored web assets (KaTeX, Fuse) pinned in package.json and consumed by
+  # docs/templates/vendor-*.js.
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: monthly
+    commit-message:
+      prefix: build
+    groups:
+      web-assets:
+        patterns: ["*"]
+    cooldown:
+      default-days: 7
+      semver-major-days: 14

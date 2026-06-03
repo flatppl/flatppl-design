@@ -11,8 +11,10 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 
-// Pinned for reproducible builds; bump deliberately.
-const FUSE_VERSION = '7.3.0';
+// Version is pinned in package.json (monitored by Dependabot) so a bump there
+// changes what gets vendored. Single source of truth.
+const pkg = JSON.parse(fs.readFileSync(path.resolve('package.json'), 'utf8'));
+const FUSE_VERSION = pkg.devDependencies['fuse.js'];
 const outFile = path.join('build', 'fuse.min.js');
 const stampFile = path.join('build', '.fuse-version');
 

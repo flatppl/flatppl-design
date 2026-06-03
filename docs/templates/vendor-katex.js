@@ -7,8 +7,10 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 
-// Pinned for reproducible builds; bump deliberately.
-const KATEX_VERSION = '0.16.47';
+// Version is pinned in package.json (monitored by Dependabot) so a bump there
+// changes what gets vendored. Single source of truth.
+const pkg = JSON.parse(fs.readFileSync(path.resolve('package.json'), 'utf8'));
+const KATEX_VERSION = pkg.devDependencies.katex;
 const outDir = path.join('build', 'katex');
 const stampFile = path.join(outDir, '.version');
 
