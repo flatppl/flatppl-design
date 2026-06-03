@@ -298,7 +298,8 @@ where $\chi_\ell$ is the degree-$\ell$ barrier polynomial:
 
 $$\chi_0 = 1, \quad \chi_1 = 1 + z, \quad \chi_2 = 9 + 3z + z^2, \quad \chi_3 = 225 + 45z + 6z^2 + z^3,$$
 
-continuing through $\ell = 7$. Defined for $0 \leq \ell \leq 7$.
+continuing through $\ell = 7$. Defined for $0 \leq \ell \leq 7$. The barrier
+factors follow [Blatt & Weisskopf (1952)](15-references.md#blatt1952).
 
 Arguments:
 
