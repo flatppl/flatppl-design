@@ -20,7 +20,7 @@
       <item>Uniform</item><item>Normal</item><item>GeneralizedNormal</item><item>Cauchy</item><item>StudentT</item><item>Logistic</item><item>LogNormal</item><item>Exponential</item><item>Gamma</item><item>Weibull</item><item>InverseGamma</item><item>Beta</item><item>ChiSquared</item><item>VonMises</item><item>Laplace</item><item>Bernoulli</item><item>Categorical</item><item>Categorical0</item><item>Binomial</item><item>Poisson</item><item>Geometric</item><item>NegativeBinomial</item><item>NegativeBinomial2</item><item>MvNormal</item><item>Wishart</item><item>InverseWishart</item><item>LKJ</item><item>LKJCholesky</item><item>Dirichlet</item><item>Multinomial</item><item>PoissonProcess</item><item>BinnedPoissonProcess</item><item>Dirac</item><item>Lebesgue</item><item>Counting</item>
     </list>
     <list name="combinators">
-      <item>weighted</item><item>logweighted</item><item>normalize</item><item>totalmass</item><item>superpose</item><item>joint</item><item>jointchain</item><item>kchain</item><item>iid</item><item>truncate</item><item>pushfwd</item>
+      <item>weighted</item><item>logweighted</item><item>normalize</item><item>totalmass</item><item>superpose</item><item>joint</item><item>jointchain</item><item>kchain</item><item>markovchain</item><item>kscan</item><item>iid</item><item>truncate</item><item>pushfwd</item>
     </list>
     <list name="analysis">
       <item>likelihoodof</item><item>joint_likelihood</item><item>densityof</item><item>logdensityof</item><item>bayesupdate</item><item>disintegrate</item><item>restrict</item>
