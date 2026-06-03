@@ -22,7 +22,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 2
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6.0.2
 
       # Match the deploy workflow: the FlatPPL Kate/skylighting grammar lives in
       # flatppl-grammars and is the single source of truth. Fetch the current
@@ -37,7 +37,7 @@ jobs:
             || { echo "::error::fetched flatppl.xml is not the FlatPPL Kate grammar"; exit 1; }
 
       - name: Install pixi
-        uses: prefix-dev/setup-pixi@v0.9.0
+        uses: prefix-dev/setup-pixi@v0.9.6
 
       # Cache the vendored web assets (KaTeX dist + the Fuse bundle). They are
       # pinned in the vendor scripts, so key on those scripts; a version bump
@@ -59,7 +59,7 @@ jobs:
       # output (HTML + PDF) for the PR. Runs even if the build/validators fail.
       - name: Upload built docs
         if: always()
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: docs-build
           path: build/
