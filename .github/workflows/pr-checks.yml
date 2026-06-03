@@ -1,0 +1,41 @@
+name: PR Checks
+
+# Builds the docs and runs the cross-reference / anchor / math validators
+# (check-html.js, check-typst.js, run as part of `pixi run build`) on every
+# pull request. Make the `build` job a required status check in the branch
+# protection rules for `main` so a PR cannot merge unless it passes.
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pr-checks-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Match the deploy workflow: the FlatPPL Kate/skylighting grammar lives in
+      # flatppl-grammars and is the single source of truth. Fetch the current
+      # `main` copy so the validated build matches what gets published.
+      - name: Fetch FlatPPL syntax grammar (flatppl-grammars@main)
+        run: |
+          set -euo pipefail
+          url="https://raw.githubusercontent.com/flatppl/flatppl-grammars/main/kate/flatppl.xml"
+          curl -fsSL --retry 5 --retry-delay 2 --retry-connrefused --retry-all-errors \
+            "$url" -o docs/templates/flatppl.xml
+          grep -q '<language name="FlatPPL"' docs/templates/flatppl.xml \
+            || { echo "::error::fetched flatppl.xml is not the FlatPPL Kate grammar"; exit 1; }
+
+      - name: Install pixi
+        uses: prefix-dev/setup-pixi@v0.8.8
+
+      - name: Build docs and run validators
+        run: pixi run build
