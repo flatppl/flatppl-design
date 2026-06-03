@@ -272,7 +272,8 @@ A function represents a reified deterministic DAG, either implicit
 (built-in) or explicitly constructed.
 Ordinary function application `y = f(a, b, ...)` introduces a deterministic
 node `y` into the graph. `functionof(y)` goes in the opposite direction:
-it reifies the ancestor subgraph of `y` as a first-class function.
+it reifies the ancestor subgraph of `y` as a first-class function — the
+backward program slice of `y` ([Weiser, 1981](15-references.md#weiser1981)).
 
 Conversely, a probability measure represents a reified stochastic DAG, either
 implicit (built-in) or explicit. `x ~ m` (equivalent to `x = draw(m)`)

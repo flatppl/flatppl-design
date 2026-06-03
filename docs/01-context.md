@@ -94,9 +94,9 @@ shapes.
 ### A starting point: RooFit and HS³
 
 The current principal building blocks for statistical modeling in High Energy Physics are
-**RooFit** (a C++ modeling toolkit in ROOT) and the
-**HEP Statistics Serialization Standard (HS³)**, a JSON-based interchange format.
-**pyhf** is a JSON specification and Python implementation of the HistFactory
+[**RooFit**](15-references.md#roofit) (a C++ modeling toolkit in ROOT) and the
+[**HEP Statistics Serialization Standard (HS³)**](15-references.md#hs3), a JSON-based interchange format.
+[**pyhf**](15-references.md#pyhf) is a JSON specification and Python implementation of the HistFactory
 template-fitting model class that originated in RooFit.
 While pyhf comes with a Python engine, both HS³ and pyhf JSON are model descriptions
 for which engines can be, and currently are being, implemented in multiple languages.
@@ -170,7 +170,7 @@ are specific to each. Independent implementations of the modeling DSLs are not f
 however, as they leverage very large subsets of the host language and so are tied to that
 language.
 
-**GraphPPL.jl** (used by RxInfer) separates model specification from inference backend, which
+[**GraphPPL.jl**](15-references.md#graphppl) (used by [RxInfer](15-references.md#rxinfer)) separates model specification from inference backend, which
 is architecturally what we want. It is Julia-specific and Bayesian-focused and trades
 generality for high-speed inference.
 
