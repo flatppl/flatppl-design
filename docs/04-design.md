@@ -1213,6 +1213,6 @@ discarded at parse time and do not appear in FlatPIR. They are
 author-eyes-only notes on the surface source. Anything intended to
 outlive the surface file — for tools, for downstream readers via
 FlatPIR, or for export to external systems — must use a doc-comment.
-([FlatPIR](11-flatpir.md) has its own `;` line comments in the
+([FlatPIR](11-flatpir.md#intermediate-representation) has its own `;` line comments in the
 canonical text syntax, but those are reserved for tooling
 annotations and do not carry user-written surface comments.)

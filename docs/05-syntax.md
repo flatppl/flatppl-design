@@ -36,12 +36,12 @@ Block comment.
 ```
 
 For documentation that attaches to bindings and survives into
-[FlatPIR](11-flatpir.md), see below.
+[FlatPIR](11-flatpir.md#intermediate-representation), see below.
 
 ### <a id="documentation"></a>Documentation
 
 Doc-comments are lexically symmetric to plain comments (`%` ↔ `#`, `%%%` ↔ `###`)
-but attach to bindings and survive into [FlatPIR](11-flatpir.md). Semantics, attachment rules, default markup, and module-level documentation are specified in
+but attach to bindings and survive into [FlatPIR](11-flatpir.md#intermediate-representation). Semantics, attachment rules, default markup, and module-level documentation are specified in
 [Code documentation](04-design.md#sec:documentation); this section covers the
 surface lexical forms only.
 

@@ -42,6 +42,10 @@ local function header_filter(el)
 end
 
 -- Phase 2: process remaining inlines — replace anchor pairs with Spans.
+local function is_label_span(el)
+  return el.tag == "Span" and el.identifier ~= "" and #el.content == 0
+end
+
 local function inlines_filter(inlines)
   local out = pandoc.List()
   local i = 1
@@ -64,6 +68,36 @@ local function inlines_filter(inlines)
       i = i + 1
     end
   end
+
+  -- Normalize anchor position so labels always attach. Typst attaches a
+  -- label to the *preceding* element; a label Span that is the first inline
+  -- of a block (e.g. an anchor at the start of a list item,
+  -- "- <a id=\"x\"></a>**name** ...") has nothing before it, so Typst drops
+  -- it ("label not attached") and any cross-reference to it fails to compile.
+  -- Relocate such a leading label to immediately *after* the first following
+  -- content inline. Authors may therefore place the anchor at the start of a
+  -- list item or paragraph and rely on this normalization.
+  local first
+  for k = 1, #out do
+    local t = out[k].tag
+    if t ~= "Space" and t ~= "SoftBreak" then first = k break end
+  end
+  if first and is_label_span(out[first]) then
+    local nextpos
+    for k = first + 1, #out do
+      local e = out[k]
+      if e.tag ~= "Space" and e.tag ~= "SoftBreak"
+          and not is_label_span(e) then
+        nextpos = k break
+      end
+    end
+    if nextpos then
+      local span = out[first]
+      out:remove(first)          -- elements after `first` shift down by one
+      out:insert(nextpos, span)  -- span now sits right after the content inline
+    end
+  end
+
   return out
 end
 

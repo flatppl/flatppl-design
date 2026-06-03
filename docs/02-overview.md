@@ -37,7 +37,7 @@ alternative surface forms with the same semantics.
 
 **Canonical intermediate representation.** FlatPPL also comes with a canonical
 intermediate representation (IR) based on S-expressions, the Flat Probabilistic
-Intermediate Representation (FlatPIR) (see [Intermediate Representation](11-flatpir.md)).
+Intermediate Representation (FlatPIR) (see [Intermediate Representation](11-flatpir.md#intermediate-representation)).
 FlatPIR supports metadata like type and phase annotations and is suitable for automated
 term-rewriting, enabling code optimization and conversion between FlatPPL
 [profiles](12-profiles.md#sec:profiles). FlatPPL maps directly to and from FlatPIR,

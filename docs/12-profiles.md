@@ -10,7 +10,7 @@ versioning yet.
 ### FlatPPL as an exchange platform
 
 While full FlatPPL implementations are feasible for some languages and package ecosystems
-with modest effort (see [appendix](13-implementations.md)), a key strength of FlatPPL is
+with modest effort (see [appendix](13-implementations.md#appendix-implementations)), a key strength of FlatPPL is
 its suitability as an exchange platform between probabilistic modeling
 systems. Rather than requiring pairwise translators between $n$ systems — an $O(n^2)$
 problem — FlatPPL enables a hub-and-spoke architecture: each system needs only one
