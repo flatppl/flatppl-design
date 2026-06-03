@@ -20,6 +20,7 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 2
     steps:
       - uses: actions/checkout@v4
 
@@ -40,3 +41,13 @@ jobs:
 
       - name: Build docs and run validators
         run: pixi run build
+
+      # Publish the rendered docs so reviewers can download and inspect the
+      # output (HTML + PDF) for the PR. Runs even if the build/validators fail.
+      - name: Upload built docs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: docs-build
+          path: build/
+          if-no-files-found: ignore
