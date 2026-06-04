@@ -360,6 +360,7 @@ closed measures (i.e. nullary kernels) as inputs. `densityof(M, x)` and
 | Construct | Arguments | Description |
 |---|---|---|
 | [`pushfwd`](#pushfwd) | `f`, `M` | pushforward of `M` through `f`: $(f_* M)(Y) = M(f^{-1}(Y))$ |
+| [`locscale`](#locscale) | `m`, `shift`, `scale` | location-scale pushforward: `pushfwd(x -> x * scale + shift, m)` |
 | [`bijection`](#bijection) | `f`, `f_inv`, `logvolume` | annotate `f` with inverse and log-volume for density evaluation |
 
 - **`pushfwd(f, M)`**<a id="pushfwd"></a> — pushforward of measure $M$ through function $f$:
@@ -390,6 +391,14 @@ closed measures (i.e. nullary kernels) as inputs. `densityof(M, x)` and
   mu = relabel(iid(Normal(mu = 0, sigma = 1), 3), ["a", "b", "c"])
   pushfwd(fn(get(_, ["a", "c"])), mu)   # marginalizes out b
   ```
+
+- **`locscale(m, shift, scale)`**<a id="locscale"></a> — affine (location-scale)
+  pushforward, shorthand for `pushfwd(x -> x * scale + shift, m)`. For
+  example, `locscale(Normal(0, 1), mu, sigma)` is equivalent to
+  `Normal(mu, sigma)`, and `locscale(StudentT(nu), mu, sigma)` is the
+  location-scale Student-t. `shift` and `scale` must be value-compatible
+  with the variate of `m`; for general matrix-vector affine maps use
+  `pushfwd` directly.
 
 - **`bijection(f, f_inv, logvolume)`**<a id="bijection"></a> annotates a function `f` with its
   inverse `f_inv` and the log-volume-element `logvolume` of the forward
