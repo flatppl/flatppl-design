@@ -24,18 +24,6 @@ jobs:
     steps:
       - uses: actions/checkout@v6.0.2
 
-      # Match the deploy workflow: the FlatPPL Kate/skylighting grammar lives in
-      # flatppl-grammars and is the single source of truth. Fetch the current
-      # `main` copy so the validated build matches what gets published.
-      - name: Fetch FlatPPL syntax grammar (flatppl-grammars@main)
-        run: |
-          set -euo pipefail
-          url="https://raw.githubusercontent.com/flatppl/flatppl-grammars/main/kate/flatppl.xml"
-          curl -fsSL --retry 5 --retry-delay 2 --retry-connrefused --retry-all-errors \
-            "$url" -o docs/templates/flatppl.xml
-          grep -q '<language name="FlatPPL"' docs/templates/flatppl.xml \
-            || { echo "::error::fetched flatppl.xml is not the FlatPPL Kate grammar"; exit 1; }
-
       - name: Install pixi
         uses: prefix-dev/setup-pixi@v0.9.6
 
