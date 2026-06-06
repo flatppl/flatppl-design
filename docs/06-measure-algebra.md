@@ -106,6 +106,8 @@ require non-nullary kernels in all but the first argument
 closed measures (i.e. nullary kernels) as inputs. `densityof(M, x)` and
 `logdensityof(M, x)` evaluate the density of a measure at a point with respect to an implicit reference measure.
 
+To evaluate a density at many points (e.g. a grid for numerical integration or plotting), [broadcast](04-design.md#sec:broadcasting) the operation rather than calling it per point: `broadcast(fn(logdensityof(M, _)), grid)` (equivalently `fn(logdensityof(M, _)).(grid)`) returns one log-density per grid element. The point argument stays scalar.
+
 #### Density reweighting
 
 | Construct | Arguments | Description |
