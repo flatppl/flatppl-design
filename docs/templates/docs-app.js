@@ -2,6 +2,21 @@
 (function () {
   var nav = document.getElementById('sidebar-nav');
 
+  // Canonical heading-text normalizer: delegates to the shared
+  // SearchHelpers.normalizeHeadingText so the sidebar labels, the search index
+  // heading paths (SearchHelpers.buildIndexEntries), and the demote prefixes all
+  // strip the leading section number + trailing anchor marker identically — the
+  // demote prefix-match then can't drift away from the index heading paths. The
+  // inline fallback only runs if search-helpers.js failed to load: search (and
+  // therefore the demote pass) is then unavailable, so nothing can drift; it
+  // just keeps the critical sidebar nav working instead of throwing.
+  function cleanHeading(el) {
+    var s = el && el.textContent != null ? el.textContent : '';
+    return (typeof SearchHelpers !== 'undefined' && SearchHelpers.normalizeHeadingText)
+      ? SearchHelpers.normalizeHeadingText(s)
+      : String(s).replace(/\s+/g, ' ').trim().replace(/^[\d.]+\s+/, '').replace(/\s*#+\s*$/, '').trim();
+  }
+
   // Collect top-level sections (h1 with single-number data-number)
   var sections = document.querySelectorAll('#content h1[data-number]');
   var sectionItems = []; // {li, id, subIds}
@@ -13,8 +28,7 @@
 
     var li = document.createElement('li');
     var a = document.createElement('a');
-    // Strip trailing '#' injected by html-anchors.lua at build time
-    a.textContent = h.textContent.replace(/^[\d.]+\s+/, '').replace(/\s*#$/, '').trim();
+    a.textContent = cleanHeading(h);
     a.href = '#' + h.id;
     li.appendChild(a);
 
@@ -36,7 +50,7 @@
       }
       var sli = document.createElement('li');
       var sa = document.createElement('a');
-      sa.textContent = sh.textContent.replace(/^[\d.]+\s+/, '').replace(/\s*#$/, '').trim();
+      sa.textContent = cleanHeading(sh);
       sa.href = '#' + sh.id;
       sli.appendChild(sa);
       subUl.appendChild(sli);
@@ -264,123 +278,78 @@
   if (searchTrigger && searchDialog && searchInput && resultsList) {
     var BLOCK_SEL = 'p, li, pre, blockquote, td, th, dt, dd, figcaption, h1, h2, h3, h4, h5, h6';
     var HEAD_SEL = ' H1 H2 H3 H4 H5 H6 ';
-    var index = [];
-    // Stack of current heading per level (1..6). Higher-level headings
-    // reset lower-level entries so each block records its full ancestry.
-    var headingStack = [null, null, null, null, null, null, null];
-    var currentTargetId = '';
-
-    function currentHeadingPath() {
-      var parts = [];
-      for (var i = 1; i <= 6; i++) {
-        if (headingStack[i]) parts.push(headingStack[i].text);
-      }
-      return parts.join(' - ');
-    }
-
+    // Gather raw blocks from the DOM. Anchor-id assignment and PRE capping are
+    // the only DOM concerns; the heading-stack walk that derives each block's
+    // heading path and section id is pure and lives in
+    // SearchHelpers.buildIndexEntries, so it can be unit-tested without a DOM.
+    // Element refs are re-attached by index after the pure pass.
+    // T7 (reviewed): this DOM glue (block gather, blockEls<->index zip, demote
+    // derivation) has no node:test coverage — node has no DOM. The pure layer it
+    // feeds is fully unit-tested; a jsdom smoke test would close this boundary
+    // if the glue ever grows logic worth isolating.
     var contentEl = document.getElementById('content');
     var syntheticIdCounter = 0;
+    var blockEls = [];
+    var blocks = [];
     [].forEach.call(contentEl ? contentEl.querySelectorAll(BLOCK_SEL) : [], function (el) {
       var isHeading = HEAD_SEL.indexOf(' ' + el.tagName + ' ') !== -1;
-      var text = el.textContent.replace(/\s*#\s*$/, '').trim();
-      if (isHeading) {
-        var level = parseInt(el.tagName.slice(1), 10);
-        headingStack[level] = { id: el.id || '', text: text.replace(/^[\d.]+\s+/, '') };
-        for (var j = level + 1; j <= 6; j++) headingStack[j] = null;
-        currentTargetId = el.id || currentTargetId;
-      }
+      // Strip the trailing anchor marker(s) pandoc appends to headings — the
+      // number-section "#" plus the html-anchors link "#", i.e. one OR MORE.
+      var text = el.textContent.replace(/\s*#+\s*$/, '').trim();
       if (!text) return;
       if (!isHeading && el.querySelector(BLOCK_SEL)) return;
-      // Cap code-block text so a single long <pre> doesn't bloat the Fuse payload.
-      if (el.tagName === 'PRE' && text.length > 400) text = text.slice(0, 400);
+      // PRE: cap to 400 chars so one long <pre> can't bloat the Fuse payload
+      // (slice is a no-op when shorter, so no length guard needed). Else:
+      // collapse the source's newlines/indentation so heading paths and snippets
+      // read cleanly AND demote-prefix matching works (rendered headings carry
+      // literal newlines otherwise).
+      text = el.tagName === 'PRE' ? text.slice(0, 400) : text.replace(/\s+/g, ' ');
       // Guarantee every indexed block has its own anchor so result hrefs are
       // always valid and the URL hash matches the scrolled element.
       if (!el.id) { el.id = 'search-anchor-' + (++syntheticIdCounter); }
-      index.push({
-        el: el,
+      blockEls.push(el);
+      blocks.push({
+        id: el.id,
         text: text,
-        heading: currentHeadingPath(),
-        targetId: el.id,
-        isHeading: isHeading
+        isHeading: isHeading,
+        level: isHeading ? parseInt(el.tagName.slice(1), 10) : 0,
+        // Reference tables (distributions, functions, modules, profile mappings)
+        // are canonical concise definitions; flag so search can boost them.
+        isTable: !!el.closest('table')
       });
     });
-
-    function escapeHtml(s) {
-      return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-    }
+    // If search-helpers.js failed to load, leave the index empty — runSearch's
+    // guard then surfaces "Search unavailable" instead of throwing at init.
+    var index = (typeof SearchHelpers !== 'undefined' && SearchHelpers.buildIndexEntries)
+      ? SearchHelpers.buildIndexEntries(blocks) : [];
+    // Attach live DOM nodes to the pure index entries (guarded zip — a length
+    // mismatch returns [] so search degrades to "unavailable", never misaligns).
+    index = (typeof SearchHelpers !== 'undefined' && SearchHelpers.attachElements)
+      ? SearchHelpers.attachElements(index, blockEls) : [];
 
     var fuseSearch = null;
     function getFuse() {
-      if (!fuseSearch) fuseSearch = new Fuse(index, {
-        keys: ['text'],
-        includeScore: true,
-        includeMatches: true,
-        threshold: 0.35,
-        ignoreLocation: true,
-        minMatchCharLength: 2,
-      });
+      if (!fuseSearch) fuseSearch = new Fuse(index, SearchHelpers.searchFuseOptions);
       return fuseSearch;
     }
 
-    // Snippet centered on the densest cluster of Fuse match ranges.
-    //
-    // Fuse's fuzzy matcher reports indices at character granularity, which
-    // for relaxed thresholds means lots of single-letter "matches" scattered
-    // across the text. Rendering each as its own <mark> produces ugly,
-    // staccato highlighting. Two passes clean this up:
-    //   1. Coalesce ranges separated by tiny gaps into one span (so words
-    //      with one or two fuzzy edits become a single highlight).
-    //   2. Drop spans shorter than MIN_HIT_LEN — a lone matching letter in
-    //      the middle of unrelated text is noise, not a hit.
-    function fuseSnippet(entry, matchRanges) {
-      if (!matchRanges.length) return escapeHtml(entry.text.slice(0, 140));
-      var text = entry.text;
-      var radius = 60;
-      var COALESCE_GAP = 2;  // merge ranges separated by <= this many chars
-      var MIN_HIT_LEN = 2;   // drop merged spans shorter than this
-
-      var sorted = matchRanges.slice().sort(function (a, b) { return a[0] - b[0]; });
-      var merged = [];
-      for (var i = 0; i < sorted.length; i++) {
-        var cur = sorted[i];
-        var top = merged.length ? merged[merged.length - 1] : null;
-        if (top && cur[0] <= top[1] + COALESCE_GAP + 1) {
-          if (cur[1] > top[1]) top[1] = cur[1];
-        } else {
-          merged.push([cur[0], cur[1]]);
-        }
-      }
-      var spans = merged.filter(function (r) { return r[1] - r[0] + 1 >= MIN_HIT_LEN; });
-      if (!spans.length) spans = merged;  // fall back so we still highlight something
-
-      var first = spans[0][0];
-      var last = 0;
-      for (var li = 0; li < spans.length; li++) {
-        if (spans[li][1] > last) last = spans[li][1];
-      }
-      var start = Math.max(0, first - radius);
-      var end = Math.min(text.length, last + radius);
-
-      var marked = {};
-      for (var si = 0; si < spans.length; si++) {
-        for (var p = spans[si][0]; p <= spans[si][1]; p++) marked[p] = true;
-      }
-      var html = (start > 0 ? '…' : '');
-      var seg = start, inMark = false;
-      for (var j = start; j < end; j++) {
-        var nowMark = !!marked[j];
-        if (nowMark !== inMark) {
-          html += escapeHtml(text.slice(seg, j));
-          seg = j;
-          html += inMark ? '</mark>' : '<mark>';
-          inMark = nowMark;
-        }
-      }
-      html += escapeHtml(text.slice(seg, end));
-      if (inMark) html += '</mark>';
-      if (end < text.length) html += '…';
-      return html;
-    }
+    // Heading-path prefixes (lowercased) whose prose is demoted so deeper
+    // reference sections outrank frontmatter/overview. The document title
+    // catches the abstract; the tour chapter is intentionally redundant with
+    // the reference sections. Both prefixes are derived from live headings via
+    // cleanHeading (the same normalizer the index uses), so the prefix-match
+    // can't drift from the heading paths in SearchHelpers.buildIndexEntries.
+    var demoteHeadings = [];
+    var docTitleEl = document.querySelector('#content .title');
+    if (docTitleEl) { demoteHeadings.push(cleanHeading(docTitleEl).toLowerCase()); }
+    // Key the overview-chapter demotion off its STABLE anchor id (`sec:overview`,
+    // a hand-placed cross-reference target that html-anchors.lua hoists onto the
+    // heading) rather than the display string "language overview", so renaming
+    // the chapter can't silently stop the demotion. closest() returns the
+    // heading itself when the id is on it, or its nearest ancestor heading.
+    var overviewEl = document.getElementById('sec:overview');
+    var overviewHeading = overviewEl && overviewEl.closest('h1, h2, h3, h4, h5, h6');
+    if (overviewHeading) { demoteHeadings.push(cleanHeading(overviewHeading).toLowerCase()); }
 
     var pulseTimer = null;
     function jumpTo(entry) {
@@ -405,12 +374,31 @@
       if (searchStatus) { searchStatus.textContent = ''; }
       if (!q) { return; }
 
-      var results = getFuse().search(q, { limit: MAX_RESULTS });
+      // Defense-in-depth: if search-helpers.js or fuse.min.js failed to load,
+      // surface a notice instead of throwing a ReferenceError on every keystroke.
+      if (typeof SearchHelpers === 'undefined' || typeof Fuse === 'undefined') {
+        if (searchStatus) { searchStatus.textContent = 'Search unavailable'; }
+        return;
+      }
 
-      for (var r = 0; r < results.length; r++) {
-        var entry = results[r].item;
-        var _m = results[r].matches && results[r].matches.find(function (m) { return m.key === 'text'; });
-        var matchRanges = _m ? _m.indices : null;
+      var results = SearchHelpers.computeResults({
+        rawQuery: q,
+        fuse: getFuse(),
+        index: index,
+        maxResults: MAX_RESULTS,
+        demoteHeadings: demoteHeadings
+      });
+
+      // Compile the snippet term regexes ONCE per search (not per row) and reuse
+      // them across every rendered result (P2).
+      var snipTerms = SearchHelpers.snippetRegexes(q);
+
+      // Build all rows into a detached fragment, then attach once — avoids a
+      // reflow per row. forEach's per-iteration scope captures `entry` for the
+      // click handler, so no IIFE is needed.
+      var frag = document.createDocumentFragment();
+      results.forEach(function (res) {
+        var entry = res.item;
 
         var li = document.createElement('li');
         var a = document.createElement('a');
@@ -424,22 +412,19 @@
         }
         var sn = document.createElement('span');
         sn.className = 'search-result-snippet' + (entry.isHeading ? ' is-heading' : '');
-        sn.innerHTML = matchRanges
-          ? fuseSnippet(entry, matchRanges)
-          : escapeHtml(entry.text.slice(0, 140));
+        sn.innerHTML = SearchHelpers.buildSnippet(entry.text, q, undefined, snipTerms);
         a.appendChild(sn);
 
-        (function (e) {
-          a.addEventListener('click', function (ev) {
-            ev.preventDefault();
-            searchDialog.close();
-            jumpTo(e);
-          });
-        })(entry);
+        a.addEventListener('click', function (ev) {
+          ev.preventDefault();
+          searchDialog.close();
+          jumpTo(entry);
+        });
 
         li.appendChild(a);
-        resultsList.appendChild(li);
-      }
+        frag.appendChild(li);
+      });
+      resultsList.appendChild(frag);
       if (emptyMsg) { emptyMsg.hidden = results.length > 0; }
       if (searchStatus) {
         var n = results.length;
@@ -467,6 +452,9 @@
     function openSearch() {
       searchDialog.showModal();
       searchInput.focus();
+      // Build the Fuse index now (behind the dialog-open) so the first query
+      // doesn't pay the ~2-3k-entry build cost on the main thread.
+      if (typeof SearchHelpers !== 'undefined' && typeof Fuse !== 'undefined') { getFuse(); }
     }
 
     searchTrigger.addEventListener('click', openSearch);
