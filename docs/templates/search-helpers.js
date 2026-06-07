@@ -394,6 +394,19 @@
     return out;
   }
 
+  // Attach each live DOM node onto its index entry by position. docs-app.js
+  // builds `index` from buildIndexEntries (one entry per gathered block, in
+  // order) and `els` from the same DOM walk, so the two arrays are parallel.
+  // If they ever disagree in length the contract is broken — return an empty
+  // index so search degrades to "unavailable" rather than scrolling results to
+  // the wrong element. Mutates `index` in place and returns it (or [] on a
+  // mismatch / non-array input).
+  function attachElements(index, els) {
+    if (!Array.isArray(index) || !Array.isArray(els) || index.length !== els.length) return [];
+    for (var i = 0; i < index.length; i++) { index[i].el = els[i]; }
+    return index;
+  }
+
   // Orchestrates a single search. Pure: takes an already-built `fuse` instance
   // and the `index` array, returns processed results ready to render
   // ({ item, score, matches }). `matches` is threaded through untouched and
@@ -464,6 +477,7 @@
     dedupeByHeading: dedupeByHeading,
     demoteByHeading: demoteByHeading,
     buildIndexEntries: buildIndexEntries,
+    attachElements: attachElements,
     computeResults: computeResults
   };
 });

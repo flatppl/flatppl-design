@@ -620,3 +620,26 @@ test('boostExact applies the whole-word bonus to a non-ASCII term', () => {
   );
   assert.ok(Math.abs(out[0].score - (-0.10)) < 1e-9, 'whole-word bonus 0.3 applied to a Unicode term');
 });
+
+// --- attachElements (PR-37 follow-up #1: guarded el zip) -------------------
+
+test('attachElements zips el refs onto entries by index and returns the same array', () => {
+  const index = [{ targetId: 'a' }, { targetId: 'b' }];
+  const els = [{ tag: 'P' }, { tag: 'LI' }];
+  const out = H.attachElements(index, els);
+  assert.strictEqual(out, index, 'mutates and returns the same array');
+  assert.strictEqual(out[0].el, els[0]);
+  assert.strictEqual(out[1].el, els[1]);
+});
+
+test('attachElements returns [] when index and els lengths disagree', () => {
+  const index = [{ targetId: 'a' }, { targetId: 'b' }];
+  const els = [{ tag: 'P' }];
+  assert.deepStrictEqual(H.attachElements(index, els), [], 'length mismatch -> empty index (search degrades to unavailable)');
+});
+
+test('attachElements handles empty inputs and non-arrays', () => {
+  assert.deepStrictEqual(H.attachElements([], []), []);
+  assert.deepStrictEqual(H.attachElements(null, []), [], 'non-array index -> []');
+  assert.deepStrictEqual(H.attachElements([{ targetId: 'a' }], null), [], 'non-array els -> []');
+});

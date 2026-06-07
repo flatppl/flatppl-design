@@ -308,7 +308,10 @@
     // guard then surfaces "Search unavailable" instead of throwing at init.
     var index = (typeof SearchHelpers !== 'undefined' && SearchHelpers.buildIndexEntries)
       ? SearchHelpers.buildIndexEntries(blocks) : [];
-    for (var bi = 0; bi < index.length; bi++) { index[bi].el = blockEls[bi]; }
+    // Attach live DOM nodes to the pure index entries (guarded zip — a length
+    // mismatch returns [] so search degrades to "unavailable", never misaligns).
+    index = (typeof SearchHelpers !== 'undefined' && SearchHelpers.attachElements)
+      ? SearchHelpers.attachElements(index, blockEls) : [];
 
     var fuseSearch = null;
     function getFuse() {
