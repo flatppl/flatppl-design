@@ -78,3 +78,24 @@ test('boostExact is case-insensitive and tolerates missing score', () => {
   );
   assert.ok(boosted[0].score < 1, 'missing score defaults to 1 then boosts');
 });
+
+test('dedupeByHeading keeps the best-scoring result per heading, preserving first-seen order', () => {
+  const results = [
+    { item: { heading: 'Measure algebra', targetId: 'a' }, score: 0.40, matches: [] },
+    { item: { heading: 'Measure algebra', targetId: 'b' }, score: 0.10, matches: [] },
+    { item: { heading: 'Distributions', targetId: 'c' }, score: 0.20, matches: [] }
+  ];
+  const out = H.dedupeByHeading(results);
+  assert.strictEqual(out.length, 2, 'two distinct headings');
+  assert.strictEqual(out[0].item.targetId, 'b', 'best of "Measure algebra" group');
+  assert.strictEqual(out[0].item.heading, 'Measure algebra');
+  assert.strictEqual(out[1].item.targetId, 'c');
+});
+
+test('dedupeByHeading falls back to targetId when heading is empty', () => {
+  const results = [
+    { item: { heading: '', targetId: 'a' }, score: 0.5, matches: [] },
+    { item: { heading: '', targetId: 'b' }, score: 0.5, matches: [] }
+  ];
+  assert.strictEqual(H.dedupeByHeading(results).length, 2, 'empty headings not collapsed together');
+});

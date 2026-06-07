@@ -77,12 +77,35 @@
     });
   }
 
+  // #2: collapse every matching block under one heading to its single
+  // best-scoring result, so the list shows one row per section instead of a
+  // wall of blocks from the same place. Blocks with no heading fall back to
+  // their own targetId so they are never merged together. First-seen heading
+  // order is preserved.
+  function dedupeByHeading(results) {
+    var best = {};
+    var order = [];
+    for (var i = 0; i < results.length; i++) {
+      var r = results[i];
+      var item = r.item || {};
+      var key = item.heading ? 'h:' + item.heading : 't:' + (item.targetId || i);
+      if (!(key in best)) {
+        best[key] = r;
+        order.push(key);
+      } else if (r.score < best[key].score) {
+        best[key] = r;
+      }
+    }
+    return order.map(function (k) { return best[k]; });
+  }
+
   return {
     __loaded: true,
     searchFuseOptions: searchFuseOptions,
     sanitizeQuery: sanitizeQuery,
     looksLikeIdentifier: looksLikeIdentifier,
     exactSubstringHits: exactSubstringHits,
-    boostExact: boostExact
+    boostExact: boostExact,
+    dedupeByHeading: dedupeByHeading
   };
 });
