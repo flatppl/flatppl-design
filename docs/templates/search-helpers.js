@@ -559,7 +559,7 @@
     // Stamp first-seen order (dedupeByHeading preserves it) as an explicit final
     // tiebreaker so the ranking is deterministic without relying on Array.sort
     // being stable. `_ord` is internal; the renderer reads only item/score.
-    for (var oi = 0; oi < deduped.length; oi++) { deduped[oi]._ord = oi; }
+    deduped.forEach(function (r, oi) { r._ord = oi; });
     deduped.sort(function (a, b) { return (tier(a) - tier(b)) || (a.score - b.score) || (a._ord - b._ord); });
     return deduped.slice(0, maxResults);
   }

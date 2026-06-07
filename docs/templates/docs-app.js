@@ -298,16 +298,12 @@
       var text = el.textContent.replace(/\s*#+\s*$/, '').trim();
       if (!text) return;
       if (!isHeading && el.querySelector(BLOCK_SEL)) return;
-      if (el.tagName === 'PRE') {
-        // Cap code-block text so a single long <pre> doesn't bloat the Fuse payload.
-        if (text.length > 400) text = text.slice(0, 400);
-      } else {
-        // Collapse the source's newlines/indentation so heading paths and result
-        // snippets read cleanly AND demote-prefix matching works (the rendered
-        // heading carries literal newlines otherwise). Code blocks keep their
-        // formatting via the branch above.
-        text = text.replace(/\s+/g, ' ');
-      }
+      // PRE: cap to 400 chars so one long <pre> can't bloat the Fuse payload
+      // (slice is a no-op when shorter, so no length guard needed). Else:
+      // collapse the source's newlines/indentation so heading paths and snippets
+      // read cleanly AND demote-prefix matching works (rendered headings carry
+      // literal newlines otherwise).
+      text = el.tagName === 'PRE' ? text.slice(0, 400) : text.replace(/\s+/g, ' ');
       // Guarantee every indexed block has its own anchor so result hrefs are
       // always valid and the URL hash matches the scrolled element.
       if (!el.id) { el.id = 'search-anchor-' + (++syntheticIdCounter); }
