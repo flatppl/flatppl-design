@@ -97,6 +97,9 @@
     return String(s).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   }
 
+  // Lower-is-better score with a default for results Fuse left unscored.
+  function scoreOf(r) { return r && typeof r.score === 'number' ? r.score : 1; }
+
   // Case-insensitive whole-word matcher for a query, or null if the query can't
   // form a word boundary (e.g. starts/ends with punctuation). Used to rank a
   // whole-word hit ("Normal") above the same letters inside a longer word
@@ -244,7 +247,7 @@
     if (wordRe === undefined) wordRe = wholeWordRegex(q);
     return results.map(function (r) {
       var text = r.item && r.item.text ? r.item.text : '';
-      var s = typeof r.score === 'number' ? r.score : 1;
+      var s = scoreOf(r);
       var whole = !!(wordRe && wordRe.test(text));
       var sub = !whole && text.toLowerCase().indexOf(lq) !== -1;
       var bonus = whole ? WHOLE_WORD_BONUS : (sub ? SUBSTRING_BONUS : 0);
@@ -267,7 +270,7 @@
     if (typeof bonus !== 'number') bonus = TABLE_BONUS;
     return results.map(function (r) {
       var item = r.item || {};
-      var s = typeof r.score === 'number' ? r.score : 1;
+      var s = scoreOf(r);
       return Object.assign({}, r, { score: (item.isTable && r.exact) ? s - bonus : s });
     });
   }
@@ -298,7 +301,6 @@
     // Jackpot only on a whole-word heading-title hit, so searching "normal"
     // jackpots a "Normal distribution" heading but not "Normalization".
     if (headingWordRe === undefined) headingWordRe = wholeWordRegex(query);
-    function scoreOf(r) { return typeof r.score === 'number' ? r.score : 1; }
 
     var groups = {};
     var order = [];
@@ -353,7 +355,7 @@
       for (var i = 0; i < prefixes.length; i++) {
         if (prefixes[i] && h.indexOf(prefixes[i]) === 0) { demote = true; break; }
       }
-      var s = typeof r.score === 'number' ? r.score : 1;
+      var s = scoreOf(r);
       return Object.assign({}, r, { score: demote ? s + penalty : s });
     });
   }
