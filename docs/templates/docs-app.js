@@ -278,28 +278,43 @@
       return parts.join(' - ');
     }
 
+    // Anchor id of the deepest heading in scope. Used to group result rows by
+    // section (see dedupeByHeading) — a stable unique id, unlike the rendered
+    // heading-path text which can repeat across distinct sections.
+    function currentSectionId() {
+      for (var i = 6; i >= 1; i--) {
+        if (headingStack[i] && headingStack[i].id) return headingStack[i].id;
+      }
+      return '';
+    }
+
     var contentEl = document.getElementById('content');
     var syntheticIdCounter = 0;
     [].forEach.call(contentEl ? contentEl.querySelectorAll(BLOCK_SEL) : [], function (el) {
       var isHeading = HEAD_SEL.indexOf(' ' + el.tagName + ' ') !== -1;
       var text = el.textContent.replace(/\s*#\s*$/, '').trim();
-      if (isHeading) {
-        var level = parseInt(el.tagName.slice(1), 10);
-        headingStack[level] = { id: el.id || '', text: text.replace(/^[\d.]+\s+/, '') };
-        for (var j = level + 1; j <= 6; j++) headingStack[j] = null;
-        currentTargetId = el.id || currentTargetId;
-      }
       if (!text) return;
       if (!isHeading && el.querySelector(BLOCK_SEL)) return;
       // Cap code-block text so a single long <pre> doesn't bloat the Fuse payload.
       if (el.tagName === 'PRE' && text.length > 400) text = text.slice(0, 400);
       // Guarantee every indexed block has its own anchor so result hrefs are
-      // always valid and the URL hash matches the scrolled element.
+      // always valid and the URL hash matches the scrolled element. Assigned
+      // BEFORE the heading stack is updated so currentSectionId() always has a
+      // real id for the section heading, never an empty string.
       if (!el.id) { el.id = 'search-anchor-' + (++syntheticIdCounter); }
+      if (isHeading) {
+        var level = parseInt(el.tagName.slice(1), 10);
+        headingStack[level] = { id: el.id, text: text.replace(/^[\d.]+\s+/, '') };
+        for (var j = level + 1; j <= 6; j++) headingStack[j] = null;
+        currentTargetId = el.id;
+      }
       index.push({
         el: el,
         text: text,
         heading: currentHeadingPath(),
+        // Anchor of the owning section heading; groups body + heading blocks of
+        // one section together while keeping same-titled sections distinct.
+        sectionId: currentSectionId(),
         targetId: el.id,
         isHeading: isHeading,
         // Reference tables (distributions, functions, modules, profile mappings)
@@ -345,6 +360,13 @@
       if (emptyMsg) { emptyMsg.hidden = true; }
       if (searchStatus) { searchStatus.textContent = ''; }
       if (!q) { return; }
+
+      // Defense-in-depth: if search-helpers.js or fuse.min.js failed to load,
+      // surface a notice instead of throwing a ReferenceError on every keystroke.
+      if (typeof SearchHelpers === 'undefined' || typeof Fuse === 'undefined') {
+        if (searchStatus) { searchStatus.textContent = 'Search unavailable'; }
+        return;
+      }
 
       var results = SearchHelpers.computeResults({
         rawQuery: q,
@@ -410,6 +432,9 @@
     function openSearch() {
       searchDialog.showModal();
       searchInput.focus();
+      // Build the Fuse index now (behind the dialog-open) so the first query
+      // doesn't pay the ~2-3k-entry build cost on the main thread.
+      if (typeof SearchHelpers !== 'undefined' && typeof Fuse !== 'undefined') { getFuse(); }
     }
 
     searchTrigger.addEventListener('click', openSearch);

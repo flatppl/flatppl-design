@@ -214,24 +214,34 @@ test('dedupeByHeading prefers the body block for display, ranking by best-in-gro
   assert.strictEqual(out[0].score, 0.10, 'rank is best-in-group score');
 });
 
-test('demoteByHeading multiplies score for matching heading prefixes only', () => {
+test('demoteByHeading adds a penalty to matching heading prefixes only', () => {
   const results = [
     { item: { heading: 'FlatPPL, a Flat Portable Probabilistic Language', targetId: 'abs' }, score: 0.10, matches: [] },
     { item: { heading: 'Measure algebra and analysis - Likelihoods', targetId: 'ref' }, score: 0.12, matches: [] }
   ];
-  const out = H.demoteByHeading(results, ['flatppl, a flat portable probabilistic language'], 1.6);
+  const out = H.demoteByHeading(results, ['flatppl, a flat portable probabilistic language'], 0.4);
   const byId = {};
   out.forEach((r) => { byId[r.item.targetId] = r.score; });
-  assert.ok(Math.abs(byId.abs - 0.16) < 1e-9, 'abstract demoted 0.10*1.6');
+  assert.ok(Math.abs(byId.abs - 0.50) < 1e-9, 'abstract demoted 0.10 + 0.4');
   assert.strictEqual(byId.ref, 0.12, 'reference section untouched');
+});
+
+test('demoteByHeading penalty is additive — reliably worsens a zero/negative score', () => {
+  const out = H.demoteByHeading(
+    [{ item: { heading: 'Language overview - tables', targetId: 'z' }, score: -0.2, matches: [] }],
+    ['language overview'], 0.4
+  );
+  // -0.2 + 0.4 = 0.2: genuinely demoted. A multiplier (×>1) would have made a
+  // negative score MORE negative (better) — the bug additivity fixes.
+  assert.ok(Math.abs(out[0].score - 0.2) < 1e-9, 'additive penalty pushes a negative score up');
 });
 
 test('demoteByHeading is prefix-based and case-insensitive', () => {
   const out = H.demoteByHeading(
     [{ item: { heading: 'Language overview - Core concepts', targetId: 'x' }, score: 0.20, matches: [] }],
-    ['language overview'], 2
+    ['language overview'], 0.5
   );
-  assert.ok(Math.abs(out[0].score - 0.40) < 1e-9);
+  assert.ok(Math.abs(out[0].score - 0.70) < 1e-9);
 });
 
 test('dedupeByHeading jackpots a section whose heading title contains the query', () => {
@@ -289,8 +299,112 @@ test('computeResults: exact-heading jackpot + demote — section wins over a low
   ];
   const out = H.computeResults({
     rawQuery: 'likelihoods', fuse: fakeFuse(fuseResults), index: [], maxResults: 40,
-    demoteHeadings: ['flatppl title'], demoteFactor: 1.6
+    demoteHeadings: ['flatppl title'], demotePenalty: 0.4
   });
   assert.strictEqual(out[0].item.heading, 'Likelihoods and posteriors', 'jackpot section leads despite abstract scoring lower');
   assert.strictEqual(out[0].item.targetId, 'lbody', 'shows body prose');
+});
+
+// --- Regression tests for the PR-37 review fixes ---------------------------
+
+test('computeResults: a demoted overview TABLE cell ranks below real reference prose (M1)', () => {
+  // Multiplicative demote used to be cancelled by the additive table bonus,
+  // floating an overview table cell above genuine reference prose. With demote
+  // additive AND applied after the table boost, the overview cell stays down.
+  const fuseResults = [
+    { item: { isTable: true, text: 'Normal', heading: 'Language overview - cheatsheet', sectionId: 'ov', targetId: 'ovcell' }, score: 0.20, matches: [] },
+    { item: { isTable: false, text: 'the Normal distribution in detail', heading: 'Distributions', sectionId: 'dist', targetId: 'prose' }, score: 0.15, matches: [] }
+  ];
+  const out = H.computeResults({
+    rawQuery: 'Normal', fuse: fakeFuse(fuseResults), index: [], maxResults: 40,
+    demoteHeadings: ['language overview'], demotePenalty: 0.4, tableBonus: 0.25
+  });
+  assert.strictEqual(out[0].item.targetId, 'prose', 'reference prose outranks the demoted overview table cell');
+});
+
+test('dedupeByHeading keeps same-titled sections distinct via sectionId (M2)', () => {
+  // Two sections share an identical heading-path string but live at different
+  // anchors. Keying on sectionId (not the path text) must not merge them.
+  const results = [
+    { item: { heading: 'Examples', sectionId: 'sec-a', targetId: 'a', isHeading: false }, score: 0.10, matches: [] },
+    { item: { heading: 'Examples', sectionId: 'sec-b', targetId: 'b', isHeading: false }, score: 0.20, matches: [] }
+  ];
+  const out = H.dedupeByHeading(results);
+  assert.strictEqual(out.length, 2, 'distinct sectionIds are not collapsed despite identical heading text');
+  const ids = out.map((r) => r.item.targetId).sort();
+  assert.deepStrictEqual(ids, ['a', 'b']);
+});
+
+test('dedupeByHeading jackpots from the heading-path last segment when no heading block is present (L4)', () => {
+  // Only body blocks reached the result set; the jackpot must still fire off the
+  // section title (last path segment), not depend on an isHeading block.
+  const results = [
+    { item: { isHeading: false, text: 'likelihood objects represent density', heading: 'Reference - Likelihoods', sectionId: 'lk', targetId: 'lbody' }, score: 0.30, matches: [] },
+    { item: { isHeading: false, text: 'mentioned in passing', heading: 'Abstract', sectionId: 'ab', targetId: 'other' }, score: 0.05, matches: [] }
+  ];
+  const out = H.dedupeByHeading(results, 'likelihoods');
+  assert.strictEqual(out[0].item.targetId, 'lbody', 'body-only section still jackpots');
+  assert.ok(out[0].score < 0, 'jackpot tiered below zero');
+  const other = out.find((r) => r.item.targetId === 'other');
+  assert.ok(out[0].score < other.score, 'jackpot beats the lower-raw-scored abstract');
+});
+
+test('dedupeByHeading jackpot offset is relative — leads even when raw scores exceed 1 (L5)', () => {
+  const results = [
+    { item: { isHeading: true, text: 'Normal distribution', heading: 'Normal distribution', sectionId: 'n', targetId: 'nh' }, score: 0.9, matches: [] },
+    { item: { isHeading: false, text: 'unrelated', heading: 'Other', sectionId: 'o', targetId: 'ob' }, score: 5.0, matches: [] }
+  ];
+  const out = H.dedupeByHeading(results, 'Normal');
+  assert.strictEqual(out[0].item.targetId, 'nh', 'jackpot leads regardless of large non-jackpot scores');
+  const ob = out.find((r) => r.item.targetId === 'ob');
+  assert.ok(out[0].score < ob.score, 'jackpot strictly below the 5.0-scored row');
+});
+
+test('buildSnippet ignores query terms shorter than the minimum length', () => {
+  const html = H.buildSnippet('a kernel of a measure', 'a kernel');
+  // 'a' is below MIN_TERM_LEN, so only 'kernel' is highlighted (not every 'a').
+  assert.strictEqual((html.match(/<mark>/g) || []).length, 1, 'only the >=2-char term marks');
+  assert.ok(html.indexOf('<mark>kernel</mark>') !== -1);
+});
+
+test('buildSnippet escapes HTML in the no-match fallback head', () => {
+  const html = H.buildSnippet('an <script>alert(1)</script> blob with no hit', 'zzzzz');
+  assert.strictEqual(html.indexOf('<script>'), -1, 'raw tag not present in fallback');
+  assert.ok(html.indexOf('&lt;script&gt;') !== -1, 'fallback head is escaped');
+});
+
+test('buildSnippet appends a trailing ellipsis when text extends past the window', () => {
+  const html = H.buildSnippet('kernel ' + 'y'.repeat(400), 'kernel');
+  assert.strictEqual(html.slice(-1), '…', 'trailing ellipsis when content is truncated');
+});
+
+test('looksLikeIdentifier boundary cases', () => {
+  assert.strictEqual(H.looksLikeIdentifier('CDF'), false, 'all-caps acronym lacks a lowercase letter');
+  assert.strictEqual(H.looksLikeIdentifier('cdf'), true, 'exactly 3 chars, lowercase');
+  assert.strictEqual(H.looksLikeIdentifier('foo_'), true, 'trailing underscore is a valid ident char');
+  assert.strictEqual(H.looksLikeIdentifier('_foo'), true, 'leading underscore allowed');
+  assert.strictEqual(H.looksLikeIdentifier('a1'), false, 'too short');
+});
+
+test('computeResults de-dups identifier exact hits against overlapping Fuse targetIds', () => {
+  // Fuse already returned idx1; the exact pass must NOT add a duplicate row for
+  // the same targetId, but must still add the genuinely-new idx2.
+  const index = [
+    { text: 'The bayesupdate operator', heading: 'Ops', sectionId: 's1', targetId: 'idx1' },
+    { text: 'see bayesupdate again', heading: 'More', sectionId: 's2', targetId: 'idx2' }
+  ];
+  const fuseResults = [
+    { item: index[0], score: 0.10, matches: [] }
+  ];
+  const out = H.computeResults({ rawQuery: 'bayesupdate', fuse: fakeFuse(fuseResults), index: index, maxResults: 40 });
+  const ids = out.map((r) => r.item.targetId).sort();
+  assert.deepStrictEqual(ids, ['idx1', 'idx2'], 'idx1 not duplicated, idx2 added by the exact pass');
+});
+
+test('sanitizeQuery handles trailing apostrophe and combined operator clusters', () => {
+  // A trailing ' is left intact — it's a Fuse prefix-only operator, inert at the
+  // end of a token — while leading !^'= clusters and a trailing $ are stripped.
+  assert.strictEqual(H.sanitizeQuery("Bayes'"), "Bayes'", 'trailing apostrophe preserved (inert)');
+  assert.strictEqual(H.sanitizeQuery("!^'=stuff$"), 'stuff', 'leading operator cluster + trailing $ stripped');
+  assert.strictEqual(H.sanitizeQuery('  ^foo |  bar$  '), 'foo bar', 'mixed operators and OR collapse to literal tokens');
 });

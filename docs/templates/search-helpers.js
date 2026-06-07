@@ -15,6 +15,17 @@
 })(this, function () {
   'use strict';
 
+  // Tunables. Scores are lower-is-better; ranking tiers are expressed relative
+  // to each other here so the pipeline stays legible.
+  var RADIUS = 60;             // chars of context kept on each side of a hit
+  var SNIPPET_WINDOW = 200;    // max snippet length once anchored on a hit
+  var HEAD_LEN = 140;          // fallback snippet length when no term matches
+  var MIN_TERM_LEN = 2;        // ignore query terms shorter than this
+  var WHOLE_WORD_FACTOR = 0.25; // boost: whole-word literal match (strong)
+  var SUBSTRING_FACTOR = 0.6;   // boost: substring literal match (mild)
+  var TABLE_BONUS = 0.25;       // reference-table cell lift (additive, better)
+  var DEMOTE_PENALTY = 0.4;     // frontmatter/overview push-down (additive, worse)
+
   // #1 (heading-weighted keys) + #5 (multi-word AND via extended search).
   // useExtendedSearch makes a space-separated query an AND of fuzzy tokens.
   var searchFuseOptions = {
@@ -47,6 +58,9 @@
       .join(' ');
   }
 
+  // Text-context-only HTML escaping: escapes & < > so a string is safe inside
+  // element text / innerHTML between tags. NOT attribute-safe (quotes are left
+  // intact); only use the output as element content, never inside an attribute.
   function escapeHtml(s) {
     return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
   }
@@ -58,7 +72,8 @@
   // Case-insensitive whole-word matcher for a query, or null if the query can't
   // form a word boundary (e.g. starts/ends with punctuation). Used to rank a
   // whole-word hit ("Normal") above the same letters inside a longer word
-  // ("normalize").
+  // ("normalize"). The returned regex has no `g` flag, so `.test()` is stateless
+  // and the instance can be shared across many calls within one search.
   function wholeWordRegex(q) {
     if (!q) return null;
     try {
@@ -77,9 +92,8 @@
   // returns the head of the text (still useful context). Original case is kept.
   function buildSnippet(text, query, radius) {
     text = text == null ? '' : String(text);
-    if (typeof radius !== 'number') radius = 60;
-    var WINDOW = 200;
-    var terms = sanitizeQuery(query).toLowerCase().split(' ').filter(function (t) { return t.length >= 2; });
+    if (typeof radius !== 'number') radius = RADIUS;
+    var terms = sanitizeQuery(query).toLowerCase().split(' ').filter(function (t) { return t.length >= MIN_TERM_LEN; });
     var lower = text.toLowerCase();
 
     var ranges = [];
@@ -92,8 +106,8 @@
       }
     }
     if (!ranges.length) {
-      var head = escapeHtml(text.slice(0, 140));
-      return text.length > 140 ? head + '…' : head;
+      var head = escapeHtml(text.slice(0, HEAD_LEN));
+      return text.length > HEAD_LEN ? head + '…' : head;
     }
 
     ranges.sort(function (a, b) { return a[0] - b[0]; });
@@ -106,7 +120,7 @@
 
     var first = merged[0][0];
     var start = Math.max(0, first - radius);
-    var end = Math.min(text.length, start + WINDOW);
+    var end = Math.min(text.length, start + SNIPPET_WINDOW);
 
     var html = (start > 0 ? '…' : '');
     var cursor = start;
@@ -136,14 +150,19 @@
   // Whole-word — not any substring — so a query like "Normal" does NOT inject
   // every "normalize"/"normalization" block at score 0 and flood the ranking.
   // (If q can't form a word boundary, fall back to substring containment.)
-  function exactSubstringHits(index, q) {
-    var wordRe = wholeWordRegex(q);
+  // `limit` caps the scan so it stays bounded on a large index; `wordRe` may be
+  // supplied to reuse a regex already built for this query.
+  function exactSubstringHits(index, q, limit, wordRe) {
+    if (wordRe === undefined) wordRe = wholeWordRegex(q);
     var lq = q.toLowerCase();
     var out = [];
     for (var i = 0; i < index.length; i++) {
       var text = index[i].text || '';
       var hit = wordRe ? wordRe.test(text) : text.toLowerCase().indexOf(lq) !== -1;
-      if (hit) { out.push({ item: index[i], score: 0, matches: null }); }
+      if (hit) {
+        out.push({ item: index[i], score: 0, matches: null });
+        if (typeof limit === 'number' && out.length >= limit) break;
+      }
     }
     return out;
   }
@@ -151,33 +170,33 @@
   // #3: literal matches are almost always what the user meant, so multiply their
   // (lower-is-better) score to float them above fuzzy-only hits. Tiered by how
   // the query sits in the text:
-  //   - whole word ("Normal" in "the Normal distribution")  -> x0.25 (strong)
-  //   - substring  ("normal" inside "normalize")            -> x0.6  (mild)
+  //   - whole word ("Normal" in "the Normal distribution")  -> xWHOLE_WORD_FACTOR
+  //   - substring  ("normal" inside "normalize")            -> xSUBSTRING_FACTOR
   //   - fuzzy only                                          -> unchanged
   // This keeps "Normal" (the distribution) above "normalize" while still giving
   // prefix/substring queries some lift. Returns a new array; inputs unmutated.
-  function boostExact(results, q) {
+  // `wordRe` may be supplied to reuse a regex already built for this query.
+  function boostExact(results, q, wordRe) {
     var lq = q.toLowerCase();
-    var wordRe = wholeWordRegex(q);
+    if (wordRe === undefined) wordRe = wholeWordRegex(q);
     return results.map(function (r) {
       var text = r.item && r.item.text ? r.item.text : '';
       var s = typeof r.score === 'number' ? r.score : 1;
       var factor = 1;
-      if (wordRe && wordRe.test(text)) { factor = 0.25; }
-      else if (text.toLowerCase().indexOf(lq) !== -1) { factor = 0.6; }
+      if (wordRe && wordRe.test(text)) { factor = WHOLE_WORD_FACTOR; }
+      else if (text.toLowerCase().indexOf(lq) !== -1) { factor = SUBSTRING_FACTOR; }
       return { item: r.item, score: s * factor, matches: r.matches };
     });
   }
 
   // Boost matches that live in reference tables (distributions, functions,
   // modules, profile mappings). These cells are the canonical concise
-  // definitions, so a table hit should outrank incidental prose. This is an
-  // additive tier (subtract `bonus`), not a multiplier, because exact short
-  // matches already score ~0 and a multiplier (0 * f = 0) couldn't separate a
-  // table cell from a tying prose mention. Tiers below the heading jackpot
-  // (-1) but above ordinary prose. Pure; returns a new array.
+  // definitions, so a table hit should outrank incidental prose. Additive
+  // (subtract `bonus`) so it composes with the additive demote/jackpot tiers on
+  // one scale — a multiplier (0 * f = 0) couldn't separate a near-zero exact
+  // table cell from a tying prose mention. Pure; returns a new array.
   function boostTables(results, bonus) {
-    if (typeof bonus !== 'number') bonus = 0.25;
+    if (typeof bonus !== 'number') bonus = TABLE_BONUS;
     return results.map(function (r) {
       var item = r.item || {};
       var s = typeof r.score === 'number' ? r.score : 1;
@@ -185,10 +204,13 @@
     });
   }
 
-  // #2: collapse every matching block under one heading to ONE row, so the list
+  // #2: collapse every matching block under one section to ONE row, so the list
   // shows one result per section instead of a wall of blocks from the same place.
-  // Blocks with no heading fall back to their own targetId (never merged).
-  // First-seen heading order is preserved.
+  // Sections are keyed by their heading's anchor id (`sectionId`) — NOT the
+  // rendered heading-path text, so two distinct sections that happen to share an
+  // identical path (e.g. repeated "Notes"/"Examples" subsections) stay separate.
+  // Blocks with no section fall back to their own targetId (never merged).
+  // First-seen order is preserved.
   //
   // Ranking and display are deliberately decoupled:
   //   - DISPLAY  the best-scoring *body* block (prose snippet that says why the
@@ -198,12 +220,14 @@
   //
   // JACKPOT: if `query` is supplied and a section's heading TITLE literally
   // contains it (e.g. searching "likelihoods" with a "Likelihoods and
-  // posteriors" heading), that section is tiered to the very top (rank pushed
-  // below zero). The displayed row is still the body prose, not the bare title.
-  function dedupeByHeading(results, query) {
+  // posteriors" heading), that section is tiered to the very top. The jackpot
+  // offset is computed RELATIVE to the worst non-jackpot rank (not a fixed
+  // constant) so a jackpot always leads regardless of score scale / threshold
+  // tuning. The displayed row is still the body prose, not the bare title.
+  function dedupeByHeading(results, query, headingWordRe) {
     // Jackpot only on a whole-word heading-title hit, so searching "normal"
     // jackpots a "Normal distribution" heading but not "Normalization".
-    var headingWordRe = wholeWordRegex(query);
+    if (headingWordRe === undefined) headingWordRe = wholeWordRegex(query);
     function scoreOf(r) { return typeof r.score === 'number' ? r.score : 1; }
 
     var groups = {};
@@ -211,7 +235,9 @@
     for (var i = 0; i < results.length; i++) {
       var r = results[i];
       var item = r.item || {};
-      var key = item.heading ? 'h:' + item.heading : 't:' + (item.targetId || i);
+      var key = item.sectionId ? 's:' + item.sectionId
+        : item.heading ? 'h:' + item.heading
+        : 't:' + (item.targetId || i);
       var g = groups[key];
       if (!g) { g = groups[key] = { bestOverall: r, bestBody: null, exactHeading: false }; order.push(key); }
       if (scoreOf(r) < scoreOf(g.bestOverall)) g.bestOverall = r;
@@ -222,21 +248,41 @@
       }
     }
 
-    return order.map(function (k) {
+    // First pass: resolve display row, base rank, and whether each group wins
+    // the jackpot. The jackpot can fire even when no isHeading block for the
+    // section reached the result set — fall back to the heading path's last
+    // segment so a body-only match still tiers correctly.
+    var ranked = order.map(function (k) {
       var g = groups[k];
       var display = g.bestBody || g.bestOverall;
-      var rank = scoreOf(g.bestOverall);
-      if (g.exactHeading) rank -= 1; // jackpot tier: always above non-jackpot rows
-      return { item: display.item, score: rank, matches: display.matches };
+      var jackpot = g.exactHeading;
+      if (!jackpot && headingWordRe) {
+        var path = (display.item && display.item.heading) || '';
+        var title = path.split(' - ').pop();
+        if (title && headingWordRe.test(title)) jackpot = true;
+      }
+      return { item: display.item, base: scoreOf(g.bestOverall), jackpot: jackpot, matches: display.matches };
+    });
+
+    // Second pass: offset jackpots below every non-jackpot row.
+    var maxBase = 0;
+    for (var j = 0; j < ranked.length; j++) {
+      if (!ranked[j].jackpot && ranked[j].base > maxBase) maxBase = ranked[j].base;
+    }
+    var jackpotOffset = maxBase + 1;
+    return ranked.map(function (x) {
+      return { item: x.item, score: x.jackpot ? x.base - jackpotOffset : x.base, matches: x.matches };
     });
   }
 
   // Push frontmatter/overview prose down so deeper reference sections win.
   // `prefixes` is a list of lowercased heading-path prefixes; a result whose
-  // heading path starts with any of them has its (lower-is-better) score
-  // multiplied by `factor` (> 1 = worse). Pure; returns a new array.
-  function demoteByHeading(results, prefixes, factor) {
-    if (typeof factor !== 'number' || factor <= 0) factor = 1;
+  // heading path starts with any of them has `penalty` ADDED to its
+  // (lower-is-better) score. Additive (not multiplicative) so it reliably
+  // worsens scores that may already be zero or negative after exact/table
+  // boosts. Pure; returns a new array.
+  function demoteByHeading(results, prefixes, penalty) {
+    if (typeof penalty !== 'number' || penalty < 0) penalty = DEMOTE_PENALTY;
     prefixes = prefixes || [];
     return results.map(function (r) {
       var item = r.item || {};
@@ -246,24 +292,29 @@
         if (prefixes[i] && h.indexOf(prefixes[i]) === 0) { demote = true; break; }
       }
       var s = typeof r.score === 'number' ? r.score : 1;
-      return { item: r.item, score: demote ? s * factor : s, matches: r.matches };
+      return { item: r.item, score: demote ? s + penalty : s, matches: r.matches };
     });
   }
 
   // Orchestrates a single search. Pure: takes an already-built `fuse` instance
   // and the `index` array, returns processed results ready to render
-  // ({ item, score, matches }). Order of operations:
-  //   sanitize -> fuse.search -> (identifier? merge exact hits) -> boost exact
-  //   -> dedupe by heading -> sort by score -> cap to maxResults.
+  // ({ item, score, matches }). `matches` is threaded through untouched and
+  // retained for a potential future highlighter; the current renderer ignores
+  // it (buildSnippet works from the raw query). Order of operations:
+  //   sanitize -> fuse.search -> (identifier? merge exact hits)
+  //   -> boostExact -> boostTables -> demoteByHeading -> dedupeByHeading
+  //   -> sort by score -> cap to maxResults.
+  // The whole-word regex is built once here and threaded into every stage.
   function computeResults(opts) {
     opts = opts || {};
     var fuse = opts.fuse;
     var index = opts.index || [];
-    var maxResults = opts.maxResults || 40;
+    var maxResults = opts.maxResults != null ? opts.maxResults : 40;
     var q = sanitizeQuery(opts.rawQuery);
     if (!q) return [];
+    var wordRe = wholeWordRegex(q);
 
-    // Over-fetch before dedup so collapsing per heading still fills the list.
+    // Over-fetch before dedup so collapsing per section still fills the list.
     var raw = fuse.search(q, { limit: maxResults * 2 });
 
     if (looksLikeIdentifier(q)) {
@@ -271,21 +322,23 @@
       for (var i = 0; i < raw.length; i++) {
         if (raw[i].item) seen[raw[i].item.targetId] = true;
       }
-      var extra = exactSubstringHits(index, q).filter(function (r) {
+      var extra = exactSubstringHits(index, q, maxResults * 2, wordRe).filter(function (r) {
         return !seen[r.item.targetId];
       });
       raw = extra.concat(raw);
     }
 
-    var boosted = boostExact(raw, q);
-    // Push frontmatter/overview prose down (opts.demoteHeadings = lowercased
-    // heading-path prefixes; opts.demoteFactor defaults to 1.6).
-    boosted = demoteByHeading(boosted, opts.demoteHeadings || [], opts.demoteFactor || 1.6);
-    // Lift reference-table cells above tying prose (opts.tableBonus default 0.25).
+    var boosted = boostExact(raw, q, wordRe);
+    // Lift reference-table cells (opts.tableBonus default TABLE_BONUS).
     boosted = boostTables(boosted, opts.tableBonus);
+    // Push frontmatter/overview prose down LAST, so a boosted overview table is
+    // still demotable (opts.demoteHeadings = lowercased heading-path prefixes;
+    // opts.demotePenalty defaults to DEMOTE_PENALTY).
+    var demotePenalty = opts.demotePenalty != null ? opts.demotePenalty : DEMOTE_PENALTY;
+    boosted = demoteByHeading(boosted, opts.demoteHeadings || [], demotePenalty);
     // Collapse to one row per section (body prose preferred for display).
     // Passing q enables the exact-heading jackpot (see dedupeByHeading).
-    var deduped = dedupeByHeading(boosted, q);
+    var deduped = dedupeByHeading(boosted, q, wordRe);
     deduped.sort(function (a, b) { return a.score - b.score; });
     return deduped.slice(0, maxResults);
   }
