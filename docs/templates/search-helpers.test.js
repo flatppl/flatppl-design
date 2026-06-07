@@ -824,3 +824,54 @@ test('computeResults: a demoted title section does not lead via jackpot (C1 end-
   });
   assert.strictEqual(out[0].item.targetId, 'sb', 'real content leads; demoted title does not jackpot to the top');
 });
+
+// Real-Fuse integration (T1): exercises the actual Fuse wiring — heading-weighted
+// keys (#1) and multi-word AND via useExtendedSearch (#5) — which the fakeFuse
+// tests cannot. Fuse isn't an npm dep here; the project vendors it to
+// build/fuse.min.js (a browser-global bundle ending in `globalThis.Fuse = ...`).
+// Load order: npm package -> vendored bundle via vm -> skip. The test runs
+// whenever either source is present (e.g. after a build) and skips otherwise.
+function loadFuse() {
+  try { const F = require('fuse.js'); return F.default || F; } catch (e) { /* not installed */ }
+  try {
+    const fs = require('node:fs');
+    const vm = require('node:vm');
+    const path = require('node:path');
+    const bundle = path.join(__dirname, '..', '..', 'build', 'fuse.min.js');
+    const code = fs.readFileSync(bundle, 'utf8');
+    const sandbox = {};
+    vm.createContext(sandbox);
+    vm.runInContext(code, sandbox);
+    return vm.runInContext('globalThis.Fuse', sandbox);
+  } catch (e) { /* not built */ }
+  return null;
+}
+
+test('computeResults over a real Fuse honors heading weight (#1) and multi-word AND (#5)', (t) => {
+  const Fuse = loadFuse();
+  if (typeof Fuse !== 'function') { t.skip('Fuse unavailable (no npm fuse.js and no build/fuse.min.js)'); return; }
+
+  const index = [
+    { text: 'prose about kernels and measures', heading: 'Bayesian updates', sectionId: 's1', targetId: 'headingonly', isHeading: false, isTable: false },
+    { text: 'the bayesian update fuses a prior and likelihood', heading: 'Updates', sectionId: 's2', targetId: 'bothwords', isHeading: false, isTable: false },
+    { text: 'a prior distribution stands alone here', heading: 'Priors', sectionId: 's3', targetId: 'oneword', isHeading: false, isTable: false }
+  ];
+  const fuse = new Fuse(index, H.searchFuseOptions);
+
+  // #1: a query matching only via the HEADING ("bayesian") still surfaces its
+  // section — proving the heading key is searched, not just the text key.
+  const byHeading = H.computeResults({ rawQuery: 'bayesian', fuse: fuse, index: index, maxResults: 40 });
+  assert.ok(byHeading.some((r) => r.item.targetId === 'headingonly'),
+    'heading-only match is found (heading key #1 is live)');
+
+  // #5: a multi-word query returns the entry containing BOTH terms and not the
+  // single-term entry. Note: the useExtendedSearch FLAG itself is pinned by the
+  // static `searchFuseOptions ...` test — flipping it doesn't change THIS
+  // fixture's result set (the 0.35 threshold already drops the single-term entry
+  // under non-extended matching). This clause guards the multi-word result shape;
+  // the #1 heading clause above is what verifies real Fuse key wiring.
+  const both = H.computeResults({ rawQuery: 'prior likelihood', fuse: fuse, index: index, maxResults: 40 });
+  const ids = both.map((r) => r.item.targetId);
+  assert.ok(ids.indexOf('bothwords') !== -1, 'entry with both terms matches');
+  assert.ok(ids.indexOf('oneword') === -1, 'prior-only entry excluded — AND, not OR (#5)');
+});
