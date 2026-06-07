@@ -669,3 +669,16 @@ test('buildSnippet cannot inject HTML via the query (XSS regression, #4)', () =>
   assert.strictEqual(html.indexOf('<img'), -1, 'no raw tag emitted from the matched doc text');
   assert.ok(html.indexOf('&lt;img') !== -1, 'matched text escaped even though it equals the query');
 });
+
+// --- #8: deterministic tiebreak (no reliance on Array.sort stability) -------
+
+test('computeResults keeps first-seen order for equal tier and score (#8)', () => {
+  // Both rows are fuzzy-only (tier 2) with identical scores and no literal hit,
+  // so the only thing that can order them is the explicit first-seen tiebreak.
+  const fuseResults = [
+    { item: { isHeading: false, text: 'alpha block', heading: 'A', sectionId: 'a', targetId: 'a' }, score: 0.2, matches: [] },
+    { item: { isHeading: false, text: 'beta block', heading: 'B', sectionId: 'b', targetId: 'b' }, score: 0.2, matches: [] }
+  ];
+  const out = H.computeResults({ rawQuery: 'zzz', fuse: fakeFuse(fuseResults), index: [], maxResults: 40 });
+  assert.deepStrictEqual(out.map((r) => r.item.targetId), ['a', 'b'], 'first-seen order preserved on a full tie');
+});

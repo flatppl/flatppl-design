@@ -460,7 +460,11 @@
     // within a tier. This is what guarantees an exact match always outranks a
     // fuzzy-only one — no boost can move a row across tiers.
     function tier(r) { return r.jackpot ? 0 : (r.exact ? 1 : 2); }
-    deduped.sort(function (a, b) { return (tier(a) - tier(b)) || (a.score - b.score); });
+    // Stamp first-seen order (dedupeByHeading preserves it) as an explicit final
+    // tiebreaker so the ranking is deterministic without relying on Array.sort
+    // being stable. `_ord` is internal; the renderer reads only item/score.
+    for (var oi = 0; oi < deduped.length; oi++) { deduped[oi]._ord = oi; }
+    deduped.sort(function (a, b) { return (tier(a) - tier(b)) || (a.score - b.score) || (a._ord - b._ord); });
     return deduped.slice(0, maxResults);
   }
 
