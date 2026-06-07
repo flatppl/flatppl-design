@@ -151,6 +151,7 @@ test('computeResults sanitizes the query before searching', () => {
   const fuse = fakeFuse([]);
   H.computeResults({ rawQuery: "  'kernel  ", fuse: fuse, index: [] });
   assert.strictEqual(fuse.calls[0].q, 'kernel');
+  assert.strictEqual(fuse.calls[0].opts.limit, 40 * 2, 'over-fetches maxResults*2 before dedup (T5)');
 });
 
 test('computeResults dedupes by heading and sorts by boosted score', () => {
