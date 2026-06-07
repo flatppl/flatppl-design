@@ -800,6 +800,20 @@ test('demoteByHeading flags demoted rows (C1 plumbing)', () => {
   assert.strictEqual(byId.b.demoted, false, 'non-matching row not demoted');
 });
 
+test('buildIndexEntries heading paths stay matchable by demoteByHeading prefixes (T4)', () => {
+  // A heading rendered with a section number and trailing anchor must normalize
+  // to a path that the demote prefix (derived the same way) still matches.
+  const entries = H.buildIndexEntries([
+    { id: 'sec:overview', text: '2 Language overview #', isHeading: true, level: 1 },
+    { id: 'b1', text: 'overview prose body', isHeading: false, level: 0 }
+  ]);
+  const prefix = H.normalizeHeadingText('2 Language overview #').toLowerCase();
+  assert.strictEqual(prefix, 'language overview', 'normalizer strips number + anchor');
+  const out = H.demoteByHeading(entries.map((e) => ({ item: e, score: 0.1 })), [prefix], 0.4);
+  assert.ok(out.every((r) => r.demoted), 'every entry under the overview heading is demoted');
+  assert.ok(out.every((r) => Math.abs(r.score - 0.5) < 1e-9), 'penalty applied (0.1 + 0.4)');
+});
+
 test('dedupeByHeading falls back to the heading block when a section has no body (T3)', () => {
   const results = [
     { item: { isHeading: true, text: 'Kernels', heading: 'Kernels', sectionId: 'k', targetId: 'khead' }, score: 0.15, matches: [] }
