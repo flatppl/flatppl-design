@@ -55,3 +55,26 @@ test('exactSubstringHits returns case-insensitive substring matches as score-0 r
   assert.strictEqual(hits[0].score, 0);
   assert.strictEqual(hits[0].matches, null);
 });
+
+test('boostExact lowers (improves) score for literal substring matches', () => {
+  const q = 'kernel';
+  const results = [
+    { item: { text: 'fuzzy kernal typo here', targetId: 'a' }, score: 0.10, matches: [] },
+    { item: { text: 'the kernel of a measure', targetId: 'b' }, score: 0.30, matches: [] }
+  ];
+  const boosted = H.boostExact(results, q);
+  // 'b' has a literal 'kernel' substring: 0.30 * 0.3 = 0.09, beating 'a' at 0.10.
+  const byId = {};
+  boosted.forEach((r) => { byId[r.item.targetId] = r.score; });
+  assert.ok(byId.b < byId.a, 'exact match outranks fuzzy-only after boost');
+  assert.strictEqual(byId.a, 0.10, 'non-matching score untouched');
+  assert.ok(Math.abs(byId.b - 0.09) < 1e-9);
+});
+
+test('boostExact is case-insensitive and tolerates missing score', () => {
+  const boosted = H.boostExact(
+    [{ item: { text: 'The KERNEL', targetId: 'x' }, matches: [] }],
+    'kernel'
+  );
+  assert.ok(boosted[0].score < 1, 'missing score defaults to 1 then boosts');
+});

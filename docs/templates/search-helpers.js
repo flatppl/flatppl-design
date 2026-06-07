@@ -64,11 +64,25 @@
     return out;
   }
 
+  // #3: literal substring matches are almost always what the user meant, so
+  // multiply their (lower-is-better) score by 0.3 to float them above
+  // fuzzy-only hits. Returns a new array; inputs are not mutated.
+  function boostExact(results, q) {
+    var lq = q.toLowerCase();
+    return results.map(function (r) {
+      var text = r.item && r.item.text ? r.item.text : '';
+      var hit = text.toLowerCase().indexOf(lq) !== -1;
+      var s = typeof r.score === 'number' ? r.score : 1;
+      return { item: r.item, score: hit ? s * 0.3 : s, matches: r.matches };
+    });
+  }
+
   return {
     __loaded: true,
     searchFuseOptions: searchFuseOptions,
     sanitizeQuery: sanitizeQuery,
     looksLikeIdentifier: looksLikeIdentifier,
-    exactSubstringHits: exactSubstringHits
+    exactSubstringHits: exactSubstringHits,
+    boostExact: boostExact
   };
 });
