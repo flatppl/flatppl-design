@@ -900,3 +900,22 @@ test('computeResults over a real Fuse honors heading weight (#1) and multi-word 
   assert.ok(ids.indexOf('bothwords') !== -1, 'entry with both terms matches');
   assert.ok(ids.indexOf('oneword') === -1, 'prior-only entry excluded — AND, not OR (#5)');
 });
+
+test('buildSnippet returns empty string for empty text (T6)', () => {
+  assert.strictEqual(H.buildSnippet('', 'kernel'), '');
+  assert.strictEqual(H.buildSnippet(null, 'kernel'), '');
+});
+
+test('buildSnippet merges overlapping ranges from a repeated term into one mark (T6)', () => {
+  // "aa" matches overlappingly in "aaaa": matches at offsets 0 and 2 are
+  // adjacent/contiguous and must merge into a single contiguous <mark>, not
+  // produce nested or duplicated marks.
+  const html = H.buildSnippet('aaaa', 'aa');
+  assert.strictEqual((html.match(/<mark>/g) || []).length, 1, 'contiguous matches merge into one mark');
+  assert.ok(html.indexOf('<mark>aaaa</mark>') !== -1, 'the whole contiguous run is marked');
+});
+
+test('buildSnippet marks two separated occurrences of the same term (T6)', () => {
+  const html = H.buildSnippet('kernel then later kernel again', 'kernel');
+  assert.strictEqual((html.match(/<mark>/g) || []).length, 2, 'two distinct occurrences -> two marks');
+});
