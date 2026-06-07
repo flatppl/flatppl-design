@@ -163,6 +163,9 @@
 
     var first = merged[0][0];
     var start = Math.max(0, first - radius);
+    // The window anchors on the FIRST matched term and spans SNIPPET_WINDOW
+    // chars. A later term outside that window is intentionally not highlighted
+    // (keeps snippets bounded) — by design, not a TODO. See the L3 test.
     var end = Math.min(text.length, start + SNIPPET_WINDOW);
 
     var html = (start > 0 ? '…' : '');
@@ -201,6 +204,10 @@
     if (wordRe === undefined) wordRe = wholeWordRegex(q);
     var lq = q.toLowerCase();
     var out = [];
+    // Per-keystroke this scans the index once, but only for identifier-shaped
+    // queries (see looksLikeIdentifier in computeResults) and it stops at
+    // `limit` (callers pass maxResults*2), so the work stays bounded — no
+    // debounce needed at the docs' index size.
     for (var i = 0; i < index.length; i++) {
       var text = index[i].text || '';
       var hit = wordRe ? wordRe.test(text) : text.toLowerCase().indexOf(lq) !== -1;

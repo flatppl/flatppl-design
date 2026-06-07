@@ -323,6 +323,9 @@
     // reference sections outrank frontmatter/overview. The document title
     // catches the abstract; the tour chapter is intentionally redundant with
     // the reference sections.
+    // NOTE: 'language overview' below is a literal match against that chapter's
+    // heading text. If the "Language overview" chapter is renamed, update this
+    // string or the demotion silently stops firing.
     var demoteHeadings = [];
     var docTitleEl = document.querySelector('#content .title');
     if (docTitleEl) { demoteHeadings.push(docTitleEl.textContent.replace(/\s*#+\s*$/, '').replace(/\s+/g, ' ').trim().toLowerCase()); }
