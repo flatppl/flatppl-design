@@ -54,7 +54,6 @@ test('exactWordHits returns case-insensitive whole-word matches as score-0 resul
   const ids = hits.map((h) => h.item.targetId).sort();
   assert.deepStrictEqual(ids, ['t1', 't3']);
   assert.strictEqual(hits[0].score, 0);
-  assert.strictEqual(hits[0].matches, null);
 });
 
 test('exactWordHits matches whole words only — no flooding on common prefixes', () => {
@@ -85,8 +84,7 @@ test('boostExact lowers (improves) score for literal substring matches', () => {
   ];
   const boosted = H.boostExact(results, q);
   // 'b' has a whole-word 'kernel': 0.30 - 0.3 = 0.0, beating 'a' at 0.10.
-  const byId = {};
-  boosted.forEach((r) => { byId[r.item.targetId] = r.score; });
+  const byId = scoresById(boosted);
   assert.ok(byId.b < byId.a, 'exact match outranks fuzzy-only after boost');
   assert.strictEqual(byId.a, 0.10, 'non-matching score untouched');
   assert.ok(Math.abs(byId.b - 0.0) < 1e-9);
@@ -98,8 +96,7 @@ test('boostExact ranks a whole-word match above a longer-word (substring) match'
     { item: { text: 'the Normal distribution', targetId: 'dist' }, score: 0.20, matches: [] }
   ];
   const out = H.boostExact(results, 'normal');
-  const byId = {};
-  out.forEach((r) => { byId[r.item.targetId] = r.score; });
+  const byId = scoresById(out);
   // dist: whole-word 0.20-0.3=-0.10 ; norm: substring 0.10-0.1=0.0 -> dist wins
   assert.ok(byId.dist < byId.norm, 'whole-word Normal beats substring inside normalize');
   assert.ok(Math.abs(byId.dist - (-0.10)) < 1e-9, 'whole-word bonus 0.3');
@@ -141,6 +138,9 @@ function fakeFuse(returnValue) {
     search: function (q, opts) { this.calls.push({ q: q, opts: opts }); return returnValue; }
   };
 }
+
+// Collapse a result array to a { targetId: score } map for terse assertions.
+const scoresById = (rows) => Object.fromEntries(rows.map((r) => [r.item.targetId, r.score]));
 
 test('computeResults returns [] for an empty/whitespace query and does not call fuse', () => {
   const fuse = fakeFuse([]);
@@ -193,8 +193,7 @@ test('boostTables tiers an EXACT table-cell match above equivalent prose', () =>
     { item: { isTable: false, text: 'a multivariate normal mention', targetId: 'prose' }, score: 0.02, matches: [], exact: true }
   ];
   const out = H.boostTables(results, 0.25);
-  const byId = {};
-  out.forEach((r) => { byId[r.item.targetId] = r.score; });
+  const byId = scoresById(out);
   assert.ok(Math.abs(byId.cell - (-0.23)) < 1e-9, 'exact table cell lowered by the bonus');
   assert.strictEqual(byId.prose, 0.02, 'prose untouched');
   assert.ok(byId.cell < byId.prose, 'table cell ranks above the tying prose');
@@ -238,8 +237,7 @@ test('demoteByHeading adds a penalty to matching heading prefixes only', () => {
     { item: { heading: 'Measure algebra and analysis - Likelihoods', targetId: 'ref' }, score: 0.12, matches: [] }
   ];
   const out = H.demoteByHeading(results, ['flatppl, a flat portable probabilistic language'], 0.4);
-  const byId = {};
-  out.forEach((r) => { byId[r.item.targetId] = r.score; });
+  const byId = scoresById(out);
   assert.ok(Math.abs(byId.abs - 0.50) < 1e-9, 'abstract demoted 0.10 + 0.4');
   assert.strictEqual(byId.ref, 0.12, 'reference section untouched');
 });
@@ -280,6 +278,15 @@ test('buildSnippet highlights the whole query term, not fuzzy fragments', () => 
   const html = H.buildSnippet('The kernel of a measure is central', 'kernel');
   assert.ok(html.indexOf('<mark>kernel</mark>') !== -1, 'whole term highlighted');
   assert.strictEqual((html.match(/<mark>/g) || []).length, 1, 'exactly one mark, no staccato');
+});
+
+test('buildSnippet highlights the right span past a length-changing code point (Unicode offset regression)', () => {
+  // "İ" (U+0130) lowercases to two code points ("i" + combining dot), so ranges
+  // computed on a lowercased copy would be shifted by one and mis-slice the
+  // original text — here yielding "<mark>ernel </mark>" instead of the term.
+  const html = H.buildSnippet('ABİCD kernel here', 'kernel');
+  assert.ok(html.indexOf('<mark>kernel</mark>') !== -1, 'whole term marked at the correct offset');
+  assert.strictEqual((html.match(/<mark>/g) || []).length, 1, 'exactly one mark');
 });
 
 test('buildSnippet highlights each query term, preserving original case', () => {
@@ -504,6 +511,31 @@ test('snippetTerms strips operators and short terms', () => {
   assert.deepStrictEqual(H.snippetTerms('  measure   algebra '), ['measure', 'algebra']);
   assert.deepStrictEqual(H.snippetTerms('a kernel'), ['kernel'], 'sub-MIN_TERM_LEN term dropped');
   assert.deepStrictEqual(H.snippetTerms("'exact"), ['exact']);
+});
+
+// --- normalizeHeadingText (single source of truth, exported) ----------------
+
+test('normalizeHeadingText strips section numbers, trailing #s, and collapses whitespace', () => {
+  assert.strictEqual(H.normalizeHeadingText('6.4 Likelihoods and posteriors'), 'Likelihoods and posteriors');
+  assert.strictEqual(H.normalizeHeadingText('2 Language\n        overview ##'), 'Language overview');
+  assert.strictEqual(H.normalizeHeadingText('Distributions #'), 'Distributions');
+  assert.strictEqual(H.normalizeHeadingText('   spaced   out   '), 'spaced out');
+  assert.strictEqual(H.normalizeHeadingText(null), '', 'null coerces to empty string');
+  assert.strictEqual(H.normalizeHeadingText(undefined), '', 'undefined coerces to empty string');
+});
+
+test('normalizeHeadingText strips the leading section number even behind source whitespace', () => {
+  // Raw el.textContent can carry indentation/newlines BEFORE the digit; collapse
+  // + trim must run first so ^[\d.]+ still fires. Guards the docs-app.js path
+  // (sidebar labels + demote prefixes) against drift from the index heading path.
+  assert.strictEqual(H.normalizeHeadingText('   6.4 Likelihoods'), 'Likelihoods');
+  assert.strictEqual(H.normalizeHeadingText('\n    2 Language\n    overview #'), 'Language overview');
+});
+
+test('buildIndexEntries stores normalized heading text on the heading row (no section number in snippet)', () => {
+  const out = H.buildIndexEntries([{ id: 'h', text: '6.4 Likelihoods and posteriors #', isHeading: true, level: 2 }]);
+  assert.strictEqual(out[0].text, 'Likelihoods and posteriors', 'heading-row text is normalized for the snippet');
+  assert.strictEqual(out[0].heading, 'Likelihoods and posteriors', 'path matches the normalized title');
 });
 
 // --- Phase-3/M4: pure index builder ----------------------------------------

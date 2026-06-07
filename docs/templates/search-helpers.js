@@ -137,15 +137,22 @@
     // `terms` may be precomputed by the caller (see snippetTerms) to skip the
     // per-row sanitize; otherwise derive them from `query`.
     if (!Array.isArray(terms)) terms = snippetTerms(query);
-    var lower = text.toLowerCase();
 
+    // Locate each term ON THE ORIGINAL-CASE text with an index-preserving,
+    // case-insensitive regex. Indexing into a separately-lowercased copy is a
+    // bug: length-changing code points (e.g. "İ" U+0130 -> "i̇" under
+    // toLowerCase) shift every later offset, so ranges computed on the lowercase
+    // string would mis-slice the original text. match.index/lastIndex from a
+    // scan over the real text are always correct, whatever case folding does.
     var ranges = [];
     for (var t = 0; t < terms.length; t++) {
       var term = terms[t];
-      var from = 0, idx;
-      while ((idx = lower.indexOf(term, from)) !== -1) {
-        ranges.push([idx, idx + term.length]);
-        from = idx + term.length;
+      if (!term) continue;
+      var re = new RegExp(escapeRegExp(term), 'giu');
+      var m;
+      while ((m = re.exec(text)) !== null) {
+        ranges.push([m.index, m.index + m[0].length]);
+        if (m.index === re.lastIndex) re.lastIndex++; // guard against any zero-length match
       }
     }
     if (!ranges.length) {
@@ -212,7 +219,7 @@
       var text = index[i].text || '';
       var hit = wordRe ? wordRe.test(text) : text.toLowerCase().indexOf(lq) !== -1;
       if (hit) {
-        out.push({ item: index[i], score: 0, matches: null });
+        out.push({ item: index[i], score: 0 });
         if (typeof limit === 'number' && out.length >= limit) break;
       }
     }
@@ -244,7 +251,7 @@
       // `exact` tags the result for the tiered sort in computeResults: an exact
       // (whole-word or substring) hit always outranks a fuzzy-only hit, no
       // matter the scores. The score still orders rows within the exact tier.
-      return { item: r.item, score: s - bonus, matches: r.matches, exact: whole || sub };
+      return { item: r.item, score: s - bonus, exact: whole || sub };
     });
   }
 
@@ -261,7 +268,7 @@
     return results.map(function (r) {
       var item = r.item || {};
       var s = typeof r.score === 'number' ? r.score : 1;
-      return { item: r.item, score: (item.isTable && r.exact) ? s - bonus : s, matches: r.matches, exact: r.exact };
+      return Object.assign({}, r, { score: (item.isTable && r.exact) ? s - bonus : s });
     });
   }
 
@@ -326,7 +333,7 @@
         var title = path.split(' - ').pop();
         if (title && headingWordRe.test(title)) jackpot = true;
       }
-      return { item: display.item, score: scoreOf(g.bestOverall), matches: display.matches, jackpot: jackpot, exact: g.exact };
+      return { item: display.item, score: scoreOf(g.bestOverall), jackpot: jackpot, exact: g.exact };
     });
   }
 
@@ -347,8 +354,25 @@
         if (prefixes[i] && h.indexOf(prefixes[i]) === 0) { demote = true; break; }
       }
       var s = typeof r.score === 'number' ? r.score : 1;
-      return { item: r.item, score: demote ? s + penalty : s, matches: r.matches, exact: r.exact };
+      return Object.assign({}, r, { score: demote ? s + penalty : s });
     });
+  }
+
+  // Canonical heading-text cleaner — the SINGLE source of truth for turning raw
+  // rendered heading text into the form used in heading paths and heading-row
+  // snippets. Drops a trailing anchor #(s), collapses internal whitespace
+  // (newlines/indentation from the source), and strips a leading section number
+  // (e.g. "6.4 "). Used by buildIndexEntries and exported so docs-app.js can
+  // apply the exact same normalization without re-copying the regex chain.
+  function normalizeHeadingText(s) {
+    return String(s == null ? '' : s)
+      // Collapse newlines/indentation to single spaces and trim FIRST, so a
+      // leading section number that was preceded by source whitespace still sits
+      // at index 0 for the next strip (raw el.textContent may carry indentation).
+      .replace(/\s+/g, ' ').trim()
+      // Drop the leading section number ("6.4 "), then the trailing anchor #(s)
+      // (one-or-more, e.g. a section-number '#' plus the html-anchor '#').
+      .replace(/^[\d.]+\s+/, '').replace(/\s*#+\s*$/, '').trim();
   }
 
   // Build the search index entries from an ordered list of raw blocks. Pure: no
@@ -364,33 +388,31 @@
   // distinct ids) apart.
   function buildIndexEntries(blocks) {
     var stack = [null, null, null, null, null, null, null];
+    // stack is length-7; indices 1-6 are the meaningful heading levels.
     function headingPath() {
-      var parts = [];
-      for (var i = 1; i <= 6; i++) { if (stack[i]) parts.push(stack[i].text); }
-      return parts.join(' - ');
+      return stack.slice(1).filter(Boolean).map(function (h) { return h.text; }).join(' - ');
     }
     function sectionId() {
-      for (var i = 6; i >= 1; i--) { if (stack[i] && stack[i].id) return stack[i].id; }
-      return '';
+      var h = stack.slice(1).reverse().find(function (x) { return x && x.id; });
+      return h ? h.id : '';
     }
     var out = [];
     for (var b = 0; b < blocks.length; b++) {
       var blk = blocks[b] || {};
       if (blk.isHeading) {
         var level = blk.level;
-        stack[level] = {
-          id: blk.id || '',
-          // Normalize the heading text used for the path: drop trailing anchor
-          // #(s), collapse whitespace, strip the leading section number. Keeps
-          // paths readable and demote-prefix matching reliable even if a caller
-          // passes raw heading text carrying the source's newlines/markers.
-          text: String(blk.text == null ? '' : blk.text)
-            .replace(/\s*#+\s*$/, '').replace(/\s+/g, ' ').replace(/^[\d.]+\s+/, '').trim()
-        };
+        // Normalize the heading text used for the path (single source of truth:
+        // see normalizeHeadingText) so paths read well and demote-prefix matching
+        // stays reliable even when a caller passes raw heading text carrying the
+        // source's section number, newlines/indentation, or trailing anchor #(s).
+        stack[level] = { id: blk.id || '', text: normalizeHeadingText(blk.text) };
         for (var j = level + 1; j <= 6; j++) stack[j] = null;
       }
       out.push({
-        text: blk.text,
+        // A heading row stores its NORMALIZED title so the snippet matches the
+        // clean heading-path span (no leading section number / trailing #).
+        // Body blocks keep their raw text for snippet context.
+        text: blk.isHeading ? normalizeHeadingText(blk.text) : blk.text,
         heading: headingPath(),
         sectionId: sectionId(),
         targetId: blk.id,
@@ -416,9 +438,9 @@
 
   // Orchestrates a single search. Pure: takes an already-built `fuse` instance
   // and the `index` array, returns processed results ready to render
-  // ({ item, score, matches }). `matches` is threaded through untouched and
-  // retained for a potential future highlighter; the current renderer ignores
-  // it (buildSnippet works from the raw query). Order of operations:
+  // ({ item, score }). Fuse's per-character `matches` are intentionally dropped
+  // at boostExact — no renderer consumes them; buildSnippet highlights from the
+  // raw query instead. Order of operations:
   //   sanitize -> fuse.search -> (identifier? merge exact hits)
   //   -> boostExact -> boostTables -> demoteByHeading -> dedupeByHeading
   //   -> tiered sort (jackpot < exact < fuzzy, score as tiebreak) -> cap.
@@ -436,12 +458,11 @@
     var raw = fuse.search(q, { limit: maxResults * 2 });
 
     if (looksLikeIdentifier(q)) {
-      var seen = {};
-      for (var i = 0; i < raw.length; i++) {
-        if (raw[i].item) seen[raw[i].item.targetId] = true;
-      }
+      // Set keyed on targetId (not a plain object) so an id like "__proto__"
+      // can't collide with Object.prototype keys.
+      var seen = new Set(raw.map(function (r) { return r.item && r.item.targetId; }));
       var extra = exactWordHits(index, q, maxResults * 2, wordRe).filter(function (r) {
-        return !seen[r.item.targetId];
+        return !seen.has(r.item.targetId);
       });
       raw = extra.concat(raw);
     }
@@ -487,6 +508,7 @@
     boostTables: boostTables,
     dedupeByHeading: dedupeByHeading,
     demoteByHeading: demoteByHeading,
+    normalizeHeadingText: normalizeHeadingText,
     buildIndexEntries: buildIndexEntries,
     attachElements: attachElements,
     computeResults: computeResults

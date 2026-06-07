@@ -2,6 +2,21 @@
 (function () {
   var nav = document.getElementById('sidebar-nav');
 
+  // Canonical heading-text normalizer: delegates to the shared
+  // SearchHelpers.normalizeHeadingText so the sidebar labels, the search index
+  // heading paths (SearchHelpers.buildIndexEntries), and the demote prefixes all
+  // strip the leading section number + trailing anchor marker identically — the
+  // demote prefix-match then can't drift away from the index heading paths. The
+  // inline fallback only runs if search-helpers.js failed to load: search (and
+  // therefore the demote pass) is then unavailable, so nothing can drift; it
+  // just keeps the critical sidebar nav working instead of throwing.
+  function cleanHeading(el) {
+    var s = el && el.textContent != null ? el.textContent : '';
+    return (typeof SearchHelpers !== 'undefined' && SearchHelpers.normalizeHeadingText)
+      ? SearchHelpers.normalizeHeadingText(s)
+      : String(s).replace(/\s+/g, ' ').trim().replace(/^[\d.]+\s+/, '').replace(/\s*#+\s*$/, '').trim();
+  }
+
   // Collect top-level sections (h1 with single-number data-number)
   var sections = document.querySelectorAll('#content h1[data-number]');
   var sectionItems = []; // {li, id, subIds}
@@ -13,8 +28,7 @@
 
     var li = document.createElement('li');
     var a = document.createElement('a');
-    // Strip trailing '#' injected by html-anchors.lua at build time
-    a.textContent = h.textContent.replace(/^[\d.]+\s+/, '').replace(/\s*#$/, '').trim();
+    a.textContent = cleanHeading(h);
     a.href = '#' + h.id;
     li.appendChild(a);
 
@@ -36,7 +50,7 @@
       }
       var sli = document.createElement('li');
       var sa = document.createElement('a');
-      sa.textContent = sh.textContent.replace(/^[\d.]+\s+/, '').replace(/\s*#$/, '').trim();
+      sa.textContent = cleanHeading(sh);
       sa.href = '#' + sh.id;
       sli.appendChild(sa);
       subUl.appendChild(sli);
@@ -322,14 +336,20 @@
     // Heading-path prefixes (lowercased) whose prose is demoted so deeper
     // reference sections outrank frontmatter/overview. The document title
     // catches the abstract; the tour chapter is intentionally redundant with
-    // the reference sections.
-    // NOTE: 'language overview' below is a literal match against that chapter's
-    // heading text. If the "Language overview" chapter is renamed, update this
-    // string or the demotion silently stops firing.
+    // the reference sections. Both prefixes are derived from live headings via
+    // cleanHeading (the same normalizer the index uses), so the prefix-match
+    // can't drift from the heading paths in SearchHelpers.buildIndexEntries.
     var demoteHeadings = [];
     var docTitleEl = document.querySelector('#content .title');
-    if (docTitleEl) { demoteHeadings.push(docTitleEl.textContent.replace(/\s*#+\s*$/, '').replace(/\s+/g, ' ').trim().toLowerCase()); }
-    demoteHeadings.push('language overview');
+    if (docTitleEl) { demoteHeadings.push(cleanHeading(docTitleEl).toLowerCase()); }
+    // Key the overview-chapter demotion off its STABLE anchor id (`sec:overview`,
+    // a hand-placed cross-reference target that html-anchors.lua hoists onto the
+    // heading) rather than the display string "language overview", so renaming
+    // the chapter can't silently stop the demotion. closest() returns the
+    // heading itself when the id is on it, or its nearest ancestor heading.
+    var overviewEl = document.getElementById('sec:overview');
+    var overviewHeading = overviewEl && overviewEl.closest('h1, h2, h3, h4, h5, h6');
+    if (overviewHeading) { demoteHeadings.push(cleanHeading(overviewHeading).toLowerCase()); }
 
     var pulseTimer = null;
     function jumpTo(entry) {
@@ -372,8 +392,12 @@
       // Sanitize the query into snippet terms once, not once per rendered row.
       var snipTerms = SearchHelpers.snippetTerms(q);
 
-      for (var r = 0; r < results.length; r++) {
-        var entry = results[r].item;
+      // Build all rows into a detached fragment, then attach once — avoids a
+      // reflow per row. forEach's per-iteration scope captures `entry` for the
+      // click handler, so no IIFE is needed.
+      var frag = document.createDocumentFragment();
+      results.forEach(function (res) {
+        var entry = res.item;
 
         var li = document.createElement('li');
         var a = document.createElement('a');
@@ -390,17 +414,16 @@
         sn.innerHTML = SearchHelpers.buildSnippet(entry.text, q, undefined, snipTerms);
         a.appendChild(sn);
 
-        (function (e) {
-          a.addEventListener('click', function (ev) {
-            ev.preventDefault();
-            searchDialog.close();
-            jumpTo(e);
-          });
-        })(entry);
+        a.addEventListener('click', function (ev) {
+          ev.preventDefault();
+          searchDialog.close();
+          jumpTo(entry);
+        });
 
         li.appendChild(a);
-        resultsList.appendChild(li);
-      }
+        frag.appendChild(li);
+      });
+      resultsList.appendChild(frag);
       if (emptyMsg) { emptyMsg.hidden = results.length > 0; }
       if (searchStatus) {
         var n = results.length;
