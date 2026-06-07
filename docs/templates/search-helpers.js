@@ -211,6 +211,9 @@
     // term (C5). Ties resolve to the earliest cluster (strict >). A term still
     // outside the chosen window is intentionally not highlighted (bounded
     // snippet) — see the L3 test.
+    // The probe measures coverage from each range's start; since the rendered
+    // window is shifted left by `radius`, this is a deliberate approximation
+    // (good enough for choosing where terms co-occur, not an exact optimum).
     var anchorIdx = 0, bestCount = 0;
     for (var c = 0; c < merged.length; c++) {
       var winEnd = merged[c][0] + SNIPPET_WINDOW;
@@ -262,6 +265,10 @@
     // queries (see looksLikeIdentifier in computeResults) and it stops at
     // `limit` (callers pass maxResults*2), so the work stays bounded — no
     // debounce needed at the docs' index size.
+    // P4 (reviewed): the full-index scan is acceptable at the docs' size — gated
+    // to identifier-shaped queries, capped by `limit`, and behind a 120ms
+    // debounce. Revisit (precompute a lowercased text field) only if the index
+    // grows substantially.
     for (var i = 0; i < index.length; i++) {
       var text = index[i].text || '';
       var hit = wordRe ? wordRe.test(text) : text.toLowerCase().indexOf(lq) !== -1;
@@ -285,8 +292,8 @@
   // The bonus gap (0.4) exceeds the Fuse threshold (0.35) — the max score any
   // hit can carry — so a whole-word hit outranks a substring hit regardless of
   // their fuzzy baselines. Returns a new
-  // array; inputs unmutated. `wordRe` may be supplied to reuse a regex already
-  // built for this query.
+  // array; inputs unmutated. `wordRe` and `prefixRe` may be supplied to reuse
+  // regexes already built for this query.
   function boostExact(results, q, wordRe, prefixRe) {
     if (wordRe === undefined) wordRe = wholeWordRegex(q);
     // Substring promotion is limited to WORD-PREFIX hits so mid-word matches
@@ -535,6 +542,10 @@
     // maxResults) are pass-through opts, each defaulted by its callee. The
     // text-shaping tunables (RADIUS, SNIPPET_WINDOW, MIN_TERM_LEN, the bonus
     // factors, threshold) are intentionally fixed module constants.
+    // P3 (reviewed): boostExact/boostTables/demoteByHeading each map the result
+    // array (~maxResults*2 rows). Kept as separate, individually-unit-tested
+    // passes on purpose — fusing them to save ~80 transient allocations would
+    // trade testability for a negligible win at the docs' index size.
     var boosted = boostExact(raw, q, wordRe, prefixRe);
     boosted = boostTables(boosted, opts.tableBonus);
     boosted = demoteByHeading(boosted, opts.demoteHeadings || [], opts.demotePenalty);

@@ -283,6 +283,10 @@
     // heading path and section id is pure and lives in
     // SearchHelpers.buildIndexEntries, so it can be unit-tested without a DOM.
     // Element refs are re-attached by index after the pure pass.
+    // T7 (reviewed): this DOM glue (block gather, blockEls<->index zip, demote
+    // derivation) has no node:test coverage — node has no DOM. The pure layer it
+    // feeds is fully unit-tested; a jsdom smoke test would close this boundary
+    // if the glue ever grows logic worth isolating.
     var contentEl = document.getElementById('content');
     var syntheticIdCounter = 0;
     var blockEls = [];
