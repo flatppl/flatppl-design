@@ -714,3 +714,42 @@ test('computeResults keeps first-seen order for equal tier and score (#8)', () =
   const out = H.computeResults({ rawQuery: 'zzz', fuse: fakeFuse(fuseResults), index: [], maxResults: 40 });
   assert.deepStrictEqual(out.map((r) => r.item.targetId), ['a', 'b'], 'first-seen order preserved on a full tie');
 });
+
+test('buildSnippet tolerates a surrogate in a term that reaches RegExp construction (C3)', () => {
+  // "a\uD800b" survives the MIN_TERM_LEN filter, so a RegExp is actually built
+  // from it (a 1-char surrogate would be filtered out before construction and
+  // prove nothing). Dropping the /u/ flag keeps construction safe for such
+  // unusual input — a lone surrogate is invalid under /u/ on some engines — so
+  // buildSnippet must not throw and must return a string.
+  const term = 'a\uD800b';
+  assert.doesNotThrow(() => H.snippetRegexes(term));
+  assert.doesNotThrow(() => H.buildSnippet('some ordinary text here', term));
+  assert.strictEqual(typeof H.buildSnippet('some ordinary text here', term), 'string');
+});
+
+test('snippetRegexes compiles escaped, case-insensitive, global term matchers', () => {
+  const res = H.snippetRegexes('Kernel a');
+  assert.ok(Array.isArray(res));
+  assert.ok(res.every((re) => re instanceof RegExp), 'returns RegExp objects');
+  assert.ok(res.every((re) => re.flags.indexOf('g') !== -1 && re.flags.indexOf('i') !== -1), 'g + i flags');
+  assert.ok(res.every((re) => re.flags.indexOf('u') === -1), 'no u flag');
+  // "a" is below MIN_TERM_LEN, so only "kernel" survives.
+  assert.strictEqual(res.length, 1);
+});
+
+test('buildSnippet accepts precompiled regexes equivalent to string terms (P2)', () => {
+  const text = 'The kernel of a measure is central';
+  const fromStrings = H.buildSnippet(text, null, undefined, H.snippetTerms('kernel'));
+  const fromRegexes = H.buildSnippet(text, null, undefined, H.snippetRegexes('kernel'));
+  assert.strictEqual(fromRegexes, fromStrings, 'precompiled regexes produce identical output');
+});
+
+test('buildSnippet reuses a precompiled global regex across calls (lastIndex reset)', () => {
+  // A /g/ regex carries lastIndex; reusing one across rows must reset it so the
+  // second row still matches from the start.
+  const res = H.snippetRegexes('kernel');
+  const a = H.buildSnippet('kernel one', null, undefined, res);
+  const b = H.buildSnippet('kernel two', null, undefined, res);
+  assert.ok(a.indexOf('<mark>kernel</mark>') !== -1, 'first call marks');
+  assert.ok(b.indexOf('<mark>kernel</mark>') !== -1, 'reused regex still marks the second call');
+});

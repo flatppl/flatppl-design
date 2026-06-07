@@ -389,8 +389,9 @@
         demoteHeadings: demoteHeadings
       });
 
-      // Sanitize the query into snippet terms once, not once per rendered row.
-      var snipTerms = SearchHelpers.snippetTerms(q);
+      // Compile the snippet term regexes ONCE per search (not per row) and reuse
+      // them across every rendered result (P2).
+      var snipTerms = SearchHelpers.snippetRegexes(q);
 
       // Build all rows into a detached fragment, then attach once — avoids a
       // reflow per row. forEach's per-iteration scope captures `entry` for the

@@ -100,6 +100,20 @@
   // Lower-is-better score with a default for results Fuse left unscored.
   function scoreOf(r) { return r && typeof r.score === 'number' ? r.score : 1; }
 
+  // Precompile the snippet match regexes for a query ONCE so a caller rendering
+  // many rows reuses them instead of recompiling per row (P2). No /u/ flag:
+  // terms are escaped literals and UTF-16 offsets already line up with String
+  // slicing, so /u/ buys nothing and would throw on invalid input like a lone
+  // surrogate (C3). Each regex is global; buildSnippet resets lastIndex per use.
+  function snippetRegexes(query, terms) {
+    if (!Array.isArray(terms)) terms = snippetTerms(query);
+    var out = [];
+    for (var i = 0; i < terms.length; i++) {
+      if (terms[i]) out.push(new RegExp(escapeRegExp(terms[i]), 'gi'));
+    }
+    return out;
+  }
+
   // Case-insensitive whole-word matcher for a query, or null if the query can't
   // form a word boundary (e.g. starts/ends with punctuation). Used to rank a
   // whole-word hit ("Normal") above the same letters inside a longer word
@@ -151,7 +165,11 @@
     for (var t = 0; t < terms.length; t++) {
       var term = terms[t];
       if (!term) continue;
-      var re = new RegExp(escapeRegExp(term), 'giu');
+      // `term` may be a precompiled /gi/ RegExp (caller used snippetRegexes to
+      // compile once per search) or a string to compile here. No /u/ flag — see
+      // snippetRegexes. Reset lastIndex so a reused global regex scans from 0.
+      var re = term instanceof RegExp ? term : new RegExp(escapeRegExp(term), 'gi');
+      re.lastIndex = 0;
       var m;
       while ((m = re.exec(text)) !== null) {
         ranges.push([m.index, m.index + m[0].length]);
@@ -503,6 +521,7 @@
     searchFuseOptions: searchFuseOptions,
     sanitizeQuery: sanitizeQuery,
     snippetTerms: snippetTerms,
+    snippetRegexes: snippetRegexes,
     buildSnippet: buildSnippet,
     looksLikeIdentifier: looksLikeIdentifier,
     exactWordHits: exactWordHits,
