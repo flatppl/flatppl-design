@@ -37,10 +37,11 @@
   // so they compose on one scale with the table/demote/jackpot tiers and, unlike
   // a multiplier, still tier a score-0 exact hit (0 * factor = 0 would not).
   // Whole word is subtracted more than a substring, and the gap
-  // (0.3 - 0.1 = 0.2) exceeds any single raw Fuse score (capped by threshold
-  // 0.35) so a whole-word hit outranks a substring hit regardless of their
-  // fuzzy baselines.
-  var WHOLE_WORD_BONUS = 0.3;  // additive: whole-word literal match (strong)
+  // (0.5 - 0.1 = 0.4) strictly EXCEEDS the Fuse threshold 0.35 — the largest raw
+  // score any returned hit can carry — so a whole-word hit outranks a substring
+  // hit regardless of their fuzzy baselines (worst case: whole at score 0.35,
+  // substring at 0.0 -> 0.35-0.5 = -0.15 < 0.0-0.1 = -0.1). (C2)
+  var WHOLE_WORD_BONUS = 0.5;  // additive: whole-word literal match (strong)
   var SUBSTRING_BONUS = 0.1;   // additive: substring literal match (mild)
   var TABLE_BONUS = 0.25;       // reference-table cell lift (additive, better)
   var DEMOTE_PENALTY = 0.4;     // frontmatter/overview push-down (additive, worse)
@@ -51,8 +52,8 @@
   // rows WITHIN a tier (whole word before substring; table cells lifted;
   // overview/abstract demoted). So an EXACT match always outranks any
   // fuzzy-only match, regardless of Fuse scores or any boost. Retune the
-  // within-tier knobs as a set; whole-word > substring (gap 0.2) is the one
-  // intra-tier magnitude relationship pinned by tests.
+  // within-tier knobs as a set; whole-word > substring (gap 0.4) is the one
+  // intra-tier magnitude relationship pinned by tests (gap 0.4 > threshold 0.35).
 
   // #1 (heading-weighted keys) + #5 (multi-word AND via extended search).
   // useExtendedSearch makes a space-separated query an AND of fuzzy tokens.
@@ -256,8 +257,9 @@
   //   - whole word ("Normal" in "the Normal distribution")  -> -WHOLE_WORD_BONUS
   //   - substring  ("normal" inside "normalize")            -> -SUBSTRING_BONUS
   //   - fuzzy only                                          -> unchanged
-  // The bonus gap (0.2) exceeds any single raw Fuse score, so a whole-word hit
-  // outranks a substring hit regardless of their fuzzy baselines. Returns a new
+  // The bonus gap (0.4) exceeds the Fuse threshold (0.35) — the max score any
+  // hit can carry — so a whole-word hit outranks a substring hit regardless of
+  // their fuzzy baselines. Returns a new
   // array; inputs unmutated. `wordRe` may be supplied to reuse a regex already
   // built for this query.
   function boostExact(results, q, wordRe) {

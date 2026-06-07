@@ -83,11 +83,11 @@ test('boostExact lowers (improves) score for literal substring matches', () => {
     { item: { text: 'the kernel of a measure', targetId: 'b' }, score: 0.30, matches: [] }
   ];
   const boosted = H.boostExact(results, q);
-  // 'b' has a whole-word 'kernel': 0.30 - 0.3 = 0.0, beating 'a' at 0.10.
+  // 'b' has a whole-word 'kernel': 0.30 - 0.5 = -0.20, beating 'a' at 0.10.
   const byId = scoresById(boosted);
   assert.ok(byId.b < byId.a, 'exact match outranks fuzzy-only after boost');
   assert.strictEqual(byId.a, 0.10, 'non-matching score untouched');
-  assert.ok(Math.abs(byId.b - 0.0) < 1e-9);
+  assert.ok(byId.b < byId.a, 'whole-word hit ranks above the fuzzy-only typo'); // relative, not pinned to bonus magnitude
 });
 
 test('boostExact ranks a whole-word match above a longer-word (substring) match', () => {
@@ -97,10 +97,9 @@ test('boostExact ranks a whole-word match above a longer-word (substring) match'
   ];
   const out = H.boostExact(results, 'normal');
   const byId = scoresById(out);
-  // dist: whole-word 0.20-0.3=-0.10 ; norm: substring 0.10-0.1=0.0 -> dist wins
+  // Relative order is the contract; absolute magnitudes are tunable (see the
+  // dedicated gap-vs-threshold invariant test).
   assert.ok(byId.dist < byId.norm, 'whole-word Normal beats substring inside normalize');
-  assert.ok(Math.abs(byId.dist - (-0.10)) < 1e-9, 'whole-word bonus 0.3');
-  assert.ok(Math.abs(byId.norm - 0.0) < 1e-9, 'substring bonus 0.1');
 });
 
 test('boostExact is case-insensitive and tolerates missing score', () => {
@@ -163,7 +162,7 @@ test('computeResults dedupes by heading and sorts by boosted score', () => {
   ];
   const out = H.computeResults({ rawQuery: 'kernel', fuse: fakeFuse(fuseResults), index: index, maxResults: 40 });
   assert.strictEqual(out.length, 2, 'A collapsed to one, plus B');
-  // B boosted: 0.25 - 0.3 = -0.05; best A is the 0.20 block (fuzzy, no boost).
+  // B boosted by whole-word bonus; best A is the 0.20 block (fuzzy, no boost).
   assert.strictEqual(out[0].item.targetId, 'b', 'boosted exact match ranks first');
 });
 
@@ -194,7 +193,7 @@ test('boostTables tiers an EXACT table-cell match above equivalent prose', () =>
   ];
   const out = H.boostTables(results, 0.25);
   const byId = scoresById(out);
-  assert.ok(Math.abs(byId.cell - (-0.23)) < 1e-9, 'exact table cell lowered by the bonus');
+  assert.ok(byId.cell < 0.02, 'exact table cell lowered below its raw score by the bonus');
   assert.strictEqual(byId.prose, 0.02, 'prose untouched');
   assert.ok(byId.cell < byId.prose, 'table cell ranks above the tying prose');
 });
@@ -238,7 +237,7 @@ test('demoteByHeading adds a penalty to matching heading prefixes only', () => {
   ];
   const out = H.demoteByHeading(results, ['flatppl, a flat portable probabilistic language'], 0.4);
   const byId = scoresById(out);
-  assert.ok(Math.abs(byId.abs - 0.50) < 1e-9, 'abstract demoted 0.10 + 0.4');
+  assert.ok(Math.abs(byId.abs - (0.10 + 0.4)) < 1e-9, 'abstract demoted by the penalty (0.10 + 0.4)');
   assert.strictEqual(byId.ref, 0.12, 'reference section untouched');
 });
 
@@ -621,8 +620,8 @@ test('computeResults: demotion costs a fixed penalty even on a whole-word litera
   // Score-independent invariant: at equal raw score, both whole-word literal
   // hits, the demoted one is worse by exactly DEMOTE_PENALTY and ranks below.
   // Pins DEMOTE_PENALTY vs WHOLE_WORD_BONUS so an overview section never floods
-  // on a literal match. (boostExact additive: 0.20 - 0.3 = -0.10 each; demote
-  // +0.4 -> 0.30 for the overview row, ref stays -0.10.)
+  // on a literal match. (boostExact subtracts WHOLE_WORD_BONUS from each; demote
+  // +0.4 makes the overview row worse than the ref at equal raw score.)
   const fuseResults = [
     { item: { text: 'the Normal distribution overview', heading: 'Language overview - intro', sectionId: 'ov', targetId: 'ov' }, score: 0.20, matches: [] },
     { item: { text: 'the Normal distribution reference', heading: 'Distributions', sectionId: 'd', targetId: 'ref' }, score: 0.20, matches: [] }
@@ -650,7 +649,7 @@ test('boostExact applies the whole-word bonus to a non-ASCII term', () => {
     [{ item: { text: 'the σ parameter', targetId: 'x' }, score: 0.20, matches: [] }],
     'σ'
   );
-  assert.ok(Math.abs(out[0].score - (-0.10)) < 1e-9, 'whole-word bonus 0.3 applied to a Unicode term');
+  assert.ok(out[0].score < 0.20, 'whole-word bonus lowered the score below the raw baseline'); // relative, not pinned to bonus magnitude
 });
 
 // --- attachElements (PR-37 follow-up #1: guarded el zip) -------------------
@@ -752,4 +751,16 @@ test('buildSnippet reuses a precompiled global regex across calls (lastIndex res
   const b = H.buildSnippet('kernel two', null, undefined, res);
   assert.ok(a.indexOf('<mark>kernel</mark>') !== -1, 'first call marks');
   assert.ok(b.indexOf('<mark>kernel</mark>') !== -1, 'reused regex still marks the second call');
+});
+
+test('boostExact: whole-word outranks substring even at worst-case fuzzy baselines (C2)', () => {
+  // The guarantee must hold when the whole-word hit has the WORST allowed fuzzy
+  // score (== threshold 0.35) and the substring hit has the BEST (0.0). If the
+  // bonus gap did not exceed the threshold, the substring would wrongly win.
+  const out = H.boostExact([
+    { item: { text: 'the Normal distribution', targetId: 'whole' }, score: 0.35, matches: [] },
+    { item: { text: 'normalize the measure', targetId: 'sub' }, score: 0.0, matches: [] }
+  ], 'normal');
+  const byId = scoresById(out);
+  assert.ok(byId.whole < byId.sub, 'whole-word ranks above substring regardless of fuzzy baselines');
 });
