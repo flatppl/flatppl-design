@@ -154,10 +154,10 @@
   // Clean, term-based snippet highlighter. Highlights the user's actual query
   // terms (case-insensitive whole substrings) rather than Fuse's per-character
   // fuzzy indices, which scatter staccato single-letter <mark>s across the text.
-  // Builds a ~200-char window anchored on the first matched term and returns
+  // Builds a ~200-char window anchored on the densest match cluster and returns
   // escaped HTML with <mark> spans and … ellipses. If no term occurs literally,
   // returns the head of the text (still useful context). Original case is kept.
-  // Lowercased query terms (>= MIN_TERM_LEN) as buildSnippet matches them.
+  // snippetTerms returns the lowercased query terms (>= MIN_TERM_LEN) that buildSnippet highlights.
   // Exported so a caller rendering many rows can compute the terms ONCE and pass
   // them into buildSnippet instead of re-sanitizing the same query per row.
   function snippetTerms(query) {
