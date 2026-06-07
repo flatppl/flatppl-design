@@ -33,3 +33,25 @@ test('sanitizeQuery trims, collapses whitespace, strips Fuse operators', () => {
   assert.strictEqual(H.sanitizeQuery(''), '');
   assert.strictEqual(H.sanitizeQuery(null), '');
 });
+
+test('looksLikeIdentifier recognizes single-token identifiers', () => {
+  assert.strictEqual(H.looksLikeIdentifier('bayesupdate'), true);
+  assert.strictEqual(H.looksLikeIdentifier('kernelof'), true);
+  assert.strictEqual(H.looksLikeIdentifier('measure algebra'), false); // has space
+  assert.strictEqual(H.looksLikeIdentifier('IO'), false);              // too short
+  assert.strictEqual(H.looksLikeIdentifier('123'), false);             // not ident-start
+  assert.strictEqual(H.looksLikeIdentifier(''), false);
+});
+
+test('exactSubstringHits returns case-insensitive substring matches as score-0 results', () => {
+  const index = [
+    { text: 'The bayesupdate operator combines a prior', heading: 'A', targetId: 't1' },
+    { text: 'Unrelated paragraph about kernels', heading: 'B', targetId: 't2' },
+    { text: 'See BayesUpdate for details', heading: 'C', targetId: 't3' }
+  ];
+  const hits = H.exactSubstringHits(index, 'bayesupdate');
+  const ids = hits.map((h) => h.item.targetId).sort();
+  assert.deepStrictEqual(ids, ['t1', 't3']);
+  assert.strictEqual(hits[0].score, 0);
+  assert.strictEqual(hits[0].matches, null);
+});

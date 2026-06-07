@@ -45,9 +45,30 @@
       .join(' ');
   }
 
+  // #4: a single token that reads like a code identifier. Fuse's fuzzy matcher
+  // mangles run-on identifiers, so for these queries we also do an exact pass.
+  function looksLikeIdentifier(q) {
+    return /^[A-Za-z_][A-Za-z0-9_]*$/.test(q) && q.length >= 3 && /[a-z]/.test(q);
+  }
+
+  // #4: index entries whose text literally contains q (case-insensitive),
+  // wrapped as best-possible (score 0) results with no fuzzy match ranges.
+  function exactSubstringHits(index, q) {
+    var lq = q.toLowerCase();
+    var out = [];
+    for (var i = 0; i < index.length; i++) {
+      if (index[i].text.toLowerCase().indexOf(lq) !== -1) {
+        out.push({ item: index[i], score: 0, matches: null });
+      }
+    }
+    return out;
+  }
+
   return {
     __loaded: true,
     searchFuseOptions: searchFuseOptions,
-    sanitizeQuery: sanitizeQuery
+    sanitizeQuery: sanitizeQuery,
+    looksLikeIdentifier: looksLikeIdentifier,
+    exactSubstringHits: exactSubstringHits
   };
 });
