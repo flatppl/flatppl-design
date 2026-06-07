@@ -317,10 +317,11 @@ test('computeResults: exact-heading jackpot + demote — section wins over a low
 
 // --- Regression tests for the PR-37 review fixes ---------------------------
 
-test('computeResults: a demoted overview TABLE cell ranks below real reference prose (M1)', () => {
-  // Multiplicative demote used to be cancelled by the additive table bonus,
-  // floating an overview table cell above genuine reference prose. With demote
-  // additive AND applied after the table boost, the overview cell stays down.
+test('computeResults: a demoted overview table cell ranks below real reference prose', () => {
+  // Demote and the table bonus are both additive on the one lower-is-better
+  // scale; demote (larger) keeps an overview table cell below genuine reference
+  // prose even after the table bonus lifted it — the overview never floods on a
+  // table hit.
   const fuseResults = [
     { item: { isTable: true, text: 'Normal', heading: 'Language overview - cheatsheet', sectionId: 'ov', targetId: 'ovcell' }, score: 0.20, matches: [] },
     { item: { isTable: false, text: 'the Normal distribution in detail', heading: 'Distributions', sectionId: 'dist', targetId: 'prose' }, score: 0.15, matches: [] }
@@ -559,4 +560,42 @@ test('buildIndexEntries passes isTable through', () => {
   ]);
   assert.strictEqual(out[0].isTable, true);
   assert.strictEqual(out[1].isTable, false);
+});
+
+// --- Ordering-contract invariant (#1) --------------------------------------
+
+test('computeResults: demotion costs a fixed penalty even on a whole-word literal hit', () => {
+  // Score-independent invariant: at equal raw score, both whole-word literal
+  // hits, the demoted one is worse by exactly DEMOTE_PENALTY and ranks below.
+  // Pins DEMOTE_PENALTY vs WHOLE_WORD_BONUS so an overview section never floods
+  // on a literal match. (boostExact additive: 0.20 - 0.3 = -0.10 each; demote
+  // +0.4 -> 0.30 for the overview row, ref stays -0.10.)
+  const fuseResults = [
+    { item: { text: 'the Normal distribution overview', heading: 'Language overview - intro', sectionId: 'ov', targetId: 'ov' }, score: 0.20, matches: [] },
+    { item: { text: 'the Normal distribution reference', heading: 'Distributions', sectionId: 'd', targetId: 'ref' }, score: 0.20, matches: [] }
+  ];
+  const out = H.computeResults({
+    rawQuery: 'Normal', fuse: fakeFuse(fuseResults), index: [], maxResults: 40,
+    demoteHeadings: ['language overview'], demotePenalty: 0.4
+  });
+  assert.strictEqual(out[0].item.targetId, 'ref', 'non-demoted literal beats the demoted literal at equal raw score');
+});
+
+// --- Unicode whole-word boundaries (#2) ------------------------------------
+
+test('exactWordHits boosts non-ASCII identifiers with Unicode word boundaries', () => {
+  const index = [
+    { text: 'the σ parameter scales the Normal', targetId: 'a' },
+    { text: 'σσ is a different token entirely', targetId: 'b' }
+  ];
+  const ids = H.exactWordHits(index, 'σ').map((h) => h.item.targetId);
+  assert.deepStrictEqual(ids, ['a'], 'whole-word σ matches standalone, not inside σσ');
+});
+
+test('boostExact applies the whole-word bonus to a non-ASCII term', () => {
+  const out = H.boostExact(
+    [{ item: { text: 'the σ parameter', targetId: 'x' }, score: 0.20, matches: [] }],
+    'σ'
+  );
+  assert.ok(Math.abs(out[0].score - (-0.10)) < 1e-9, 'whole-word bonus 0.3 applied to a Unicode term');
 });

@@ -44,6 +44,18 @@
   var SUBSTRING_BONUS = 0.1;   // additive: substring literal match (mild)
   var TABLE_BONUS = 0.25;       // reference-table cell lift (additive, better)
   var DEMOTE_PENALTY = 0.4;     // frontmatter/overview push-down (additive, worse)
+  // ORDERING CONTRACT — since boostExact became additive, these four live on
+  // ONE lower-is-better scale and their magnitudes are load-bearing RELATIVE to
+  // each other, not just individually. Retune them as a SET, not one at a time.
+  // The score-independent invariants (pinned by regression tests) are:
+  //   * literal beats fuzzy-only            — bonuses > 0
+  //   * whole word beats substring          — gap 0.3-0.1=0.2 exceeds the max
+  //     raw Fuse score (threshold 0.35), so the order holds at any baseline
+  //   * demotion costs a fixed net penalty  — a demoted hit is worse by exactly
+  //     DEMOTE_PENALTY than the same hit undemoted, regardless of any boost, so
+  //     an overview/abstract section never floods even on an exact match
+  // (Whether a demoted literal outranks a *different* non-demoted fuzzy hit is
+  // score-dependent — that comparison is a tuning question, not an invariant.)
 
   // #1 (heading-weighted keys) + #5 (multi-word AND via extended search).
   // useExtendedSearch makes a space-separated query an AND of fuzzy tokens.
@@ -96,10 +108,16 @@
   function wholeWordRegex(q) {
     if (!q) return null;
     try {
-      var re = new RegExp('\\b' + escapeRegExp(q) + '\\b', 'i');
-      // \b only anchors next to a word char; if the query edge isn't a word
-      // char the regex can't mean "whole word", so don't use it.
-      return /[A-Za-z0-9_]/.test(q.charAt(0)) && /[A-Za-z0-9_]/.test(q.charAt(q.length - 1)) ? re : null;
+      // Unicode-aware "whole word": no letter/number/underscore on either side.
+      // JS \b is ASCII-only, so we build explicit boundaries from \p{L}\p{N} to
+      // also boost non-ASCII identifiers (e.g. Greek math symbols in the docs).
+      // If the query edge isn't a word char the regex can't mean "whole word",
+      // so don't use it. On engines lacking lookbehind/\p support the RegExp
+      // construction throws and we fall back to substring matching (caught).
+      var WORD = '[\\p{L}\\p{N}_]';
+      var edge = new RegExp(WORD, 'u');
+      if (!edge.test(q.charAt(0)) || !edge.test(q.charAt(q.length - 1))) return null;
+      return new RegExp('(?<!' + WORD + ')' + escapeRegExp(q) + '(?!' + WORD + ')', 'iu');
     } catch (e) { return null; }
   }
 
