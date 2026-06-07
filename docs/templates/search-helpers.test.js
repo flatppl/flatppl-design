@@ -714,6 +714,16 @@ test('computeResults keeps first-seen order for equal tier and score (#8)', () =
   assert.deepStrictEqual(out.map((r) => r.item.targetId), ['a', 'b'], 'first-seen order preserved on a full tie');
 });
 
+test('buildSnippet anchors on the densest cluster, not the first lone term (C5)', () => {
+  // "alpha" appears once early and far away; "alpha beta" co-occur late. The
+  // window should anchor on the dense late cluster and mark both, not the early
+  // lone "alpha".
+  const text = 'alpha ' + 'x'.repeat(300) + ' alpha beta gamma';
+  const html = H.buildSnippet(text, 'alpha beta');
+  assert.ok(html.indexOf('<mark>alpha</mark>') !== -1, 'alpha in the dense cluster marked');
+  assert.ok(html.indexOf('<mark>beta</mark>') !== -1, 'beta marked — proves the window moved to the dense cluster');
+});
+
 test('buildSnippet tolerates a surrogate in a term that reaches RegExp construction (C3)', () => {
   // "a\uD800b" survives the MIN_TERM_LEN filter, so a RegExp is actually built
   // from it (a 1-char surrogate would be filtered out before construction and

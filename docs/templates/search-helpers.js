@@ -205,11 +205,21 @@
       else { merged.push(ranges[i].slice()); }
     }
 
-    var first = merged[0][0];
+    // Anchor on the DENSEST cluster: the merged-range whose SNIPPET_WINDOW-wide
+    // span starting at it covers the most ranges. This surfaces the part of the
+    // block where the query terms actually co-occur instead of an early lone
+    // term (C5). Ties resolve to the earliest cluster (strict >). A term still
+    // outside the chosen window is intentionally not highlighted (bounded
+    // snippet) — see the L3 test.
+    var anchorIdx = 0, bestCount = 0;
+    for (var c = 0; c < merged.length; c++) {
+      var winEnd = merged[c][0] + SNIPPET_WINDOW;
+      var count = 0;
+      for (var d = c; d < merged.length && merged[d][0] < winEnd; d++) count++;
+      if (count > bestCount) { bestCount = count; anchorIdx = c; }
+    }
+    var first = merged[anchorIdx][0];
     var start = Math.max(0, first - radius);
-    // The window anchors on the FIRST matched term and spans SNIPPET_WINDOW
-    // chars. A later term outside that window is intentionally not highlighted
-    // (keeps snippets bounded) — by design, not a TODO. See the L3 test.
     var end = Math.min(text.length, start + SNIPPET_WINDOW);
 
     var html = (start > 0 ? '…' : '');
