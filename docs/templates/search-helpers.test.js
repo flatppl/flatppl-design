@@ -17,7 +17,7 @@ test('searchFuseOptions weights text above heading and enables extended search',
   assert.ok(text.weight > heading.weight, 'text outranks heading');
   assert.strictEqual(o.useExtendedSearch, true);
   assert.strictEqual(o.includeScore, true);
-  assert.strictEqual(o.includeMatches, true);
+  assert.strictEqual(o.includeMatches, false, 'matches are unused; computing them is dead work (P1)');
   assert.strictEqual(o.ignoreLocation, true);
   assert.strictEqual(o.threshold, 0.35);
   assert.strictEqual(o.minMatchCharLength, 2);

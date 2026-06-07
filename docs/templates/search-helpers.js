@@ -62,7 +62,7 @@
       { name: 'heading', weight: 0.3 }
     ],
     includeScore: true,
-    includeMatches: true,
+    includeMatches: false,
     threshold: 0.35,
     ignoreLocation: true,
     minMatchCharLength: 2,
