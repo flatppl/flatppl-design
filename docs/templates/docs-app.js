@@ -275,11 +275,21 @@
     var blocks = [];
     [].forEach.call(contentEl ? contentEl.querySelectorAll(BLOCK_SEL) : [], function (el) {
       var isHeading = HEAD_SEL.indexOf(' ' + el.tagName + ' ') !== -1;
-      var text = el.textContent.replace(/\s*#\s*$/, '').trim();
+      // Strip the trailing anchor marker(s) pandoc appends to headings — the
+      // number-section "#" plus the html-anchors link "#", i.e. one OR MORE.
+      var text = el.textContent.replace(/\s*#+\s*$/, '').trim();
       if (!text) return;
       if (!isHeading && el.querySelector(BLOCK_SEL)) return;
-      // Cap code-block text so a single long <pre> doesn't bloat the Fuse payload.
-      if (el.tagName === 'PRE' && text.length > 400) text = text.slice(0, 400);
+      if (el.tagName === 'PRE') {
+        // Cap code-block text so a single long <pre> doesn't bloat the Fuse payload.
+        if (text.length > 400) text = text.slice(0, 400);
+      } else {
+        // Collapse the source's newlines/indentation so heading paths and result
+        // snippets read cleanly AND demote-prefix matching works (the rendered
+        // heading carries literal newlines otherwise). Code blocks keep their
+        // formatting via the branch above.
+        text = text.replace(/\s+/g, ' ');
+      }
       // Guarantee every indexed block has its own anchor so result hrefs are
       // always valid and the URL hash matches the scrolled element.
       if (!el.id) { el.id = 'search-anchor-' + (++syntheticIdCounter); }
@@ -312,7 +322,7 @@
     // the reference sections.
     var demoteHeadings = [];
     var docTitleEl = document.querySelector('#content .title');
-    if (docTitleEl) { demoteHeadings.push(docTitleEl.textContent.trim().toLowerCase()); }
+    if (docTitleEl) { demoteHeadings.push(docTitleEl.textContent.replace(/\s*#+\s*$/, '').replace(/\s+/g, ' ').trim().toLowerCase()); }
     demoteHeadings.push('language overview');
 
     var pulseTimer = null;

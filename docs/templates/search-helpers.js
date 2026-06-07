@@ -386,7 +386,15 @@
       var blk = blocks[b] || {};
       if (blk.isHeading) {
         var level = blk.level;
-        stack[level] = { id: blk.id || '', text: String(blk.text == null ? '' : blk.text).replace(/^[\d.]+\s+/, '') };
+        stack[level] = {
+          id: blk.id || '',
+          // Normalize the heading text used for the path: drop trailing anchor
+          // #(s), collapse whitespace, strip the leading section number. Keeps
+          // paths readable and demote-prefix matching reliable even if a caller
+          // passes raw heading text carrying the source's newlines/markers.
+          text: String(blk.text == null ? '' : blk.text)
+            .replace(/\s*#+\s*$/, '').replace(/\s+/g, ' ').replace(/^[\d.]+\s+/, '').trim()
+        };
         for (var j = level + 1; j <= 6; j++) stack[j] = null;
       }
       out.push({

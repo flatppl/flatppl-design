@@ -527,6 +527,20 @@ test('buildIndexEntries strips leading section numbers from heading text', () =>
   assert.strictEqual(out[0].heading, 'Likelihoods and posteriors', 'numeric prefix stripped from path');
 });
 
+test('buildIndexEntries normalizes messy heading text (whitespace, trailing #s, number)', () => {
+  // Mirrors what the rendered DOM yields: a section number, internal newlines +
+  // indentation, and one-or-more trailing anchor "#". The path must come out
+  // clean so it reads well AND matches lowercased demote prefixes.
+  const out = H.buildIndexEntries([
+    { id: 'h', text: '2 Language\n        overview ##', isHeading: true, level: 1 },
+    { id: 'p', text: 'body block', isHeading: false, level: 0 }
+  ]);
+  assert.strictEqual(out[0].heading, 'Language overview', 'heading text cleaned');
+  assert.strictEqual(out[1].heading, 'Language overview', 'body inherits the cleaned path');
+  assert.strictEqual(out[1].sectionId, 'h');
+  assert.strictEqual('Language overview'.toLowerCase().indexOf('language overview'), 0, 'matches demote prefix');
+});
+
 test('buildIndexEntries keeps same-titled sections distinct via their own ids', () => {
   const blocks = [
     { id: 'ex1', text: 'Examples', isHeading: true, level: 2 },
