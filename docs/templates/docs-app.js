@@ -301,13 +301,12 @@
         text: text,
         heading: currentHeadingPath(),
         targetId: el.id,
-        isHeading: isHeading
+        isHeading: isHeading,
+        // Reference tables (distributions, functions, modules, profile mappings)
+        // are canonical concise definitions; flag so search can boost them.
+        isTable: !!el.closest('table')
       });
     });
-
-    function escapeHtml(s) {
-      return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-    }
 
     var fuseSearch = null;
     function getFuse() {
@@ -315,65 +314,14 @@
       return fuseSearch;
     }
 
-    // Snippet centered on the densest cluster of Fuse match ranges.
-    //
-    // Fuse's fuzzy matcher reports indices at character granularity, which
-    // for relaxed thresholds means lots of single-letter "matches" scattered
-    // across the text. Rendering each as its own <mark> produces ugly,
-    // staccato highlighting. Two passes clean this up:
-    //   1. Coalesce ranges separated by tiny gaps into one span (so words
-    //      with one or two fuzzy edits become a single highlight).
-    //   2. Drop spans shorter than MIN_HIT_LEN — a lone matching letter in
-    //      the middle of unrelated text is noise, not a hit.
-    function fuseSnippet(entry, matchRanges) {
-      if (!matchRanges.length) return escapeHtml(entry.text.slice(0, 140));
-      var text = entry.text;
-      var radius = 60;
-      var COALESCE_GAP = 2;  // merge ranges separated by <= this many chars
-      var MIN_HIT_LEN = 2;   // drop merged spans shorter than this
-
-      var sorted = matchRanges.slice().sort(function (a, b) { return a[0] - b[0]; });
-      var merged = [];
-      for (var i = 0; i < sorted.length; i++) {
-        var cur = sorted[i];
-        var top = merged.length ? merged[merged.length - 1] : null;
-        if (top && cur[0] <= top[1] + COALESCE_GAP + 1) {
-          if (cur[1] > top[1]) top[1] = cur[1];
-        } else {
-          merged.push([cur[0], cur[1]]);
-        }
-      }
-      var spans = merged.filter(function (r) { return r[1] - r[0] + 1 >= MIN_HIT_LEN; });
-      if (!spans.length) spans = merged;  // fall back so we still highlight something
-
-      var first = spans[0][0];
-      var last = 0;
-      for (var li = 0; li < spans.length; li++) {
-        if (spans[li][1] > last) last = spans[li][1];
-      }
-      var start = Math.max(0, first - radius);
-      var end = Math.min(text.length, last + radius);
-
-      var marked = {};
-      for (var si = 0; si < spans.length; si++) {
-        for (var p = spans[si][0]; p <= spans[si][1]; p++) marked[p] = true;
-      }
-      var html = (start > 0 ? '…' : '');
-      var seg = start, inMark = false;
-      for (var j = start; j < end; j++) {
-        var nowMark = !!marked[j];
-        if (nowMark !== inMark) {
-          html += escapeHtml(text.slice(seg, j));
-          seg = j;
-          html += inMark ? '</mark>' : '<mark>';
-          inMark = nowMark;
-        }
-      }
-      html += escapeHtml(text.slice(seg, end));
-      if (inMark) html += '</mark>';
-      if (end < text.length) html += '…';
-      return html;
-    }
+    // Heading-path prefixes (lowercased) whose prose is demoted so deeper
+    // reference sections outrank frontmatter/overview. The document title
+    // catches the abstract; the tour chapter is intentionally redundant with
+    // the reference sections.
+    var demoteHeadings = [];
+    var docTitleEl = document.querySelector('#content .title');
+    if (docTitleEl) { demoteHeadings.push(docTitleEl.textContent.trim().toLowerCase()); }
+    demoteHeadings.push('language overview');
 
     var pulseTimer = null;
     function jumpTo(entry) {
@@ -402,13 +350,12 @@
         rawQuery: q,
         fuse: getFuse(),
         index: index,
-        maxResults: MAX_RESULTS
+        maxResults: MAX_RESULTS,
+        demoteHeadings: demoteHeadings
       });
 
       for (var r = 0; r < results.length; r++) {
         var entry = results[r].item;
-        var _m = results[r].matches && results[r].matches.find(function (m) { return m.key === 'text'; });
-        var matchRanges = _m ? _m.indices : null;
 
         var li = document.createElement('li');
         var a = document.createElement('a');
@@ -422,9 +369,7 @@
         }
         var sn = document.createElement('span');
         sn.className = 'search-result-snippet' + (entry.isHeading ? ' is-heading' : '');
-        sn.innerHTML = matchRanges
-          ? fuseSnippet(entry, matchRanges)
-          : escapeHtml(entry.text.slice(0, 140));
+        sn.innerHTML = SearchHelpers.buildSnippet(entry.text, q);
         a.appendChild(sn);
 
         (function (e) {
