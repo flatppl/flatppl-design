@@ -311,14 +311,7 @@
 
     var fuseSearch = null;
     function getFuse() {
-      if (!fuseSearch) fuseSearch = new Fuse(index, {
-        keys: ['text'],
-        includeScore: true,
-        includeMatches: true,
-        threshold: 0.35,
-        ignoreLocation: true,
-        minMatchCharLength: 2,
-      });
+      if (!fuseSearch) fuseSearch = new Fuse(index, SearchHelpers.searchFuseOptions);
       return fuseSearch;
     }
 
@@ -405,7 +398,12 @@
       if (searchStatus) { searchStatus.textContent = ''; }
       if (!q) { return; }
 
-      var results = getFuse().search(q, { limit: MAX_RESULTS });
+      var results = SearchHelpers.computeResults({
+        rawQuery: q,
+        fuse: getFuse(),
+        index: index,
+        maxResults: MAX_RESULTS
+      });
 
       for (var r = 0; r < results.length; r++) {
         var entry = results[r].item;
