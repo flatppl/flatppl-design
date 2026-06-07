@@ -800,6 +800,16 @@ test('demoteByHeading flags demoted rows (C1 plumbing)', () => {
   assert.strictEqual(byId.b.demoted, false, 'non-matching row not demoted');
 });
 
+test('dedupeByHeading falls back to the heading block when a section has no body (T3)', () => {
+  const results = [
+    { item: { isHeading: true, text: 'Kernels', heading: 'Kernels', sectionId: 'k', targetId: 'khead' }, score: 0.15, matches: [] }
+  ];
+  const out = H.dedupeByHeading(results);
+  assert.strictEqual(out.length, 1);
+  assert.strictEqual(out[0].item.targetId, 'khead', 'heading block is displayed when no body block exists');
+  assert.strictEqual(out[0].score, 0.15, 'group score preserved');
+});
+
 test('dedupeByHeading does NOT jackpot a demoted section (C1)', () => {
   // The doc-title section both contains the query as a heading whole-word AND is
   // demoted. It must not be flagged jackpot, or the demote is defeated.
