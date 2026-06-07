@@ -15,7 +15,39 @@
 })(this, function () {
   'use strict';
 
+  // #1 (heading-weighted keys) + #5 (multi-word AND via extended search).
+  // useExtendedSearch makes a space-separated query an AND of fuzzy tokens.
+  var searchFuseOptions = {
+    keys: [
+      { name: 'text', weight: 0.7 },
+      { name: 'heading', weight: 0.3 }
+    ],
+    includeScore: true,
+    includeMatches: true,
+    threshold: 0.35,
+    ignoreLocation: true,
+    minMatchCharLength: 2,
+    useExtendedSearch: true
+  };
+
+  // #5 safety: extended search treats !, ^, ', =, $, | as operators. Strip them
+  // from user input so typed text matches literally instead of triggering
+  // surprising operator behavior. Per-token: drop leading !^'= and trailing $,
+  // drop a standalone | (OR), collapse whitespace.
+  function sanitizeQuery(raw) {
+    if (!raw) return '';
+    return String(raw)
+      .replace(/\s+/g, ' ')
+      .trim()
+      .split(' ')
+      .map(function (t) { return t.replace(/^[!^'=]+/, '').replace(/\$+$/, ''); })
+      .filter(function (t) { return t && t !== '|'; })
+      .join(' ');
+  }
+
   return {
-    __loaded: true
+    __loaded: true,
+    searchFuseOptions: searchFuseOptions,
+    sanitizeQuery: sanitizeQuery
   };
 });
