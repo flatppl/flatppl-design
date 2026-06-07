@@ -264,32 +264,15 @@
   if (searchTrigger && searchDialog && searchInput && resultsList) {
     var BLOCK_SEL = 'p, li, pre, blockquote, td, th, dt, dd, figcaption, h1, h2, h3, h4, h5, h6';
     var HEAD_SEL = ' H1 H2 H3 H4 H5 H6 ';
-    var index = [];
-    // Stack of current heading per level (1..6). Higher-level headings
-    // reset lower-level entries so each block records its full ancestry.
-    var headingStack = [null, null, null, null, null, null, null];
-    var currentTargetId = '';
-
-    function currentHeadingPath() {
-      var parts = [];
-      for (var i = 1; i <= 6; i++) {
-        if (headingStack[i]) parts.push(headingStack[i].text);
-      }
-      return parts.join(' - ');
-    }
-
-    // Anchor id of the deepest heading in scope. Used to group result rows by
-    // section (see dedupeByHeading) — a stable unique id, unlike the rendered
-    // heading-path text which can repeat across distinct sections.
-    function currentSectionId() {
-      for (var i = 6; i >= 1; i--) {
-        if (headingStack[i] && headingStack[i].id) return headingStack[i].id;
-      }
-      return '';
-    }
-
+    // Gather raw blocks from the DOM. Anchor-id assignment and PRE capping are
+    // the only DOM concerns; the heading-stack walk that derives each block's
+    // heading path and section id is pure and lives in
+    // SearchHelpers.buildIndexEntries, so it can be unit-tested without a DOM.
+    // Element refs are re-attached by index after the pure pass.
     var contentEl = document.getElementById('content');
     var syntheticIdCounter = 0;
+    var blockEls = [];
+    var blocks = [];
     [].forEach.call(contentEl ? contentEl.querySelectorAll(BLOCK_SEL) : [], function (el) {
       var isHeading = HEAD_SEL.indexOf(' ' + el.tagName + ' ') !== -1;
       var text = el.textContent.replace(/\s*#\s*$/, '').trim();
@@ -298,30 +281,24 @@
       // Cap code-block text so a single long <pre> doesn't bloat the Fuse payload.
       if (el.tagName === 'PRE' && text.length > 400) text = text.slice(0, 400);
       // Guarantee every indexed block has its own anchor so result hrefs are
-      // always valid and the URL hash matches the scrolled element. Assigned
-      // BEFORE the heading stack is updated so currentSectionId() always has a
-      // real id for the section heading, never an empty string.
+      // always valid and the URL hash matches the scrolled element.
       if (!el.id) { el.id = 'search-anchor-' + (++syntheticIdCounter); }
-      if (isHeading) {
-        var level = parseInt(el.tagName.slice(1), 10);
-        headingStack[level] = { id: el.id, text: text.replace(/^[\d.]+\s+/, '') };
-        for (var j = level + 1; j <= 6; j++) headingStack[j] = null;
-        currentTargetId = el.id;
-      }
-      index.push({
-        el: el,
+      blockEls.push(el);
+      blocks.push({
+        id: el.id,
         text: text,
-        heading: currentHeadingPath(),
-        // Anchor of the owning section heading; groups body + heading blocks of
-        // one section together while keeping same-titled sections distinct.
-        sectionId: currentSectionId(),
-        targetId: el.id,
         isHeading: isHeading,
+        level: isHeading ? parseInt(el.tagName.slice(1), 10) : 0,
         // Reference tables (distributions, functions, modules, profile mappings)
         // are canonical concise definitions; flag so search can boost them.
         isTable: !!el.closest('table')
       });
     });
+    // If search-helpers.js failed to load, leave the index empty — runSearch's
+    // guard then surfaces "Search unavailable" instead of throwing at init.
+    var index = (typeof SearchHelpers !== 'undefined' && SearchHelpers.buildIndexEntries)
+      ? SearchHelpers.buildIndexEntries(blocks) : [];
+    for (var bi = 0; bi < index.length; bi++) { index[bi].el = blockEls[bi]; }
 
     var fuseSearch = null;
     function getFuse() {
@@ -376,6 +353,9 @@
         demoteHeadings: demoteHeadings
       });
 
+      // Sanitize the query into snippet terms once, not once per rendered row.
+      var snipTerms = SearchHelpers.snippetTerms(q);
+
       for (var r = 0; r < results.length; r++) {
         var entry = results[r].item;
 
@@ -391,7 +371,7 @@
         }
         var sn = document.createElement('span');
         sn.className = 'search-result-snippet' + (entry.isHeading ? ' is-heading' : '');
-        sn.innerHTML = SearchHelpers.buildSnippet(entry.text, q);
+        sn.innerHTML = SearchHelpers.buildSnippet(entry.text, q, undefined, snipTerms);
         a.appendChild(sn);
 
         (function (e) {

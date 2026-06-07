@@ -44,27 +44,37 @@ test('looksLikeIdentifier recognizes single-token identifiers', () => {
   assert.strictEqual(H.looksLikeIdentifier(''), false);
 });
 
-test('exactSubstringHits returns case-insensitive substring matches as score-0 results', () => {
+test('exactWordHits returns case-insensitive whole-word matches as score-0 results', () => {
   const index = [
     { text: 'The bayesupdate operator combines a prior', heading: 'A', targetId: 't1' },
     { text: 'Unrelated paragraph about kernels', heading: 'B', targetId: 't2' },
     { text: 'See BayesUpdate for details', heading: 'C', targetId: 't3' }
   ];
-  const hits = H.exactSubstringHits(index, 'bayesupdate');
+  const hits = H.exactWordHits(index, 'bayesupdate');
   const ids = hits.map((h) => h.item.targetId).sort();
   assert.deepStrictEqual(ids, ['t1', 't3']);
   assert.strictEqual(hits[0].score, 0);
   assert.strictEqual(hits[0].matches, null);
 });
 
-test('exactSubstringHits matches whole words only — no flooding on common prefixes', () => {
+test('exactWordHits matches whole words only — no flooding on common prefixes', () => {
   const index = [
     { text: 'the Normal distribution', heading: 'A', targetId: 'd' },
     { text: 'normalize the measure', heading: 'B', targetId: 'n' },
     { text: 'an unnormalized superposition', heading: 'C', targetId: 'u' }
   ];
-  const ids = H.exactSubstringHits(index, 'Normal').map((h) => h.item.targetId);
+  const ids = H.exactWordHits(index, 'Normal').map((h) => h.item.targetId);
   assert.deepStrictEqual(ids, ['d'], 'only the whole-word Normal, not normalize/unnormalized');
+});
+
+test('exactWordHits respects the limit cap (M5)', () => {
+  const index = [
+    { text: 'kernel one', targetId: 'a' },
+    { text: 'kernel two', targetId: 'b' },
+    { text: 'kernel three', targetId: 'c' }
+  ];
+  assert.strictEqual(H.exactWordHits(index, 'kernel', 2).length, 2, 'scan stops once limit hits collected');
+  assert.strictEqual(H.exactWordHits(index, 'kernel').length, 3, 'no limit -> all matches');
 });
 
 test('boostExact lowers (improves) score for literal substring matches', () => {
@@ -74,12 +84,12 @@ test('boostExact lowers (improves) score for literal substring matches', () => {
     { item: { text: 'the kernel of a measure', targetId: 'b' }, score: 0.30, matches: [] }
   ];
   const boosted = H.boostExact(results, q);
-  // 'b' has a whole-word 'kernel': 0.30 * 0.25 = 0.075, beating 'a' at 0.10.
+  // 'b' has a whole-word 'kernel': 0.30 - 0.3 = 0.0, beating 'a' at 0.10.
   const byId = {};
   boosted.forEach((r) => { byId[r.item.targetId] = r.score; });
   assert.ok(byId.b < byId.a, 'exact match outranks fuzzy-only after boost');
   assert.strictEqual(byId.a, 0.10, 'non-matching score untouched');
-  assert.ok(Math.abs(byId.b - 0.075) < 1e-9);
+  assert.ok(Math.abs(byId.b - 0.0) < 1e-9);
 });
 
 test('boostExact ranks a whole-word match above a longer-word (substring) match', () => {
@@ -90,10 +100,10 @@ test('boostExact ranks a whole-word match above a longer-word (substring) match'
   const out = H.boostExact(results, 'normal');
   const byId = {};
   out.forEach((r) => { byId[r.item.targetId] = r.score; });
-  // dist: whole-word 0.20*0.25=0.05 ; norm: substring 0.10*0.6=0.06 -> dist wins
+  // dist: whole-word 0.20-0.3=-0.10 ; norm: substring 0.10-0.1=0.0 -> dist wins
   assert.ok(byId.dist < byId.norm, 'whole-word Normal beats substring inside normalize');
-  assert.ok(Math.abs(byId.dist - 0.05) < 1e-9, 'whole-word factor 0.25');
-  assert.ok(Math.abs(byId.norm - 0.06) < 1e-9, 'substring factor 0.6');
+  assert.ok(Math.abs(byId.dist - (-0.10)) < 1e-9, 'whole-word bonus 0.3');
+  assert.ok(Math.abs(byId.norm - 0.0) < 1e-9, 'substring bonus 0.1');
 });
 
 test('boostExact is case-insensitive and tolerates missing score', () => {
@@ -153,7 +163,7 @@ test('computeResults dedupes by heading and sorts by boosted score', () => {
   ];
   const out = H.computeResults({ rawQuery: 'kernel', fuse: fakeFuse(fuseResults), index: index, maxResults: 40 });
   assert.strictEqual(out.length, 2, 'A collapsed to one, plus B');
-  // B boosted: 0.25 * 0.3 = 0.075; best A is the 0.20 block (fuzzy, no boost).
+  // B boosted: 0.25 - 0.3 = -0.05; best A is the 0.20 block (fuzzy, no boost).
   assert.strictEqual(out[0].item.targetId, 'b', 'boosted exact match ranks first');
 });
 
@@ -407,4 +417,146 @@ test('sanitizeQuery handles trailing apostrophe and combined operator clusters',
   assert.strictEqual(H.sanitizeQuery("Bayes'"), "Bayes'", 'trailing apostrophe preserved (inert)');
   assert.strictEqual(H.sanitizeQuery("!^'=stuff$"), 'stuff', 'leading operator cluster + trailing $ stripped');
   assert.strictEqual(H.sanitizeQuery('  ^foo |  bar$  '), 'foo bar', 'mixed operators and OR collapse to literal tokens');
+});
+
+// --- Phase-1 jackpot-offset bug (M1) ---------------------------------------
+
+test('dedupeByHeading jackpot leads over a NEGATIVE-scored non-jackpot (M1)', () => {
+  // The old offset (maxNonJackpotBase + 1, init 0) ignored negative non-jackpot
+  // scores — a table cell at -0.25 could still outrank the jackpot. Confirmed
+  // repro: jackpot body base 0.8 vs a -0.25 non-jackpot.
+  const results = [
+    { item: { isHeading: false, text: 'likelihood objects', heading: 'Reference - Likelihoods', sectionId: 'lk', targetId: 'lbody' }, score: 0.80, matches: [] },
+    { item: { isHeading: false, text: 'a table cell', heading: 'Other', sectionId: 'o', targetId: 'cell' }, score: -0.25, matches: [] }
+  ];
+  const out = H.dedupeByHeading(results, 'likelihoods');
+  assert.strictEqual(out[0].item.targetId, 'lbody', 'jackpot leads despite a negative-scored competitor');
+  const cell = out.find((r) => r.item.targetId === 'cell');
+  assert.ok(out[0].score < cell.score, 'jackpot strictly below the -0.25 non-jackpot');
+});
+
+test('dedupeByHeading jackpot leads when its base far exceeds the non-jackpots (M1)', () => {
+  // Confirmed repro: jackpot base 10, non-jackpots in [0, 2]. The old formula
+  // (offset = 2 + 1 = 3) gave the jackpot 10 - 3 = 7 and sorted it LAST.
+  const results = [
+    { item: { isHeading: true, text: 'Normal distribution', heading: 'Normal distribution', sectionId: 'n', targetId: 'nh' }, score: 10, matches: [] },
+    { item: { isHeading: false, text: 'a', heading: 'A', sectionId: 'a', targetId: 'a' }, score: 0, matches: [] },
+    { item: { isHeading: false, text: 'b', heading: 'B', sectionId: 'b', targetId: 'b' }, score: 2, matches: [] }
+  ];
+  const out = H.dedupeByHeading(results, 'Normal');
+  assert.strictEqual(out[0].item.targetId, 'nh', 'high-base jackpot still leads');
+  const others = out.filter((r) => r.item.targetId !== 'nh');
+  others.forEach((r) => assert.ok(out[0].score < r.score, 'jackpot below every non-jackpot'));
+});
+
+test('dedupeByHeading with ALL rows jackpots ranks them sensibly among themselves', () => {
+  const results = [
+    { item: { isHeading: true, text: 'Normal distribution', heading: 'Normal distribution', sectionId: 'n1', targetId: 'a' }, score: 0.30, matches: [] },
+    { item: { isHeading: true, text: 'the Normal kernel', heading: 'the Normal kernel', sectionId: 'n2', targetId: 'b' }, score: 0.10, matches: [] }
+  ];
+  const out = H.dedupeByHeading(results, 'Normal');
+  assert.strictEqual(out.length, 2);
+  // dedupeByHeading returns first-seen order (computeResults sorts). With no
+  // non-jackpot to clear the offset is 0, so scores equal their base — no
+  // spurious tiering — and sorting by score puts the better-scoring 'b' first.
+  const byId = {};
+  out.forEach((r) => { byId[r.item.targetId] = r.score; });
+  assert.ok(Math.abs(byId.a - 0.30) < 1e-9, 'jackpot score unchanged (offset 0)');
+  assert.ok(Math.abs(byId.b - 0.10) < 1e-9, 'jackpot score unchanged (offset 0)');
+  assert.ok(byId.b < byId.a, 'better-scoring jackpot sorts first');
+});
+
+// --- Phase-3 coverage gaps -------------------------------------------------
+
+test('computeResults returns [] for an all-operator query without calling fuse', () => {
+  const fuse = fakeFuse([]);
+  assert.deepStrictEqual(H.computeResults({ rawQuery: "!^'$", fuse: fuse, index: [] }), []);
+  assert.deepStrictEqual(H.computeResults({ rawQuery: '|', fuse: fuse, index: [] }), []);
+  assert.strictEqual(fuse.calls.length, 0, 'fuse never searched for an empty sanitized query');
+});
+
+test('buildSnippet drops a 2nd term beyond the window but still bounds output (L3)', () => {
+  // Window anchors on the first match (start + SNIPPET_WINDOW=200). A second
+  // term >200 chars away is outside the window: not highlighted, output bounded.
+  const text = 'alpha ' + 'x'.repeat(260) + ' beta';
+  const html = H.buildSnippet(text, 'alpha beta');
+  assert.ok(html.indexOf('<mark>alpha</mark>') !== -1, 'first (in-window) term marked');
+  assert.strictEqual(html.indexOf('<mark>beta</mark>'), -1, 'second term beyond the window not marked');
+  assert.strictEqual(html.slice(-1), '…', 'trailing ellipsis since content runs past the window');
+});
+
+test('buildSnippet accepts precomputed terms equivalent to deriving them from the query', () => {
+  const text = 'The kernel of a measure is central';
+  const fromQuery = H.buildSnippet(text, 'kernel');
+  const fromTerms = H.buildSnippet(text, null, undefined, H.snippetTerms('kernel'));
+  assert.strictEqual(fromTerms, fromQuery, 'precomputed terms produce identical output');
+});
+
+test('snippetTerms strips operators and short terms', () => {
+  assert.deepStrictEqual(H.snippetTerms('  measure   algebra '), ['measure', 'algebra']);
+  assert.deepStrictEqual(H.snippetTerms('a kernel'), ['kernel'], 'sub-MIN_TERM_LEN term dropped');
+  assert.deepStrictEqual(H.snippetTerms("'exact"), ['exact']);
+});
+
+// --- Phase-3/M4: pure index builder ----------------------------------------
+
+test('buildIndexEntries derives heading paths and own/parent section ids', () => {
+  const blocks = [
+    { id: 'r', text: 'Reference', isHeading: true, level: 1 },
+    { id: 'b1', text: 'kernel prose', isHeading: false, level: 0 },
+    { id: 'l', text: 'Likelihoods', isHeading: true, level: 2 },
+    { id: 'b2', text: 'likelihood prose', isHeading: false, level: 0 }
+  ];
+  const out = H.buildIndexEntries(blocks);
+  assert.strictEqual(out.length, 4);
+  // Heading owns its own section id; body inherits the deepest heading.
+  assert.deepStrictEqual(
+    out.map((e) => [e.targetId, e.heading, e.sectionId, e.isHeading]),
+    [
+      ['r', 'Reference', 'r', true],
+      ['b1', 'Reference', 'r', false],
+      ['l', 'Reference - Likelihoods', 'l', true],
+      ['b2', 'Reference - Likelihoods', 'l', false]
+    ]
+  );
+});
+
+test('buildIndexEntries strips leading section numbers from heading text', () => {
+  const out = H.buildIndexEntries([{ id: 'h', text: '6.4 Likelihoods and posteriors', isHeading: true, level: 2 }]);
+  assert.strictEqual(out[0].heading, 'Likelihoods and posteriors', 'numeric prefix stripped from path');
+});
+
+test('buildIndexEntries keeps same-titled sections distinct via their own ids', () => {
+  const blocks = [
+    { id: 'ex1', text: 'Examples', isHeading: true, level: 2 },
+    { id: 'p1', text: 'first example body', isHeading: false, level: 0 },
+    { id: 'ex2', text: 'Examples', isHeading: true, level: 2 },
+    { id: 'p2', text: 'second example body', isHeading: false, level: 0 }
+  ];
+  const out = H.buildIndexEntries(blocks);
+  assert.strictEqual(out[1].sectionId, 'ex1');
+  assert.strictEqual(out[3].sectionId, 'ex2', 'identical heading text, distinct section ids');
+  assert.strictEqual(out[1].heading, out[3].heading, 'paths read the same');
+});
+
+test('buildIndexEntries resets deeper heading levels when a higher level appears', () => {
+  const blocks = [
+    { id: 'h1', text: 'A', isHeading: true, level: 1 },
+    { id: 'h2', text: 'B', isHeading: true, level: 2 },
+    { id: 'h1b', text: 'C', isHeading: true, level: 1 },
+    { id: 'p', text: 'body', isHeading: false, level: 0 }
+  ];
+  const out = H.buildIndexEntries(blocks);
+  // After the second level-1 'C', the level-2 'B' must be cleared from the path.
+  assert.strictEqual(out[3].heading, 'C', 'deeper stale heading reset');
+  assert.strictEqual(out[3].sectionId, 'h1b');
+});
+
+test('buildIndexEntries passes isTable through', () => {
+  const out = H.buildIndexEntries([
+    { id: 'c', text: 'Normal', isHeading: false, level: 0, isTable: true },
+    { id: 'p', text: 'prose', isHeading: false, level: 0, isTable: false }
+  ]);
+  assert.strictEqual(out[0].isTable, true);
+  assert.strictEqual(out[1].isTable, false);
 });
