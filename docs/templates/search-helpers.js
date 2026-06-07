@@ -99,6 +99,39 @@
     return order.map(function (k) { return best[k]; });
   }
 
+  // Orchestrates a single search. Pure: takes an already-built `fuse` instance
+  // and the `index` array, returns processed results ready to render
+  // ({ item, score, matches }). Order of operations:
+  //   sanitize -> fuse.search -> (identifier? merge exact hits) -> boost exact
+  //   -> dedupe by heading -> sort by score -> cap to maxResults.
+  function computeResults(opts) {
+    opts = opts || {};
+    var fuse = opts.fuse;
+    var index = opts.index || [];
+    var maxResults = opts.maxResults || 40;
+    var q = sanitizeQuery(opts.rawQuery);
+    if (!q) return [];
+
+    // Over-fetch before dedup so collapsing per heading still fills the list.
+    var raw = fuse.search(q, { limit: maxResults * 2 });
+
+    if (looksLikeIdentifier(q)) {
+      var seen = {};
+      for (var i = 0; i < raw.length; i++) {
+        if (raw[i].item) seen[raw[i].item.targetId] = true;
+      }
+      var extra = exactSubstringHits(index, q).filter(function (r) {
+        return !seen[r.item.targetId];
+      });
+      raw = extra.concat(raw);
+    }
+
+    var boosted = boostExact(raw, q);
+    var deduped = dedupeByHeading(boosted);
+    deduped.sort(function (a, b) { return a.score - b.score; });
+    return deduped.slice(0, maxResults);
+  }
+
   return {
     __loaded: true,
     searchFuseOptions: searchFuseOptions,
@@ -106,6 +139,7 @@
     looksLikeIdentifier: looksLikeIdentifier,
     exactSubstringHits: exactSubstringHits,
     boostExact: boostExact,
-    dedupeByHeading: dedupeByHeading
+    dedupeByHeading: dedupeByHeading,
+    computeResults: computeResults
   };
 });

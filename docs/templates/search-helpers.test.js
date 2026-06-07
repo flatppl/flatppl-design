@@ -99,3 +99,54 @@ test('dedupeByHeading falls back to targetId when heading is empty', () => {
   ];
   assert.strictEqual(H.dedupeByHeading(results).length, 2, 'empty headings not collapsed together');
 });
+
+function fakeFuse(returnValue) {
+  return {
+    calls: [],
+    search: function (q, opts) { this.calls.push({ q: q, opts: opts }); return returnValue; }
+  };
+}
+
+test('computeResults returns [] for an empty/whitespace query and does not call fuse', () => {
+  const fuse = fakeFuse([]);
+  assert.deepStrictEqual(H.computeResults({ rawQuery: '   ', fuse: fuse, index: [] }), []);
+  assert.strictEqual(fuse.calls.length, 0);
+});
+
+test('computeResults sanitizes the query before searching', () => {
+  const fuse = fakeFuse([]);
+  H.computeResults({ rawQuery: "  'kernel  ", fuse: fuse, index: [] });
+  assert.strictEqual(fuse.calls[0].q, 'kernel');
+});
+
+test('computeResults dedupes by heading and sorts by boosted score', () => {
+  const index = [];
+  const fuseResults = [
+    { item: { text: 'fuzzy only', heading: 'A', targetId: 'a' }, score: 0.20, matches: [] },
+    { item: { text: 'has kernel literally', heading: 'B', targetId: 'b' }, score: 0.25, matches: [] },
+    { item: { text: 'another A block', heading: 'A', targetId: 'a2' }, score: 0.50, matches: [] }
+  ];
+  const out = H.computeResults({ rawQuery: 'kernel', fuse: fakeFuse(fuseResults), index: index, maxResults: 40 });
+  assert.strictEqual(out.length, 2, 'A collapsed to one, plus B');
+  // B boosted: 0.25 * 0.3 = 0.075; best A is the 0.20 block (fuzzy, no boost).
+  assert.strictEqual(out[0].item.targetId, 'b', 'boosted exact match ranks first');
+});
+
+test('computeResults merges identifier exact hits the fuzzy search missed', () => {
+  const index = [
+    { text: 'The bayesupdate operator', heading: 'Ops', targetId: 'idx1' }
+  ];
+  // Fuse returns nothing for the identifier query; the exact pass must supply it.
+  const out = H.computeResults({ rawQuery: 'bayesupdate', fuse: fakeFuse([]), index: index, maxResults: 40 });
+  assert.strictEqual(out.length, 1);
+  assert.strictEqual(out[0].item.targetId, 'idx1');
+});
+
+test('computeResults respects maxResults', () => {
+  const fuseResults = [];
+  for (let i = 0; i < 10; i++) {
+    fuseResults.push({ item: { text: 't' + i, heading: 'H' + i, targetId: 'id' + i }, score: 0.1 * i, matches: [] });
+  }
+  const out = H.computeResults({ rawQuery: 'zzz', fuse: fakeFuse(fuseResults), index: [], maxResults: 3 });
+  assert.strictEqual(out.length, 3);
+});
