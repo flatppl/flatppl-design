@@ -44,18 +44,15 @@
   var SUBSTRING_BONUS = 0.1;   // additive: substring literal match (mild)
   var TABLE_BONUS = 0.25;       // reference-table cell lift (additive, better)
   var DEMOTE_PENALTY = 0.4;     // frontmatter/overview push-down (additive, worse)
-  // ORDERING CONTRACT — since boostExact became additive, these four live on
-  // ONE lower-is-better scale and their magnitudes are load-bearing RELATIVE to
-  // each other, not just individually. Retune them as a SET, not one at a time.
-  // The score-independent invariants (pinned by regression tests) are:
-  //   * literal beats fuzzy-only            — bonuses > 0
-  //   * whole word beats substring          — gap 0.3-0.1=0.2 exceeds the max
-  //     raw Fuse score (threshold 0.35), so the order holds at any baseline
-  //   * demotion costs a fixed net penalty  — a demoted hit is worse by exactly
-  //     DEMOTE_PENALTY than the same hit undemoted, regardless of any boost, so
-  //     an overview/abstract section never floods even on an exact match
-  // (Whether a demoted literal outranks a *different* non-demoted fuzzy hit is
-  // score-dependent — that comparison is a tuning question, not an invariant.)
+  // ORDERING CONTRACT — the final ranking (see computeResults) is a TIERED sort:
+  //   jackpot (heading-title literal hit) < exact (query is a whole word or
+  //   substring of the block text) < fuzzy-only.
+  // The additive bonuses/penalties below NEVER cross tiers — they only order
+  // rows WITHIN a tier (whole word before substring; table cells lifted;
+  // overview/abstract demoted). So an EXACT match always outranks any
+  // fuzzy-only match, regardless of Fuse scores or any boost. Retune the
+  // within-tier knobs as a set; whole-word > substring (gap 0.2) is the one
+  // intra-tier magnitude relationship pinned by tests.
 
   // #1 (heading-weighted keys) + #5 (multi-word AND via extended search).
   // useExtendedSearch makes a space-separated query an AND of fuzzy tokens.
@@ -234,25 +231,30 @@
     return results.map(function (r) {
       var text = r.item && r.item.text ? r.item.text : '';
       var s = typeof r.score === 'number' ? r.score : 1;
-      var bonus = 0;
-      if (wordRe && wordRe.test(text)) { bonus = WHOLE_WORD_BONUS; }
-      else if (text.toLowerCase().indexOf(lq) !== -1) { bonus = SUBSTRING_BONUS; }
-      return { item: r.item, score: s - bonus, matches: r.matches };
+      var whole = !!(wordRe && wordRe.test(text));
+      var sub = !whole && text.toLowerCase().indexOf(lq) !== -1;
+      var bonus = whole ? WHOLE_WORD_BONUS : (sub ? SUBSTRING_BONUS : 0);
+      // `exact` tags the result for the tiered sort in computeResults: an exact
+      // (whole-word or substring) hit always outranks a fuzzy-only hit, no
+      // matter the scores. The score still orders rows within the exact tier.
+      return { item: r.item, score: s - bonus, matches: r.matches, exact: whole || sub };
     });
   }
 
   // Boost matches that live in reference tables (distributions, functions,
   // modules, profile mappings). These cells are the canonical concise
   // definitions, so a table hit should outrank incidental prose. Additive
-  // (subtract `bonus`) so it composes with the additive demote/jackpot tiers on
-  // one scale — a multiplier (0 * f = 0) couldn't separate a near-zero exact
-  // table cell from a tying prose mention. Pure; returns a new array.
+  // (subtract `bonus`) so it composes with the additive demote tier on one
+  // scale. ONLY lifts a cell that is itself an EXACT match (r.exact, set by the
+  // preceding boostExact) — a fuzzy-only cell ("Distribution" for the query
+  // "distributed") is not a real hit, so promoting it would float it (and its
+  // section's display row) above genuine content. Pure; returns a new array.
   function boostTables(results, bonus) {
     if (typeof bonus !== 'number') bonus = TABLE_BONUS;
     return results.map(function (r) {
       var item = r.item || {};
       var s = typeof r.score === 'number' ? r.score : 1;
-      return { item: r.item, score: item.isTable ? s - bonus : s, matches: r.matches };
+      return { item: r.item, score: (item.isTable && r.exact) ? s - bonus : s, matches: r.matches, exact: r.exact };
     });
   }
 
@@ -272,11 +274,12 @@
   //
   // JACKPOT: if `query` is supplied and a section's heading TITLE literally
   // contains it (e.g. searching "likelihoods" with a "Likelihoods and
-  // posteriors" heading), that section is tiered to the very top. The jackpot
-  // offset is computed RELATIVE to the actual score extrema (min non-jackpot,
-  // max jackpot base) so a jackpot always leads regardless of score scale,
-  // sign, or threshold tuning. The displayed row is still the body prose, not
-  // the bare title.
+  // posteriors" heading), the group is flagged `jackpot` and computeResults
+  // sorts it into the top tier. The displayed row is still the body prose, not
+  // the bare title. Each group is also flagged `exact` if any of its blocks is
+  // an exact (whole-word/substring) hit, so computeResults can tier it above
+  // fuzzy-only sections. dedupeByHeading itself does NOT sort or offset scores —
+  // it only collapses and flags; the tiered sort lives in computeResults.
   function dedupeByHeading(results, query, headingWordRe) {
     // Jackpot only on a whole-word heading-title hit, so searching "normal"
     // jackpots a "Normal distribution" heading but not "Normalization".
@@ -292,8 +295,9 @@
         : item.heading ? 'h:' + item.heading
         : 't:' + (item.targetId || i);
       var g = groups[key];
-      if (!g) { g = groups[key] = { bestOverall: r, bestBody: null, exactHeading: false }; order.push(key); }
+      if (!g) { g = groups[key] = { bestOverall: r, bestBody: null, exactHeading: false, exact: false }; order.push(key); }
       if (scoreOf(r) < scoreOf(g.bestOverall)) g.bestOverall = r;
+      if (r.exact) g.exact = true;
       if (item.isHeading) {
         if (headingWordRe && headingWordRe.test(item.text || '')) g.exactHeading = true;
       } else if (!g.bestBody || scoreOf(r) < scoreOf(g.bestBody)) {
@@ -301,11 +305,12 @@
       }
     }
 
-    // First pass: resolve display row, base rank, and whether each group wins
-    // the jackpot. The jackpot can fire even when no isHeading block for the
-    // section reached the result set — fall back to the heading path's last
-    // segment so a body-only match still tiers correctly.
-    var ranked = order.map(function (k) {
+    // Collapse to one row per group: display the best body block (prose), rank
+    // by the group's best score, and flag jackpot/exact for the tiered sort in
+    // computeResults. The jackpot can fire even when no isHeading block reached
+    // the result set — fall back to the heading path's last segment so a
+    // body-only match still tiers correctly. No score offset is applied here.
+    return order.map(function (k) {
       var g = groups[k];
       var display = g.bestBody || g.bestOverall;
       var jackpot = g.exactHeading;
@@ -314,27 +319,7 @@
         var title = path.split(' - ').pop();
         if (title && headingWordRe.test(title)) jackpot = true;
       }
-      return { item: display.item, base: scoreOf(g.bestOverall), jackpot: jackpot, matches: display.matches };
-    });
-
-    // Second pass: tier every jackpot strictly below every non-jackpot row.
-    // The offset must clear BOTH the minimum non-jackpot score (the row a
-    // jackpot has to beat) AND the maximum jackpot base (so even the
-    // worst-scoring jackpot lands below it): max jackpot final =
-    // maxJackpotBase - (maxJackpotBase - minNonJackpot + 1) = minNonJackpot - 1.
-    // The old `maxNonJackpotBase + 1` was insufficient — a negative non-jackpot
-    // score (e.g. an exact table cell at -0.25) or a large jackpot base could
-    // leave a jackpot ranked above a non-jackpot. Subtracting one constant
-    // preserves jackpots' relative order. No jackpots -> no offset; no
-    // non-jackpots -> nothing to clear.
-    var minNonJackpot = Infinity, maxJackpotBase = -Infinity;
-    for (var j = 0; j < ranked.length; j++) {
-      if (ranked[j].jackpot) { if (ranked[j].base > maxJackpotBase) maxJackpotBase = ranked[j].base; }
-      else if (ranked[j].base < minNonJackpot) minNonJackpot = ranked[j].base;
-    }
-    var jackpotOffset = minNonJackpot === Infinity ? 0 : (maxJackpotBase - minNonJackpot + 1);
-    return ranked.map(function (x) {
-      return { item: x.item, score: x.jackpot ? x.base - jackpotOffset : x.base, matches: x.matches };
+      return { item: display.item, score: scoreOf(g.bestOverall), matches: display.matches, jackpot: jackpot, exact: g.exact };
     });
   }
 
@@ -355,7 +340,7 @@
         if (prefixes[i] && h.indexOf(prefixes[i]) === 0) { demote = true; break; }
       }
       var s = typeof r.score === 'number' ? r.score : 1;
-      return { item: r.item, score: demote ? s + penalty : s, matches: r.matches };
+      return { item: r.item, score: demote ? s + penalty : s, matches: r.matches, exact: r.exact };
     });
   }
 
@@ -416,7 +401,7 @@
   // it (buildSnippet works from the raw query). Order of operations:
   //   sanitize -> fuse.search -> (identifier? merge exact hits)
   //   -> boostExact -> boostTables -> demoteByHeading -> dedupeByHeading
-  //   -> sort by score -> cap to maxResults.
+  //   -> tiered sort (jackpot < exact < fuzzy, score as tiebreak) -> cap.
   // The whole-word regex is built once here and threaded into every stage.
   function computeResults(opts) {
     opts = opts || {};
@@ -441,10 +426,11 @@
       raw = extra.concat(raw);
     }
 
-    // boostExact, boostTables and demoteByHeading are all ADDITIVE, so they
-    // commute — their order among themselves does not change the result. The
-    // ONE ordering invariant is that dedupeByHeading runs LAST: its jackpot
-    // offset is computed relative to the other rows' final base scores.
+    // boostExact runs FIRST: it tags each row `exact` and applies the literal
+    // bonus. boostTables then lifts ONLY exact table cells (it reads that flag),
+    // and demoteByHeading penalizes overview prose; those two are additive and
+    // commute with each other. dedupeByHeading runs LAST, collapsing sections
+    // and flagging jackpot/exact for the tiered sort.
     // (opts.tableBonus -> TABLE_BONUS; opts.demoteHeadings = lowercased
     // heading-path prefixes; opts.demotePenalty -> DEMOTE_PENALTY.)
     // Convention: per-search tunables (tableBonus, demotePenalty, demoteHeadings,
@@ -457,7 +443,11 @@
     // Collapse to one row per section (body prose preferred for display).
     // Passing q enables the exact-heading jackpot (see dedupeByHeading).
     var deduped = dedupeByHeading(boosted, q, wordRe);
-    deduped.sort(function (a, b) { return a.score - b.score; });
+    // Tiered sort: jackpot (0) < exact (1) < fuzzy-only (2); score breaks ties
+    // within a tier. This is what guarantees an exact match always outranks a
+    // fuzzy-only one — no boost can move a row across tiers.
+    function tier(r) { return r.jackpot ? 0 : (r.exact ? 1 : 2); }
+    deduped.sort(function (a, b) { return (tier(a) - tier(b)) || (a.score - b.score); });
     return deduped.slice(0, maxResults);
   }
 

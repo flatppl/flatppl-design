@@ -186,21 +186,29 @@ test('computeResults respects maxResults', () => {
   assert.strictEqual(out.length, 3);
 });
 
-test('boostTables tiers table-cell matches above equivalent prose', () => {
+test('boostTables tiers an EXACT table-cell match above equivalent prose', () => {
+  // `exact` is set upstream by boostExact; boostTables only lifts exact cells.
   const results = [
-    { item: { isTable: true, text: 'Normal', targetId: 'cell' }, score: 0.02, matches: [] },
-    { item: { isTable: false, text: 'a multivariate normal mention', targetId: 'prose' }, score: 0.02, matches: [] }
+    { item: { isTable: true, text: 'Normal', targetId: 'cell' }, score: 0.02, matches: [], exact: true },
+    { item: { isTable: false, text: 'a multivariate normal mention', targetId: 'prose' }, score: 0.02, matches: [], exact: true }
   ];
   const out = H.boostTables(results, 0.25);
   const byId = {};
   out.forEach((r) => { byId[r.item.targetId] = r.score; });
-  assert.ok(Math.abs(byId.cell - (-0.23)) < 1e-9, 'table lowered by the bonus');
+  assert.ok(Math.abs(byId.cell - (-0.23)) < 1e-9, 'exact table cell lowered by the bonus');
   assert.strictEqual(byId.prose, 0.02, 'prose untouched');
   assert.ok(byId.cell < byId.prose, 'table cell ranks above the tying prose');
 });
 
+test('boostTables does NOT lift a FUZZY-only table cell (the "distributed" bug)', () => {
+  // A table cell that only fuzzy-matches (exact:false) must get no structural
+  // promotion — otherwise it floats above genuine content.
+  const out = H.boostTables([{ item: { isTable: true, text: 'Distribution', targetId: 'cell' }, score: 0.24, matches: [], exact: false }], 0.25);
+  assert.strictEqual(out[0].score, 0.24, 'fuzzy-only table cell unchanged');
+});
+
 test('boostTables leaves non-table results alone', () => {
-  const out = H.boostTables([{ item: { isTable: false, text: 'x', targetId: 'a' }, score: 0.5, matches: [] }], 0.25);
+  const out = H.boostTables([{ item: { isTable: false, text: 'x', targetId: 'a' }, score: 0.5, matches: [], exact: true }], 0.25);
   assert.strictEqual(out[0].score, 0.5);
 });
 
@@ -254,18 +262,18 @@ test('demoteByHeading is prefix-based and case-insensitive', () => {
   assert.ok(Math.abs(out[0].score - 0.70) < 1e-9);
 });
 
-test('dedupeByHeading jackpots a section whose heading title contains the query', () => {
+test('dedupeByHeading flags the jackpot section (heading title contains the query) and shows its body', () => {
   const results = [
     { item: { isHeading: true, text: '6.4 Likelihoods and posteriors', heading: 'Likelihoods and posteriors', targetId: 'lhead' }, score: 0.20, matches: [] },
     { item: { isHeading: false, text: 'likelihood objects represent density', heading: 'Likelihoods and posteriors', targetId: 'lbody' }, score: 0.30, matches: [{ key: 'text' }] },
     { item: { isHeading: false, text: 'mentions likelihoods in passing', heading: 'Abstract', targetId: 'other' }, score: 0.05, matches: [] }
   ];
   const out = H.dedupeByHeading(results, 'likelihoods');
-  assert.strictEqual(out[0].item.heading, 'Likelihoods and posteriors');
-  assert.strictEqual(out[0].item.targetId, 'lbody', 'jackpot still shows the body prose');
-  assert.ok(out[0].score < 0, 'jackpot rank is tiered below zero so it always leads');
+  const lk = out.find((r) => r.item.heading === 'Likelihoods and posteriors');
+  assert.ok(lk.jackpot, 'section with the title hit is flagged jackpot');
+  assert.strictEqual(lk.item.targetId, 'lbody', 'jackpot still shows the body prose');
   const other = out.find((r) => r.item.heading === 'Abstract');
-  assert.ok(out[0].score < other.score, 'jackpot beats a lower-raw-scored non-heading match');
+  assert.ok(!other.jackpot, 'a non-title section is not jackpotted');
 });
 
 test('buildSnippet highlights the whole query term, not fuzzy fragments', () => {
@@ -354,21 +362,19 @@ test('dedupeByHeading jackpots from the heading-path last segment when no headin
     { item: { isHeading: false, text: 'mentioned in passing', heading: 'Abstract', sectionId: 'ab', targetId: 'other' }, score: 0.05, matches: [] }
   ];
   const out = H.dedupeByHeading(results, 'likelihoods');
-  assert.strictEqual(out[0].item.targetId, 'lbody', 'body-only section still jackpots');
-  assert.ok(out[0].score < 0, 'jackpot tiered below zero');
+  const lk = out.find((r) => r.item.targetId === 'lbody');
+  assert.ok(lk.jackpot, 'body-only section still jackpots via the heading-path last segment');
   const other = out.find((r) => r.item.targetId === 'other');
-  assert.ok(out[0].score < other.score, 'jackpot beats the lower-raw-scored abstract');
+  assert.ok(!other.jackpot, 'abstract section not jackpotted');
 });
 
-test('dedupeByHeading jackpot offset is relative — leads even when raw scores exceed 1 (L5)', () => {
-  const results = [
+test('computeResults: jackpot leads even when a non-jackpot raw score exceeds 1 (L5)', () => {
+  const fuseResults = [
     { item: { isHeading: true, text: 'Normal distribution', heading: 'Normal distribution', sectionId: 'n', targetId: 'nh' }, score: 0.9, matches: [] },
     { item: { isHeading: false, text: 'unrelated', heading: 'Other', sectionId: 'o', targetId: 'ob' }, score: 5.0, matches: [] }
   ];
-  const out = H.dedupeByHeading(results, 'Normal');
-  assert.strictEqual(out[0].item.targetId, 'nh', 'jackpot leads regardless of large non-jackpot scores');
-  const ob = out.find((r) => r.item.targetId === 'ob');
-  assert.ok(out[0].score < ob.score, 'jackpot strictly below the 5.0-scored row');
+  const out = H.computeResults({ rawQuery: 'Normal', fuse: fakeFuse(fuseResults), index: [], maxResults: 40 });
+  assert.strictEqual(out[0].item.targetId, 'nh', 'jackpot (top tier) leads regardless of large non-jackpot scores');
 });
 
 test('buildSnippet ignores query terms shorter than the minimum length', () => {
@@ -422,49 +428,50 @@ test('sanitizeQuery handles trailing apostrophe and combined operator clusters',
 
 // --- Phase-1 jackpot-offset bug (M1) ---------------------------------------
 
-test('dedupeByHeading jackpot leads over a NEGATIVE-scored non-jackpot (M1)', () => {
-  // The old offset (maxNonJackpotBase + 1, init 0) ignored negative non-jackpot
-  // scores — a table cell at -0.25 could still outrank the jackpot. Confirmed
-  // repro: jackpot body base 0.8 vs a -0.25 non-jackpot.
-  const results = [
+test('computeResults: a jackpot leads even past a strongly-scored non-jackpot (M1)', () => {
+  // Jackpot is the top tier, so even a table cell with a very good (low) score
+  // and the table bonus cannot displace it.
+  const fuseResults = [
     { item: { isHeading: false, text: 'likelihood objects', heading: 'Reference - Likelihoods', sectionId: 'lk', targetId: 'lbody' }, score: 0.80, matches: [] },
-    { item: { isHeading: false, text: 'a table cell', heading: 'Other', sectionId: 'o', targetId: 'cell' }, score: -0.25, matches: [] }
+    { item: { isTable: true, text: 'Likelihoods', heading: 'Other', sectionId: 'o', targetId: 'cell' }, score: 0.10, matches: [] }
   ];
-  const out = H.dedupeByHeading(results, 'likelihoods');
-  assert.strictEqual(out[0].item.targetId, 'lbody', 'jackpot leads despite a negative-scored competitor');
-  const cell = out.find((r) => r.item.targetId === 'cell');
-  assert.ok(out[0].score < cell.score, 'jackpot strictly below the -0.25 non-jackpot');
+  const out = H.computeResults({ rawQuery: 'likelihoods', fuse: fakeFuse(fuseResults), index: [], maxResults: 40 });
+  assert.strictEqual(out[0].item.targetId, 'lbody', 'jackpot section leads the tier despite the cell scoring/boosting better');
 });
 
-test('dedupeByHeading jackpot leads when its base far exceeds the non-jackpots (M1)', () => {
-  // Confirmed repro: jackpot base 10, non-jackpots in [0, 2]. The old formula
-  // (offset = 2 + 1 = 3) gave the jackpot 10 - 3 = 7 and sorted it LAST.
-  const results = [
+test('computeResults: a jackpot leads even with a large raw score vs low-scored others (M1)', () => {
+  const fuseResults = [
     { item: { isHeading: true, text: 'Normal distribution', heading: 'Normal distribution', sectionId: 'n', targetId: 'nh' }, score: 10, matches: [] },
-    { item: { isHeading: false, text: 'a', heading: 'A', sectionId: 'a', targetId: 'a' }, score: 0, matches: [] },
-    { item: { isHeading: false, text: 'b', heading: 'B', sectionId: 'b', targetId: 'b' }, score: 2, matches: [] }
+    { item: { isHeading: false, text: 'unrelated a', heading: 'A', sectionId: 'a', targetId: 'a' }, score: 0, matches: [] },
+    { item: { isHeading: false, text: 'unrelated b', heading: 'B', sectionId: 'b', targetId: 'b' }, score: 2, matches: [] }
   ];
-  const out = H.dedupeByHeading(results, 'Normal');
-  assert.strictEqual(out[0].item.targetId, 'nh', 'high-base jackpot still leads');
-  const others = out.filter((r) => r.item.targetId !== 'nh');
-  others.forEach((r) => assert.ok(out[0].score < r.score, 'jackpot below every non-jackpot'));
+  const out = H.computeResults({ rawQuery: 'Normal', fuse: fakeFuse(fuseResults), index: [], maxResults: 40 });
+  assert.strictEqual(out[0].item.targetId, 'nh', 'jackpot leads regardless of its large raw score');
 });
 
-test('dedupeByHeading with ALL rows jackpots ranks them sensibly among themselves', () => {
-  const results = [
-    { item: { isHeading: true, text: 'Normal distribution', heading: 'Normal distribution', sectionId: 'n1', targetId: 'a' }, score: 0.30, matches: [] },
-    { item: { isHeading: true, text: 'the Normal kernel', heading: 'the Normal kernel', sectionId: 'n2', targetId: 'b' }, score: 0.10, matches: [] }
+test('computeResults: an exact match always outranks a better-fuzz-scored hit (distributed)', () => {
+  // The reported bug: searching "distributed" floated fuzzy "Distribution"
+  // table cells (Fuse ~0.24 + table bonus) above genuine whole-word content.
+  // Exactness is the dominant tier, so the body hit wins even though the cell
+  // both scores better fuzzily AND gets the table bonus.
+  const fuseResults = [
+    { item: { isTable: true, text: 'Distribution', heading: 'Built-in distributions', sectionId: 'tbl', targetId: 'cell' }, score: 0.24, matches: [] },
+    { item: { isTable: false, text: 'values are distributed across the DAG', heading: 'Design', sectionId: 'd', targetId: 'body' }, score: 0.40, matches: [] }
   ];
-  const out = H.dedupeByHeading(results, 'Normal');
-  assert.strictEqual(out.length, 2);
-  // dedupeByHeading returns first-seen order (computeResults sorts). With no
-  // non-jackpot to clear the offset is 0, so scores equal their base — no
-  // spurious tiering — and sorting by score puts the better-scoring 'b' first.
-  const byId = {};
-  out.forEach((r) => { byId[r.item.targetId] = r.score; });
-  assert.ok(Math.abs(byId.a - 0.30) < 1e-9, 'jackpot score unchanged (offset 0)');
-  assert.ok(Math.abs(byId.b - 0.10) < 1e-9, 'jackpot score unchanged (offset 0)');
-  assert.ok(byId.b < byId.a, 'better-scoring jackpot sorts first');
+  const out = H.computeResults({ rawQuery: 'distributed', fuse: fakeFuse(fuseResults), index: [], maxResults: 40 });
+  assert.strictEqual(out[0].item.targetId, 'body', 'whole-word content beats the fuzzy table cell despite its better score+bonus');
+});
+
+test('computeResults: tiers are jackpot < exact < fuzzy', () => {
+  // One row per tier; assert the exact order out of computeResults.
+  const fuseResults = [
+    { item: { isHeading: false, text: 'a fuzzy-only paragraph', heading: 'F', sectionId: 'f', targetId: 'fuzzy' }, score: 0.05, matches: [] },
+    { item: { isHeading: false, text: 'the Normal distribution in prose', heading: 'E', sectionId: 'e', targetId: 'exact' }, score: 0.30, matches: [] },
+    { item: { isHeading: true, text: 'Normal distribution', heading: 'Normal distribution', sectionId: 'j', targetId: 'jack' }, score: 0.20, matches: [] }
+  ];
+  const out = H.computeResults({ rawQuery: 'Normal', fuse: fakeFuse(fuseResults), index: [], maxResults: 40 });
+  assert.deepStrictEqual(out.map((r) => r.item.targetId), ['jack', 'exact', 'fuzzy'],
+    'jackpot first, then exact (despite worse raw score than fuzzy), then fuzzy-only');
 });
 
 // --- Phase-3 coverage gaps -------------------------------------------------
