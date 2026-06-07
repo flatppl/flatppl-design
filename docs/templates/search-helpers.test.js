@@ -643,3 +643,29 @@ test('attachElements handles empty inputs and non-arrays', () => {
   assert.deepStrictEqual(H.attachElements(null, []), [], 'non-array index -> []');
   assert.deepStrictEqual(H.attachElements([{ targetId: 'a' }], null), [], 'non-array els -> []');
 });
+
+// --- #2: whole-word regex fallback to substring ----------------------------
+
+test('exactWordHits falls back to substring when the query has no word boundary (#2)', () => {
+  // '.foo' starts with a non-word char, so wholeWordRegex() returns null (the
+  // same null path taken on engines lacking lookbehind/\p, which throw and are
+  // caught). exactWordHits must then use case-insensitive substring containment.
+  const index = [
+    { text: 'see .foo. marker', targetId: 'a' },
+    { text: 'unrelated content', targetId: 'b' }
+  ];
+  const ids = H.exactWordHits(index, '.foo').map((h) => h.item.targetId);
+  assert.deepStrictEqual(ids, ['a'], 'substring fallback finds .foo when whole-word regex is unavailable');
+});
+
+// --- #4: query cannot inject HTML via the snippet (XSS regression) ----------
+
+test('buildSnippet cannot inject HTML via the query (XSS regression, #4)', () => {
+  // The matched span is sliced from the DOCUMENT text and escaped; the query is
+  // only used to locate it, never rendered. Even when the query equals a tag and
+  // that tag literally appears in the text, output carries no raw markup.
+  const text = 'a <img src=x onerror=alert(1)> blob with kernel here';
+  const html = H.buildSnippet(text, '<img src=x onerror=alert(1)>');
+  assert.strictEqual(html.indexOf('<img'), -1, 'no raw tag emitted from the matched doc text');
+  assert.ok(html.indexOf('&lt;img') !== -1, 'matched text escaped even though it equals the query');
+});
