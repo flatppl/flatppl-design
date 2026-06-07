@@ -41,4 +41,4 @@ build-typst = { cmd = "pandoc build/flatppl-design.md -t typst -o build/flatppl-
 ] }
 build = { depends-on = ["build-html", "build-pdf", "build-md", "build-typst"] }
 clean = "rm -rf build"
-test-js = "node --test docs/templates/"
+test-js = "node --test docs/templates/*.test.js"

@@ -32,16 +32,18 @@
 
   // #5 safety: extended search treats !, ^, ', =, $, | as operators. Strip them
   // from user input so typed text matches literally instead of triggering
-  // surprising operator behavior. Per-token: drop leading !^'= and trailing $,
-  // drop a standalone | (OR), collapse whitespace.
+  // surprising operator behavior. | (OR) is turned to a space everywhere — even
+  // mid-token (e.g. "Int|Float") — so it never flips the query to OR. Per
+  // remaining token: drop leading !^'= and trailing $; collapse whitespace.
   function sanitizeQuery(raw) {
     if (!raw) return '';
     return String(raw)
+      .replace(/\|/g, ' ')
       .replace(/\s+/g, ' ')
       .trim()
       .split(' ')
       .map(function (t) { return t.replace(/^[!^'=]+/, '').replace(/\$+$/, ''); })
-      .filter(function (t) { return t && t !== '|'; })
+      .filter(function (t) { return t; })
       .join(' ');
   }
 

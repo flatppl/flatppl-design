@@ -30,6 +30,7 @@ test('sanitizeQuery trims, collapses whitespace, strips Fuse operators', () => {
   assert.strictEqual(H.sanitizeQuery('!neg'), 'neg');         // leading inverse op
   assert.strictEqual(H.sanitizeQuery('^pre'), 'pre');         // leading prefix op
   assert.strictEqual(H.sanitizeQuery('a | b'), 'a b');        // OR operator dropped
+  assert.strictEqual(H.sanitizeQuery('Int|Float'), 'Int Float'); // mid-token | -> space, not OR
   assert.strictEqual(H.sanitizeQuery(''), '');
   assert.strictEqual(H.sanitizeQuery(null), '');
 });
