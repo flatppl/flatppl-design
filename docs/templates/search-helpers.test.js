@@ -779,3 +779,38 @@ test('boostExact: mid-word substrings are NOT promoted to the exact tier (C4)', 
   assert.strictEqual(byId.pre.exact, true, 'word-prefix substring is still exact');
   assert.ok(byId.pre.score < 0.20, 'word-prefix substring still gets the bonus');
 });
+
+test('demoteByHeading flags demoted rows (C1 plumbing)', () => {
+  const out = H.demoteByHeading([
+    { item: { heading: 'Language overview - intro', targetId: 'a' }, score: 0.1, matches: [] },
+    { item: { heading: 'Distributions', targetId: 'b' }, score: 0.1, matches: [] }
+  ], ['language overview'], 0.4);
+  const byId = out.reduce((m, r) => (m[r.item.targetId] = r, m), {});
+  assert.strictEqual(byId.a.demoted, true, 'matching prefix is flagged demoted');
+  assert.strictEqual(byId.b.demoted, false, 'non-matching row not demoted');
+});
+
+test('dedupeByHeading does NOT jackpot a demoted section (C1)', () => {
+  // The doc-title section both contains the query as a heading whole-word AND is
+  // demoted. It must not be flagged jackpot, or the demote is defeated.
+  const results = [
+    { item: { isHeading: true, text: 'FlatPPL, a Flat Portable Probabilistic Language', heading: 'FlatPPL, a Flat Portable Probabilistic Language', sectionId: 'title', targetId: 'th' }, score: 0.1, matches: [], demoted: true },
+    { item: { isHeading: false, text: 'a probabilistic intro', heading: 'FlatPPL, a Flat Portable Probabilistic Language', sectionId: 'title', targetId: 'tb' }, score: 0.2, matches: [], demoted: true }
+  ];
+  const out = H.dedupeByHeading(results, 'probabilistic');
+  assert.strictEqual(out.length, 1);
+  assert.strictEqual(out[0].jackpot, false, 'demoted section is not jackpotted');
+  assert.strictEqual(out[0].demoted, true, 'group carries the demoted flag through');
+});
+
+test('computeResults: a demoted title section does not lead via jackpot (C1 end-to-end)', () => {
+  const fuseResults = [
+    { item: { isHeading: true, text: 'FlatPPL Probabilistic', heading: 'FlatPPL Probabilistic', sectionId: 'title', targetId: 'th' }, score: 0.1, matches: [] },
+    { item: { isHeading: false, text: 'the probabilistic semantics in detail', heading: 'Semantics', sectionId: 'sem', targetId: 'sb' }, score: 0.30, matches: [] }
+  ];
+  const out = H.computeResults({
+    rawQuery: 'probabilistic', fuse: fakeFuse(fuseResults), index: [], maxResults: 40,
+    demoteHeadings: ['flatppl probabilistic'], demotePenalty: 0.4
+  });
+  assert.strictEqual(out[0].item.targetId, 'sb', 'real content leads; demoted title does not jackpot to the top');
+});

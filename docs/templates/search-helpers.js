@@ -335,6 +335,9 @@
   // an exact (whole-word/substring) hit, so computeResults can tier it above
   // fuzzy-only sections. dedupeByHeading itself does NOT sort or offset scores —
   // it only collapses and flags; the tiered sort lives in computeResults.
+  // A section flagged `demoted` (by demoteByHeading, via a demote-prefix match)
+  // is never jackpotted — the demote would otherwise be defeated by the top
+  // tier. The group's `demoted` flag is carried onto the collapsed row. (C1)
   function dedupeByHeading(results, query, headingWordRe) {
     // Jackpot only on a whole-word heading-title hit, so searching "normal"
     // jackpots a "Normal distribution" heading but not "Normalization".
@@ -349,9 +352,10 @@
         : item.heading ? 'h:' + item.heading
         : 't:' + (item.targetId || i);
       var g = groups[key];
-      if (!g) { g = groups[key] = { bestOverall: r, bestBody: null, exactHeading: false, exact: false }; order.push(key); }
+      if (!g) { g = groups[key] = { bestOverall: r, bestBody: null, exactHeading: false, exact: false, demoted: false }; order.push(key); }
       if (scoreOf(r) < scoreOf(g.bestOverall)) g.bestOverall = r;
       if (r.exact) g.exact = true;
+      if (r.demoted) g.demoted = true;
       if (item.isHeading) {
         if (headingWordRe && headingWordRe.test(item.text || '')) g.exactHeading = true;
       } else if (!g.bestBody || scoreOf(r) < scoreOf(g.bestBody)) {
@@ -373,7 +377,10 @@
         var title = path.split(' - ').pop();
         if (title && headingWordRe.test(title)) jackpot = true;
       }
-      return { item: display.item, score: scoreOf(g.bestOverall), jackpot: jackpot, exact: g.exact };
+      // A demoted section must never enter the jackpot tier, or the demote (a
+      // within-tier penalty) is silently overridden by the top tier. (C1)
+      if (g.demoted) jackpot = false;
+      return { item: display.item, score: scoreOf(g.bestOverall), jackpot: jackpot, exact: g.exact, demoted: g.demoted };
     });
   }
 
@@ -389,12 +396,11 @@
     return results.map(function (r) {
       var item = r.item || {};
       var h = (item.heading || '').toLowerCase();
-      var demote = false;
-      for (var i = 0; i < prefixes.length; i++) {
-        if (prefixes[i] && h.indexOf(prefixes[i]) === 0) { demote = true; break; }
-      }
+      var demote = prefixes.some(function (p) { return p && h.indexOf(p) === 0; });
       var s = scoreOf(r);
-      return Object.assign({}, r, { score: demote ? s + penalty : s });
+      // Carry a `demoted` flag so dedupeByHeading can refuse to jackpot a demoted
+      // section (otherwise the jackpot tier overrides the demote). (C1)
+      return Object.assign({}, r, { score: demote ? s + penalty : s, demoted: demote });
     });
   }
 
