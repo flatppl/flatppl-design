@@ -1128,6 +1128,13 @@ The phase of this input determines what it can be bound to on the right-hand sid
 Value sets must be compatible in both cases, so the computational structure of the
 loaded module is not modified.
 
+**Stochastic boundary.** Only bindings of `fixed` or `parameterized` phase in the
+loaded module are accessible from the loading module (`module.name`). Bindings of
+`stochastic` phase — direct draws or values with `draw` ancestors that have not
+been reified via `lawof`/`kernelof` — are invisible to the loading module. This
+preserves referential transparency and avoids semantic ambiguity when two loaded
+modules load a common third module.
+
 **Path resolution.** Relative file paths in `load_module(...)` are resolved relative to the directory
 of the FlatPPL file containing that `load_module(...)` call, not the host process's working
 directory. For embedded FlatPPL code, relative paths are resolved relative to the directory of the source file containing the embedded FlatPPL code block. The forward slash `/` is the mandatory path separator
