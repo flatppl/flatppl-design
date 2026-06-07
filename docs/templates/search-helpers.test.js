@@ -764,3 +764,18 @@ test('boostExact: whole-word outranks substring even at worst-case fuzzy baselin
   const byId = scoresById(out);
   assert.ok(byId.whole < byId.sub, 'whole-word ranks above substring regardless of fuzzy baselines');
 });
+
+test('boostExact: mid-word substrings are NOT promoted to the exact tier (C4)', () => {
+  // "normal" appears mid-word in "abnormal"; that must stay fuzzy-only (no exact
+  // flag, no bonus) so it cannot flood the exact tier. A word-prefix hit
+  // ("normalize") is still promoted.
+  const out = H.boostExact([
+    { item: { text: 'an abnormal case', targetId: 'mid' }, score: 0.20, matches: [] },
+    { item: { text: 'normalize first', targetId: 'pre' }, score: 0.20, matches: [] }
+  ], 'normal');
+  const byId = out.reduce((m, r) => (m[r.item.targetId] = r, m), {});
+  assert.strictEqual(byId.mid.exact, false, 'mid-word substring is not exact');
+  assert.strictEqual(byId.mid.score, 0.20, 'mid-word substring score untouched');
+  assert.strictEqual(byId.pre.exact, true, 'word-prefix substring is still exact');
+  assert.ok(byId.pre.score < 0.20, 'word-prefix substring still gets the bonus');
+});

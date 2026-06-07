@@ -136,6 +136,21 @@
     } catch (e) { return null; }
   }
 
+  // Case-insensitive "term starts a word" matcher (left word boundary only), or
+  // null if the query can't begin a word. Used to promote a word-PREFIX hit
+  // ("normal" in "normalize") into the exact tier while leaving a MID-word hit
+  // ("normal" in "abnormal") fuzzy-only, so common substrings don't flood the
+  // tier (C4). Stateless (no /g/); shareable across a search.
+  function wordPrefixRegex(q) {
+    if (!q) return null;
+    try {
+      var WORD = '[\\p{L}\\p{N}_]';
+      var edge = new RegExp(WORD, 'u');
+      if (!edge.test(q.charAt(0))) return null; // query can't begin a word
+      return new RegExp('(?<!' + WORD + ')' + escapeRegExp(q), 'iu');
+    } catch (e) { return null; }
+  }
+
   // Clean, term-based snippet highlighter. Highlights the user's actual query
   // terms (case-insensitive whole substrings) rather than Fuse's per-character
   // fuzzy indices, which scatter staccato single-letter <mark>s across the text.
@@ -254,22 +269,25 @@
   // AND still tiers a score-0 exact hit — a multiplier left every 0-scored hit
   // (Fuse perfect matches, all injected exactWordHits) tied at 0. Tiered by how
   // the query sits in the text:
-  //   - whole word ("Normal" in "the Normal distribution")  -> -WHOLE_WORD_BONUS
-  //   - substring  ("normal" inside "normalize")            -> -SUBSTRING_BONUS
-  //   - fuzzy only                                          -> unchanged
+  //   - whole word  ("Normal" in "the Normal distribution") -> -WHOLE_WORD_BONUS
+  //   - word prefix ("normal" starting "normalize")         -> -SUBSTRING_BONUS
+  //   - mid-word / fuzzy only ("normal" in "abnormal")      -> unchanged (C4)
   // The bonus gap (0.4) exceeds the Fuse threshold (0.35) — the max score any
   // hit can carry — so a whole-word hit outranks a substring hit regardless of
   // their fuzzy baselines. Returns a new
   // array; inputs unmutated. `wordRe` may be supplied to reuse a regex already
   // built for this query.
-  function boostExact(results, q, wordRe) {
-    var lq = q.toLowerCase();
+  function boostExact(results, q, wordRe, prefixRe) {
     if (wordRe === undefined) wordRe = wholeWordRegex(q);
+    // Substring promotion is limited to WORD-PREFIX hits so mid-word matches
+    // ("normal" in "abnormal") don't flood the exact tier (C4). If the query
+    // can't start a word, prefixRe is null and only whole-word hits promote.
+    if (prefixRe === undefined) prefixRe = wordPrefixRegex(q);
     return results.map(function (r) {
       var text = r.item && r.item.text ? r.item.text : '';
       var s = scoreOf(r);
       var whole = !!(wordRe && wordRe.test(text));
-      var sub = !whole && text.toLowerCase().indexOf(lq) !== -1;
+      var sub = !whole && !!(prefixRe && prefixRe.test(text));
       var bonus = whole ? WHOLE_WORD_BONUS : (sub ? SUBSTRING_BONUS : 0);
       // `exact` tags the result for the tiered sort in computeResults: an exact
       // (whole-word or substring) hit always outranks a fuzzy-only hit, no
@@ -475,6 +493,7 @@
     var q = sanitizeQuery(opts.rawQuery);
     if (!q) return [];
     var wordRe = wholeWordRegex(q);
+    var prefixRe = wordPrefixRegex(q);
 
     // Over-fetch before dedup so collapsing per section still fills the list.
     var raw = fuse.search(q, { limit: maxResults * 2 });
@@ -500,7 +519,7 @@
     // maxResults) are pass-through opts, each defaulted by its callee. The
     // text-shaping tunables (RADIUS, SNIPPET_WINDOW, MIN_TERM_LEN, the bonus
     // factors, threshold) are intentionally fixed module constants.
-    var boosted = boostExact(raw, q, wordRe);
+    var boosted = boostExact(raw, q, wordRe, prefixRe);
     boosted = boostTables(boosted, opts.tableBonus);
     boosted = demoteByHeading(boosted, opts.demoteHeadings || [], opts.demotePenalty);
     // Collapse to one row per section (body prose preferred for display).
