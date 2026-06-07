@@ -10,7 +10,7 @@ nodejs = ">=20,<21"
 [tasks]
 _mkdir = "mkdir -p build"
 _fetch-grammar = { cmd = "bash docs/templates/fetch-grammar.sh", depends-on = ["_mkdir"] }
-_copy-assets = { cmd = "cp docs/templates/style.css docs/templates/theme-init.js docs/templates/docs-app.js build/ && cp docs/favicon.ico build/ 2>/dev/null || true && cp -r docs/diagrams build/ 2>/dev/null || true", depends-on = [
+_copy-assets = { cmd = "cp docs/templates/style.css docs/templates/theme-init.js docs/templates/docs-app.js docs/templates/search-helpers.js build/ && cp docs/favicon.ico build/ 2>/dev/null || true && cp -r docs/diagrams build/ 2>/dev/null || true", depends-on = [
     "_mkdir",
 ] }
 _katex = { cmd = "node docs/templates/vendor-katex.js", depends-on = [
@@ -41,3 +41,4 @@ build-typst = { cmd = "pandoc build/flatppl-design.md -t typst -o build/flatppl-
 ] }
 build = { depends-on = ["build-html", "build-pdf", "build-md", "build-typst"] }
 clean = "rm -rf build"
+test-js = "node --test docs/templates/"
