@@ -65,8 +65,8 @@ address both with a common FlatPPL profile for now.
 
 This profile does *not* include `fn`/`functionof`/`kernelof`, `draw` and `lawof`.
 Stochastic dependencies must be expressed via measure algebra only. All
-measures must be record-valued. Vectors are only allowed to represent observed
-data.
+measures over latent quantities must be record-valued. Measures over observed
+data may be vector-valued.
 
 This profile specification assumes the following binding:
 
@@ -191,13 +191,13 @@ channel's total per-bin nominal across samples (`staterror` only).
 
 | FlatPPL deterministic effect | FlatPPL auxiliary measurement | HS³ `histfactory_dist` modifier | Notes |
 |---|---|---|---|
-| `broadcast(mul, expected, factor)` | none (free) | `normfactor` | `factor = elementof(reals)` |
-| `broadcast(mul, expected, lumi)` | `Normal(mu = lumi, sigma = sigma_lumi)` (observed at `lumi_nom`) | `lumi` | `lumi = elementof(posreals)` |
-| `broadcast(mul, expected, hepphys.interp_*(lo, 1.0, hi, alpha))` | `Normal(mu = alpha, sigma = 1.0)` (observed at `0`) | `normsys` | default `hepphys.interp_poly6_exp` |
+| `expected .* factor` | none (free) | `normfactor` | `factor = elementof(reals)` |
+| `expected .* lumi` | `Normal(mu = lumi, sigma = sigma_lumi)` (observed at `lumi_nom`) | `lumi` | `lumi = elementof(posreals)` |
+| `expected .* hepphys.interp_*(lo, 1.0, hi, alpha)` | `Normal(mu = alpha, sigma = 1.0)` (observed at `0`) | `normsys` | default `hepphys.interp_poly6_exp` |
 | `hepphys.interp_*(tmpl_dn, nom, tmpl_up, alpha)` | `Normal(mu = alpha, sigma = 1.0)` (observed at `0`) | `histosys` | default `hepphys.interp_poly6_lin`; replaces nominal directly |
-| `broadcast(mul, expected, gamma)` | none (free per-bin) | `shapefactor` | `gamma = elementof(cartpow(posreals, n_bins))` |
-| `broadcast(mul, expected, gamma)` | `broadcast(ContinuedPoisson, bcmul(gamma, tau))` (observed at `tau`) | `shapesys` | `tau = broadcast(fn((_ / _) ^ 2), nom, sigma)`; non-integer `tau` requires `ContinuedPoisson` |
-| `broadcast(mul, total_nom, gamma)` | `broadcast(fn(Normal(_, _)), gamma, delta)` (observed at `1.0` per bin) | `staterror` | `delta` from quadrature sum across samples |
+| `expected .* gamma` | none (free per-bin) | `shapefactor` | `gamma = elementof(cartpow(posreals, n_bins))` |
+| `expected .* gamma` | `broadcast(ContinuedPoisson, gamma .* tau)` (observed at `tau`) | `shapesys` | `tau = broadcast(fn((_ / _) ^ 2), nom, sigma)`; non-integer `tau` requires `ContinuedPoisson` |
+| `total_nom .* gamma` | `broadcast(fn(Normal(_, _)), gamma, delta)` (observed at `1.0` per bin) | `staterror` | `delta` from quadrature sum across samples |
 
 **Notes.** Modifiers with the same name share a single nuisance parameter; the
 translator must verify compatible auxiliary-measurement types.
@@ -226,12 +226,12 @@ mu = elementof(nonnegreals)
 gamma = elementof(cartpow(posreals, 2))
 
 # Observation model
-expected = broadcast(add, broadcast(mul, mu, sig), broadcast(mul, gamma, bkg))
+expected = (mu .* sig) .+ (gamma .* bkg)
 obs_model = broadcast(Poisson, expected)
 
 # Auxiliary constraint model
-tau = broadcast(pow, broadcast(divide, bkg, dbkg), 2)
-aux_model = broadcast(hepphys.ContinuedPoisson, bcmul(gamma, tau))
+tau = (bkg ./ dbkg) .^ 2
+aux_model = broadcast(hepphys.ContinuedPoisson, gamma .* tau)
 
 # Likelihoods
 L_obs = likelihoodof(obs_model, obs_data)
