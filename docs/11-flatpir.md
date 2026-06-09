@@ -186,11 +186,12 @@ encoded into the type annotation. The type annotation records structural categor
   of `fn(sum(_))`. Counterpart of the value-level set `anything`.
 - `(%scalar real)`, `(%scalar integer)`, `(%scalar boolean)`, `(%scalar complex)` — the
   four scalar value types.
-- `(%array <rank> <shape> <element-type>)` — arrays. `<rank>` is a positive integer
-  literal (not `%dynamic`). Each entry in `<shape>` is a positive integer dimension
-  size, or the placeholder `%dynamic` for a dimension whose size is determined at load
-  or runtime rather than statically (e.g. `(%array 2 (%dynamic 3) (%scalar real))` is a
-  2D real array with three columns and a dynamic row count).
+- `(%array <ndims> <shape> <element-type>)` — arrays. `<ndims>` is the number of
+  dimensions (axes), a positive integer literal (not `%dynamic`). Each entry in
+  `<shape>` is a positive integer dimension size, or the placeholder `%dynamic` for
+  a dimension whose size is determined at load or runtime rather than statically
+  (e.g. `(%array 2 (%dynamic 3) (%scalar real))` is a 2D real array with three
+  columns and a dynamic row count).
 - `(%tvector <length> <element-type>)` — transposed vectors. `<length>` is a
   positive integer literal or `%dynamic`. A distinct type from `(%array 1 ...)`.
 - `(%record (<field> <type>) ...)` — records with named fields.
