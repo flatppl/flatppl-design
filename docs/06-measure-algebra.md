@@ -522,7 +522,7 @@ edges = [0.0, 1.0, 2.0, 3.0, 4.0, 5.0]
 obs_counts = [10, 12, 15, 8, 5]
 mu_scale = elementof(posreals)
 nominal = [5.0, 6.0, 7.0, 4.0, 2.5]
-expected_counts = broadcast(mul, mu_scale, nominal)
+expected_counts = mu_scale .* nominal
 
 R = interval(-3.0, 3.0)
 obs_R = selectbins(edges, R, obs_counts)
