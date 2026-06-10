@@ -126,8 +126,9 @@ Surface FlatPPL → FlatPIR examples:
 ### <a id="type-and-phase-annotations"></a>Type and phase annotations
 
 A **call** in FlatPIR is a built-in operation or a `(%call ...)` form invoking
-a user-defined callable. Literals, references (`%ref`), and FlatPIR structural
-wrappers (`%kwarg`, `%field`, `%assign`, `%params`) are not calls.
+a user-defined callable. Literals, references (`%ref`), FlatPIR structural
+wrappers (`%kwarg`, `%field`, `%assign`), and the input-origin tags and
+input lists of `functionof` / `kernelof` are not calls.
 
 Calls (and only calls) may carry an optional positional `(%meta <type> <phase>)`
 annotation describing the return value, placed immediately after the head. For
@@ -201,7 +202,8 @@ encoded into the type annotation. The type annotation records structural categor
 - `(%tuple <type1> <type2> ...)` — tuples with at least two elements.
 - `(%measure (%domain <type>))` — closed measures. `<type>` is the type of values that
   sampling generates and on which density evaluation is defined.
-- `(%kernel (%inputs <name> ...))` — user-defined transition kernels. 
+- `(%kernel (%inputs <name> ...))` — user-defined transition kernels. The
+  `%inputs` names are the callable's input names.
 - `(%function (%inputs <name> ...))` — user-defined functions.
 - `(%likelihood (%inputs <name> ...) (%obstype <type>))` — likelihood objects.
   `<type>` is the type of the observed data.
@@ -237,10 +239,10 @@ arguments in surface FlatPPL, but structurally different since their order
 carries semantic meaning. Some of these forms also have a single leading
 positional argument:
 
-- `functionof` and `kernelof` take variadic kwargs that define parameters of the reified
-  callable. FlatPIR uses `(%params ...)` for the parameter list.
+- `functionof` and `kernelof` take variadic kwargs that define the inputs of
+  the reified callable (see [below](#reified-callables)).
 - `record`, `table`, `cartprod`, `joint`, `jointchain` take variadic kwargs that label
-  components of the output. FlatPIR uses `(%field ...)` entries (see below).
+  components of the output. FlatPIR uses `(%field ...)` entries (see [below](#structural-named-entries)).
 - `load_module` takes optional substitution kwargs for load-time binding of the
   loaded module's free inputs. FlatPIR uses `(%assign ...)` entries for these
   substitutions (see [Module structure](#module-structure)).
@@ -254,7 +256,8 @@ reals  posreals  integers  booleans  pi  inf  im
 **References to named bindings** use `(%ref <namespace> <name>)`:
 
 - `(%ref self <name>)` — reference to a binding in the current module.
-- `(%ref %local <name>)` — reference to a parameter inside `functionof` or `kernelof`.
+- `(%ref %local <name>)` — reference to a placeholder input (`_x_`) in
+  output expressions and input lists of `functionof` and `kernelof`.
 - `(%ref <module> <name>)` — reference to a binding in a loaded module.
 
 **Axis nodes** use `(%axis <name>)` for the symbolic axis labels of
@@ -285,7 +288,7 @@ valid FlatPIR with identical semantics for a given callable. `%kwarg` entries ar
 unordered: `(Normal (%kwarg sigma 1.0) (%kwarg mu 0.0))` is the same call
 as `(Normal (%kwarg mu 0.0) (%kwarg sigma 1.0))`.
 
-**Structural named entries** use two dedicated heads distinct from `%kwarg`:
+<a id="structural-named-entries"></a>**Structural named entries** use two dedicated heads distinct from `%kwarg`:
 
 - `(%field <name> <value>)` — named entries in data constructors (e.g., `record`,
   `cartprod`, `joint`, `table`). Order is part of the structure.
@@ -347,18 +350,39 @@ kernels, likelihoods):
 Tuple decomposition on the surface (`a, b = expr`) lowers to successive `(get ...)`
 projections with integer indices.
 
-**Function parameter lists.** `functionof` and `kernelof` introduce explicit parameter
-lists via `(%params ...)`:
+<a id="reified-callables"></a>**Reified callables.** `functionof` and `kernelof` carry two fixed operands
+after the reified output expression: an input-origin tag and an input list.
 
 ```lisp
-(functionof (%params (center spread _x_))
-  (Normal (%kwarg mu (add (%ref %local center) (%ref %local _x_)))
-          (%kwarg sigma (%ref %local spread))))
+(functionof <output> %specinputs ((<name> <ref>) ...))  ; explicit boundary specification
+(functionof <output> %autoinputs %deferred)             ; no boundary specification, not yet inferred
+(functionof <output> %autoinputs ((<name> <ref>) ...))  ; no boundary specification, inferred
 ```
 
-Inside the body, parameter references use `(%ref %local <name>)`. Parameter names
-preserve the surface trailing-underscore placeholder convention (e.g. `_x_`), keeping
-the round-trip to surface FlatPPL trivial.
+Each entry `(<name> <ref>)` defines one input: `<name>` is the input's name,
+`<ref>` refers to a node in the ancestor subgraph of `<output>`
+(`(%ref self a)`, `(%ref <module> a)`), or a placeholder within `<output>`
+(`(%ref %local _x_)`) bound to that input. Input lists are never empty
+(callables cannot be nullary). See the section on
+[function reification](04-design.md#sec:functionof) for details.
+
+For example:
+
+```lisp
+(functionof
+  (Normal (%kwarg mu (add (%ref self center) (%ref %local _x_)))
+          (%kwarg sigma (%ref self spread)))
+  %specinputs
+  ((center (%ref self center)) (spread (%ref self spread)) (x (%ref %local _x_))))
+```
+
+- **`%specinputs`** — the reification carried an explicit boundary
+  specification. The entries, in order, are preserved; converting FlatPIR to
+  FlatPPL restores them as boundary keyword arguments.
+- **`%autoinputs`** — the reification carried no boundary specification. The
+  list is `%deferred` until inference fills it (see
+  [reification](04-design.md#sec:functionof)); a filled list is inference
+  metadata, dropped when converting to FlatPPL.
 
 **Normalization.** Bare FlatPIR preserves the surface calling convention for round-trip
 fidelity. Optional normalization passes can convert keyword arguments to positional
@@ -432,10 +456,14 @@ L = likelihoodof(helpers.obs_kernel, input_data)
   (%bind spread (elementof posreals))
 
   (%bind obs_kernel
-    (functionof (%params (center spread _x_))
+    (functionof
       (Normal
-        (%kwarg mu (add (%ref %local center) (%ref %local _x_)))
-        (%kwarg sigma (%ref %local spread)))))
+        (%kwarg mu (add (%ref self center) (%ref %local _x_)))
+        (%kwarg sigma (%ref self spread)))
+      %specinputs
+      ((center (%ref self center))
+       (spread (%ref self spread))
+       (x (%ref %local _x_)))))
 
   (%bind shifted_value (add (%ref self center) 1.0)))
 ```
@@ -479,12 +507,15 @@ shape.
 
   (%bind obs_kernel
     (functionof
-      (%meta (%kernel (%inputs center spread _x_)) %fixed)
-      (%params (center spread _x_))
+      (%meta (%kernel (%inputs center spread x)) %fixed)
       (Normal (%meta (%measure (%domain (%scalar real))) %parameterized)
         (%kwarg mu (add (%meta (%scalar real) %parameterized)
-                        (%ref %local center) (%ref %local _x_)))
-        (%kwarg sigma (%ref %local spread)))))
+                        (%ref self center) (%ref %local _x_)))
+        (%kwarg sigma (%ref self spread)))
+      %specinputs
+      ((center (%ref self center))
+       (spread (%ref self spread))
+       (x (%ref %local _x_)))))
 
   (%bind shifted_value
     (add (%meta (%scalar real) %parameterized)
@@ -517,23 +548,24 @@ shape.
 
   (%bind L
     (likelihoodof
-      (%meta (%likelihood (%inputs center spread _x_)
+      (%meta (%likelihood (%inputs center spread x)
                           (%obstype (%scalar real)))
              %fixed)
       (%ref helpers obs_kernel) (%ref self input_data))))
 ```
 
-Inside `obs_kernel`'s `functionof` body, phase analysis treats the reified
-parameters (`center`, `spread`, `_x_`) as `%parameterized` inputs, so inner
+Inside `obs_kernel`'s `functionof` body, phase analysis treats the boundary
+nodes (`center`, `spread`) and the placeholder (`_x_`) as `%parameterized`
+inputs, so inner
 calls depending on them are themselves `%parameterized`; the function value
 itself is `%fixed` (the function definition does not change). Annotations on
 inner calls are optional in the canonical form: a tool may annotate every call
 (as shown for `obs_kernel`) or only the outermost call of each binding's RHS
 (as shown for `_combined`); both are valid annotated FlatPIR.
 
-The likelihood `L` inherits its `%inputs` list from `obs_kernel`'s reified parameters —
-local names `center`, `spread`, and `_x_`, decoupled from any same-named module-level
-binding. A downstream tool walks the list and supplies a value for each parameter at
+The likelihood `L` inherits its `%inputs` list from `obs_kernel`'s reified inputs —
+input names `center`, `spread`, and `x`, decoupled from the nodes they
+designate. A downstream tool walks the list and supplies a value for each input at
 the call site, with the matching done by name. `input_data` is a literal scalar
 observation of type `(%scalar real)`, matching the scalar variate generated by
 `obs_kernel` (per [likelihoods and posteriors](06-measure-algebra.md#likelihoods-and-posteriors),
