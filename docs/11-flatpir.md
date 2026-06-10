@@ -268,11 +268,15 @@ for upper (contravariant) and `(%laxis <name>)` for lower (covariant)
 indices: surface `.mu^` maps to `(%uaxis mu)` and `.mu_` to
 `(%laxis mu)`.
 
-**Calls to user-defined callables** use `(%call <ref-head> <args>...)`:
+**Calls to user-defined callables** use `(%call <callable> <args>...)`, where
+`<callable>` is an expression that must evaluate to a user-defined callable —
+a `(%ref ...)` in the common case, or an inline callable expression such as a
+reification:
 
 ```lisp
 (%call (%ref self helper_fn) x y)
 (%call (%ref helpers obs_kernel) row)
+(%call (functionof (%ref self e) %specinputs ((p (%ref self a)))) 2.5)
 ```
 
 User bindings always use `(%ref ...)` while built-ins use bare symbols. The surface
