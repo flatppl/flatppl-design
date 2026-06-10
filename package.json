@@ -4,7 +4,7 @@
   "private": true,
   "description": "Pinned web assets vendored into the docs build by docs/templates/vendor-*.js. These versions are the single source of truth and are monitored by Dependabot.",
   "devDependencies": {
-    "fuse.js": "7.3.0",
+    "fuse.js": "7.4.2",
     "katex": "0.17.0"
   }
 }
