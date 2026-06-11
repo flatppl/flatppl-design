@@ -40,6 +40,7 @@ statement w.r.t. `Lebesgue(support = S)` follows by restriction.
 | [`Exponential`](#exponential) | `rate` | `reals` | `nonnegreals` |
 | [`Gamma`](#gamma) | `shape`, `rate` | `reals` | `posreals` |
 | [`Weibull`](#weibull) | `shape`, `scale` | `reals` | `nonnegreals` |
+| [`Pareto`](#pareto) | `shape`, `scale` | `reals` | `posreals` |
 | [`InverseGamma`](#inversegamma) | `shape`, `scale` | `reals` | `posreals` |
 | [`Beta`](#beta) | `alpha`, `beta` | `reals` | `unitinterval` |
 | [`ChiSquared`](#chisq) | `k` | `reals` | `posreals` |
@@ -189,6 +190,19 @@ Parameters:
 Density w.r.t. `Lebesgue(reals)`:
 
 $$\frac{k}{\lambda}\left(\frac{x}{\lambda}\right)^{k-1} e^{-(x/\lambda)^k} \quad \text{for } x \geq 0$$
+
+<a id="pareto"></a>**`Pareto(shape, scale)`** — The [Pareto distribution](https://en.wikipedia.org/wiki/Pareto_distribution).
+
+Domain/Support: `reals`/`posreals`.
+
+Parameters:
+
+- `shape = elementof(posreals)`: shape parameter $\alpha$ (tail index).
+- `scale = elementof(posreals)`: scale parameter $x_m$, the minimum value of the support.
+
+Density w.r.t. `Lebesgue(reals)`:
+
+$$\frac{\alpha\, x_m^{\alpha}}{x^{\alpha+1}} \quad \text{for } x \geq x_m$$
 
 <a id="inversegamma"></a>**`InverseGamma(shape, scale)`** — The [inverse-gamma distribution](https://en.wikipedia.org/wiki/Inverse-gamma_distribution). If $X \sim \text{Gamma}(\alpha, \beta)$ (using the shape-rate parameterization as we do), then $1/X \sim \text{InverseGamma}(\alpha, \beta)$. Conjugate prior for the variance of a normal distribution.
 
