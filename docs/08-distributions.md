@@ -474,9 +474,9 @@ Parameters:
 
 Density w.r.t. Lebesgue on the $n(n-1)/2$-dimensional manifold of $n \times n$ correlation matrices:
 
-$$p(\mathbf{C} \mid \eta) = c_n(\eta) \, \det(\mathbf{C})^{\eta - 1}$$
+$$p(\mathbf{C} \mid \eta) = \frac{\det(\mathbf{C})^{\eta - 1}}{c_n(\eta)}$$
 
-with normalization constant
+with normalization constant (the integral of $\det(\mathbf{C})^{\eta-1}$ over the manifold, so the density integrates to 1)
 
 $$c_n(\eta) = 2^{\sum_{k=1}^{n-1} (2\eta - 2 + n - k)(n - k)} \prod_{k=1}^{n-1} \left[ B\!\left(\eta + \tfrac{n - k - 1}{2}, \, \eta + \tfrac{n - k - 1}{2}\right) \right]^{n - k}$$
 
@@ -495,9 +495,9 @@ Parameters:
 
 Density w.r.t. Lebesgue on the $n(n-1)/2$-dimensional manifold of $n \times n$ lower-triangular matrices with positive diagonal and unit-norm rows:
 
-$$p(\mathbf{L} \mid \eta) = c_n(\eta) \prod_{i=2}^{n} L_{ii}^{n - i + 2\eta - 2}$$
+$$p(\mathbf{L} \mid \eta) = \frac{\prod_{i=2}^{n} L_{ii}^{n - i + 2\eta - 2}}{c_n(\eta)}$$
 
-with the same normalization constant $c_n(\eta)$ as the [`LKJ`](#lkj) distribution on correlation matrices:
+with the same normalization constant $c_n(\eta)$ (in the denominator, as above) as the [`LKJ`](#lkj) distribution on correlation matrices:
 
 $$c_n(\eta) = 2^{\sum_{k=1}^{n-1} (2\eta - 2 + n - k)(n - k)} \prod_{k=1}^{n-1} \left[ B\!\left(\eta + \tfrac{n - k - 1}{2}, \, \eta + \tfrac{n - k - 1}{2}\right) \right]^{n - k}$$
 
