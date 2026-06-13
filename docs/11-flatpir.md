@@ -130,33 +130,49 @@ a user-defined callable. Literals, references (`%ref`), FlatPIR structural
 wrappers (`%kwarg`, `%field`, `%assign`), and the input-origin tags and
 input lists of `functionof` / `kernelof` are not calls.
 
-Calls (and only calls) may carry an optional positional `(%meta <type> <phase>)`
-annotation describing the return value, placed immediately after the head. For
-example:
+Calls (and only calls) may carry an optional positional
+`(%meta <type> <phase> <valueset>)` annotation describing the return value,
+placed immediately after the head. For example:
 
 ```lisp
-(add (%meta (%scalar real) %parameterized) (%ref self x) (%ref self y))
+(add (%meta (%scalar real) %parameterized reals) (%ref self x) (%ref self y))
 ```
 
 For each slot, three states are recognized:
 
 - **`%deferred`** — not yet inferred. Equivalent to omitting the entire `%meta`
   block.
-- **Concrete value** — the inferred type or phase (e.g. `(%scalar real)`,
-  `%parameterized`).
+- **Concrete value** — the inferred type, phase, or value set (e.g.
+  `(%scalar real)`, `%parameterized`, `posreals`).
 - **`(%failed "<reason>")`** — diagnostic marker indicating inference attempted
   to resolve the slot but could not. A module containing any `%failed` marker is
   ill-formed.
 
 Phase values are `%fixed`, `%parameterized`, or `%stochastic` (see
 [Phases](04-design.md#phases)). Phase computation is cheaper than type inference
-(an ancestor walk over the binding graph) and the two passes may run
+(an ancestor walk over the binding graph) and the passes may run
 independently.
 
+The **value-set slot** records the strongest statically known set containing
+the call's value, written as a set expression from the [§03 value-set
+vocabulary](03-value-types.md) (set constants, `interval`, `stdsimplex`,
+`cartpow`); for a measure-valued call it is the measure's support. `%unknown`
+means inference ran but established no constraint (distinct from `%deferred`).
+For a value-typed call the set is at least the type's natural extent (e.g.
+`reals` for a `(%scalar real)` call) and must be a subset of it — a checkable
+redundancy, like `%array`'s `<ndims>`; non-value calls (callables, module
+references) carry `%unknown`.
+The vocabulary is not intersection-closed, so engines may be conservative —
+any sound superset within the type's extent is valid. Producers include
+distribution supports (the §08
+Domain/Support column), `elementof`/`truncate` set arguments, and
+normalization functions (`softmax(v) ∈ stdsimplex(n)`); consumers include the
+[total-mass rules](#total-mass-classes) and domain-contract checks.
+
 A missing call annotation is equivalent to
-`(%meta %deferred %deferred)`. The explicit form is useful as an intermediate
-state (not yet visited) before type and/or phase inference or to mark
-inference of a call as blocked by upstream failure.
+`(%meta %deferred %deferred %deferred)`. The explicit form is useful as an
+intermediate state (not yet visited) before type, phase, and/or value-set
+inference or to mark inference of a call as blocked by upstream failure.
 
 **Type inference is required to succeed on well-formed modules.** If inference
 fails — for example, an unresolvable reference or a type error in an expression —
@@ -173,7 +189,9 @@ the traditional programming-language sense.
 (e.g. `(elementof posreals)`) is preserved structurally in the expression itself, not
 encoded into the type annotation. The type annotation records structural category
 (e.g. `(%scalar real)`); the `elementof` expression records set membership
-(e.g. `posreals` as a subset of `reals`).
+(e.g. `posreals` as a subset of `reals`). The value-set `%meta` slot carries
+*inferred* membership for intermediate nodes — derived facts, strippable like
+all metadata — while authored membership stays structural.
 
 #### Type categories
 
@@ -520,17 +538,18 @@ shape.
   (%public center spread obs_kernel shifted_value)
 
   (%bind center
-    (elementof (%meta (%scalar real) %parameterized) reals))
+    (elementof (%meta (%scalar real) %parameterized reals) reals))
 
   (%bind spread
-    (elementof (%meta (%scalar real) %parameterized) posreals))
+    (elementof (%meta (%scalar real) %parameterized posreals) posreals))
 
   (%bind obs_kernel
     (functionof
-      (%meta (%kernel (%inputs center spread x) (%mass %normalized)) %fixed)
+      (%meta (%kernel (%inputs center spread x) (%mass %normalized))
+             %fixed %unknown)
       (Normal (%meta (%measure (%domain (%scalar real)) (%mass %normalized))
-                     %parameterized)
-        (%kwarg mu (add (%meta (%scalar real) %parameterized)
+                     %parameterized reals)
+        (%kwarg mu (add (%meta (%scalar real) %parameterized reals)
                         (%ref self center) (%ref %local _x_)))
         (%kwarg sigma (%ref self spread)))
       %specinputs
@@ -539,7 +558,7 @@ shape.
        (x (%ref %local _x_)))))
 
   (%bind shifted_value
-    (add (%meta (%scalar real) %parameterized)
+    (add (%meta (%scalar real) %parameterized reals)
          (%ref self center) 1.0)))
 ```
 
@@ -550,20 +569,20 @@ shape.
   (%public a b input_data L)
 
   (%bind helpers
-    (load_module (%meta %module %fixed)
+    (load_module (%meta %module %fixed %unknown)
                  "helpers.flatppl" (%assign center (%ref self a))))
 
   (%bind a
-    (elementof (%meta (%scalar real) %parameterized) reals))
+    (elementof (%meta (%scalar real) %parameterized reals) reals))
 
   (%bind b
-    (draw (%meta (%scalar real) %stochastic)
+    (draw (%meta (%scalar real) %stochastic reals)
           (Normal (%meta (%measure (%domain (%scalar real)) (%mass %normalized))
-                         %fixed)
+                         %fixed reals)
                   (%kwarg mu 0.0) (%kwarg sigma 2.0))))
 
   (%bind _combined
-    (add (%meta (%scalar real) %stochastic)
+    (add (%meta (%scalar real) %stochastic reals)
          (%ref self a) (%ref self b)))
 
   (%bind input_data 2.5)
@@ -572,7 +591,7 @@ shape.
     (likelihoodof
       (%meta (%likelihood (%inputs center spread x)
                           (%obstype (%scalar real)))
-             %fixed)
+             %fixed %unknown)
       (%ref helpers obs_kernel) (%ref self input_data))))
 ```
 
