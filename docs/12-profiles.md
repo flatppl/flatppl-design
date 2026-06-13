@@ -63,10 +63,32 @@ targets RooFit primarily via HS³. Current HS³ development aims to close the
 remaining gaps to RooFit, and does not go beyond RooFit functionality yet, so we
 address both with a common FlatPPL profile for now.
 
-This profile does *not* include `fn`/`functionof`/`kernelof`, `draw` and `lawof`.
-Stochastic dependencies must be expressed via measure algebra only. All
-measures must be record-valued. Vectors are only allowed to represent observed
-data.
+This profile excludes the **generative stochastic-node style**: no `~`/`draw`
+stochastic nodes and no `lawof`. Stochastic structure is expressed via measure
+algebra only. It also excludes **named `functionof`/`kernelof` bindings** as model
+structure — distributions and their dependencies are composed directly with
+measure-algebra operators. It does *not* exclude the inline function argument that a
+measure operator intrinsically takes (the weight of `weighted`/`logweighted`), nor
+the likelihood-assembly layer (`likelihoodof`, `joint_likelihood`); these appear in
+the mappings and examples below. All measures must be record-valued. Vectors are only
+allowed to represent observed data.
+
+These exclusions describe the **profiled form** — the subset a model must be in to map
+onto RooFit — not a limit on which FlatPPL models can be targeted at it. A model that
+uses the excluded constructs is brought into the profile by term-rewriting before
+export:
+
+- **Named `functionof`/`kernelof` bindings** are **inlined** at their use sites: a named
+  weight function folds into the intrinsic inline argument of the `weighted`/`logweighted`
+  (or `RooGenericPdf`-style) operator that consumes it, and a named kernel folds into the
+  `jointchain`/`kchain` composition it feeds. The named binding does not survive, so the
+  rewrite is **not source-round-trippable**, but the resulting measure is the same model.
+- **Generative stochastic nodes** (`~`/`draw`) are **lowered to measure composition**: a
+  node and its law are two views of one object (related by `lawof`/`draw`), so independent
+  draws become `joint`, a draw conditioned on earlier draws becomes a kernel composed via
+  `jointchain`/`kchain`, and the program's joint law is reconstructed as a measure-algebra
+  term. This succeeds for the finite-dimensional, statically-shaped models the profile
+  covers; unbounded recursion and data-dependent control flow are the genuine gaps.
 
 This profile specification assumes the following binding:
 
@@ -140,6 +162,31 @@ FlatPPL preset domains, see [Presets](03-value-types.md#presets).
 | `pushfwd(f, M)` | — | `RooFormulaVar` composition |
 | `bayesupdate(L, prior)` | `analyses` entry with `prior` | `BayesianCalculator` / `MCMCCalculator` |
 
+In the `density_function_dist` / `log_density_function_dist` rows (and HS³
+`generic_dist`), the weight `w` is the HS³ expression translated to a FlatPPL
+expression — arithmetic and comparison operators, the elementary functions of
+[Functions and deterministic operations](07-functions.md#sec:functions), and `ifelse` for the
+ternary — supplied **inline** as the `weighted`/`logweighted` weight argument. This
+inline use is permitted under the [profile restriction](#sec:hs3roofit) above; it
+introduces no named `functionof` binding.
+
+The `product_dist` (`RooProdPdf`) row covers the **independent** case, where the
+factors are pdfs over *distinct* observables; it lowers to `joint(M1, M2, ...)`,
+the independent product measure. RooProdPdf is overloaded, so the lowering depends
+on the factors' variates:
+
+- **Disjoint variates** — `joint(M1, M2, ...)` (the row above). *Default.*
+- **Shared variate** — when every factor is a pdf over the *same* observable,
+  `RooProdPdf` is the pointwise product of densities, not a product over a higher-
+  dimensional space. It lowers to the normalized pointwise density product
+  `normalize(logweighted(x -> logdensityof(M2, x) + ... + logdensityof(Mₙ, x), M1))`:
+  reweight the first factor's measure by the sum of the remaining factors'
+  log-densities. This is flat in the factor count (one `add`-fold of `n − 1`
+  log-densities, base = `M1`) and yields the probability measure ∝ ∏ᵢ gᵢ.
+- **Conditional** — `RooProdPdf` with `RooFit::Conditional(...)` → `jointchain(M, K)`
+  (the row above).
+- **Partially-overlapping variates** are outside the profile.
+
 #### HS³/RooFit distribution mapping
 
 The following table summarizes major correspondences; it is illustrative rather than
@@ -196,11 +243,19 @@ channel's total per-bin nominal across samples (`staterror` only).
 | `broadcast(mul, expected, hepphys.interp_*(lo, 1.0, hi, alpha))` | `Normal(mu = alpha, sigma = 1.0)` (observed at `0`) | `normsys` | default `hepphys.interp_poly6_exp` |
 | `hepphys.interp_*(tmpl_dn, nom, tmpl_up, alpha)` | `Normal(mu = alpha, sigma = 1.0)` (observed at `0`) | `histosys` | default `hepphys.interp_poly6_lin`; replaces nominal directly |
 | `broadcast(mul, expected, gamma)` | none (free per-bin) | `shapefactor` | `gamma = elementof(cartpow(posreals, n_bins))` |
-| `broadcast(mul, expected, gamma)` | `broadcast(ContinuedPoisson, bcmul(gamma, tau))` (observed at `tau`) | `shapesys` | `tau = broadcast(fn((_ / _) ^ 2), nom, sigma)`; non-integer `tau` requires `ContinuedPoisson` |
-| `broadcast(mul, total_nom, gamma)` | `broadcast(fn(Normal(_, _)), gamma, delta)` (observed at `1.0` per bin) | `staterror` | `delta` from quadrature sum across samples |
+| `broadcast(mul, expected, gamma)` | `broadcast(ContinuedPoisson, bcmul(gamma, tau))` (observed at `tau`) | `shapesys` | `tau = broadcast(pow, broadcast(divide, nom, sigma), 2)`; non-integer `tau` requires `ContinuedPoisson` |
+| `broadcast(mul, total_nom, gamma)` | `broadcast(Normal, gamma, delta)` (observed at `1.0` per bin) | `staterror` | `delta` from quadrature sum across samples |
 
 **Notes.** Modifiers with the same name share a single nuisance parameter; the
 translator must verify compatible auxiliary-measurement types.
+
+`staterror` carries an HS³ `constraint_type` (`Gauss` or `Poisson`; pyhf defaults to
+`Gauss`, ROOT HS³ to `Poisson`), and a translator must honour the field rather than
+assume a default. The `Gauss` form is the row above (`broadcast(Normal, gamma, delta)`
+observed at `1.0`). The `Poisson` form mirrors `shapesys`:
+`broadcast(ContinuedPoisson, bcmul(gamma, tau))` observed at `tau`, with
+`tau = broadcast(pow, broadcast(divide, total_nom, delta_abs), 2)` (the per-bin
+effective count, `delta_abs` the absolute quadrature-sum uncertainty).
 
 ##### Example: pyhf `uncorrelated_background`
 
