@@ -85,10 +85,11 @@ export:
   rewrite is **not source-round-trippable**, but the resulting measure is the same model.
 - **Generative stochastic nodes** (`~`/`draw`) are **lowered to measure composition**: a
   node and its law are two views of one object (related by `lawof`/`draw`), so independent
-  draws become `joint`, a draw conditioned on earlier draws becomes a kernel composed via
-  `jointchain`/`kchain`, and the program's joint law is reconstructed as a measure-algebra
-  term. This succeeds for the finite-dimensional, statically-shaped models the profile
-  covers; unbounded recursion and data-dependent control flow are the genuine gaps.
+  draws become `joint`, and a draw conditioned on earlier draws becomes a kernel composed
+  with `jointchain` — which retains every draw's variate, reconstructing the program's joint
+  law as a measure-algebra term. This succeeds for the finite-dimensional, statically-shaped
+  models the profile covers; unbounded recursion and data-dependent control flow are the
+  genuine gaps.
 
 This profile specification assumes the following binding:
 
