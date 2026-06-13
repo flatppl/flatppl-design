@@ -155,7 +155,7 @@ independently.
 
 The **value-set slot** records the strongest statically known set containing
 the call's value, written as a set expression from the [§03 value-set
-vocabulary](03-value-types.md) (set constants, `interval`, `stdsimplex`,
+vocabulary](03-value-types.md#sec:valuetypes) (set constants, `interval`, `stdsimplex`,
 `cartpow`); for a measure-valued call it is the measure's support. `%unknown`
 means inference ran but established no constraint (distinct from `%deferred`).
 For a value-typed call the set is at least the type's natural extent (e.g.
