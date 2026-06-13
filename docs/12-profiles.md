@@ -73,6 +73,23 @@ the likelihood-assembly layer (`likelihoodof`, `joint_likelihood`); these appear
 the mappings and examples below. All measures must be record-valued. Vectors are only
 allowed to represent observed data.
 
+These exclusions describe the **profiled form** — the subset a model must be in to map
+onto RooFit — not a limit on which FlatPPL models can be targeted at it. A model that
+uses the excluded constructs is brought into the profile by term-rewriting before
+export:
+
+- **Named `functionof`/`kernelof` bindings** are **inlined** at their use sites: a named
+  weight function folds into the intrinsic inline argument of the `weighted`/`logweighted`
+  (or `RooGenericPdf`-style) operator that consumes it, and a named kernel folds into the
+  `jointchain`/`kchain` composition it feeds. The named binding does not survive, so the
+  rewrite is **not source-round-trippable**, but the resulting measure is the same model.
+- **Generative stochastic nodes** (`~`/`draw`) are **lowered to measure composition**: a
+  node and its law are two views of one object (related by `lawof`/`draw`), so independent
+  draws become `joint`, a draw conditioned on earlier draws becomes a kernel composed via
+  `jointchain`/`kchain`, and the program's joint law is reconstructed as a measure-algebra
+  term. This succeeds for the finite-dimensional, statically-shaped models the profile
+  covers; unbounded recursion and data-dependent control flow are the genuine gaps.
+
 This profile specification assumes the following binding:
 
 ```flatppl
