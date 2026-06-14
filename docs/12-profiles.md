@@ -140,6 +140,21 @@ FlatPPL preset domains, see [Presets](03-value-types.md#presets).
 | `pushfwd(f, M)` | — | `RooFormulaVar` composition |
 | `bayesupdate(L, prior)` | `analyses` entry with `prior` | `BayesianCalculator` / `MCMCCalculator` |
 
+> **`product_dist` is overloaded by observable.** `RooProdPdf` means two
+> different things depending on the factors' variates, so `product_dist` has two
+> lowerings:
+> - **Distinct observables** → `joint(M1, M2, ...)` — the product *measure* over
+>   the higher-dimensional space (the row above).
+> - **One shared observable** → `normalize(logweighted(x -> Σᵢ logdensityof(Mᵢ, x), M₁))`
+>   — the pointwise *density* product. Here `joint(g, g)` would be a 2-D product
+>   over `(x, x)`, the wrong measure; RooFit instead multiplies the densities at
+>   the same point, so we reweight `M₁` by the sum of the others' log-densities.
+>
+> This is only well-defined when every factor is a density against the **same
+> reference measure** (e.g. all continuous in `x`); mixing reference measures
+> (a `Poisson` and a `Normal` over one name) has no pointwise-product meaning and
+> an importer must reject it rather than emit a wrong measure.
+
 #### HS³/RooFit distribution mapping
 
 The following table summarizes major correspondences; it is illustrative rather than
