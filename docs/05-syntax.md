@@ -205,13 +205,12 @@ functions and kernels](04-design.md#sec:functionof) for the desugaring.
 
 ### <a id="function-definition-syntax"></a>Function definition syntax
 
-`f(arg1, arg2, ...) = expr` is a named function definition: shorthand for binding
-the name `f` to a lambda. It desugars to `f = (arg1, arg2, ...) -> expr` in the
-multi-argument case and to `f = arg1 -> expr` in the single-argument case, and
-thence to [`functionof`](04-design.md#sec:functionof) with placeholders. At least
-one argument is required (there are no nullary definitions, consistent with
-[lambdas](#lambda-syntax)); `f() = expr` is not legal — bind a plain value with
-`f = expr` instead.
+`f(arg1, arg2, ...) = expr` is a named function definition: syntactic sugar for
+binding the name `f` to a lambda. It desugars to `f = (arg1, arg2, ...) -> expr`
+(or `f = arg1 -> expr` for a single argument), which in turn lowers to
+[`functionof`](04-design.md#sec:functionof) with placeholders. At least one
+argument is required (no nullary definitions, as for [lambdas](#lambda-syntax));
+`f() = expr` is not legal — bind a plain value with `f = expr` instead.
 
 ```flatppl
 f(x, y) = x^2 * y^2
@@ -219,15 +218,13 @@ f(x, y) = x^2 * y^2
 # f = (x, y) -> x^2 * y^2
 ```
 
-Because the lambda desugaring targets `functionof` with an explicit boundary
-specification, the defined function supports both positional and keyword calls
-(see [Reification to functions and kernels](04-design.md#sec:functionof)):
-`f(x, y) = expr` may be called as `f(a, b)` or as `f(x = a, y = b)`.
+The lambda desugaring supplies an explicit boundary specification, so the
+defined function accepts both positional and keyword calls (see [Reification to
+functions and kernels](04-design.md#sec:functionof)): `f(x, y) = expr` may be
+called as `f(a, b)` or `f(x = a, y = b)`.
 
-The body is a single expression, and its value type determines the function's
-output type. Multi-output functions therefore follow directly from a record,
-array, or tuple body, with no additional machinery (the output type of a reified
-function matches the type of the argument of `functionof`):
+The body is a single expression whose value type is the function's output type,
+so a record, array, or tuple body yields a multi-output function:
 
 ```flatppl
 f(x, y) = x^2 * y^2                          # scalar output
@@ -235,23 +232,21 @@ g(x, y, z) = record(p = x + y, q = y * z)    # record output
 h(x, y) = [x / y, x * log(y)]                # array output
 ```
 
-Free names in the body that are not arguments are closed over from the enclosing
-module, exactly as in lambdas. The argument names are local to the body: they
-shadow any module-level binding of the same name and are not part of the module
-namespace (see [binding names](04-design.md#sec:binding-names)), so the same names
-may be used independently elsewhere in the module. The defined name `f` is an
-ordinary binding name, follows the usual binding-name rules, and is a first-class
-function value usable wherever a [`functionof`](04-design.md#sec:functionof) result
-is (e.g. `broadcast`, `pushfwd`, higher-order arguments).
+As in lambdas, the argument names are local to the body: they shadow any
+module-level binding of the same name and are not part of the module namespace
+(see [binding names](04-design.md#sec:binding-names)), so the same names may be
+used independently elsewhere; other free names in the body are closed over from
+the enclosing module. The defined name `f` is an ordinary binding name and a
+first-class function value, usable wherever a
+[`functionof`](04-design.md#sec:functionof) result is (e.g. `broadcast`,
+`pushfwd`, higher-order arguments).
 
-This construct is **purely a surface rewrite**: `f(arg1, ...) = expr` has exactly
-the semantics of the equivalent lambda binding and introduces no new
-[FlatPIR](11-flatpir.md#intermediate-representation) node — it lowers through the
-same lambda/`functionof` path and produces identical FlatPIR. Consequently every
-property of the resulting function (argument names, scoping, duplicate-argument
-rules, phase propagation, doc-comment attachment) is inherited from
-`functionof`. There is no tilde form: a measure is not a function, so
-`f(arg1, ...) ~ expr` is not legal syntax.
+The construct is **purely a surface rewrite**: it introduces no new
+[FlatPIR](11-flatpir.md#intermediate-representation) node and produces FlatPIR
+identical to the equivalent lambda binding, so every property of the resulting
+function — argument names, scoping, duplicate-argument rules, phase propagation,
+doc-comment attachment — is inherited from `functionof`. There is no tilde form,
+since a measure is not a function: `f(arg1, ...) ~ expr` is not legal syntax.
 
 ### <a id="axis-names"></a>Axis names and aggregation
 
