@@ -397,12 +397,11 @@ which become the inputs of `g` under the new names `p` and `q`. The computation 
 `a` and `b` to `d` is excluded — `g` only contains the path from `a` and `d` to `e`.
 
 Boundary input specification is all-or-none: either every reified input is
-specified explicitly, or none is. Boundary input names must be distinct: a
-name repeated across the boundary keyword arguments is a static error. This
-likewise forbids a [lambda](05-syntax.md#lambda-syntax) or [function
-definition](05-syntax.md#function-definition-syntax) from repeating an argument
-name, since both lower to boundary keywords. With explicit boundary
-specification, the
+specified explicitly, or none is. Boundary input names must be distinct — a
+repeated name is a static error, which likewise forbids a
+[lambda](05-syntax.md#lambda-syntax) or [named
+function](05-syntax.md#named-functions) from repeating an argument
+name. With explicit boundary specification, the
 reified function supports positional arguments in addition to keyword
 arguments, with positional order determined by the order in which boundary
 inputs are specified. Without a boundary specification, inputs are traced

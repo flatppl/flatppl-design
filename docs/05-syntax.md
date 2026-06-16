@@ -77,8 +77,8 @@ FlatPPL has a very lean syntax:
 - **Tilde bindings**: `name ~ expr` and decomposition `a, b ~ expr`, equivalent
   to `name = draw(expr)` and `a, b = draw(expr)` respectively (see
   [variates and measures](04-design.md#sec:variate-measure)).
-- **Function definitions**: `f(arg1, arg2, ...) = expr` is shorthand for binding
-  `f` to a lambda (see [Function definition syntax](#function-definition-syntax)).
+- **Named functions**: `f(arg1, arg2, ...) = expr` is shorthand for binding
+  `f` to a lambda (see [named functions](#named-functions)).
 - **Literals**: numbers (`3.14`, `42`, `0xF7`, `0x3e`, `1_000_000`, `1.45e7`), strings
   (`"foo"`), booleans (`true`, `false`), arrays (`[1, 2, 3]`), records
   (`record(a = 1, b = 2)`), tuples (`(a, b)`).
@@ -117,9 +117,8 @@ but can easily be represented in other ways:
 - **No loops or conditionals.** Use `ifelse(cond, a, b)` for piecewise definitions
   (see [logic and conditionals](07-functions.md#logic-and-conditionals)).
 - **No function definition blocks.** A function body is a single expression
-  (`f(x) = expr`, see [Function definition syntax](#function-definition-syntax),
-  or a lambda); multi-statement bodies with local bindings are not supported. Use
-  `functionof` over named intermediate bindings
+  (a lambda or `f(x) = expr`, see [named functions](#named-functions));
+  for named intermediate steps use `functionof`
   (see [language design](04-design.md#sec:functionof)).
 - **No implicit operator broadcasting.** Infix `+`, `-`, `*`, `/`, `^` and
   unary `-` follow standard linear-algebra and scalar semantics: `+`
@@ -203,50 +202,26 @@ as the body. Inside the body, the argument names refer to the lambda's inputs
 and shadow any module-level binding of the same name. See [Reification to
 functions and kernels](04-design.md#sec:functionof) for the desugaring.
 
-### <a id="function-definition-syntax"></a>Function definition syntax
+### <a id="named-functions"></a>Named functions
 
-`f(arg1, arg2, ...) = expr` is a named function definition: syntactic sugar for
-binding the name `f` to a lambda. It desugars to `f = (arg1, arg2, ...) -> expr`
-(or `f = arg1 -> expr` for a single argument), which in turn lowers to
-[`functionof`](04-design.md#sec:functionof) with placeholders. At least one
-argument is required (no nullary definitions, as for [lambdas](#lambda-syntax));
-`f() = expr` is not legal — bind a plain value with `f = expr` instead.
-
-```flatppl
-f(x, y) = x^2 * y^2
-# equivalent to
-# f = (x, y) -> x^2 * y^2
-```
-
-The lambda desugaring supplies an explicit boundary specification, so the
-defined function accepts both positional and keyword calls (see [Reification to
-functions and kernels](04-design.md#sec:functionof)): `f(x, y) = expr` may be
-called as `f(a, b)` or `f(x = a, y = b)`.
-
-The body is a single expression whose value type is the function's output type,
-so a record, array, or tuple body yields a multi-output function:
+`f(arg1, arg2, ...) = expr` is syntactic sugar for binding `f` to a
+[lambda](#lambda-syntax) — it desugars to `f = (arg1, arg2, ...) -> expr`. As for
+lambdas, at least one argument is required (`f() = expr` is not legal; bind a
+plain value with `f = expr`) and the argument names are local to the body. The
+defined function accepts positional and keyword calls, and `f` is a first-class
+value usable wherever a [`functionof`](04-design.md#sec:functionof) result is.
 
 ```flatppl
-f(x, y) = x^2 * y^2                          # scalar output
-g(x, y, z) = record(p = x + y, q = y * z)    # record output
-h(x, y) = [x / y, x * log(y)]                # array output
+f(x, y) = x^2 * y^2                          # equivalent to f = (x, y) -> x^2 * y^2
+g(x, y, z) = record(p = x + y, q = y * z)    # record/array/tuple body → multi-output
+h(x, y) = [x / y, x * log(y)]
 ```
 
-As in lambdas, the argument names are local to the body: they shadow any
-module-level binding of the same name and are not part of the module namespace
-(see [binding names](04-design.md#sec:binding-names)), so the same names may be
-used independently elsewhere; other free names in the body are closed over from
-the enclosing module. The defined name `f` is an ordinary binding name and a
-first-class function value, usable wherever a
-[`functionof`](04-design.md#sec:functionof) result is (e.g. `broadcast`,
-`pushfwd`, higher-order arguments).
-
-The construct is **purely a surface rewrite**: it introduces no new
-[FlatPIR](11-flatpir.md#intermediate-representation) node and produces FlatPIR
-identical to the equivalent lambda binding, so every property of the resulting
-function — argument names, scoping, duplicate-argument rules, phase propagation,
-doc-comment attachment — is inherited from `functionof`. There is no tilde form,
-since a measure is not a function: `f(arg1, ...) ~ expr` is not legal syntax.
+The construct is purely a surface rewrite: it adds no
+[FlatPIR](11-flatpir.md#intermediate-representation) node and inherits every
+function property — scoping, duplicate-argument rules, phase, doc-comment
+attachment — from the lambda desugaring. There is no tilde form, since a measure
+is not a function (`f(arg1, ...) ~ expr` is not legal).
 
 ### <a id="axis-names"></a>Axis names and aggregation
 
@@ -475,9 +450,8 @@ a parenthesised lambda is well-formed only if the parenthesised content
 was a list of two or more bare `Name`s. A bare `Name` immediately
 followed by `->` is a single-argument `Lambda`. At statement level, a `Name`
 followed by `(` begins a `FunctionDefinition` (no other statement form starts
-`Name "("`, and bare expressions are not statements); the parenthesised list must
-be bare `Name`s and is followed by `=`, so a one-token lookahead at the `(` and a
-check that the closing `)` is followed by `=` suffice. A `.Name` token is
+`Name "("`), disambiguated by checking that the closing `)` is followed by `=`.
+A `.Name` token is
 `FieldAccess` when it follows a `Postfix`-able expression, and `Axis`
 otherwise (at the start of a `Primary`). Inside `[...]`, a `!` token
 followed immediately by `,` or `]` is the `only` axis keyword;
