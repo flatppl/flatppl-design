@@ -244,7 +244,7 @@ channel's total per-bin nominal across samples (`staterror` only).
 | `broadcast(mul, expected, hepphys.interp_*(lo, 1.0, hi, alpha))` | `Normal(mu = alpha, sigma = 1.0)` (observed at `0`) | `normsys` | default `hepphys.interp_poly6_exp` |
 | `hepphys.interp_*(tmpl_dn, nom, tmpl_up, alpha)` | `Normal(mu = alpha, sigma = 1.0)` (observed at `0`) | `histosys` | default `hepphys.interp_poly6_lin`; replaces nominal directly |
 | `broadcast(mul, expected, gamma)` | none (free per-bin) | `shapefactor` | `gamma = elementof(cartpow(posreals, n_bins))` |
-| `broadcast(mul, expected, gamma)` | `broadcast(ContinuedPoisson, bcmul(gamma, tau))` (observed at `tau`) | `shapesys` | `tau = broadcast(pow, broadcast(divide, nom, sigma), 2)`; non-integer `tau` requires `ContinuedPoisson` |
+| `broadcast(mul, expected, gamma)` | `broadcast(ContinuedPoisson, broadcast(mul, gamma, tau))` (observed at `tau`) | `shapesys` | `tau = broadcast(pow, broadcast(divide, nom, sigma), 2)`; non-integer `tau` requires `ContinuedPoisson` |
 | `broadcast(mul, total_nom, gamma)` | `broadcast(Normal, gamma, delta)` (observed at `1.0` per bin) | `staterror` | `delta` from quadrature sum across samples |
 
 **Notes.** Modifiers with the same name share a single nuisance parameter; the
@@ -254,7 +254,7 @@ translator must verify compatible auxiliary-measurement types.
 `Gauss`, ROOT HS³ to `Poisson`), and a translator must honour the field rather than
 assume a default. The `Gauss` form is the row above (`broadcast(Normal, gamma, delta)`
 observed at `1.0`). The `Poisson` form mirrors `shapesys`:
-`broadcast(ContinuedPoisson, bcmul(gamma, tau))` observed at `tau`, with
+`broadcast(ContinuedPoisson, broadcast(mul, gamma, tau))` observed at `tau`, with
 `tau = broadcast(pow, broadcast(divide, total_nom, delta_abs), 2)` (the per-bin
 effective count, `delta_abs` the absolute quadrature-sum uncertainty).
 
@@ -287,7 +287,7 @@ obs_model = broadcast(Poisson, expected)
 
 # Auxiliary constraint model
 tau = broadcast(pow, broadcast(divide, bkg, dbkg), 2)
-aux_model = broadcast(hepphys.ContinuedPoisson, bcmul(gamma, tau))
+aux_model = broadcast(hepphys.ContinuedPoisson, broadcast(mul, gamma, tau))
 
 # Likelihoods
 L_obs = likelihoodof(obs_model, obs_data)
