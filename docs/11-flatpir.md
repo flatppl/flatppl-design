@@ -6,7 +6,7 @@ FlatPPL engines may ingest either FlatPPL or FlatPIR, depending on their design.
 **Note:** The design of FlatPIR is preliminary and subject to change. It is not part
 of FlatPPL semantic versioning yet.
 
-FlatPIR is FlatPPL with operators, field access and indexing lowered to function calls. FlatPIR also supports optional type/phase inference metadata annotations.
+FlatPIR is FlatPPL with operators, field access and indexing lowered to function calls. FlatPIR also supports optional inference-metadata annotations (type, phase, and value set).
 FlatPPL maps directly to FlatPIR and FlatPIR maps back directly to FlatPPL.
 Metadata is dropped when converting FlatPIR to FlatPPL.
 
@@ -28,10 +28,11 @@ FlatPIR is designed to support term-rewriting, with two main use cases:
 - Optimizing FlatPPL/FlatPIR code before handing it off to host-language implementations
   (which then can do further optimization within their own language stack).
 
-Term-rewriting can require both value type and value phase
-(see [Phases](04-design.md#phases)) information at intermediate nodes, so FlatPIR
-allows type and phase annotations on every call. This lets generic rewrite tools
-consume typed/phased terms directly, without re-implementing FlatPPL inference.
+Term-rewriting can require value type, value phase
+(see [Phases](04-design.md#phases)), and value-set information at intermediate
+nodes, so FlatPIR allows such annotations on any expression. This lets generic
+rewrite tools consume annotated terms directly, without re-implementing FlatPPL
+inference.
 
 The semantics of FlatPIR are identical to the semantics of FlatPPL, with the
 addition of metadata. They are independent of the canonical S-expression
@@ -58,8 +59,8 @@ A FlatPIR file contains exactly one `(%module ...)` form with these elements:
 - `(%bind <name> <expression> [(%doc <markup> <line>...)])` — pairs a name
   with an expression and an optional documentation form. The `(%doc ...)`
   sub-form, when present, is always last; see [Documentation](#documentation)
-  below. Type and phase live on the RHS expression when the RHS is a call (see
-  [Type and phase annotations](#type-and-phase-annotations)).
+  below. A `(%meta …)` annotation, when present, wraps the RHS expression (see
+  [Annotations](#flatpir-meta-annotations)).
   Module loads are ordinary bindings whose right-hand side is a `(load_module ...)`
   or `(standard_module ...)` call; engines must resolve such bindings before
   resolving references that depend on them.
@@ -123,25 +124,46 @@ Surface FlatPPL → FlatPIR examples:
 | `mu = 0 % Prior mean.` | `(%bind mu 0 (%doc md "Prior mean."))` |
 | `%%%\nA\n\nB\n%%%\nmu = 0` | `(%bind mu 0 (%doc md "A" "" "B"))` |
 
-### <a id="type-and-phase-annotations"></a>Type and phase annotations
+### Literal values
+
+A scalar literal is a bare atom representing a FlatPPL
+[scalar value](03-value-types.md#sec:valuetypes) whose type is fixed by its
+lexical form:
+
+```lisp
+3            ; integer
+1.0          ; real
+"inputs.csv" ; string
+true         ; boolean
+```
+
+Composite literal values are expressed via constructor calls (`(complex …)`,
+`(vector …)`, `(record …)`, `(tuple …)`; see [Expressions](#expressions)).
+
+### Calls
 
 A **call** in FlatPIR is a built-in operation or a `(%call ...)` form invoking
 a user-defined callable. Literals, references (`%ref`), FlatPIR structural
-wrappers (`%kwarg`, `%field`, `%assign`), and the input-origin tags and
+wrappers (`%kwarg`, `%field`, `%assign`, `%meta`), and the input-origin tags and
 input lists of `functionof` / `kernelof` are not calls.
 
-Calls (and only calls) may carry an optional positional
-`(%meta <type> <phase> <valueset>)` annotation describing the return value,
-placed immediately after the head. For example:
+### <a id="flatpir-meta-annotations"></a>Annotations
+
+Any expression may be wrapped in a `(%meta (<type> <phase> <valueset>) <expr>)`
+annotation describing the value of `<expr>` — its structural type, phase, and
+value set, grouped in that order. The annotation is a transparent wrapper:
+tools that do not consult it read straight through to `<expr>`. A scalar literal
+is self-typing and is normally left bare but may be wrapped in an annotation.
+For example:
 
 ```lisp
-(add (%meta (%scalar real) %parameterized reals) (%ref self x) (%ref self y))
+(%meta ((%scalar real) %parameterized reals) (add (%ref self x) (%ref self y)))
 ```
 
 For each slot, three states are recognized:
 
-- **`%deferred`** — not yet inferred. Equivalent to omitting the entire `%meta`
-  block.
+- **`%deferred`** — this slot is not yet inferred. An annotation wrapper whose
+  slots are all `%deferred` is equivalent to a bare expression (see below).
 - **Concrete value** — the inferred type, phase, or value set (e.g.
   `(%scalar real)`, `%parameterized`, `posreals`).
 - **`(%failed "<reason>")`** — diagnostic marker indicating inference attempted
@@ -153,26 +175,33 @@ Phase values are `%fixed`, `%parameterized`, or `%stochastic` (see
 (an ancestor walk over the binding graph) and the passes may run
 independently.
 
-The **value-set slot** records the strongest statically known set containing
-the call's value, written as a set expression from the [§03 value-set
+The **value-set slot** records a sound statically inferred set containing the
+node's possible values, written in the [§03 value-set
 vocabulary](03-value-types.md#sec:valuetypes) (set constants, `interval`, `stdsimplex`,
-`cartpow`); for a measure-valued call it is the measure's support. `%unknown`
-means inference ran but established no constraint (distinct from `%deferred`).
-For a value-typed call the set is at least the type's natural extent (e.g.
-`reals` for a `(%scalar real)` call) and must be a subset of it — a checkable
-redundancy, like `%array`'s `<ndims>`; non-value calls (callables, module
-references) carry `%unknown`.
-The vocabulary is not intersection-closed, so engines may be conservative —
-any sound superset within the type's extent is valid. Producers include
-distribution supports (the §08
-Domain/Support column), `elementof`/`truncate` set arguments, and
-normalization functions (`softmax(v) ∈ stdsimplex(n)`); consumers include the
+`cartpow`); for a measure-valued node it is the measure's support. The set must be
+a subset of the type's natural extent (e.g. `reals` for `(%scalar real)`),
+defaulting to that extent when nothing tighter is known. It is ideally tight, but
+the vocabulary is not intersection-closed, so there may be no unique tightest
+set — any sound superset is valid. Non-value nodes — callables, likelihoods, and
+module references — have no value set and carry `%unknown` (distinct from
+`%deferred`). A value-set expression's shape parameters (the `n` in
+`stdsimplex(n)` or `cartpow(S, n)`) must agree with the node's structural shape,
+using `%dynamic` for a load- or runtime-fixed dimension as `%array` does.
+Producers include distribution supports (the §08 Domain/Support column),
+`elementof`/`truncate` set arguments, and normalization functions
+(`softmax(v) ∈ stdsimplex(n)`); consumers include the
 [total-mass rules](#total-mass-classes) and domain-contract checks.
 
-A missing call annotation is equivalent to
-`(%meta %deferred %deferred %deferred)`. The explicit form is useful as an
-intermediate state (not yet visited) before type, phase, and/or value-set
-inference or to mark inference of a call as blocked by upstream failure.
+A `%meta` wrapper never nests directly: its `<expr>` is not itself a `(%meta …)`.
+Metadata is descriptive, not semantic — stripping every `%meta` preserves a term's
+meaning — but it is not inert: metadata-guarded rewrites read it, so a more
+precisely annotated term may admit rewrites a coarser one does not. Serialization
+may be sparse: a bare expression — equivalently, all slots `%deferred` — records
+no metadata, deferring it to inference rather than asserting anything about the
+value. What inference supplies depends on the node: nothing yet for an expression
+it has not reached, or one blocked upstream; the self-evident
+`((%scalar real) %fixed reals)` for a self-typing literal such as `3.14`. Tools
+therefore query a node's *inferred* metadata, not the presence of a wrapper.
 
 **Type inference is required to succeed on well-formed modules.** If inference
 fails — for example, an unresolvable reference or a type error in an expression —
@@ -183,7 +212,10 @@ location of the failure inline.
 
 The "type" terminology refers to the **structural category** of a value — scalar,
 array, record, table, measure, kernel, likelihood, function — not to a type system in
-the traditional programming-language sense.
+the traditional programming-language sense. For measures and kernels the structural
+category includes the total-mass class (the `%mass` slot, see
+[below](#total-mass-classes)) — part of the measure's kind, not a separate
+refinement.
 
 **Sets and types are distinct.** Set membership information attached via `elementof`
 (e.g. `(elementof posreals)`) is preserved structurally in the expression itself, not
@@ -196,7 +228,7 @@ all metadata — while authored membership stays structural.
 #### Type categories
 
 - `%deferred` — explicit "not yet resolved" marker; semantically equivalent to
-  omitting the entire `%meta` block when both slots would be `%deferred`.
+  omitting the entire `%meta` wrapper when all three slots would be `%deferred`.
 - `(%failed "<reason>")` — diagnostic marker written into the type slot of
   `%meta` when inference attempted to resolve it but could not. The reason
   string is for human and tooling consumption. A module containing any `%failed`
@@ -334,18 +366,8 @@ as `(Normal (%kwarg mu 0.0) (%kwarg sigma 1.0))`.
   substitution arguments of `load_module` and `standard_module`). Unordered
   (matched by name).
 
-**Literal values.** Primitive scalar literals are bare atoms; their type is
-determined by lexical form (integer vs. real digit pattern, quoted string,
-`true`/`false`):
-
-```lisp
-3            ; integer
-1.0          ; real
-"inputs.csv" ; string
-true         ; boolean
-```
-
-Composite literal values use FlatPPL
+**Composite literal values.** Scalar literals are covered [above](#literal-values);
+composite literal values use FlatPPL
 [scalar restriction and constructor](07-functions.md#scalar-restrictions-and-constructors)
 function names as heads:
 
@@ -526,7 +548,7 @@ L = likelihoodof(helpers.obs_kernel, input_data)
   (%bind L (likelihoodof (%ref helpers obs_kernel) (%ref self input_data))))
 ```
 
-Calls carry no annotations in the bare form. This is the canonical pre-inference
+The bare form carries no `%meta` annotations — the canonical pre-inference
 shape.
 
 #### Annotated FlatPIR
@@ -538,28 +560,26 @@ shape.
   (%public center spread obs_kernel shifted_value)
 
   (%bind center
-    (elementof (%meta (%scalar real) %parameterized reals) reals))
+    (%meta ((%scalar real) %parameterized reals) (elementof reals)))
 
   (%bind spread
-    (elementof (%meta (%scalar real) %parameterized posreals) posreals))
+    (%meta ((%scalar real) %parameterized posreals) (elementof posreals)))
 
   (%bind obs_kernel
-    (functionof
-      (%meta (%kernel (%inputs center spread x) (%mass %normalized))
-             %fixed %unknown)
-      (Normal (%meta (%measure (%domain (%scalar real)) (%mass %normalized))
-                     %parameterized reals)
-        (%kwarg mu (add (%meta (%scalar real) %parameterized reals)
-                        (%ref self center) (%ref %local _x_)))
-        (%kwarg sigma (%ref self spread)))
-      %specinputs
-      ((center (%ref self center))
-       (spread (%ref self spread))
-       (x (%ref %local _x_)))))
+    (%meta ((%kernel (%inputs center spread x) (%mass %normalized)) %fixed %unknown)
+      (functionof
+        (%meta ((%measure (%domain (%scalar real)) (%mass %normalized)) %parameterized reals)
+          (Normal
+            (%kwarg mu (%meta ((%scalar real) %parameterized reals)
+                         (add (%ref self center) (%ref %local _x_))))
+            (%kwarg sigma (%ref self spread))))
+        %specinputs
+        ((center (%ref self center))
+         (spread (%ref self spread))
+         (x (%ref %local _x_))))))
 
   (%bind shifted_value
-    (add (%meta (%scalar real) %parameterized reals)
-         (%ref self center) 1.0)))
+    (%meta ((%scalar real) %parameterized reals) (add (%ref self center) 1.0))))
 ```
 
 `model.flatpir` after type inference:
@@ -569,39 +589,38 @@ shape.
   (%public a b input_data L)
 
   (%bind helpers
-    (load_module (%meta %module %fixed %unknown)
-                 "helpers.flatppl" (%assign center (%ref self a))))
+    (%meta (%module %fixed %unknown)
+           (load_module "helpers.flatppl" (%assign center (%ref self a)))))
 
   (%bind a
-    (elementof (%meta (%scalar real) %parameterized reals) reals))
+    (%meta ((%scalar real) %parameterized reals) (elementof reals)))
 
   (%bind b
-    (draw (%meta (%scalar real) %stochastic reals)
-          (Normal (%meta (%measure (%domain (%scalar real)) (%mass %normalized))
+    (%meta ((%scalar real) %stochastic reals)
+           (draw (%meta ((%measure (%domain (%scalar real)) (%mass %normalized))
                          %fixed reals)
-                  (%kwarg mu 0.0) (%kwarg sigma 2.0))))
+                        (Normal (%kwarg mu 0.0) (%kwarg sigma 2.0))))))
 
   (%bind _combined
-    (add (%meta (%scalar real) %stochastic reals)
-         (%ref self a) (%ref self b)))
+    (%meta ((%scalar real) %stochastic reals)
+           (add (%ref self a) (%ref self b))))
 
   (%bind input_data 2.5)
 
   (%bind L
-    (likelihoodof
-      (%meta (%likelihood (%inputs center spread x)
-                          (%obstype (%scalar real)))
-             %fixed %unknown)
-      (%ref helpers obs_kernel) (%ref self input_data))))
+    (%meta ((%likelihood (%inputs center spread x)
+                         (%obstype (%scalar real)))
+            %fixed %unknown)
+           (likelihoodof (%ref helpers obs_kernel) (%ref self input_data)))))
 ```
 
 Inside `obs_kernel`'s `functionof` body, phase analysis treats the boundary
 nodes (`center`, `spread`) and the placeholder (`_x_`) as `%parameterized`
 inputs, so inner
 calls depending on them are themselves `%parameterized`; the function value
-itself is `%fixed` (the function definition does not change). Annotations on
-inner calls are optional in the canonical form: a tool may annotate every call
-(as shown for `obs_kernel`) or only the outermost call of each binding's RHS
+itself is `%fixed` (the function definition does not change). The `%meta` wrapper
+is optional on inner expressions: a tool may wrap every expression
+(as shown for `obs_kernel`) or only each binding's RHS
 (as shown for `_combined`); both are valid annotated FlatPIR.
 
 The likelihood `L` inherits its `%inputs` list from `obs_kernel`'s reified inputs —
