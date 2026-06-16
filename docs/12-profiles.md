@@ -245,15 +245,17 @@ channel's total per-bin nominal across samples (`staterror` only).
 | `hepphys.interp_*(tmpl_dn, nom, tmpl_up, alpha)` | `Normal(mu = alpha, sigma = 1.0)` (observed at `0`) | `histosys` | default `hepphys.interp_poly6_lin`; replaces nominal directly |
 | `broadcast(mul, expected, gamma)` | none (free per-bin) | `shapefactor` | `gamma = elementof(cartpow(posreals, n_bins))` |
 | `broadcast(mul, expected, gamma)` | `broadcast(ContinuedPoisson, broadcast(mul, gamma, tau))` (observed at `tau`) | `shapesys` | `tau = broadcast(pow, broadcast(divide, nom, sigma), 2)`; non-integer `tau` requires `ContinuedPoisson` |
-| `broadcast(mul, total_nom, gamma)` | `broadcast(Normal, gamma, delta)` (observed at `1.0` per bin) | `staterror` | `delta` from quadrature sum across samples |
+| `broadcast(mul, total_nom, gamma)` | `broadcast(Normal, gamma, delta)` (observed at `1.0` per bin) | `staterror` | `delta` from quadrature sum across samples; this is the `Gauss` constraint — see the `Poisson` form in the note below |
 
 **Notes.** Modifiers with the same name share a single nuisance parameter; the
 translator must verify compatible auxiliary-measurement types.
 
-`staterror` carries an HS³ `constraint_type` (`Gauss` or `Poisson`; pyhf defaults to
-`Gauss`, ROOT HS³ to `Poisson`), and a translator must honour the field rather than
-assume a default. The `Gauss` form is the row above (`broadcast(Normal, gamma, delta)`
-observed at `1.0`). The `Poisson` form mirrors `shapesys`:
+`staterror` carries an HS³ `constraint_type` (`Gauss` or `Poisson`). A translator must
+honour the field when it is present; when it is omitted the default follows the source
+tool — pyhf omits it and means `Gauss`, ROOT HS³ means `Poisson` — so a ROOT-faithful
+importer defaults to the `Poisson` form. The `Gauss` form is the row above
+(`broadcast(Normal, gamma, delta)` observed at `1.0`). The `Poisson` form mirrors
+`shapesys`:
 `broadcast(ContinuedPoisson, broadcast(mul, gamma, tau))` observed at `tau`, with
 `tau = broadcast(pow, broadcast(divide, total_nom, delta_abs), 2)` (the per-bin
 effective count, `delta_abs` the absolute quadrature-sum uncertainty).
