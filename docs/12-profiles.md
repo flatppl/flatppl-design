@@ -158,8 +158,8 @@ FlatPPL preset domains, see [Presets](03-value-types.md#presets).
 | `superpose(M1, M2, ...)` | — | `RooAddPdf` (extended) |
 | `normalize(weighted(w, M))` | — | `RooEffProd` |
 | `normalize(logweighted(w, M))` | — | `RooEffProd` with `exp(w)` via `RooFormulaVar` |
-| `normalize(weighted(w, Lebesgue(reals)))` | `density_function_dist` | `RooGenericPdf` |
-| `normalize(logweighted(w, Lebesgue(reals)))` | `log_density_function_dist` | `RooGenericPdf` with `exp(w)` expression |
+| `normalize(truncate(weighted(w, Lebesgue(reals)), S))` | `density_function_dist` | `RooGenericPdf` |
+| `normalize(truncate(logweighted(w, Lebesgue(reals)), S))` | `log_density_function_dist` | `RooGenericPdf` with `exp(w)` expression |
 | `pushfwd(f, M)` | — | `RooFormulaVar` composition |
 | `bayesupdate(L, prior)` | `analyses` entry with `prior` | `BayesianCalculator` / `MCMCCalculator` |
 
@@ -170,6 +170,18 @@ expression — arithmetic and comparison operators, the elementary functions of
 ternary — supplied **inline** as the `weighted`/`logweighted` weight argument. This
 inline use is permitted under the [profile restriction](#sec:hs3roofit) above; it
 introduces no named `functionof` binding.
+
+The region `S` is the observable's declared `product_domain` interval; the density is
+normalized over it,
+
+$$p(x) = \frac{w(x)}{\int_S w\,\mathrm{d}x}, \qquad x \in S,$$
+
+matching `RooGenericPdf`, which normalizes over the observable's range. Normalizing over
+$\mathbb{R}$ diverges when $w$ is not integrable; with no declared domain the lowering
+falls back to `Lebesgue(reals)`.
+
+A `generic_function` lowers to a lambda over the observable when its expression
+references it, and to the bare scalar expression otherwise.
 
 The `product_dist` (`RooProdPdf`) row covers the **independent** case, where the
 factors are pdfs over *distinct* observables; it lowers to `joint(M1, M2, ...)`,
