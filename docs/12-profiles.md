@@ -239,10 +239,12 @@ concerns:
   (Gaussian, Poisson, or unconstrained).
 
 In FlatPPL the deterministic effects use broadcasting and arithmetic; each auxiliary
-measurement becomes its own likelihood term via `likelihoodof(distribution, aux_obs)`,
+measurement becomes its own likelihood term via `likelihoodof(functionof(distribution), aux_obs)`,
 and all terms combine with the main binned-Poisson likelihood via `joint_likelihood(...)`.
-The main likelihood wraps total expected counts in `broadcast(Poisson, expected)` and
-binds it to the observed bin counts.
+The main likelihood wraps total expected counts in `functionof(broadcast(Poisson, expected))` and
+binds it to the observed bin counts. (`likelihoodof` takes a *kernel*, not a measure —
+see [§06](06-measure-algebra.md#likelihoodof) — so the parameter-dependent observation and
+auxiliary measures are reified into kernels with `functionof` before binding the data.)
 
 The "deterministic effect" column shows what the modifier transforms: `expected`
 is a sample's per-bin expected counts (sample-level modifiers), `nom` is a sample's
@@ -303,9 +305,9 @@ obs_model = broadcast(Poisson, expected)
 tau = broadcast(pow, broadcast(divide, bkg, dbkg), 2)
 aux_model = broadcast(hepphys.ContinuedPoisson, broadcast(mul, gamma, tau))
 
-# Likelihoods
-L_obs = likelihoodof(obs_model, obs_data)
-L_aux = likelihoodof(aux_model, tau)
+# Likelihoods (likelihoodof takes a kernel — reify the measures with functionof, §06)
+L_obs = likelihoodof(functionof(obs_model), obs_data)
+L_aux = likelihoodof(functionof(aux_model), tau)
 L = joint_likelihood(L_obs, L_aux)
 ```
 
