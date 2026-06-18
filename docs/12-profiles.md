@@ -31,6 +31,102 @@ construct models via measure algebra. FlatPPL supports both paradigms natively
 bridges between them. Profiles define the mechanically translatable fragment for each
 target.
 
+### <a id="sec:profile-specs"></a>Profile specifications
+
+A profile is specified as a tree grammar over
+[FlatPIR](11-flatpir.md#intermediate-representation), i.e. as
+a set of productions (FlatPIR term patterns). Profile specifications are
+purely inclusive: a fully inferred FlatPIR term conforms to the profile if and
+only if it can be derived from the productions in the profile specification.
+
+Conformance is defined over **canonical** FlatPIR — keyword arguments
+positionalized and ordered where the callable's argument order is known,
+reified-callable placeholders and `aggregate` / `metricsum` axis labels
+α-canonicalized, and aliases resolved (FlatPIR
+[normalization](11-flatpir.md#intermediate-representation)). Canonicalization
+gives each construct one normal form, so productions match a single shape rather
+than every surface variant; the same canonical form is the precondition for term
+rewriting (`.flatrules`, below).
+
+Profile specifications are a single S-expression of the form
+`(&profile <production>…)` and use the filename extension `.flatprof`.
+The `&`-prefix marks a DSL keyword that frames FlatPIR terms but is not itself
+FlatPIR. Each production is a FlatPPL term S-expression with an profile
+specification wildcard (metavariable) syntax:
+
+- **terminals** are FlatPIR heads, keywords, and atoms (`add`, `%scalar`, `reals`) —
+  matched literally.
+- **`?name` / `?_`** denote *closed* metavariables that represent any term the profile
+  allows (so a pattern can never admit an otherwise-illegal subterm). In a profile
+  every metavariable is **independent** (linear): a name is a readable label, not a
+  back-reference — repeating it does not force the two positions to match, so
+  conformance stays a linear-time tree-grammar membership test. (Consistency between
+  positions — e.g. equal dimensions — is well-formedness, already guaranteed by
+  inference before conformance runs, so a profile never needs to state it.) `?_` is the
+  anonymous form. The term-rewriting rule language (`.flatrules`) reuses this
+  vocabulary but reads `?name` as a *capture* variable — the same subterm wherever it
+  repeats — because matching-and-rewriting, unlike membership, is inherently non-linear.
+- **`??`** is the *open* wildcard, matching any legal FlatPPL/FlatPIR term.
+- **`(?| <a> <b> …)`** denotes alternation, a shorthand for one production per alternative.
+  It stands for any of the listed alternatives, so either `<a>` or `<b>`, etc.
+- A trailing **`*`** (zero-or-more) or **`+`** (one-or-more) on any metavariable
+  matches a *sequence* of terms in that position: `?_*` is a run of closed terms,
+  `??+` one-or-more open terms. This covers the variadic heads (`vector`, `cat`,
+  the placeholder tail of `functionof`).
+- A production may **wrap any sub-pattern** in a
+  `(%meta (<type> <phase> <valueset>) <pattern>)` annotation pattern, exactly
+  where FlatPIR places one (see
+  [`%meta` annotations](11-flatpir.md#flatpir-meta-annotations)). The wrapper is
+  matched structurally, so it constrains the wrapped node's inferred type, phase,
+  and value set automatically. Each slot is itself a pattern: `(%scalar ??)`
+  matches a scalar of any kind, `(%scalar real)` a real one. An unwrapped pattern
+  is equivalent to a `(%meta (?? ?? ??) …)` wrapper — no constraint.
+
+For example, the specification of FlatPPL/full is simply
+
+```lisp
+(&profile ??)
+```
+
+A FlatPPL/scalarmath profiles that only covers deterministic scalar arithmetic
+of real values could be specified as
+
+```lisp
+(&profile
+  ((?| elementof external)
+   (?| reals integers booleans posreals nonnegreals unitinterval))
+  (functionof ?_ ?_*)
+  (neg ?_)
+  ((?| add sub mul divide pow) ?_ ?_)
+  ((?| lt le gt ge equal unequal) ?_ ?_)
+  ((?| land lor lxor) ?_ ?_)
+  (lnot ?_)
+  (ifelse ?_ ?_ ?_)
+  ((?| isfinite isinf isnan iszero) ?_)
+  ((?| abs sqrt exp log log10 sin cos tan floor ceil round) ?_)
+  ((?| min max) ?_ ?_))
+```
+
+Complex and array values are excluded here by admitting no construct that can
+*produce* them — neither array/complex sources (`elementof` over `complexes` or
+`cartpow`) nor the array, table, and `complex` constructors; omitting `draw` and
+the built-in kernels likewise leaves nothing of stochastic phase. Because a value
+type exists only where the profile admits a producer for it, a polymorphic
+placeholder typed `anything` is bounded by that universe and needs no separate
+restriction — only a *free* input (`external`, or a top-level `elementof`), whose
+value comes from outside the model, must pin its set, as the inputs above do.
+References are admitted as base cases — the binding they refer to is checked on
+its own — and so are literals (which a profile can restrict by wrapping in a
+`(%meta …)` pattern, matched against the literal's inferred type). Constants, however, are *production-gated terminals*: a
+profile admits a constant only where a production lists it. This is exactly what
+excludes complex values above — `complexes` and `im` appear in no production, so
+no closed metavariable can admit them. Thus only calls, plus whatever constants a
+profile chooses to admit, require productions.
+
+A profile specification constrains *term shapes*; constraints on whole bindings or
+modules — e.g. that a public result has a given value set — are stated separately, not
+as productions.
+
 ### Target system profiles
 
 Other stochastic systems will typically not support the whole semantics and

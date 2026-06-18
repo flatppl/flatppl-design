@@ -1,0 +1,25 @@
+; FlatPPL/scalarmath - a scalar arithmetic-only profile without complex
+; values, arrays, (probability) measures or stochastic nodes.
+(&profile
+  ; --- inputs: scalar numbers only ---
+  ((?| elementof external) (?| reals integers booleans posreals nonnegreals unitinterval))
+
+  ; --- functions (lambdas / functionof); placeholders bounded by the producers ---
+  (functionof ?_ ?_*)
+
+  ; --- arithmetic ---
+  (neg ?_)
+  ((?| add sub mul divide pow) ?_ ?_)
+
+  ; --- comparison & logic ---
+  ((?| lt le gt ge equal unequal) ?_ ?_)
+  ((?| land lor lxor) ?_ ?_)
+  (lnot ?_)
+  (ifelse ?_ ?_ ?_)
+
+  ; --- finiteness predicates ---
+  ((?| isfinite isinf isnan iszero) ?_)
+
+  ; --- elementary functions ---
+  ((?| abs sqrt exp log log10 sin cos tan floor ceil round) ?_)
+  ((?| min max) ?_ ?_))
