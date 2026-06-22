@@ -87,7 +87,7 @@ The result stays positive, making this appropriate for multiplicative factors.
 | Distribution | Parameters | Domain | Support |
 |---|---|---|---|
 | [`CrystalBall`](#crystalball) | `m0`, `sigma`, `alpha`, `n` | `reals` | `reals` |
-| [`DoubleSidedCrystalBall`](#doublesidedcrystalball) | `m0`, `sigmaL`, `sigmaR`, `alphaL`, `nL`, `alphaR`, `nR` | `reals` | `reals` |
+| [`DoubleSidedCrystalBall`](#doublesidedcrystalball) | `m0`, `sigmaL`, `sigmaR`, `alphaL`, `alphaR`, `nL`, `nR` | `reals` | `reals` |
 | [`Argus`](#argus) | `resonance`, `slope`, `power` | `reals` | `interval(0, resonance)` |
 | [`RelativisticBreitWigner`](#relativisticbreitwigner) | `mean`, `width` | `reals` | `posreals` |
 | [`Voigtian`](#voigtian) | `mean`, `width`, `sigma` | `reals` | `reals` |
@@ -118,7 +118,7 @@ $$A = \left(\frac{n}{|\alpha|}\right)^{n}\exp\left(-\frac{|\alpha|^2}{2}\right),
  
 $\mathcal{M}$ is a normalizing constant, and $(m_0, \sigma, \alpha, n)$ is equal to `(m0, sigma, alpha, n)`.
 
-<a id="doublesidedcrystalball"></a>**`DoubleSidedCrystalBall(m0, sigmaL, sigmaR, alphaL, nL, alphaR, nR)`** — The double-sided [Crystal Ball distribution](https://en.wikipedia.org/wiki/Crystal_Ball_function): Gaussian core with independent power-law tails on both sides.
+<a id="doublesidedcrystalball"></a>**`DoubleSidedCrystalBall(m0, sigmaL, sigmaR, alphaL, alphaR, nL, nR)`** — The double-sided [Crystal Ball distribution](https://en.wikipedia.org/wiki/Crystal_Ball_function): Gaussian core with independent power-law tails on both sides.
 
 Domain/Support: `reals`/`reals`.
 
