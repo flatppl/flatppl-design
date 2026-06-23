@@ -91,6 +91,7 @@ The result stays positive, making this appropriate for multiplicative factors.
 | [`Argus`](#argus) | `resonance`, `slope`, `power` | `reals` | `interval(0, resonance)` |
 | [`RelativisticBreitWigner`](#relativisticbreitwigner) | `mean`, `width` | `reals` | `posreals` |
 | [`Voigtian`](#voigtian) | `mean`, `width`, `sigma` | `reals` | `reals` |
+| [`Landau`](#landau) | `loc`, `scale` | `reals` | `reals` |
 | [`BifurcatedNormal`](#bifurcatednormal) | `mean`, `sigmaL`, `sigmaR` | `reals` | `reals` |
 | [`ContinuedPoisson`](#continuedpoisson) | `rate` | `reals` | `nonnegreals` |
 
@@ -188,6 +189,23 @@ Density w.r.t. `Lebesgue(reals)`:
 
 $$\frac{\mathrm{Re}\left(w\left(\frac{x - \mu + i\Gamma/2}{\sigma \sqrt{2}}\right)\right)}{\sigma \sqrt{2\pi}} \quad \text{for } x \in \mathbb{R},$$
 where $w(z) = \exp\left(-z^2\right)\mathrm{erfc}\left(-iz\right)$ is the Faddeeva function, $\Gamma/2$ is the Cauchy half-width at half-maximum, and $(\mu, \Gamma, \sigma)$ is equal to `(mean, width, sigma)`.
+
+<a id="landau"></a>**`Landau(loc, scale)`** — The [Landau distribution](https://en.wikipedia.org/wiki/Landau_distribution): a location-scale family over the standard Landau density, describing fluctuations in the energy loss of a charged particle traversing a thin layer of matter.
+
+Domain/Support: `reals`/`reals`.
+
+Parameters:
+
+- `loc = elementof(reals)`: location parameter.
+- `scale = elementof(posreals)`: scale parameter.
+
+Density w.r.t. `Lebesgue(reals)`:
+
+$$\frac{1}{s}\,\phi\!\left(\frac{x - \ell}{s}\right) \quad \text{for } x \in \mathbb{R},$$
+where $\phi$ is the standard Landau density
+
+$$\phi(\lambda) = \frac{1}{\pi}\int_0^\infty e^{-t\ln t - \lambda t}\sin(\pi t)\,dt,$$
+and $(\ell, s)$ is equal to `(loc, scale)`.
 
 <a id="bifurcatednormal"></a>**`BifurcatedNormal(mean, sigmaL, sigmaR)`** — [Split normal distribution](https://en.wikipedia.org/wiki/Split_normal_distribution): Gaussian with different widths on left and right sides.
 
