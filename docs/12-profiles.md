@@ -223,6 +223,7 @@ exhaustive.
 | `hepphys.ContinuedPoisson` | `poisson_dist` (implicit) | `RooPoisson` (`noRounding=true`) | Same parameter mapping as `Poisson`; density only, not generative |
 | `hepphys.CrystalBall` | `crystalball_dist` | `RooCBShape` | Names match directly |
 | `hepphys.DoubleSidedCrystalBall` | `crystalball_dist` (double-sided) | `RooCrystalBall` | `sigmaL` → `sigma_L` (HS³), etc. |
+| `hepphys.Landau` | `landau_dist` | `RooLandau` | HS³/RooFit `mean` → `loc`, `sigma` → `scale` (Landau has no finite mean) |
 | `hepphys.RelativisticBreitWigner` | `relativistic_breit_wigner_dist` | — | Names match HS³ |
 | `hepphys.Voigtian` | — | `RooVoigtian` | |
 
