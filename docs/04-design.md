@@ -1097,7 +1097,7 @@ other modules written in FlatPPL though, to make models composable:
 
 **`load_module(source)`** loads a FlatPPL file and returns a module reference.
 
-`source` may be a file path or a URL.
+`source` may be a file path or a URL (see [Remote file caching](#sec:url-cache)).
 
 In the canonical syntax, bound names in the loaded module are accessed via dot syntax:
 
@@ -1228,3 +1228,81 @@ FlatPIR, or for export to external systems — must use a doc-comment.
 ([FlatPIR](11-flatpir.md#intermediate-representation) has its own `;` line comments in the
 canonical text syntax, but those are reserved for tooling
 annotations and do not carry user-written surface comments.)
+
+
+### <a id="sec:url-cache"></a>Remote file caching
+
+A `load_module(url)` or [`load_data(url)`](07-functions.md#load_data) `source`
+may be an `http`/`https` URL rather than a local path. FlatPPL is meant to be
+supported by multiple engines and tools in a variety of host languages, and
+the design leaves a lot of freedom to individual FlatPPL implementations. But
+caching of remote content to local files should be consistent across various
+tools and engines, so they should adhere to the following conventions (subject
+to change in future FlatPPL versions) and thus use a shared local cache:
+
+**Cache directory.** The main cache directory (referred to below as
+`<flatppl-cachedir>`) is set by the environment variable `FLATPPL_CACHEDIR`.
+If not set, the following default is used:
+
+* Linux and BSD: A directory `flatppl` directly under the
+  [XDG](https://specifications.freedesktop.org/basedir-spec/latest/) cache directory
+  (defaults to `$HOME/.cache/flatppl`).
+* macOS: `$HOME/Library/Caches/flatppl`
+* Windows: `%LOCALAPPDATA%\flatppl`
+
+**Layout and keys.** Under `<flatppl-cachedir>/v1/`:
+
+- `objects/<kk>/<key>.<ext>` holds the fetched URL content. `key` is the
+  lowercase-hexadecimal SHA-256 of the request URL with any `#`-fragment removed
+  (no other normalization), and `<kk>` is the first two characters of `key`.
+  `<ext>` is the requested file's full trailing extension — everything after
+  the first `.` in the URL's final path segment — so a multi-part extension is
+  kept whole; a final segment with no `.` uses just `<key>`.
+- `objects/<kk>/<key>_meta.json` is a mandatory JSON metadata file with fields
+  `url` (the original URL), `resolved_url` (the URL fetched after any
+  redirects), `retrieved` (ISO 8601 UTC time), `content_type`, and the HTTP
+  validators `etag` and `last_modified` (any may be `null` if the server omits
+  it). Readers ignore unknown fields.
+- `trust/<kk>/<key>` is a per-URL trust marker — its presence means the URL is
+  trusted — keyed by the same `<kk>`/`<key>` as the object. Trust is based on
+  the original URLs, not on redirect URLs.
+- `tmp/` holds temporary files during downloads, must be on the same
+  filesystem as `objects/` to achieve atomic renames.
+
+The cache is keyed by URL hash; there is no separate index, and `objects/` is its
+complete state.
+
+**Resolve and fetch.** To resolve a URL, FlatPPL implementations use the cached
+object under the matching hash if present. Otherwise, implementations check if
+the URL is trusted (see below), fetch the URL via the temporary directory (see
+below for details), and store the URL content in the objects directory under
+the URL hash with the file extension added. URL redirects are followed
+for download but the hash of the original URL is used in the cache. A fetch
+that fails — a network error, a final response whose status is not
+`2xx`, or an unresolvable redirect — is an error, and nothing is written to
+the cache (no partial object and no metadata). If
+`FLATPPL_CACHE_OFFLINE` is set, a cache miss is an error and no URL fetch is
+attempted.
+
+**Trust.** Before fetching a URL that has no trust marker, interactive tooling
+must obtain the user's approval and then create its `trust/<kk>/<key>` marker.
+Non-interactive
+tooling must error if a requested URL is not marked as trusted. If the environment
+variable `FLATPPL_TRUST` is set, all URLs are trusted implicitly by interactive
+and non-interactive tooling, but no trust markers are created.
+
+**Atomicity and concurrent tools.** Content is initially downloaded to the
+`tmp/` directory, then fsynced and then atomically renamed into the destination
+file under the objects directory. The `_meta.json` file is written the same
+way and renamed into place before its content object, so a present `<key>.<ext>`
+always has its metadata. Trust markers are created with an exclusive
+`O_CREAT | O_EXCL` open. The whole cache is lock-free and `<flatppl-cachedir>`
+should be located on a file system that supports atomic renaming.
+
+**Environment variables.**
+
+| Variable | Effect |
+|---|---|
+| `FLATPPL_CACHEDIR` | Override the cache directory; used verbatim. |
+| `FLATPPL_CACHE_OFFLINE` | Never fetch — a cache miss is an error. |
+| `FLATPPL_TRUST` | Trust all URLs implicitly (no prompt; no trust markers created). |

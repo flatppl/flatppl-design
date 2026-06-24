@@ -98,7 +98,8 @@ by the declared `valueset`, which defines the set that governs each vector entry
 table row.
 
   - `source`: a file path or URL identifying the data source. File path resolution follows
-    the same rules as with `load_module`.
+    the same rules as with `load_module`, and URL sources are fetched and cached per
+    [Remote file caching](04-design.md#sec:url-cache).
   - `valueset`: specifies the set that governs each vector entry or table row.
 
   This loads a table with a scalar column `a` and a 3-vector column `b`:
