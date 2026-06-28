@@ -1,0 +1,258 @@
+; FlatPPL/jax — the subset of FlatPPL that maps to bare JAX numerical code
+; (no PPL dependency).
+;
+; JAX serves BOTH styles: jax.random provides PRNG samplers (draws) and
+; jax.scipy.stats provides logpdf functions (density). A draw maps to a sampler;
+; density evaluation (the unnormalized log-density of a composed measure) maps to
+; logpdf arithmetic (joint -> sum of logpdfs, superpose -> logsumexp, logweighted ->
+; lw + logpdf, bayesupdate -> logdensityof(L) + logdensityof(prior)).
+;
+; THE CUT IS SYMBOLIC vs NUMERICAL, not "measure algebra vs everything else".
+; Everything NUMERICAL — every built-in function (§07), every distribution (§08),
+; every standard-module member (§09), and every vectorization/aggregation sugar
+; (broadcast / reduce / scan / aggregate / metricsum, §04) — RUNS directly in JAX:
+; it is array math, and JAX is array math. A full pass over §07/§08/§09 and the §04
+; sugars found NO numerical construct that bare JAX cannot express (verified fresh
+; 2026-06-28 against docs.jax.dev — see the per-namespace audit at the bottom). The
+; measure ALGEBRA (§06) is the symbolic layer: there is no JAX runtime object that
+; "is a measure". Its combinators are not *run* in JAX — they are *lowered* to JAX
+; density/sampler code by the §06 rules (joint->sum, iid->vmap+sum, superpose->
+; logsumexp, weighted/logweighted->+w, bayesupdate->logL+logprior, pushfwd->change
+; -of-variables, markovchain/kscan->jax.lax.scan, ...). Almost all of it lowers
+; cleanly; the genuine non-JAX residue is small and is enumerated under
+; "EXTRA-GRAMMATICAL LIMITS" below.
+;
+; WHY JAX, AND WHY ONE PROFILE. FlatPPL is itself the probabilistic framework (its
+; own measure algebra + reification), so the Python target is a neutral COMPUTE
+; substrate, not a competing PPL: NumPyro (effect handlers / named sample sites) and
+; PyTensor (its own symbolic graph + rewriter, which duplicates FlatPIR) impose
+; semantics that clash with explicit measure algebra. JAX is semantically neutral
+; (array math + jit / grad / vmap), so FlatPPL lowers to it directly. The model
+; compiles ONCE to a pure-JAX core exposing a stable inference interface
+; (log_density + grad, sample_prior, constrain / unconstrain, param shapes,
+; totalmass); the many Python inference packages are then THIN ADAPTERS on that core
+; - BlackJAX (~free), NumPyro via potential_fn, scipy / optax, emcee / dynesty, PyMC
+; (harder, needs a PyTensor graph). Those packages are adapters, NOT separate
+; profiles: this is the one Python profile. (Lower to public JAX ops, not jaxpr /
+; StableHLO; the Rust compiler emits lowered FlatPIR, the Python side does the thin
+; JAX emission + adapters.)
+;
+; DISTRIBUTION & SPECIAL-FUNCTION COVERAGE IS NOT A PROFILE LIMIT. Bare JAX's
+; bundled coverage is partial and uneven - jax.scipy.stats is a port of scipy.stats
+; (densities), jax.random is JAX's PRNG (samplers); the two grew independently, so
+; per distribution they often don't line up (verified 2026-06-28: VonMises has a
+; logpdf but no sampler; LogNormal/Weibull/Categorical a sampler but no logpdf;
+; NegativeBinomial a logpmf but no sampler; InverseGamma/Wishart/LKJ neither). This
+; is incidental, not fundamental: every FlatPPL distribution is a CLOSED-FORM density
+; (§08 / §09) with a sampler derivable from JAX primitives, so the backend supplies
+; whichever half bare JAX omits — a few lines each, or (preferred) the
+; reparameterization rules in core-equivalences.flatrules (LogNormal=pushfwd(exp,
+; Normal), InverseGamma=pushfwd(1/_,Gamma), InverseWishart=pushfwd(inv,Wishart),
+; LKJ=pushfwd(row_gram,LKJCholesky)). The SAME holds for §09 special functions:
+; erf/erfc/digamma/polygamma/gammainc/betainc are bundled in jax.scipy.special, and
+; the unbundled ones (arbitrary-order Bessel jv/yv/iv/kv, airy) are closed-form,
+; backend-supplied. The full set is therefore admitted below; JAX is a general
+; numerical backend, not a fixed distribution/special-function library.
+;
+; EXTRA-GRAMMATICAL LIMITS (verified 2026-06-28; §12 sec:profile-specs allows
+; constraints that are not term-shape productions). A term may match the grammar yet
+; still fail to lower; these are the only such cases, and they are the whole of the
+; "cannot go to JAX" set:
+;   1. Normalizers that are neither closed-form nor low-dimensional. normalize /
+;      totalmass need a COMPUTABLE Z = integral of m — and only as a differentiable
+;      function of the params, and only when Z depends on the params differentiated.
+;      Three tiers, not analytic-vs-not: (a) CLOSED-FORM Z (Gaussian normalizer,
+;      truncated-normal Phi(b)-Phi(a)) — arithmetic, exact; (b) NO closed form but
+;      LOW-DIMENSIONAL support — fixed-grid quadrature (jnp.trapezoid / Gauss-Legendre
+;      nodes), static-shape + differentiable, so 1-D/2-D normalize/truncate are IN;
+;      (c) HIGH-DIMENSIONAL, no closed form — curse of dimensionality, no fixed-shape
+;      integral: the only true out (plus anything needing Z explicitly at high dim —
+;      evidence, Bayes factors). Z DROPS OUT when constant in the differentiated
+;      variable (sampling at fixed params; the evidence in a posterior) — so the
+;      unnormalized forms gradient inference consumes (bayesupdate / logweighted) are
+;      always in; and the SAMPLER never needs Z (sampling is proportional to shape), so
+;      an intractable-Z model can still be sample-only.
+;   2. Symbolic conditioning — only the OPAQUE case. STRUCTURAL disintegrate /
+;      restrict are routine: when the joint is built from a generative DAG (draws +
+;      kernels), disintegrate(["obs"], joint) recovers the prior x kernel factorization
+;      and restrict(joint, obs=data) is exactly the unnormalized posterior (partial
+;      application). restrict on the latents gives the predictive over obs with both a
+;      density and a forward sampler. Only GENERAL symbolic disintegration of an opaque
+;      measure (no known factorization) is the compiler-not-JAX case that is out.
+;   3. Non-invertible pushforward. pushfwd has a JAX *density* only through a
+;      diffeomorphism (change-of-variables needs f^-1 and a Jacobian); a non-injective
+;      or non-differentiable map has a sampler but no fixed-shape density. The §08
+;      reparameterizations (exp, inv, 1/_, row_gram) are all diffeomorphisms.
+;   4. Variable cardinality. Unbounded PoissonProcess — a measure over a random
+;      *number* of points (§08; variates are permutation-invariant arrays) — has no
+;      static-shape tensor and so no XLA log-density; EXCLUDED from the grammar. A
+;      BINNED model enters via BinnedPoissonProcess / broadcast(Poisson, counts)
+;      (fixed-shape) — admitted.
+;   5. Data-dependent output shape. filter(pred, data) and value-dependent
+;      selectbins produce a runtime-variable length → not jittable (XLA needs static
+;      shapes); EXCLUDED. (selectbins over a *static* (%fixed) region is static-shape
+;      and admittable; omitted from the core grammar pending a phase guard. bincounts
+;      over fixed bins is static and IS admitted.) Runtime-variable %dynamic
+;      dimensions that change *during* inference are likewise out; a load-time-fixed
+;      dynamic dim is fine (jit re-traces per shape).
+;   6. Non-numeric values. The string() constructor has no JAX dtype; EXCLUDED.
+;      (Field-name selectors are compile-time — get(r,"a") lowers to static indexing.)
+;   7. Soft spots (admitted, but flagged). Non-symmetric eigen() (extla) is CPU/GPU
+;      only — no TPU — and its eigenVECTORS are not autodiffable (jnp.linalg.eig,
+;      2026-06-28); symmetric eigmax/eigmin via eigvalsh are fine. Arbitrary-order
+;      Bessel (specfn bessel_j/y/i/k) and airy are not in jax.scipy.special (only
+;      i0/i1/i0e/i1e) — backend-supplied series/asymptotics, differentiable but
+;      non-trivial numerics.
+;   8. Precision is CONFIGURABLE, not mandated. JAX defaults to float32, which FlatPPL
+;      fully supports as the default; float64 is OPT-IN (jax_enable_x64) for models that
+;      request it. FlatPPL does NOT require float64 — precision is a user/config choice,
+;      never a backend mandate. Differentiability gate: a DISCRETE LATENT draw must be
+;      marginalized before a gradient sampler (Stan's restriction) — and that
+;      marginalization should be AUTOMATED (compiler enumerates the discrete support ->
+;      superpose -> logsumexp), not pushed onto the user; discrete OBSERVED data is fine.
+;      Constrain/unconstrain transforms are value-set-driven and AUTO-DERIVED, centralized
+;      in the core (the unconstrained log-density carries the Jacobian).
+;
+; aggregate / metricsum (the §04 Einstein-summation sugars) lower to JAX as follows
+; (verified 2026-06-28: jnp.einsum + all reducers present):
+;   - aggregate(sum, output_axes, expr) where expr is a product of indexed factors ->
+;     jnp.einsum directly (the index notation IS einsum: named axes absent from the
+;     output are summed). E.g. aggregate(sum,[.i,.k], A[.i,.j]*B[.j,.k]) -> einsum
+;     'ij,jk->ik'.
+;   - the GENERAL case (any f_reduction in {sum,prod,mean,var,std,maximum,minimum},
+;     any scalar expr) -> bind each distinct axis name to a fresh array dimension,
+;     align each indexed operand onto those dims (expand_dims/broadcast/transpose),
+;     evaluate expr elementwise to a tensor over ALL named axes, then reduce with
+;     jnp.{sum,prod,mean,var,std,max,min} over the axes not in output_axes and
+;     transpose to output order. All axis lengths are fixed by inference
+;     (well-formedness: same name => same length), so shapes are STATIC and the whole
+;     thing is jittable. metricsum lowers to aggregate(sum,...) with inv(metric)/metric
+;     contractions inlined (§04), i.e. einsum + matmuls.
+;
+; Assumes module bindings:
+;   hepphys = standard_module("particle-physics", "0.1")
+;   glm     = standard_module("generalized-linear-models", "0.1")
+;   specfn  = standard_module("special-functions", "0.1")
+;   polys   = standard_module("polynomials", "0.1")
+;   extla   = standard_module("ext-linear-algebra", "0.1")
+;   dist    = standard_module("distances", "0.1")
+;
+; DRAFT. Arity is well-formedness (§12 sec:profile-specs) — inference checks it before
+; conformance — so arguments are written as a run of admitted closed terms (?_*); the
+; profile pins arity only where it reads naturally (binary ops, ifelse).
+
+(&profile
+  ; --- top-level joint / target ---
+  (lawof ?_)
+  (record (%field ?_ ?_)*)
+
+  ; --- parameters & data ---
+  ((?| elementof external)
+   (?| reals posreals nonnegreals integers nonnegintegers booleans unitinterval
+       (cartpow ?_ ?_) (stdsimplex ?_) (interval ?_ ?_)))
+  (draw ?_)                              ; -> jax.random sampler
+  (load_data ?_*)
+
+  ; --- measure algebra (§06): admitted because the §06 density/sampler LOWERING is
+  ;     pure JAX. The combinators do not run in JAX — they lower to it. normalize /
+  ;     totalmass / disintegrate / restrict / pushfwd carry the extra-grammatical
+  ;     tractability constraints listed in the header (computable Z, limit 1;
+  ;     closed-form conditioning; diffeomorphism). PoissonProcess is excluded (limit 4). ---
+  ((?| joint iid jointchain kchain markovchain kscan superpose
+       weighted logweighted bayesupdate truncate pushfwd locscale bijection
+       normalize totalmass disintegrate restrict
+       likelihoodof joint_likelihood densityof logdensityof) ?_*)
+  ((?| Lebesgue Counting Dirac) ?_*)
+
+  ; --- distributions: full scalar / vector / matrix / composite set, all closed-form
+  ;     (§08). Backend supplies whichever of density/sampler bare JAX omits. ---
+  ((?| Uniform Normal GeneralizedNormal Cauchy StudentT Logistic LogNormal
+       Exponential Gamma Weibull Pareto InverseGamma Beta ChiSquared VonMises Laplace
+       Bernoulli Categorical Categorical0 Binomial Geometric NegativeBinomial
+       NegativeBinomial2 Poisson
+       MvNormal Wishart InverseWishart LKJ LKJCholesky Dirichlet Multinomial
+       BinnedPoissonProcess) ?_*)
+
+  ; --- standard-module distributions & functions (§09) ---
+  (%call (%ref hepphys (?| Argus BifurcatedNormal ContinuedPoisson CrystalBall
+                           DoubleSidedCrystalBall Landau RelativisticBreitWigner
+                           Voigtian
+                           interp_pwlin interp_pwexp interp_poly2_lin interp_poly6_lin
+                           interp_poly6_exp resonance_breitwigner kallen
+                           breakup_momentum blatt_weisskopf
+                           wignerd wignerD wignerd_doublearg wignerD_doublearg)) ?_*)
+  (%call (%ref glm (?| BernoulliLogitGLM BinomialLogitGLM CategoricalLogitGLM
+                       NormalGLM PoissonLogGLM)) ?_*)
+  (%call (%ref specfn (?| erf erfc bessel_j bessel_y bessel_i bessel_k digamma
+                          polygamma gammainc betainc airy)) ?_*)
+  (%call (%ref polys (?| legendre hermite laguerre chebyshev)) ?_*)
+  (%call (%ref extla (?| lu svd eigen eigmax eigmin matexp kron lstsq rank)) ?_*)
+  (%call (%ref dist (?| pairwise_distance cross_distance euclidean squared_euclidean
+                        cosine manhattan chebyshev minkowski jensenshannon)) ?_*)
+
+  ; --- array & table generation (§07) ---
+  ((?| identity vector array fill zeros ones eye onehot linspace extlinspace) ?_*)
+
+  ; --- field & element access (§07) — static indices; FlatPPL is static-shape ---
+  ((?| get get0) ?_*)
+
+  ; --- array & table operations (§07) ---
+  ((?| cat rowstack colstack tile splitblocks joinblocks partition reverse
+       addaxes blockdiagmat bandedmat) ?_*)
+
+  ; --- convolution (§07) -> jnp.convolve / jnp.correlate ---
+  ((?| conv crosscorr) ?_*)
+
+  ; --- scalar constructors (§07) — numeric only; string() excluded (limit 6) ---
+  ((?| boolean integer real complex imag conj) ?_*)
+
+  ; --- elementary functions (§07) -> jax.numpy / jax.scipy.special ---
+  ((?| add sub mul divide neg pow div mod) ?_*)
+  ((?| lt le gt ge equal unequal) ?_ ?_)
+  ((?| land lor lxor) ?_ ?_)
+  (lnot ?_)
+  (ifelse ?_ ?_ ?_)                      ; -> jnp.where (elementwise; no branch)
+  ((?| isfinite isinf isnan iszero) ?_)
+  (checked ?_ ?_)                        ; -> jnp.where(cond, value, nan) / checkify
+  ((?| exp log log10 sqrt abs abs2
+       sin cos tan asin acos atan atan2
+       sinh cosh tanh asinh acosh atanh
+       log1p expm1 floor ceil round min max
+       cis gamma loggamma logit invlogit probit invprobit) ?_*)
+
+  ; --- linear algebra (§07) -> jax.numpy.linalg / jax.scipy.linalg ---
+  ((?| transpose adjoint det logabsdet inv trace linsolve qr lower_cholesky
+       row_gram col_gram self_outer cross diagmat diag quadform) ?_*)
+
+  ; --- reductions, indices, sizes (§07) ---
+  ((?| sum cumsum mean var std prod cumprod maximum minimum) ?_*)
+  ((?| lengthof sizeof indicesof indicesof0) ?_)
+
+  ; --- norms & normalization (§07) ---
+  ((?| l1norm l2norm l1unit l2unit logsumexp softmax logsoftmax) ?_*)
+
+  ; --- membership & binning (§07) — static sets / fixed bins ---
+  (in ?_ ?_)
+  (bincounts ?_ ?_)
+
+  ; --- approximation functions (§07) ---
+  ((?| polynomial bernstein stepwise) ?_*)
+
+  ; --- vectorization / aggregation sugars (§04) ---
+  (broadcast ?_*)                        ; -> vmap / array broadcasting
+  (broadcasted ?_)
+  ((?| reduce scan) ?_*)                 ; scan -> jax.lax.scan (direct)
+  (aggregate ?_ ?_ ?_)                   ; sum-case -> jnp.einsum; general -> broadcast+reduce
+  (metricsum ?_ ?_ ?_)                   ; -> aggregate(sum) with metric contractions inlined
+
+  ; --- reification (§04) — functions/kernels are JAX-traceable pure callables ---
+  ((?| functionof kernelof) ?_*)
+
+  ; --- explicit RNG (§07) -> jax.random splittable keys ---
+  ((?| rnginit rand rngstate) ?_*)
+
+  ; --- measure-kernel evaluation primitives (§07). fromuniform/fromnormal need an
+  ;     inverse-CDF; closed-form where available, else root-finding via lax.while_loop
+  ;     (e.g. Gamma/Beta/StudentT quantiles). ---
+  ((?| builtin_logdensityof builtin_sample builtin_touniform builtin_fromuniform
+       builtin_tonormal builtin_fromnormal) ?_*))

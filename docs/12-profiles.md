@@ -43,7 +43,7 @@ Conformance is defined over **canonical** FlatPIR — keyword arguments
 positionalized and ordered where the callable's argument order is known,
 reified-callable placeholders and `aggregate` / `metricsum` axis labels
 α-canonicalized, and aliases resolved (FlatPIR
-[normalization](11-flatpir.md#intermediate-representation)). Canonicalization
+[normalization](11-flatpir.md#flatpir-normalization)). Canonicalization
 gives each construct one normal form, so productions match a single shape rather
 than every surface variant; the same canonical form is the precondition for term
 rewriting (`.flatrules`, below).
@@ -51,12 +51,12 @@ rewriting (`.flatrules`, below).
 Profile specifications are a single S-expression of the form
 `(&profile <production>…)` and use the filename extension `.flatprof`.
 The `&`-prefix marks a DSL keyword that frames FlatPIR terms but is not itself
-FlatPIR. Each production is a FlatPPL term S-expression with an profile
-specification wildcard (metavariable) syntax:
+FlatPIR. Each production is a FlatPPL term S-expression with a
+profile-specification wildcard (metavariable) syntax:
 
 - **terminals** are FlatPIR heads, keywords, and atoms (`add`, `%scalar`, `reals`) —
   matched literally.
-- **`?name` / `?_`** denote *closed* metavariables that represent any term the profile
+- **`?name` / `?_`** denote _closed_ metavariables that represent any term the profile
   allows (so a pattern can never admit an otherwise-illegal subterm). In a profile
   every metavariable is **independent** (linear): a name is a readable label, not a
   back-reference — repeating it does not force the two positions to match, so
@@ -64,13 +64,13 @@ specification wildcard (metavariable) syntax:
   positions — e.g. equal dimensions — is well-formedness, already guaranteed by
   inference before conformance runs, so a profile never needs to state it.) `?_` is the
   anonymous form. The term-rewriting rule language (`.flatrules`) reuses this
-  vocabulary but reads `?name` as a *capture* variable — the same subterm wherever it
+  vocabulary but reads `?name` as a _capture_ variable — the same subterm wherever it
   repeats — because matching-and-rewriting, unlike membership, is inherently non-linear.
-- **`??`** is the *open* wildcard, matching any legal FlatPPL/FlatPIR term.
+- **`??`** is the _open_ wildcard, matching any legal FlatPPL/FlatPIR term.
 - **`(?| <a> <b> …)`** denotes alternation, a shorthand for one production per alternative.
   It stands for any of the listed alternatives, so either `<a>` or `<b>`, etc.
 - A trailing **`*`** (zero-or-more) or **`+`** (one-or-more) on any metavariable
-  matches a *sequence* of terms in that position: `?_*` is a run of closed terms,
+  matches a _sequence_ of terms in that position: `?_*` is a run of closed terms,
   `??+` one-or-more open terms. This covers the variadic heads (`vector`, `cat`,
   the placeholder tail of `functionof`).
 - A production may **wrap any sub-pattern** in a
@@ -88,7 +88,7 @@ For example, the specification of FlatPPL/full is simply
 (&profile ??)
 ```
 
-A FlatPPL/scalarmath profiles that only covers deterministic scalar arithmetic
+A FlatPPL/scalarmath profile that covers only deterministic scalar arithmetic
 of real values could be specified as
 
 ```lisp
@@ -108,22 +108,22 @@ of real values could be specified as
 ```
 
 Complex and array values are excluded here by admitting no construct that can
-*produce* them — neither array/complex sources (`elementof` over `complexes` or
+_produce_ them — neither array/complex sources (`elementof` over `complexes` or
 `cartpow`) nor the array, table, and `complex` constructors; omitting `draw` and
 the built-in kernels likewise leaves nothing of stochastic phase. Because a value
 type exists only where the profile admits a producer for it, a polymorphic
 placeholder typed `anything` is bounded by that universe and needs no separate
-restriction — only a *free* input (`external`, or a top-level `elementof`), whose
+restriction — only a _free_ input (`external`, or a top-level `elementof`), whose
 value comes from outside the model, must pin its set, as the inputs above do.
 References are admitted as base cases — the binding they refer to is checked on
 its own — and so are literals (which a profile can restrict by wrapping in a
-`(%meta …)` pattern, matched against the literal's inferred type). Constants, however, are *production-gated terminals*: a
+`(%meta …)` pattern, matched against the literal's inferred type). Constants, however, are _production-gated terminals_: a
 profile admits a constant only where a production lists it. This is exactly what
 excludes complex values above — `complexes` and `im` appear in no production, so
 no closed metavariable can admit them. Thus only calls, plus whatever constants a
 profile chooses to admit, require productions.
 
-A profile specification constrains *term shapes*; constraints on whole bindings or
+A profile specification constrains _term shapes_; constraints on whole bindings or
 modules — e.g. that a public result has a given value set — are stated separately, not
 as productions.
 
@@ -142,10 +142,10 @@ The following table summarizes the high-level FlatPPL semantics of the target
 system profiles that are currently defined, i.e. the basic architecture that
 a FlatPPL model must be restricted to:
 
-| Profile | Measure algebra | Stochastic nodes | Likelihoods / Posteriors | Hierarchical models |
-|---|---|---|---|---|
-| HS³/RooFit | yes | no | multiple, both | yes |
-| Stan | no | yes | single likelihood or posterior | yes |
+| Profile    | Measure algebra | Stochastic nodes | Likelihoods / Posteriors       | Hierarchical models |
+| ---------- | --------------- | ---------------- | ------------------------------ | ------------------- |
+| HS³/RooFit | yes             | no               | multiple, both                 | yes                 |
+| Stan       | no              | yes              | single likelihood or posterior | yes                 |
 
 ### <a id="sec:hs3roofit"></a>HS³/RooFit profile
 
@@ -163,7 +163,7 @@ This profile excludes the **generative stochastic-node style**: no `~`/`draw`
 stochastic nodes and no `lawof`. Stochastic structure is expressed via measure
 algebra only. It also excludes **named `functionof`/`kernelof` bindings** as model
 structure — distributions and their dependencies are composed directly with
-measure-algebra operators. It does *not* exclude the inline function argument that a
+measure-algebra operators. It does _not_ exclude the inline function argument that a
 measure operator intrinsically takes (the weight of `weighted`/`logweighted`), nor
 the likelihood-assembly layer (`likelihoodof`, `joint_likelihood`); these appear in
 the mappings and examples below. All measures must be record-valued. Vectors are only
@@ -209,14 +209,22 @@ HS³ JSON:
 ```json
 {
   "distributions": [
-    {"name": "mass", "type": "gaussian_dist",
-     "mean": "mu_param", "sigma": "sigma_param", "x": "mass_obs"}
+    {
+      "name": "mass",
+      "type": "gaussian_dist",
+      "mean": "mu_param",
+      "sigma": "sigma_param",
+      "x": "mass_obs"
+    }
   ],
   "parameter_points": [
-    {"name": "default", "entries": [
-      {"name": "mu_param", "value": 5.28},
-      {"name": "sigma_param", "value": 0.003}
-    ]}
+    {
+      "name": "default",
+      "entries": [
+        { "name": "mu_param", "value": 5.28 },
+        { "name": "sigma_param", "value": 0.003 }
+      ]
+    }
   ]
 }
 ```
@@ -231,33 +239,33 @@ FlatPPL preset domains, see [Presets](03-value-types.md#presets).
 
 #### HS³/RooFit function mapping
 
-| FlatPPL | HS³ | RooFit | Notes |
-|---|---|---|---|
-| `hepphys.interp_pwlin` | `lin` | `FlexibleInterpVar` (code 0) | Piecewise linear |
-| `hepphys.interp_pwexp` | `log` | `FlexibleInterpVar` (code 1) | Piecewise exponential |
-| `hepphys.interp_poly2_lin` | `parabolic` | `FlexibleInterpVar` (code 2) | Quadratic + linear extrapolation |
-| `hepphys.interp_poly6_lin` | `poly6` | `FlexibleInterpVar` (code 4) | 6th-order + linear extrapolation |
-| `hepphys.interp_poly6_exp` | — | `FlexibleInterpVar` (code 5) | 6th-order + exponential extrapolation |
-| `polynomial` | — | `RooPolynomial` | Power-series polynomial |
-| `bernstein` | — | `RooBernstein` | Bernstein basis polynomial |
-| `stepwise` | — | `RooParametricStepFunction` | Piecewise-constant |
-| `bincounts` | (via axes metadata) | `RooHistFunc` / `RooDataHist` | Binning operation |
+| FlatPPL                    | HS³                 | RooFit                        | Notes                                 |
+| -------------------------- | ------------------- | ----------------------------- | ------------------------------------- |
+| `hepphys.interp_pwlin`     | `lin`               | `FlexibleInterpVar` (code 0)  | Piecewise linear                      |
+| `hepphys.interp_pwexp`     | `log`               | `FlexibleInterpVar` (code 1)  | Piecewise exponential                 |
+| `hepphys.interp_poly2_lin` | `parabolic`         | `FlexibleInterpVar` (code 2)  | Quadratic + linear extrapolation      |
+| `hepphys.interp_poly6_lin` | `poly6`             | `FlexibleInterpVar` (code 4)  | 6th-order + linear extrapolation      |
+| `hepphys.interp_poly6_exp` | —                   | `FlexibleInterpVar` (code 5)  | 6th-order + exponential extrapolation |
+| `polynomial`               | —                   | `RooPolynomial`               | Power-series polynomial               |
+| `bernstein`                | —                   | `RooBernstein`                | Bernstein basis polynomial            |
+| `stepwise`                 | —                   | `RooParametricStepFunction`   | Piecewise-constant                    |
+| `bincounts`                | (via axes metadata) | `RooHistFunc` / `RooDataHist` | Binning operation                     |
 
 #### HS³/RooFit measure algebra mapping
 
-| FlatPPL | HS³ | RooFit |
-|---|---|---|
-| `joint(M1, M2, ...)` | `product_dist` | `RooProdPdf` |
-| `jointchain(M, K)` | — | `RooProdPdf` with `RooFit::Conditional(...)` |
-| `kchain(M, K)` | — | `RooAbsPdf::createProjection(...)`; `RooFFTConvPdf` / `RooNumConvPdf` for convolutions |
-| `normalize(superpose(weighted(w1, M1), weighted(w2, M2), ...))` | `mixture_dist` | `RooAddPdf` (normalized) |
-| `superpose(M1, M2, ...)` | — | `RooAddPdf` (extended) |
-| `normalize(weighted(w, M))` | — | `RooEffProd` |
-| `normalize(logweighted(w, M))` | — | `RooEffProd` with `exp(w)` via `RooFormulaVar` |
-| `normalize(truncate(weighted(w, Lebesgue(reals)), S))` | `density_function_dist` | `RooGenericPdf` |
-| `normalize(truncate(logweighted(w, Lebesgue(reals)), S))` | `log_density_function_dist` | `RooGenericPdf` with `exp(w)` expression |
-| `pushfwd(f, M)` | — | `RooFormulaVar` composition |
-| `bayesupdate(L, prior)` | `analyses` entry with `prior` | `BayesianCalculator` / `MCMCCalculator` |
+| FlatPPL                                                         | HS³                           | RooFit                                                                                 |
+| --------------------------------------------------------------- | ----------------------------- | -------------------------------------------------------------------------------------- |
+| `joint(M1, M2, ...)`                                            | `product_dist`                | `RooProdPdf`                                                                           |
+| `jointchain(M, K)`                                              | —                             | `RooProdPdf` with `RooFit::Conditional(...)`                                           |
+| `kchain(M, K)`                                                  | —                             | `RooAbsPdf::createProjection(...)`; `RooFFTConvPdf` / `RooNumConvPdf` for convolutions |
+| `normalize(superpose(weighted(w1, M1), weighted(w2, M2), ...))` | `mixture_dist`                | `RooAddPdf` (normalized)                                                               |
+| `superpose(M1, M2, ...)`                                        | —                             | `RooAddPdf` (extended)                                                                 |
+| `normalize(weighted(w, M))`                                     | —                             | `RooEffProd`                                                                           |
+| `normalize(logweighted(w, M))`                                  | —                             | `RooEffProd` with `exp(w)` via `RooFormulaVar`                                         |
+| `normalize(truncate(weighted(w, Lebesgue(reals)), S))`          | `density_function_dist`       | `RooGenericPdf`                                                                        |
+| `normalize(truncate(logweighted(w, Lebesgue(reals)), S))`       | `log_density_function_dist`   | `RooGenericPdf` with `exp(w)` expression                                               |
+| `pushfwd(f, M)`                                                 | —                             | `RooFormulaVar` composition                                                            |
+| `bayesupdate(L, prior)`                                         | `analyses` entry with `prior` | `BayesianCalculator` / `MCMCCalculator`                                                |
 
 In the `density_function_dist` / `log_density_function_dist` rows (and HS³
 `generic_dist`), the weight `w` is the HS³ expression translated to a FlatPPL
@@ -280,12 +288,12 @@ A `generic_function` lowers to a lambda over the observable when its expression
 references it, and to the bare scalar expression otherwise.
 
 The `product_dist` (`RooProdPdf`) row covers the **independent** case, where the
-factors are pdfs over *distinct* observables; it lowers to `joint(M1, M2, ...)`,
+factors are pdfs over _distinct_ observables; it lowers to `joint(M1, M2, ...)`,
 the independent product measure. RooProdPdf is overloaded, so the lowering depends
 on the factors' variates:
 
-- **Disjoint variates** — `joint(M1, M2, ...)` (the row above). *Default.*
-- **Shared variate** — when every factor is a pdf over the *same* observable,
+- **Disjoint variates** — `joint(M1, M2, ...)` (the row above). _Default._
+- **Shared variate** — when every factor is a pdf over the _same_ observable,
   `RooProdPdf` is the pointwise product of densities, not a product over a higher-
   dimensional space. It lowers to the normalized pointwise density product
   `normalize(logweighted(x -> logdensityof(M2, x) + ... + logdensityof(Mₙ, x), M1))`:
@@ -301,27 +309,27 @@ on the factors' variates:
 The following table summarizes major correspondences; it is illustrative rather than
 exhaustive.
 
-| FlatPPL | HS³ | RooFit | Parameter mapping |
-|---|---|---|---|
-| `BinnedPoissonProcess` | `bincounts_extended_dist` / `bincounts_density_dist` | `RooExtendPdf` + binned PDF | |
-| `Cauchy` | — | `RooBreitWigner` | RooBreitWigner uses full width $\Gamma = 2 \cdot \text{scale}$ |
-| `Exponential` | `exponential_dist` | `RooExponential` | `rate` → `c` (HS³); RooFit: `c` = $-$`rate` |
-| `Gamma` | — | `RooGamma` | `shape` → `gamma`, `rate` → $1/$`beta`, `mu` = 0 |
-| `GeneralizedNormal` | `generalized_normal_dist` | — | Names match HS³ |
-| `LogNormal` | `lognormal_dist` | `RooLognormal` | RooFit: `m0` = $e^\mu$, `k` = $e^\sigma$ |
-| `MvNormal` | `multivariate_normal_dist` | `RooMultiVarGaussian` | `mu` → `mean` (HS³); `cov` → `covariances` (HS³) |
-| `Normal` | `gaussian_dist` (also `normal_dist`) | `RooGaussian` | `mu` → `mean` |
-| `Poisson` | `poisson_dist` | `RooPoisson` | `rate` → `mean` = $\lambda$ |
-| `PoissonProcess` | `rate_extended_dist` / `rate_density_dist` | `RooExtendPdf` + base PDF | Decompose via `normalize`/`totalmass` |
-| `Uniform` | `uniform_dist` | `RooUniform` | |
-| `hepphys.Argus` | `argus_dist` | `RooArgusBG` | HS³: names match; RooFit: `resonance` → `m0`, `slope` → `c`, `power` → `p` |
-| `hepphys.BifurcatedNormal` | — | `RooBifurGauss` | |
-| `hepphys.ContinuedPoisson` | `poisson_dist` (implicit) | `RooPoisson` (`noRounding=true`) | Same parameter mapping as `Poisson`; density only, not generative |
-| `hepphys.CrystalBall` | `crystalball_dist` | `RooCBShape` | Names match directly |
-| `hepphys.DoubleSidedCrystalBall` | `crystalball_dist` (double-sided) | `RooCrystalBall` | `sigmaL` → `sigma_L` (HS³), etc. |
-| `hepphys.Landau` | `landau_dist` | `RooLandau` | HS³/RooFit `mean` → `loc`, `sigma` → `scale` (Landau has no finite mean) |
-| `hepphys.RelativisticBreitWigner` | `relativistic_breit_wigner_dist` | — | Names match HS³ |
-| `hepphys.Voigtian` | — | `RooVoigtian` | |
+| FlatPPL                           | HS³                                                  | RooFit                           | Parameter mapping                                                          |
+| --------------------------------- | ---------------------------------------------------- | -------------------------------- | -------------------------------------------------------------------------- |
+| `BinnedPoissonProcess`            | `bincounts_extended_dist` / `bincounts_density_dist` | `RooExtendPdf` + binned PDF      |                                                                            |
+| `Cauchy`                          | —                                                    | `RooBreitWigner`                 | RooBreitWigner uses full width $\Gamma = 2 \cdot \text{scale}$             |
+| `Exponential`                     | `exponential_dist`                                   | `RooExponential`                 | `rate` → `c` (HS³); RooFit: `c` = $-$`rate`                                |
+| `Gamma`                           | —                                                    | `RooGamma`                       | `shape` → `gamma`, `rate` → $1/$`beta`, `mu` = 0                           |
+| `GeneralizedNormal`               | `generalized_normal_dist`                            | —                                | Names match HS³                                                            |
+| `LogNormal`                       | `lognormal_dist`                                     | `RooLognormal`                   | RooFit: `m0` = $e^\mu$, `k` = $e^\sigma$                                   |
+| `MvNormal`                        | `multivariate_normal_dist`                           | `RooMultiVarGaussian`            | `mu` → `mean` (HS³); `cov` → `covariances` (HS³)                           |
+| `Normal`                          | `gaussian_dist` (also `normal_dist`)                 | `RooGaussian`                    | `mu` → `mean`                                                              |
+| `Poisson`                         | `poisson_dist`                                       | `RooPoisson`                     | `rate` → `mean` = $\lambda$                                                |
+| `PoissonProcess`                  | `rate_extended_dist` / `rate_density_dist`           | `RooExtendPdf` + base PDF        | Decompose via `normalize`/`totalmass`                                      |
+| `Uniform`                         | `uniform_dist`                                       | `RooUniform`                     |                                                                            |
+| `hepphys.Argus`                   | `argus_dist`                                         | `RooArgusBG`                     | HS³: names match; RooFit: `resonance` → `m0`, `slope` → `c`, `power` → `p` |
+| `hepphys.BifurcatedNormal`        | —                                                    | `RooBifurGauss`                  |                                                                            |
+| `hepphys.ContinuedPoisson`        | `poisson_dist` (implicit)                            | `RooPoisson` (`noRounding=true`) | Same parameter mapping as `Poisson`; density only, not generative          |
+| `hepphys.CrystalBall`             | `crystalball_dist`                                   | `RooCBShape`                     | Names match directly                                                       |
+| `hepphys.DoubleSidedCrystalBall`  | `crystalball_dist` (double-sided)                    | `RooCrystalBall`                 | `sigmaL` → `sigma_L` (HS³), etc.                                           |
+| `hepphys.Landau`                  | `landau_dist`                                        | `RooLandau`                      | HS³/RooFit `mean` → `loc`, `sigma` → `scale` (Landau has no finite mean)   |
+| `hepphys.RelativisticBreitWigner` | `relativistic_breit_wigner_dist`                     | —                                | Names match HS³                                                            |
+| `hepphys.Voigtian`                | —                                                    | `RooVoigtian`                    |                                                                            |
 
 #### HS³ `histfactory_dist` mapping
 
@@ -339,7 +347,7 @@ In FlatPPL the deterministic effects use broadcasting and arithmetic; each auxil
 measurement becomes its own likelihood term via `likelihoodof(functionof(distribution), aux_obs)`,
 and all terms combine with the main binned-Poisson likelihood via `joint_likelihood(...)`.
 The main likelihood wraps total expected counts in `functionof(broadcast(Poisson, expected))` and
-binds it to the observed bin counts. (`likelihoodof` takes a *kernel*, not a measure —
+binds it to the observed bin counts. (`likelihoodof` takes a _kernel_, not a measure —
 see [§06](06-measure-algebra.md#likelihoodof) — so the parameter-dependent observation and
 auxiliary measures are reified into kernels with `functionof` before binding the data.)
 
@@ -348,15 +356,15 @@ is a sample's per-bin expected counts (sample-level modifiers), `nom` is a sampl
 nominal histogram (replaced wholesale by `histosys`), and `total_nom` is the
 channel's total per-bin nominal across samples (`staterror` only).
 
-| FlatPPL deterministic effect | FlatPPL auxiliary measurement | HS³ `histfactory_dist` modifier | Notes |
-|---|---|---|---|
-| `broadcast(mul, expected, factor)` | none (free) | `normfactor` | `factor = elementof(reals)` |
-| `broadcast(mul, expected, lumi)` | `Normal(mu = lumi, sigma = sigma_lumi)` (observed at `lumi_nom`) | `lumi` | `lumi = elementof(posreals)` |
-| `broadcast(mul, expected, hepphys.interp_*(lo, 1.0, hi, alpha))` | `Normal(mu = alpha, sigma = 1.0)` (observed at `0`) | `normsys` | default `hepphys.interp_poly6_exp` |
-| `hepphys.interp_*(tmpl_dn, nom, tmpl_up, alpha)` | `Normal(mu = alpha, sigma = 1.0)` (observed at `0`) | `histosys` | default `hepphys.interp_poly6_lin`; replaces nominal directly |
-| `broadcast(mul, expected, gamma)` | none (free per-bin) | `shapefactor` | `gamma = elementof(cartpow(posreals, n_bins))` |
-| `broadcast(mul, expected, gamma)` | `broadcast(ContinuedPoisson, broadcast(mul, gamma, tau))` (observed at `tau`) | `shapesys` | `tau = broadcast(pow, broadcast(divide, nom, sigma), 2)`; non-integer `tau` requires `ContinuedPoisson` |
-| `broadcast(mul, total_nom, gamma)` | `broadcast(Normal, gamma, delta)` (observed at `1.0` per bin) | `staterror` | `delta` from quadrature sum across samples; this is the `Gauss` constraint — see the `Poisson` form in the note below |
+| FlatPPL deterministic effect                                     | FlatPPL auxiliary measurement                                                 | HS³ `histfactory_dist` modifier | Notes                                                                                                                                                                            |
+| ---------------------------------------------------------------- | ----------------------------------------------------------------------------- | ------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `broadcast(mul, expected, factor)`                               | none (free)                                                                   | `normfactor`                    | `factor = elementof(reals)`                                                                                                                                                      |
+| `broadcast(mul, expected, lumi)`                                 | `Normal(mu = lumi, sigma = sigma_lumi)` (observed at `lumi_nom`)              | `normfactor` (named `Lumi`)     | `lumi = elementof(posreals)`; HS³/ROOT models luminosity as a constrained `normfactor` named `Lumi`, not a distinct modifier type — pyhf instead has a dedicated `lumi` modifier |
+| `broadcast(mul, expected, hepphys.interp_*(lo, 1.0, hi, alpha))` | `Normal(mu = alpha, sigma = 1.0)` (observed at `0`)                           | `normsys`                       | default `hepphys.interp_poly6_exp`                                                                                                                                               |
+| `hepphys.interp_*(tmpl_dn, nom, tmpl_up, alpha)`                 | `Normal(mu = alpha, sigma = 1.0)` (observed at `0`)                           | `histosys`                      | default `hepphys.interp_poly6_lin`; replaces nominal directly                                                                                                                    |
+| `broadcast(mul, expected, gamma)`                                | none (free per-bin)                                                           | `shapefactor`                   | `gamma = elementof(cartpow(posreals, n_bins))`                                                                                                                                   |
+| `broadcast(mul, expected, gamma)`                                | `broadcast(ContinuedPoisson, broadcast(mul, gamma, tau))` (observed at `tau`) | `shapesys`                      | `tau = broadcast(pow, broadcast(divide, nom, sigma), 2)`; non-integer `tau` requires `ContinuedPoisson`                                                                          |
+| `broadcast(mul, total_nom, gamma)`                               | `broadcast(Normal, gamma, delta)` (observed at `1.0` per bin)                 | `staterror`                     | `delta` from quadrature sum across samples; this is the `Gauss` constraint — see the `Poisson` form in the note below                                                            |
 
 **Notes.** Modifiers with the same name share a single nuisance parameter; the
 translator must verify compatible auxiliary-measurement types.
@@ -412,29 +420,34 @@ pyhf JSON:
 
 ```json
 {
-    "channels": [
-        { "name": "singlechannel",
-          "samples": [
-            { "name": "signal",
-              "data": [12.0, 11.0],
-              "modifiers": [{ "name": "mu", "type": "normfactor", "data": null }]
-            },
-            { "name": "background",
-              "data": [50.0, 52.0],
-              "modifiers": [
-                { "name": "uncorr_bkguncrt", "type": "shapesys", "data": [3.0, 7.0] }
-              ]
+  "channels": [
+    {
+      "name": "singlechannel",
+      "samples": [
+        {
+          "name": "signal",
+          "data": [12.0, 11.0],
+          "modifiers": [{ "name": "mu", "type": "normfactor", "data": null }]
+        },
+        {
+          "name": "background",
+          "data": [50.0, 52.0],
+          "modifiers": [
+            {
+              "name": "uncorr_bkguncrt",
+              "type": "shapesys",
+              "data": [3.0, 7.0]
             }
           ]
         }
-    ],
-    "observations": [
-        { "name": "singlechannel", "data": [51.0, 48.0] }
-    ],
-    "measurements": [
-        { "name": "Measurement", "config": {"poi": "mu", "parameters": []} }
-    ],
-    "version": "1.0.0"
+      ]
+    }
+  ],
+  "observations": [{ "name": "singlechannel", "data": [51.0, 48.0] }],
+  "measurements": [
+    { "name": "Measurement", "config": { "poi": "mu", "parameters": [] } }
+  ],
+  "version": "1.0.0"
 }
 ```
 
@@ -479,13 +492,13 @@ block structure does not expose directly.
 FlatPPL models that express a joint distribution over parameters and observations
 (without separate likelihood objects) map to Stan. The profile includes:
 
-| FlatPPL construct | Stan equivalent |
-|---|---|
-| `draw(D(...))` | `x ~ D(...)` (generative fragment) |
-| `elementof(S)` | parameter declaration with constraints |
-| Deterministic computation | transformed parameters / model block |
-| `logweighted(lw, M)` | `target += lw` |
-| `lawof(record(...))` | implicit in block structure |
+| FlatPPL construct         | Stan equivalent                        |
+| ------------------------- | -------------------------------------- |
+| `draw(D(...))`            | `x ~ D(...)` (generative fragment)     |
+| `elementof(S)`            | parameter declaration with constraints |
+| Deterministic computation | transformed parameters / model block   |
+| `logweighted(lw, M)`      | `target += lw`                         |
+| `lawof(record(...))`      | implicit in block structure            |
 
 **What does not map.** Stan has no first-class support for:
 
@@ -501,35 +514,35 @@ FlatPPL models that express a joint distribution over parameters and observation
 The following tables summarize major correspondences; they are illustrative rather than
 exhaustive.
 
-| FlatPPL | Stan | Parameter notes |
-|---|---|---|
-| `Uniform` | `uniform` | `support` → `(alpha, beta)` bounds |
-| `Normal` | `normal` | `mu` → `mu`, `sigma` → `sigma` |
-| `Cauchy` | `cauchy` | `location` → `mu`, `scale` → `sigma` |
-| `Laplace` | `double_exponential` | `location` → `mu`, `scale` → `sigma` |
-| `VonMises` | `von_mises` | `mu` → `mu`, `kappa` → `kappa` |
-| `StudentT` | `student_t` | `nu` → `nu`; Stan has location-scale form |
-| `Logistic` | `logistic` | `mu` → `mu`, `s` → `sigma` |
-| `LogNormal` | `lognormal` | `mu` → `mu`, `sigma` → `sigma` |
-| `Exponential` | `exponential` | `rate` → `beta` (Stan uses rate) |
-| `Gamma` | `gamma` | `shape` → `alpha`, `rate` → `beta` |
-| `ChiSquared` | `chi_square` | `k` → `nu`; equivalently `Gamma(shape = k/2, rate = 0.5)` |
-| `Weibull` | `weibull` | `shape` → `alpha`, `scale` → `sigma` |
-| `InverseGamma` | `inv_gamma` | `shape` → `alpha`, `scale` → `beta` |
-| `Beta` | `beta` | `alpha` → `alpha`, `beta` → `beta` |
-| `Bernoulli` | `bernoulli` | `p` → `theta` |
-| `Categorical` | `categorical` | `p` → `theta` |
-| `Binomial` | `binomial` | `n` → `N`, `p` → `theta` |
-| `Poisson` | `poisson` | `rate` → `lambda` |
-| `NegativeBinomial` | `neg_binomial` | `alpha` → `alpha`, `beta` → `beta` |
-| `Geometric` | `neg_binomial` | special case `alpha = 1`, `beta = p/(1 - p)` (both on support {0,1,2,…}; not Stan's native trials-based `geometric`) |
-| `MvNormal` | `multi_normal` | `mu` → `mu`, `cov` → `Sigma` |
-| `Wishart` | `wishart` | `nu` → `nu`, `scale` → `Sigma` |
-| `InverseWishart` | `inv_wishart` | `nu` → `nu`, `scale` → `Sigma` |
-| `LKJ` | `lkj_corr` | `eta` → `eta`; correlation-matrix form (vs. Cholesky-factor `LKJCholesky`) |
-| `LKJCholesky` | `lkj_corr_cholesky` | `eta` → `eta` |
-| `Dirichlet` | `dirichlet` | `alpha` → `alpha` |
-| `Multinomial` | `multinomial` | `n` → `N`, `p` → `theta` |
+| FlatPPL            | Stan                 | Parameter notes                                                                                                      |
+| ------------------ | -------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| `Uniform`          | `uniform`            | `support` → `(alpha, beta)` bounds                                                                                   |
+| `Normal`           | `normal`             | `mu` → `mu`, `sigma` → `sigma`                                                                                       |
+| `Cauchy`           | `cauchy`             | `location` → `mu`, `scale` → `sigma`                                                                                 |
+| `Laplace`          | `double_exponential` | `location` → `mu`, `scale` → `sigma`                                                                                 |
+| `VonMises`         | `von_mises`          | `mu` → `mu`, `kappa` → `kappa`                                                                                       |
+| `StudentT`         | `student_t`          | `nu` → `nu`; Stan has location-scale form                                                                            |
+| `Logistic`         | `logistic`           | `mu` → `mu`, `s` → `sigma`                                                                                           |
+| `LogNormal`        | `lognormal`          | `mu` → `mu`, `sigma` → `sigma`                                                                                       |
+| `Exponential`      | `exponential`        | `rate` → `beta` (Stan uses rate)                                                                                     |
+| `Gamma`            | `gamma`              | `shape` → `alpha`, `rate` → `beta`                                                                                   |
+| `ChiSquared`       | `chi_square`         | `k` → `nu`; equivalently `Gamma(shape = k/2, rate = 0.5)`                                                            |
+| `Weibull`          | `weibull`            | `shape` → `alpha`, `scale` → `sigma`                                                                                 |
+| `InverseGamma`     | `inv_gamma`          | `shape` → `alpha`, `scale` → `beta`                                                                                  |
+| `Beta`             | `beta`               | `alpha` → `alpha`, `beta` → `beta`                                                                                   |
+| `Bernoulli`        | `bernoulli`          | `p` → `theta`                                                                                                        |
+| `Categorical`      | `categorical`        | `p` → `theta`                                                                                                        |
+| `Binomial`         | `binomial`           | `n` → `N`, `p` → `theta`                                                                                             |
+| `Poisson`          | `poisson`            | `rate` → `lambda`                                                                                                    |
+| `NegativeBinomial` | `neg_binomial`       | `alpha` → `alpha`, `beta` → `beta`                                                                                   |
+| `Geometric`        | `neg_binomial`       | special case `alpha = 1`, `beta = p/(1 - p)` (both on support {0,1,2,…}; not Stan's native trials-based `geometric`) |
+| `MvNormal`         | `multi_normal`       | `mu` → `mu`, `cov` → `Sigma`                                                                                         |
+| `Wishart`          | `wishart`            | `nu` → `nu`, `scale` → `Sigma`                                                                                       |
+| `InverseWishart`   | `inv_wishart`        | `nu` → `nu`, `scale` → `Sigma`                                                                                       |
+| `LKJ`              | `lkj_corr`           | `eta` → `eta`; correlation-matrix form (vs. Cholesky-factor `LKJCholesky`)                                           |
+| `LKJCholesky`      | `lkj_corr_cholesky`  | `eta` → `eta`                                                                                                        |
+| `Dirichlet`        | `dirichlet`          | `alpha` → `alpha`                                                                                                    |
+| `Multinomial`      | `multinomial`        | `n` → `N`, `p` → `theta`                                                                                             |
 
 **No direct Stan equivalent.** `GeneralizedNormal` has no built-in Stan distribution; express
 it via explicit `target +=` log-density contributions. `PoissonProcess` and
@@ -538,39 +551,39 @@ binned model maps to one `poisson` contribution per bin.
 
 #### Stan function mapping
 
-| FlatPPL | Stan | Notes |
-|---|---|---|
-| `exp`, `log`, `log10`, `sqrt`, `abs` | same names | |
-| `sin`, `cos`, `tan`, `asin`, `acos`, `atan` | same names | |
-| `atan2` | `atan2` | |
-| `sinh`, `cosh`, `tanh`, `asinh`, `acosh`, `atanh` | same names | |
-| `log1p`, `expm1` | `log1p`, `expm1` | |
-| `floor`, `ceil`, `round` | same names | |
-| `min`, `max` (binary) | `fmin`, `fmax` | scalar pairwise min/max |
-| `pow` | `^` operator | |
-| `gamma`, `loggamma` | `tgamma`, `lgamma` | |
-| `logit`, `invlogit` | `logit`, `inv_logit` | |
-| `probit`, `invprobit` | `inv_Phi`, `Phi` | standard-normal quantile / CDF |
-| `add`, `sub`, `mul`, `divide`, `neg` | `+`, `-`, `*`, `/`, unary `-` | |
-| `lt`, `le`, `gt`, `ge`, `equal`, `unequal` | `<`, `<=`, `>`, `>=`, `==`, `!=` | |
-| `ifelse` | ternary `? :` | |
-| `sum`, `prod`, `mean` | `sum`, `prod`, `mean` | |
-| `var`, `std` | `variance`, `sd` | both use the $1/(n-1)$ convention |
-| `maximum`, `minimum` | `max`, `min` | array reductions |
-| `cumsum` | `cumulative_sum` | Stan has no `cumprod` equivalent |
-| `logsumexp`, `softmax` | `log_sum_exp`, `softmax` | |
-| `transpose`, `adjoint` | `'` (postfix transpose) | Stan transpose is real-only |
-| `det`, `inv`, `trace` | `determinant`, `inverse`, `trace` | |
-| `logabsdet` | `log_determinant` | Stan returns $\log\det$, not $\log\lvert\det\rvert$; differ for negative determinant |
-| `lower_cholesky` | `cholesky_decompose` | |
-| `qr` | `qr_thin_Q`, `qr_thin_R` | FlatPPL returns one `record(Q, R)`; Stan splits into two calls |
-| `diagmat`, `diag` | `diag_matrix`, `diagonal` | `diagonal` extracts the main diagonal only (no `k` offset) |
-| `quadform` | `quad_form` | |
-| `linsolve` | `\` (left division) | |
-| `eye` | `identity_matrix` | |
-| `zeros`, `ones`, `fill` | `rep_vector` / `rep_matrix` | with `0`, `1`, or the fill value |
-| `linspace` | `linspaced_vector` | |
-| `broadcast` | vectorized operations | Stan auto-vectorizes for standard distributions; general `broadcast` may require explicit loops |
+| FlatPPL                                           | Stan                              | Notes                                                                                           |
+| ------------------------------------------------- | --------------------------------- | ----------------------------------------------------------------------------------------------- |
+| `exp`, `log`, `log10`, `sqrt`, `abs`              | same names                        |                                                                                                 |
+| `sin`, `cos`, `tan`, `asin`, `acos`, `atan`       | same names                        |                                                                                                 |
+| `atan2`                                           | `atan2`                           |                                                                                                 |
+| `sinh`, `cosh`, `tanh`, `asinh`, `acosh`, `atanh` | same names                        |                                                                                                 |
+| `log1p`, `expm1`                                  | `log1p`, `expm1`                  |                                                                                                 |
+| `floor`, `ceil`, `round`                          | same names                        |                                                                                                 |
+| `min`, `max` (binary)                             | `fmin`, `fmax`                    | scalar pairwise min/max                                                                         |
+| `pow`                                             | `^` operator                      |                                                                                                 |
+| `gamma`, `loggamma`                               | `tgamma`, `lgamma`                |                                                                                                 |
+| `logit`, `invlogit`                               | `logit`, `inv_logit`              |                                                                                                 |
+| `probit`, `invprobit`                             | `inv_Phi`, `Phi`                  | standard-normal quantile / CDF                                                                  |
+| `add`, `sub`, `mul`, `divide`, `neg`              | `+`, `-`, `*`, `/`, unary `-`     |                                                                                                 |
+| `lt`, `le`, `gt`, `ge`, `equal`, `unequal`        | `<`, `<=`, `>`, `>=`, `==`, `!=`  |                                                                                                 |
+| `ifelse`                                          | ternary `? :`                     |                                                                                                 |
+| `sum`, `prod`, `mean`                             | `sum`, `prod`, `mean`             |                                                                                                 |
+| `var`, `std`                                      | `variance`, `sd`                  | both use the $1/(n-1)$ convention                                                               |
+| `maximum`, `minimum`                              | `max`, `min`                      | array reductions                                                                                |
+| `cumsum`                                          | `cumulative_sum`                  | Stan has no `cumprod` equivalent                                                                |
+| `logsumexp`, `softmax`                            | `log_sum_exp`, `softmax`          |                                                                                                 |
+| `transpose`, `adjoint`                            | `'` (postfix transpose)           | Stan transpose is real-only                                                                     |
+| `det`, `inv`, `trace`                             | `determinant`, `inverse`, `trace` |                                                                                                 |
+| `logabsdet`                                       | `log_determinant`                 | Stan returns $\log\det$, not $\log\lvert\det\rvert$; differ for negative determinant            |
+| `lower_cholesky`                                  | `cholesky_decompose`              |                                                                                                 |
+| `qr`                                              | `qr_thin_Q`, `qr_thin_R`          | FlatPPL returns one `record(Q, R)`; Stan splits into two calls                                  |
+| `diagmat`, `diag`                                 | `diag_matrix`, `diagonal`         | `diagonal` extracts the main diagonal only (no `k` offset)                                      |
+| `quadform`                                        | `quad_form`                       |                                                                                                 |
+| `linsolve`                                        | `\` (left division)               |                                                                                                 |
+| `eye`                                             | `identity_matrix`                 |                                                                                                 |
+| `zeros`, `ones`, `fill`                           | `rep_vector` / `rep_matrix`       | with `0`, `1`, or the fill value                                                                |
+| `linspace`                                        | `linspaced_vector`                |                                                                                                 |
+| `broadcast`                                       | vectorized operations             | Stan auto-vectorizes for standard distributions; general `broadcast` may require explicit loops |
 
 ### Future profiles
 

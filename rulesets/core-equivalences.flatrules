@@ -12,6 +12,12 @@
 ;   ??      any term (rarely wanted in a rule — an un-carried wildcard drops a matched
 ;           position; prefer a named, carried var).
 ;   ?_* / ??*   variadic run of terms (closed / open) for arg & boundary lists.
+;   (?* <pat>) / (?+ <pat>)   ellipsis form: matches a run of <pat>, binding the vars
+;           inside <pat> as PARALLEL RUNS (one value per element). A run-variable reused
+;           in another list position pairs the two runs element-wise — the "zip" (e.g. the
+;           same ?a.. among the call args and the boundary refs forces boundary[i].ref =
+;           arg[i]). An RHS (?* …) template reconstructs element-wise. Boundary-correspondence
+;           notation; proposed extension — see flatppl-dev/stochastic-measure-rewriting.md.
 ;   (%meta (<type> <phase> <valueset>) <expr>)   transparent annotation wrapper used
 ;           as a guard: it constrains the wrapped node's inferred type, phase, value
 ;           set, or mass (§11). A guard reads INFERRED metadata — present on every
@@ -23,6 +29,9 @@
 ;           (?= ?a (%meta (?k ?? ??) ?_)) binding ?a to a node matching the pattern.
 ;           A metavariable shared across guards is a cross-node constraint — the same
 ;           ?k in two %meta guards requires both nodes to share that inferred type.
+;   (?indep <run>)   host-evaluated side predicate: the draws in <run> are mutually
+;           independent (no shared stochastic ancestor in the dependency DAG). Computed by
+;           the engine from inferred phase/ancestry — not a pattern match. Proposed.
 ;   %…      FlatPIR terminals, matched literally.
 ;
 ; Each rule is (&equiv <a> <b>) — a bidirectional equality — or (&rewrite <from> <to>)
@@ -50,7 +59,10 @@
 ;
 ; STATUS: preliminary. Lambda-bearing rules below are marked [schematic] — their `fn`
 ; bodies reify to (functionof … %specinputs …) in real FlatPIR; a compact lambda
-; shorthand is still being settled.
+; shorthand is still being settled. The (?* …) ellipsis/zip and (?indep …) predicate
+; (used by the η and stochastic↔measure rules below) are a proposed rule-language
+; extension — see flatppl-dev/stochastic-measure-rewriting.md. The dependent-chain and
+; measure→stochastic conversions are engine structural passes, not rules here (noted below).
 
 (&termrules
 
@@ -66,11 +78,38 @@
   (&equiv (kernelof ?out %specinputs ?inputs) (functionof (lawof ?out) %specinputs ?inputs))
   (&equiv (kernelof ?out %autoinputs ?inputs) (functionof (lawof ?out) %autoinputs ?inputs))
 
-  ; η-laws — reifying an application recovers the callable (§04 identity laws):
-  ;   (functionof (%call ?f ?a ?b …)  %specinputs ((… ?a) (… ?b) …))      ≡ ?f
-  ;   (kernelof  (draw (%call ?K …))  %specinputs (…))                     ≡ ?K
-  ; [schematic] — the boundary list must correspond positionally to the call args;
-  ; needs the boundary-correspondence notation (the ?_* run alone does not pin it).
+  ; η-laws — reifying an application recovers the callable (§04 identity laws). The
+  ; reified boundary re-exposes each call argument in order: the SAME run-variable ?a..
+  ; appears among the call args and among the boundary refs, pairing them element-wise
+  ; (the zip — header). ?n.. are the boundary names (the public interface, wildcarded).
+  (&equiv (functionof (%call ?f (?* ?a)) %specinputs (?* (?n ?a))) ?f)
+  (&equiv (kernelof (draw (%call ?K (?* ?a))) %specinputs (?* (?n ?a))) ?K)
+
+  ; ============================================================================
+  ; Stochastic ↔ measure conversion (§06 "Equivalence with stochastic nodes").
+  ; ============================================================================
+
+  ; Independent draws collapse to a product measure: lawof of a record of MUTUALLY
+  ; INDEPENDENT draws is the joint of their laws (§06 joint). ?n../?m.. bind element-wise
+  ; (field name, its measure) and are reused in the joint RHS (the zip). (?indep …) is a
+  ; host-evaluated side condition — the ?m.. draws share no stochastic ancestor (a
+  ; dependency-graph predicate, not a pattern; see header + dev note).
+  (&equiv (lawof (record (?* (%field ?n (draw ?m)))))
+          (joint (?* (%field ?n ?m)))
+          (?indep (?* ?m)))
+
+  ; iid is the identical case (joint of n equal independent components, §06 iid). It needs
+  ; an additional "the ?m.. run is constant" condition beyond (?indep …); deferred until
+  ; that predicate is settled, since `joint` of equal components already covers it
+  ; semantically:  (lawof (vector (?* (draw ?m)))) ≡ (iid ?m_same ?n)  [needs all-equal-run]
+
+  ; The DEPENDENT chains (jointchain / kchain / markovchain / kscan) and the
+  ; measure→stochastic decomposition (disintegrate, restrict) are NOT egglog rules: each
+  ; draw depends on the cat of all prior variates (a prefix scan) and the conditional must
+  ; be reified into a kernel (a binder). They are realized as engine structural/binder
+  ; passes (extract → reify → assert-equal → re-saturate), interleaved with re-inference.
+  ; See §06 (jointchain/kchain/disintegrate/restrict) and
+  ; flatppl-dev/stochastic-measure-rewriting.md §5.
 
   ; ============================================================================
   ; Distributions as pushforwards / reparameterizations

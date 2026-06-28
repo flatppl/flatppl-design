@@ -117,12 +117,12 @@ between leading and trailing doc-comments, are erased at lowering.
 
 Surface FlatPPL → FlatPIR examples:
 
-| Surface FlatPPL | FlatPIR |
-|---|---|
-| `mu = 0` | `(%bind mu 0)` |
-| `% Prior mean.\nmu = 0` | `(%bind mu 0 (%doc md "Prior mean."))` |
-| `mu = 0 % Prior mean.` | `(%bind mu 0 (%doc md "Prior mean."))` |
-| `%%%\nA\n\nB\n%%%\nmu = 0` | `(%bind mu 0 (%doc md "A" "" "B"))` |
+| Surface FlatPPL            | FlatPIR                                |
+| -------------------------- | -------------------------------------- |
+| `mu = 0`                   | `(%bind mu 0)`                         |
+| `% Prior mean.\nmu = 0`    | `(%bind mu 0 (%doc md "Prior mean."))` |
+| `mu = 0 % Prior mean.`     | `(%bind mu 0 (%doc md "Prior mean."))` |
+| `%%%\nA\n\nB\n%%%\nmu = 0` | `(%bind mu 0 (%doc md "A" "" "B"))`    |
 
 ### Literal values
 
@@ -201,7 +201,7 @@ no metadata, deferring it to inference rather than asserting anything about the
 value. What inference supplies depends on the node: nothing yet for an expression
 it has not reached, or one blocked upstream; the self-evident
 `((%scalar real) %fixed reals)` for a self-typing literal such as `3.14`. Tools
-therefore query a node's *inferred* metadata, not the presence of a wrapper.
+therefore query a node's _inferred_ metadata, not the presence of a wrapper.
 
 **Type inference is required to succeed on well-formed modules.** If inference
 fails — for example, an unresolvable reference or a type error in an expression —
@@ -222,7 +222,7 @@ refinement.
 encoded into the type annotation. The type annotation records structural category
 (e.g. `(%scalar real)`); the `elementof` expression records set membership
 (e.g. `posreals` as a subset of `reals`). The value-set `%meta` slot carries
-*inferred* membership for intermediate nodes — derived facts, strippable like
+_inferred_ membership for intermediate nodes — derived facts, strippable like
 all metadata — while authored membership stays structural.
 
 #### Type categories
@@ -444,7 +444,7 @@ For example:
   [reification](04-design.md#sec:functionof)); a filled list is inference
   metadata, dropped when converting to FlatPPL.
 
-**Normalization.** Bare FlatPIR preserves the surface calling convention for round-trip
+**<a id="flatpir-normalization"></a>Normalization.** Bare FlatPIR preserves the surface calling convention for round-trip
 fidelity. Optional normalization passes can convert keyword arguments to positional
 where the argument order is known (built-ins, explicitly-ordered user callables) and
 sort remaining keyword arguments into canonical order. Normalized FlatPIR is easier for
