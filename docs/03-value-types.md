@@ -204,7 +204,9 @@ field `a` in `S1`, field `b` in `S2`, etc., mirroring `joint(a = M1, b = M2, ...
 with shape `size`, mirroring `iid(M, size)` for measures. `size` is an
 integer (1-D) or a vector of positive integers (multi-axis). For example,
 `cartpow(reals, 3)` represents $\mathbb{R}^3$ and `cartpow(reals, [3, 3])`
-the set of $3 \times 3$ real matrices.
+the set of $3 \times 3$ real matrices. When `S` is a record set, the power is
+the set of tables with those columns: `cartpow(cartprod(a = reals, b = posreals), n)`
+is the set of `n`-row tables.
 
 **Standard simplex.** `stdsimplex(n)` denotes the standard $(n{-}1)$-dimensional probability
 simplex $\Delta_{n-1} = \{x \in \mathbb{R}^n : x_i \geq 0,\; \sum_i x_i = 1\}$.

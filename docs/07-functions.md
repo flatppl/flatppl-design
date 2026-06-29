@@ -25,7 +25,6 @@ Equivalent to `fn(_)`.
 | [`onehot`](#onehot) | `i, n` | length-$n$ basis vector $\mathbf{e}_i$ | positive integer, positive integer |
 | [`linspace`](#linspace) | `from, to, n` | `n` evenly spaced reals from `from` to `to` | reals, reals, positive integer |
 | [`extlinspace`](#extlinspace) | `from, to, n` | `linspace` with `-inf`/`inf` overflow edges | reals, reals, positive integer |
-| [`load_data`](#load_data) | `source, valueset` | load vector or table from external file/URL | string, valueset |
 
 <a id="vector"></a>**`vector(x1, x2, ...)`** — constructs a 1D array (vector) from the given elements.
 Equivalent to the array literal syntax `[x1, x2, ...]`.
@@ -92,40 +91,54 @@ producing n+2 edge points and n+1 bins (n-1 finite bins plus 2 overflow bins).
   points; `extlinspace(from, to, n)` produces `n + 2` total edge points (adding `-inf` and
   `inf`) and a total of `n + 1` bins (including the overflow bins).
 
-<a id="load_data"></a>**`load_data(source, valueset)`** — loads a collection of data entries from an
-external source and returns a vector or table. The shape of the result is determined
-by the declared `valueset`, which defines the set that governs each vector entry or
-table row.
+### Data loading
 
-  - `source`: a file path or URL identifying the data source. File path resolution follows
-    the same rules as with `load_module`, and URL sources are fetched and cached per
-    [Remote file caching](04-design.md#sec:url-cache).
-  - `valueset`: specifies the set that governs each vector entry or table row.
+| Function | Arguments | Description | Domains |
+|---|---|---|---|
+| [`load_data`](#load_data) | `source, valueset` | load a single value (scalar, array, record, or table) from a file/URL | string, valueset |
 
-  This loads a table with a scalar column `a` and a 3-vector column `b`:
+<a id="load_data"></a>**`load_data(source, valueset)`** — reads a single value of set
+`valueset` from an external source. `valueset` fully determines the result's shape.
 
-  ```flatppl
-  events = load_data(
-      source = "observed_events.csv",
-      valueset = cartprod(a = reals, b = cartpow(reals, 3)))
-  ```
-
-  This loads a flat vector of real values:
+  - `source`: a file path or URL. File path resolution follows the same rules as with
+    `load_module`, and URL sources are fetched and
+    [cached](04-design.md#sec:url-cache).
+  - `valueset`: the set the loaded value belongs to. A scalar set yields a scalar,
+    `cartpow` an array, `cartprod` a record, and a power of a record set a table
+    (see [sets](03-value-types.md#sets)).
 
   ```flatppl
-  weights = load_data(source = "weights.csv", valueset = reals)
+  # 1000-row table, scalar column a and 3-vector column b
+  events = load_data("events.csv", cartpow(cartprod(a = reals, b = cartpow(reals, 3)), 1000))
+
+  # record of named tensors
+  net = load_data("net.safetensors", cartprod(W = cartpow(reals, [100, 50]), b = cartpow(reals, 100)))
   ```
 
-  Tabular data with a single column can be loaded as a vector instead of a table, depending
-  on `valueset`.
+  `load_data` supports access to a subset of the fields/columns (for record and table
+  data) and entries (for vector and table data): `valueset` may omit fields/columns
+  that are not of interest. `valueset` may also describe data with `n` entries where
+  `n` is lower than the number of entries available. Only those fields/columns and
+  the first `n` entries will then be loaded. `valueset` must not contain field/column
+  names not present in the data source or request more entries than available.
+
+  Users may use the set `anything` to defer data shape description:
+  `load_data(source, anything)` is well-formed, though it will result in an
+  error if a FlatPPL engine tries to access it. It can be used as a placeholder
+  for automated tooling that inspects the data source and replaces `anything` with the
+  correct value set. FlatPPL engines should not do this as an automatic step though.
 
   All FlatPPL engines must support at least:
 
-  - **JSON** (`.json`) — containing either an array of objects (array-of-structs),
-    an object of arrays (struct-of-arrays) or a vector.
+  - **JSON** (`.json`) — array-of-structs, struct-of-arrays, or a single value.
   - **CSV and WSV** (`.csv`, `.wsv`) — comma- or whitespace-separated values with
     column names in the first row.
   - **Arrow IPC** (`.arrow`, `.arrows`) — Apache Arrow File and Stream formats.
+  - **Safetensors** (`.safetensors`) — a record whose fields are the file's tensors.
+    Interior dots in a key become double underscores and leading/trailing dots are
+    dropped (`enc.0.weight` → `enc__0__weight`); keys that then collide are a static
+    error. Dtypes (float → `reals`, integer → `integers`, bool → `booleans`) and shapes
+    are checked against `valueset`.
 
 ### Field and element access
 
@@ -493,7 +506,7 @@ unchanged if `condition` evaluates to `true`, and raises a static error otherwis
 
 ```flatppl
 n_raw = external(integers)
-data = load_data(source = "...", valueset = reals)
+data = load_data(source = "...", valueset = cartpow(reals, 1000))
 n = checked(value = n_raw, condition = equal(n_raw, lengthof(data)))
 # n is n_raw with the dimension check attached; use n downstream.
 ```

@@ -247,8 +247,8 @@ all metadata — while authored membership stays structural.
   positive integer literal or `%dynamic`. A distinct type from `(%array 1 ...)`.
 - `(%record (<field> <type>) ...)` — records with named fields.
 - `(%table (%columns (<name> <type>) ...) (%nrows <N>))` — tables with named columns
-  and row count. `<N>` is a positive integer or `%dynamic`; tables loaded via
-  `load_data` are a common source of dynamic row counts.
+  and row count. `<N>` is a positive integer or `%dynamic`; length-changing operations
+  such as `filter` are a common source of dynamic row counts.
 - `(%tuple <type1> <type2> ...)` — tuples with at least two elements.
 - `(%measure (%domain <type>) (%mass <mass>))` — closed measures. `<type>` is the
   type of values that sampling generates and on which density evaluation is
