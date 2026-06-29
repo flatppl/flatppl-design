@@ -1,0 +1,116 @@
+; FlatPPL/flatpdl — the Flat Portable Deterministic Language: the deterministic
+; subdialect of FlatPPL in which measures have been eliminated. It admits
+; deterministic value computation, the six measure-kernel evaluation primitives
+; (§07 sec:measure-eval-prims), and explicit RNG-state threading, and is the floor
+; of the profile lattice. A FlatPDL term re-parses, type/phase/shape-checks, and
+; renders as ordinary FlatPPL.
+;
+; Not admitted (the measure layer):
+;   - draw, lawof, kernelof;
+;   - the measure algebra: joint, iid, jointchain, kchain, markovchain, kscan,
+;     superpose, weighted, logweighted, normalize, truncate, pushfwd, locscale,
+;     relabel, bijection, disintegrate, restrict, bayesupdate;
+;   - the density and sampling queries over measures: logdensityof, densityof,
+;     rand, totalmass, likelihoodof, joint_likelihood;
+;   - measure-producing constructors: the distributions (§08, and the §09 hepphys
+;     and glm families), Lebesgue, Counting, Dirac.
+; A distribution name occurs only as the bare kernel argument of a builtin_*
+; primitive, never as a measure-valued application.
+;
+; Equivalently, in terms of inferred annotations: no node of type %measure or
+; %likelihood; a %kernel type only as a builtin_* argument; and no node of
+; %stochastic phase — the sole stochastic seed, draw, is absent, and randomness
+; flows through %rngstate values and builtin_sample.
+(&profile
+  ; --- parameters & data (§04): the remaining phase seeds are %parameterized
+  ;     (elementof) and %fixed (external / load_data) ---
+  ((?| elementof external)
+   (?| reals posreals nonnegreals integers nonnegintegers booleans unitinterval
+       (cartpow ?_ ?_) (stdsimplex ?_) (interval ?_ ?_)))
+  (load_data ?_*)
+
+  ; --- the six measure-kernel evaluation primitives (§07 sec:measure-eval-prims):
+  ;     the only probabilistic content of the profile. The kernel argument is a
+  ;     bare built-in constructor (matched by ?_), not a composed measure. ---
+  (builtin_logdensityof ?_ ?_ ?_)
+  (builtin_sample ?_*)                   ; (rngstate, kernel, kernel_input, n, m, …)
+  ((?| builtin_touniform builtin_fromuniform builtin_tonormal builtin_fromnormal) ?_ ?_ ?_)
+
+  ; --- explicit RNG (§07): the seed; threading is via the rngstate returned by
+  ;     builtin_sample. rand samples a measure and is not admitted. ---
+  (rnginit ?_*)
+
+  ; --- reification to a deterministic function (§04). kernelof reifies a
+  ;     measure-valued kernel and is not admitted. ---
+  (functionof ?_ ?_*)
+  (fchain ?_*)
+
+  ; --- records, field & element access (§07): static indices ---
+  (record (%field ?_ ?_)*)
+  ((?| get get0) ?_*)
+
+  ; --- array & table generation (§07) ---
+  ((?| identity vector array fill zeros ones eye onehot linspace extlinspace) ?_*)
+
+  ; --- array & table operations (§07) ---
+  ((?| cat rowstack colstack tile splitblocks joinblocks partition reverse
+       addaxes blockdiagmat bandedmat) ?_*)
+
+  ; --- convolution (§07) ---
+  ((?| conv crosscorr) ?_*)
+
+  ; --- scalar constructors (§07): numeric only; string is excluded ---
+  ((?| boolean integer real complex imag conj) ?_*)
+
+  ; --- elementary functions, operators, predicates, logic (§07) ---
+  ((?| add sub mul divide neg pow div mod) ?_*)
+  ((?| lt le gt ge equal unequal) ?_ ?_)
+  ((?| land lor lxor) ?_ ?_)
+  (lnot ?_)
+  (ifelse ?_ ?_ ?_)
+  ((?| isfinite isinf isnan iszero) ?_)
+  (checked ?_ ?_)
+  ((?| exp log log10 sqrt abs abs2
+       sin cos tan asin acos atan atan2
+       sinh cosh tanh asinh acosh atanh
+       log1p expm1 floor ceil round min max
+       cis gamma loggamma logit invlogit probit invprobit) ?_*)
+
+  ; --- linear algebra (§07) ---
+  ((?| transpose adjoint det logabsdet inv trace linsolve qr lower_cholesky
+       row_gram col_gram self_outer cross diagmat diag quadform) ?_*)
+
+  ; --- reductions, indices, sizes (§07) ---
+  ((?| sum cumsum mean var std prod cumprod maximum minimum) ?_*)
+  ((?| lengthof sizeof indicesof indicesof0) ?_)
+
+  ; --- norms & normalization (§07) ---
+  ((?| l1norm l2norm l1unit l2unit logsumexp softmax logsoftmax) ?_*)
+
+  ; --- membership & binning (§07): static sets, fixed bins ---
+  (in ?_ ?_)
+  (bincounts ?_ ?_)
+
+  ; --- approximation functions (§07) ---
+  ((?| polynomial bernstein stepwise) ?_*)
+
+  ; --- vectorization & aggregation (§04) ---
+  (broadcast ?_*)
+  (broadcasted ?_)
+  ((?| reduce scan) ?_*)
+  (aggregate ?_ ?_ ?_)
+  (metricsum ?_ ?_ ?_)
+
+  ; --- deterministic standard-module functions (§09). The §09 distributions
+  ;     (hepphys and glm families) are not admitted as calls; like all kernels
+  ;     they occur only as builtin_* arguments. ---
+  (%call (%ref specfn (?| erf erfc bessel_j bessel_y bessel_i bessel_k digamma
+                          polygamma gammainc betainc airy)) ?_*)
+  (%call (%ref polys (?| legendre hermite laguerre chebyshev)) ?_*)
+  (%call (%ref extla (?| lu svd eigen eigmax eigmin matexp kron lstsq rank)) ?_*)
+  (%call (%ref dist (?| pairwise_distance cross_distance euclidean squared_euclidean
+                        cosine manhattan chebyshev minkowski jensenshannon)) ?_*)
+  (%call (%ref hepphys (?| interp_pwlin interp_pwexp interp_poly2_lin interp_poly6_lin
+                           interp_poly6_exp resonance_breitwigner kallen
+                           breakup_momentum blatt_weisskopf
+                           wignerd wignerD wignerd_doublearg wignerD_doublearg)) ?_*))
