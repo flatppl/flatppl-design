@@ -31,6 +31,104 @@ construct models via measure algebra. FlatPPL supports both paradigms natively
 bridges between them. Profiles define the mechanically translatable fragment for each
 target.
 
+### <a id="sec:profile-specs"></a>Profile specifications
+
+A profile is specified as a tree grammar over
+[FlatPIR](11-flatpir.md#intermediate-representation): a set of productions (term
+patterns). It is purely inclusive — a fully inferred FlatPIR term conforms iff it derives
+from those productions — and is matched over **canonical** FlatPIR (keyword arguments
+positionalized and ordered, reified-callable placeholders and `aggregate` / `metricsum`
+axis labels α-canonicalized, aliases resolved; FlatPIR
+[normalization](11-flatpir.md#flatpir-normalization)), so each construct has one normal
+form to match rather than every surface variant.
+
+A specification is a single S-expression `(&profile <production>…)` with the extension
+`.flatprof`; the `&`-prefix marks a DSL keyword framing FlatPIR, not FlatPIR itself. Each
+production is a FlatPPL term with metavariable syntax:
+
+- **terminals** — FlatPIR heads, keywords, and atoms (`add`, `%scalar`, `reals`), matched
+  literally.
+- **`?name` / `?_`** — _closed_ metavariables, admitting any term the profile allows
+  (never an otherwise-illegal subterm). Metavariables are **independent** (linear): a
+  repeated name is a label, not a back-reference, so conformance stays a linear-time
+  membership test. Cross-position consistency (e.g. equal dimensions) is well-formedness,
+  guaranteed by inference beforehand, so a profile need not state it. `?_` is the
+  anonymous form.
+- **`??`** — the _open_ wildcard: any legal FlatPPL/FlatPIR term.
+- **`(?| <a> <b> …)`** — alternation: any one alternative (shorthand for one production
+  each).
+- a trailing **`*`** / **`+`** on a metavariable matches a _sequence_ (zero-or-more /
+  one-or-more): `?_*` a run of closed terms, `??+` of open ones — covering the variadic
+  heads (`vector`, `cat`, the placeholder tail of `functionof`).
+- **`(%meta (<type> <phase> <valueset>) <pattern>)`** wraps a sub-pattern where FlatPIR
+  places an annotation (see [`%meta`](11-flatpir.md#flatpir-meta-annotations)),
+  constraining the wrapped node's inferred type, phase, and value set; each slot is itself
+  a pattern (`(%scalar ??)` any scalar, `(%scalar real)` a real one). An unwrapped pattern
+  is `(%meta (?? ?? ??) …)` — no constraint.
+
+FlatPPL/full is simply `(&profile ??)`. A FlatPPL/scalarmath profile covering only
+deterministic real scalar arithmetic could read:
+
+```lisp
+(&profile
+  ((?| elementof external)
+   (?| reals integers booleans posreals nonnegreals unitinterval))
+  (functionof ?_ ?_*)
+  (neg ?_)
+  ((?| add sub mul divide pow) ?_ ?_)
+  ((?| lt le gt ge equal unequal) ?_ ?_)
+  ((?| land lor lxor) ?_ ?_)
+  (lnot ?_)
+  (ifelse ?_ ?_ ?_)
+  ((?| isfinite isinf isnan iszero) ?_)
+  ((?| abs sqrt exp log log10 sin cos tan floor ceil round) ?_)
+  ((?| min max) ?_ ?_))
+```
+
+A value type exists only where the profile admits a producer for it, so excluding the
+producers excludes the type: with no array/complex source (`elementof` over `complexes`
+or `cartpow`) or array/table/`complex` constructor, and no `draw` or kernel, the profile
+above has no array, complex, or stochastic values, and a placeholder typed `anything` is
+bounded by that universe. Only a _free_ input (`external`, or a top-level `elementof`)
+must pin its set, as the inputs above do. References are admitted as base cases (the
+binding is checked on its own), as are literals (restrictable by a wrapping `(%meta …)`).
+Constants are _production-gated_: admitted only where a production lists them — which is
+what excludes complex values, since `complexes` and `im` appear in none. Thus only calls,
+plus the constants a profile admits, need productions.
+
+A profile constrains _term shapes_; constraints on whole bindings or modules — e.g. a
+public result's value set — are stated separately, not as productions.
+
+### <a id="sec:rule-language"></a>Term-rewriting rules
+
+A profile says which terms are legal; a _term-rewriting_ layer says which terms a backend
+may substitute for one another while preserving meaning. These equivalences live in
+`.flatrules` files, each a single `(&termrules <rule>…)` form. A rule is `(&equiv <a>
+<b>)` — a bidirectional equality, usable either way — or `(&rewrite <from> <to>)`, a
+directed rewrite for cases where the reverse would not terminate; either may carry
+trailing `(?= …)` side conditions. Like a profile, rules frame FlatPIR (the `&`-prefix)
+and match over the same canonical FlatPIR.
+
+The metavariable vocabulary is the profile's, read for rewriting: `?name` is a _capture_
+(the same subterm wherever it repeats, carried across the rule), `??` any single uncarried
+term, `?_*` / `??*` a closed or open variadic run. Rewriting adds four forms:
+
+- **`(?* <pat>)` / `(?+ <pat>)`** — _ellipsis_ runs: each matches a sequence of `<pat>`,
+  binding the metavariables inside it as _parallel runs_ (one value per element). A run
+  reused in another list position pairs the two element-wise (a _zip_); an `(?* …)`
+  template on the right reconstructs element-wise.
+- **`(%meta (<type> <phase> <valueset>) <expr>)`** — the profile's annotation pattern used
+  as a _guard_: it reads the wrapped node's inferred type, phase, or value set, never
+  asserts them, is strippable, and never nests. A rewrite re-derives metadata rather than
+  copying a guard onto a new term.
+- **`(?= <v> <pat-or-expr>)`** — a trailing _side condition_: a computed binding, e.g.
+  `(?= ?n (lengthof ?mu))`, or a guarded-pattern binding, e.g. `(?= ?a (%meta (?k ?? ??)
+  ?_))`. A metavariable shared across side conditions ties the nodes to the same inferred
+  metadata.
+- **`(?indep <run>)`** — a side _predicate_: the draws in `<run>` are mutually independent
+  (no shared stochastic ancestor), decided from inferred phase and ancestry, not by
+  pattern match.
+
 ### Target system profiles
 
 Other stochastic systems will typically not support the whole semantics and
