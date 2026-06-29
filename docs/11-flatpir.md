@@ -444,7 +444,7 @@ For example:
   [reification](04-design.md#sec:functionof)); a filled list is inference
   metadata, dropped when converting to FlatPPL.
 
-**Normalization.** Bare FlatPIR preserves the surface calling convention for round-trip
+**<a id="flatpir-normalization"></a>Normalization.** Bare FlatPIR preserves the surface calling convention for round-trip
 fidelity. Optional normalization passes can convert keyword arguments to positional
 where the argument order is known (built-ins, explicitly-ordered user callables) and
 sort remaining keyword arguments into canonical order. Normalized FlatPIR is easier for
