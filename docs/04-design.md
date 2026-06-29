@@ -1148,6 +1148,19 @@ Absolute file paths are permitted but discouraged, as they prevent relocatable m
 **Aliasing** is just assignment: `sig_model = sig_module.model` creates a local alias — a
 reference to the same underlying object in the loaded module's DAG, not a clone.
 
+**Bundles.** `source` may be a bundle holding a main FlatPPL module file and
+its module and data dependencies. If `source` is a directory, `load_module`
+loads its root `main.flatppl` (which will typically itself use `load_module` and
+`load_data` to load dependencies located under that directory). If `source`
+is a ZIP file (extension `.zip`; `.flatppl.zip` recommended where practical), it
+loads `main.flatppl` from the archive root. If there is no root
+`main.flatppl` in the archive, but the archive's sole top-level entry is a
+directory containing a `main.flatppl`, it is loaded from there. A missing
+`main.flatppl` is an error.
+
+Within a bundle (directory or ZIP), relative paths — in both `load_module` and
+`load_data` — resolve only inside the bundle and must not escape its root via `..`.
+
 ### FlatPPL version compatibility
 
 A FlatPPL module may declare which versions of FlatPPL it is compatible with
