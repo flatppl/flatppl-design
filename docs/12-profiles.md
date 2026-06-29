@@ -355,7 +355,7 @@ channel's total per-bin nominal across samples (`staterror` only).
 | FlatPPL deterministic effect | FlatPPL auxiliary measurement | HS³ `histfactory_dist` modifier | Notes |
 |---|---|---|---|
 | `broadcast(mul, expected, factor)` | none (free) | `normfactor` | `factor = elementof(reals)` |
-| `broadcast(mul, expected, lumi)` | `Normal(mu = lumi, sigma = sigma_lumi)` (observed at `lumi_nom`) | `lumi` | `lumi = elementof(posreals)` |
+| `broadcast(mul, expected, lumi)` | `Normal(mu = lumi, sigma = sigma_lumi)` (observed at `lumi_nom`) | `normfactor` (named `Lumi`) | `lumi = elementof(posreals)`; HS³/ROOT models luminosity as a constrained `normfactor` named `Lumi`, not a distinct modifier type — pyhf instead has a dedicated `lumi` modifier |
 | `broadcast(mul, expected, hepphys.interp_*(lo, 1.0, hi, alpha))` | `Normal(mu = alpha, sigma = 1.0)` (observed at `0`) | `normsys` | default `hepphys.interp_poly6_exp` |
 | `hepphys.interp_*(tmpl_dn, nom, tmpl_up, alpha)` | `Normal(mu = alpha, sigma = 1.0)` (observed at `0`) | `histosys` | default `hepphys.interp_poly6_lin`; replaces nominal directly |
 | `broadcast(mul, expected, gamma)` | none (free per-bin) | `shapefactor` | `gamma = elementof(cartpow(posreals, n_bins))` |
