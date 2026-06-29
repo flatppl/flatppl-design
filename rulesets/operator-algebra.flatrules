@@ -1,0 +1,45 @@
+; operator-algebra.flatrules
+;
+; Algebraic properties of FlatPIR operators, consumed by the term-rewriting layer
+; alongside the equivalence rules (core-equivalences.flatrules). A declared property
+; lets the matching rules be written ONCE per operand order: the engine realizes it
+; its own way — canonical operand ordering for a greedy / canonical-form pass; native
+; AC(I) matching or a controlled birewrite for an e-graph (egglog). Same notation as
+; the rules (§12); the leading & marks a DSL keyword that frames
+; FlatPIR heads, not FlatPIR itself.
+;
+; A bare marker means "match this head modulo the property, for all operands". A
+; property that holds only on some operand TYPES is not a bare marker — it is a
+; guarded &equiv (see mul, below).
+
+; --- commutative:  f(a, b) = f(b, a) ----------------------------------------------
+; Exact for every listed head, IEEE floating point included (a+b and a*b commute;
+; only NaN payloads, left unspecified, may differ). superpose is measure addition,
+; a commutative monoid; joint / cartprod are NOT here — their variate layout is an
+; ordered cat (§06).
+(&commutative superpose add min max land lor lxor equal unequal)
+
+; --- associative:  f(f(a, b), c) = f(a, f(b, c)) ----------------------------------
+; add and mul are deliberately ABSENT: real addition / multiplication are associative
+; over ℝ but NOT in IEEE arithmetic (reassociation changes rounding), so declaring
+; them would be unsound for numeric codegen. Integer add/mul are associative, but a
+; per-head marker can't carry that type condition; an engine wanting integer
+; reassociation applies it under a type guard instead.
+(&associative superpose min max land lor lxor)
+
+; --- idempotent:  f(…, a, …, a, …) = f(…, a, …) -----------------------------------
+; Reserved for a future set(…) constructor (a set is commutative + associative +
+; idempotent — ACI).
+; (&idempotent set)
+
+; --- conditional commutativity: mul -----------------------------------------------
+; mul commutes for SCALARS only — matrix·matrix and matrix·vector do not — so it is a
+; guarded equivalence, not a bare marker. The shared ?k ties both operands to the
+; same scalar type via their inferred %meta (a guard reads inferred metadata, §11,
+; whether or not the term carries a serialized wrapper). Rarer to fire than the bare
+; markers, so a guarded birewrite is an acceptable cost.
+(&termrules
+  (&equiv (mul ?a ?b) (mul ?b ?a)
+    (?= ?k (%scalar (?| real integer complex)))
+    (?= ?a (%meta (?k ?? ??) ?_))
+    (?= ?b (%meta (?k ?? ??) ?_))))

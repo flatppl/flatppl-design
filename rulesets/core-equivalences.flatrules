@@ -1,0 +1,192 @@
+; core-equivalences.flatrules
+;
+; FlatPPL/FlatPIR term equivalences, drawn from the normative spec (§04 reification,
+; §06 measure algebra, §08 distributions). Bidirectional: each entry lists mutually
+; equivalent FlatPIR patterns. A term-rewriting engine asserts these as equalities
+; (equality saturation) and a backend extracts the form legal for its target profile
+; (see §12). These are profile-INDEPENDENT semantic truths.
+;
+; Notation (shared with profile specs, §12), with two differences for rules:
+;   ?name   capture variable — the SAME subterm wherever the name repeats, carried
+;           across the rule (universally quantified: "for all ?name, … = …").
+;   ??      any term (rarely wanted in a rule — an un-carried wildcard drops a matched
+;           position; prefer a named, carried var).
+;   ?_* / ??*   variadic run of terms (closed / open) for arg & boundary lists.
+;   (?* <pat>) / (?+ <pat>)   ellipsis form: matches a run of <pat>, binding the vars
+;           inside <pat> as PARALLEL RUNS (one value per element). A run-variable reused
+;           in another list position pairs the two runs element-wise — the "zip" (e.g. the
+;           same ?a.. among the call args and the boundary refs forces boundary[i].ref =
+;           arg[i]). An RHS (?* …) template reconstructs element-wise. Boundary-correspondence
+;           notation (§12).
+;   (%meta (<type> <phase> <valueset>) <expr>)   transparent annotation wrapper used
+;           as a guard: it constrains the wrapped node's inferred type, phase, or value
+;           set (§11; a measure's total-mass class is part of its type). A guard reads
+;           INFERRED metadata — present on every node after inference, whether or not the
+;           serialized term wrote a wrapper; it never asserts metadata. Strippable; never nested.
+;   (?= ?v <pat|expr>)   side condition / where-clause, trailing after the two sides,
+;           one binding per clause. Two forms: a COMPUTED binding
+;           (?= ?n (lengthof ?mu)), and a GUARDED-PATTERN binding
+;           (?= ?a (%meta (?k ?? ??) ?_)) binding ?a to a node matching the pattern.
+;           A metavariable shared across guards is a cross-node constraint — the same
+;           ?k in two %meta guards requires both nodes to share that inferred type.
+;   (?indep <run>)   host-evaluated side predicate: the draws in <run> are mutually
+;           independent (no shared stochastic ancestor in the dependency DAG). Computed by
+;           the engine from inferred phase/ancestry — not a pattern match.
+;   %…      FlatPIR terminals, matched literally.
+;
+; Each rule is (&equiv <a> <b>) — a bidirectional equality — or (&rewrite <from> <to>)
+; for a directed rewrite (used where the reverse would loop or blow up). Both, plus
+; optional trailing (?= …) side conditions, frame FlatPIR terms; the leading & marks
+; them as DSL keywords, not FlatPIR. This core file is all &equiv: semantic truths a
+; backend reads in either direction. The whole file is a single (&termrules …) form.
+;
+; Matching presupposes CANONICAL FlatPIR (§11 normalization): keyword args
+; positionalized + ordered, reified-callable placeholders and aggregate/metricsum
+; axis labels α-canonicalized, aliases resolved. Without it a rule would have to
+; spell out every surface variant of the same term.
+;
+; %meta is analysis output, not term structure: inference WRITES it, rules only GUARD
+; on it. A rewrite that builds a new term does not copy %meta onto it — the metadata
+; is re-derived (an e-class analysis in a saturating engine; a re-run of inference
+; between passes in a greedy one). Two terms differing only in %meta are the same
+; term for rewriting.
+;
+; Operator algebraic properties — commutativity, associativity, idempotence, and
+; mul's scalar-only (conditional) commutativity — are declared in
+; operator-algebra.flatrules; rules here assume one operand order and the engine
+; matches modulo the declared property (canonical operand sort, or AC matching for an
+; e-graph).
+;
+; Some pushforward equivalences below use a lambda in the pushforward; they are shown
+; in comment form because their `fn` bodies reify to the full (functionof … %specinputs
+; …) and have no compact inline rule form. The (?* …) ellipsis/zip and (?indep …)
+; predicate (used by the η and stochastic↔measure rules below) are defined in §12. The
+; dependent-chain and measure→stochastic conversions are engine structural passes, not
+; rules here (noted below).
+
+(&termrules
+
+  ; ============================================================================
+  ; The FlatPPL probabilistic reification calculus.
+  ; ============================================================================
+
+  ; β-law (value ↔ measure): lawof absorbs draw.
+  (&equiv (lawof (draw ?m)) ?m)
+
+  ; Definition of kernelof as functionof-of-lawof (§04). The reified input list is
+  ; carried whole as ?inputs — no variadics needed.
+  (&equiv (kernelof ?out %specinputs ?inputs) (functionof (lawof ?out) %specinputs ?inputs))
+  (&equiv (kernelof ?out %autoinputs ?inputs) (functionof (lawof ?out) %autoinputs ?inputs))
+
+  ; η-laws — reifying an application recovers the callable (§04 identity laws). The
+  ; reified boundary re-exposes each call argument in order: the SAME run-variable ?a..
+  ; appears among the call args and among the boundary refs, pairing them element-wise
+  ; (the zip — header). ?n.. are the boundary names (the public interface, wildcarded).
+  (&equiv (functionof (%call ?f (?* ?a)) %specinputs (?* (?n ?a))) ?f)
+  (&equiv (kernelof (draw (%call ?K (?* ?a))) %specinputs (?* (?n ?a))) ?K)
+
+  ; ============================================================================
+  ; Stochastic ↔ measure conversion (§06 "Equivalence with stochastic nodes").
+  ; ============================================================================
+
+  ; Independent draws collapse to a product measure: lawof of a record of MUTUALLY
+  ; INDEPENDENT draws is the joint of their laws (§06 joint). ?n../?m.. bind element-wise
+  ; (field name, its measure) and are reused in the joint RHS (the zip). (?indep …) is a
+  ; host-evaluated side condition — the ?m.. draws share no stochastic ancestor (a
+  ; dependency-graph predicate, not a pattern; see header).
+  (&equiv (lawof (record (?* (%field ?n (draw ?m)))))
+          (joint (?* (%field ?n ?m)))
+          (?indep (?* ?m)))
+
+  ; iid is the identical case (joint of n equal independent components, §06 iid). It needs
+  ; an additional "the ?m.. run is constant" condition beyond (?indep …); deferred until
+  ; that predicate is settled, since `joint` of equal components already covers it
+  ; semantically:  (lawof (vector (?* (draw ?m)))) ≡ (iid ?m_same ?n)  [needs all-equal-run]
+
+  ; The DEPENDENT chains (jointchain / kchain / markovchain / kscan) and the
+  ; measure→stochastic decomposition (disintegrate, restrict) are NOT egglog rules: each
+  ; draw depends on the cat of all prior variates (a prefix scan) and the conditional must
+  ; be reified into a kernel (a binder). They are realized as engine structural/binder
+  ; passes (extract → reify → assert-equal → re-saturate), interleaved with re-inference.
+  ; See §06 (jointchain/kchain/disintegrate/restrict).
+
+  ; ============================================================================
+  ; Distributions as pushforwards / reparameterizations
+  ; ============================================================================
+
+  ; LogNormal is the exp-pushforward of a Normal.
+  (&equiv (LogNormal (%kwarg mu ?mu) (%kwarg sigma ?sigma))
+          (pushfwd exp (Normal (%kwarg mu ?mu) (%kwarg sigma ?sigma))))
+
+  ; InverseWishart is the inverse-pushforward of a Wishart with inverted scale.
+  (&equiv (InverseWishart (%kwarg nu ?nu) (%kwarg scale ?scale))
+          (pushfwd inv (Wishart (%kwarg nu ?nu) (%kwarg scale (inv ?scale)))))
+
+  ; LKJ correlation matrices are the row-Gram of their Cholesky factor.
+  (&equiv (LKJ (%kwarg n ?n) (%kwarg eta ?eta))
+          (pushfwd row_gram (LKJCholesky (%kwarg n ?n) (%kwarg eta ?eta))))
+
+  ; StudentT special cases.
+  (&equiv (StudentT (%kwarg nu 1))   (Cauchy (%kwarg location 0) (%kwarg scale 1)))
+  (&equiv (StudentT (%kwarg nu inf)) (Normal (%kwarg mu 0) (%kwarg sigma 1)))
+
+  ; ChiSquared(k) is a Gamma.
+  (&equiv (ChiSquared (%kwarg k ?k)) (Gamma (%kwarg shape (divide ?k 2)) (%kwarg rate 0.5)))
+
+  ; Weibull with unit shape is Exponential (scale = 1/rate).
+  (&equiv (Weibull (%kwarg shape 1) (%kwarg scale ?s)) (Exponential (%kwarg rate (divide 1 ?s))))
+
+  ; Poisson at zero rate is a point mass at 0 (§08).
+  (&equiv (Poisson (%kwarg rate 0)) (Dirac (%kwarg value 0)))
+
+  ; --- lambda-bearing pushforwards (shown commented; fn bodies reify to functionof) ---
+  ; Cauchy is the location-scale pushforward of StudentT(1):
+  ;   (&equiv (Cauchy (%kwarg location ?loc) (%kwarg scale ?s))
+  ;           (pushfwd (fn (add ?loc (mul ?s _))) (StudentT (%kwarg nu 1))))
+  ; InverseGamma is the reciprocal-pushforward of a Gamma:
+  ;   (&equiv (InverseGamma (%kwarg shape ?a) (%kwarg scale ?b))
+  ;           (pushfwd (fn (divide 1 _)) (Gamma (%kwarg shape ?a) (%kwarg rate ?b))))
+  ; Categorical/Categorical0 differ by a unit index shift:
+  ;   (&equiv (Categorical0 (%kwarg p ?p))
+  ;           (pushfwd (fn (sub _ 1)) (Categorical (%kwarg p ?p))))
+  ; MvNormal is the affine pushforward of standard iid normals (needs a ?= binding):
+  ;   (&equiv (MvNormal (%kwarg mu ?mu) (%kwarg cov ?cov))
+  ;           (pushfwd (fn (add ?mu (mul (lower_cholesky ?cov) _)))
+  ;                    (iid (Normal (%kwarg mu 0) (%kwarg sigma 1)) ?n))
+  ;           (?= ?n (lengthof ?mu)))
+
+  ; ============================================================================
+  ; Measure algebra
+  ; ============================================================================
+
+  ; Uniform is normalized Lebesgue over its support.
+  (&equiv (Uniform (%kwarg support ?S)) (normalize (Lebesgue (%kwarg support ?S))))
+
+  ; IID of Lebesgue is Lebesgue over the cartesian power.
+  (&equiv (iid (Lebesgue (%kwarg support ?S)) ?n) (Lebesgue (%kwarg support (cartpow ?S ?n))))
+
+  ; --- lambda-bearing pushforwards (shown commented; fn bodies reify to functionof) ---
+  ; locscale is an affine pushforward:
+  ;   (&equiv (locscale ?m ?shift ?scale) (pushfwd (fn (add (mul ?scale _) ?shift)) ?m))
+  ; bayesupdate lowers to logweighted:
+  ;   (&equiv (bayesupdate ?L ?prior) (logweighted (fn (logdensityof ?L _)) ?prior))
+
+  ; ============================================================================
+  ; Normalization and total mass
+  ; ============================================================================
+
+  ; normalize is the identity on an already-normalized measure: a %meta mass guard on
+  ; the operand turns a total-mass fact into a rewrite — dropping a Staton
+  ; commutativity boundary (§13).
+  (&equiv (normalize (%meta ((%measure (%domain ??) (%mass %normalized)) ?? ??) ?m))
+          ?m))
+
+; ----------------------------------------------------------------------------------
+; NOTES
+; - The commented lambda-bearing rules use the full reified functionof form for their
+;   `fn` bodies, as does the η-law boundary correspondence.
+; - Density-evaluation rules (e.g. the §06 pushfwd change-of-variables for
+;   logdensityof) are a separate category — they rewrite density terms, not measures —
+;   and belong in their own ruleset.
+; - Standard-module GLM identities (§09, e.g. BernoulliLogitGLM ≡ Bernoulli(invlogit(…)))
+;   belong in a per-module ruleset, not this core file.
