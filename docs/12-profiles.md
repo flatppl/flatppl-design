@@ -48,12 +48,13 @@ production is a FlatPPL term with metavariable syntax:
 
 - **terminals** — FlatPIR heads, keywords, and atoms (`add`, `%scalar`, `reals`), matched
   literally.
-- **`?name` / `?_`** — _closed_ metavariables, admitting any term the profile allows
-  (never an otherwise-illegal subterm). Metavariables are **independent** (linear): a
-  repeated name is a label, not a back-reference, so conformance stays a linear-time
-  membership test. Cross-position consistency (e.g. equal dimensions) is well-formedness,
-  guaranteed by inference beforehand, so a profile need not state it. `?_` is the
-  anonymous form.
+- **`?_`** — the _closed_ metavariable, admitting any term the profile allows (never an
+  otherwise-illegal subterm). Profiles use no named metavariables: each `?_` is
+  **independent**, matched on its own, so conformance stays a linear-time membership test
+  and a profile never asserts that two positions are equal. Cross-position consistency
+  (e.g. equal dimensions) is well-formedness, guaranteed by inference beforehand, so a
+  profile need not state it. (A capturing `?name` exists only in the rewriting layer
+  below.)
 - **`??`** — the _open_ wildcard: any legal FlatPPL/FlatPIR term.
 - **`(?| <a> <b> …)`** — alternation: any one alternative (shorthand for one production
   each).
@@ -109,9 +110,10 @@ directed rewrite for cases where the reverse would not terminate; either may car
 trailing `(?= …)` side conditions. Like a profile, rules frame FlatPIR (the `&`-prefix)
 and match over the same canonical FlatPIR.
 
-The metavariable vocabulary is the profile's, read for rewriting: `?name` is a _capture_
-(the same subterm wherever it repeats, carried across the rule), `??` any single uncarried
-term, `?_*` / `??*` a closed or open variadic run. Rewriting adds four forms:
+Rules reuse the profile wildcards (`?_`, `??`, `(?|…)`, a trailing `*` / `+`), which match
+without capturing, and add a _capture_ variable `?name` — the same subterm wherever it
+repeats, carried across the rule so the right-hand side can refer back to it (`?_*` / `??*`
+are the uncaptured variadic runs). Rewriting then adds four forms:
 
 - **`(?* <pat>)` / `(?+ <pat>)`** — _ellipsis_ runs: each matches a sequence of `<pat>`,
   binding the metavariables inside it as _parallel runs_ (one value per element). A run

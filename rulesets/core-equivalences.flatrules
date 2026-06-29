@@ -6,7 +6,8 @@
 ; (equality saturation) and a backend extracts the form legal for its target profile
 ; (see §12). These are profile-INDEPENDENT semantic truths.
 ;
-; Notation (shared with profile specs, §12), with two differences for rules:
+; Notation: the profile wildcards (§12) — ?_, ??, (?|…), %meta, trailing */+ — plus the
+; rules-only forms below. Profiles have no named metavars; ?name is a rule capture:
 ;   ?name   capture variable — the SAME subterm wherever the name repeats, carried
 ;           across the rule (universally quantified: "for all ?name, … = …").
 ;   ??      any term (rarely wanted in a rule — an un-carried wildcard drops a matched
