@@ -150,7 +150,7 @@ integer literal index (starting at 1). Decomposition as in `a, b, c = (...)` is 
 **Tuples are objects, not values.** They have no `valueset`, are not drawn from
 measures, and are not part of the measure algebra. Specifically:
 
-- A tuple may not appear inside another tuple, array, record, or table.
+- A tuple may not appear inside an array, record, or table, but may appear inside another tuple (tuples nest).
 - `elementof(...)` and `external(...)` may not produce tuples.
 - Measures, kernels, and likelihoods never use tuples as their domain.
 - `==`/`equal` does not compare tuples.

@@ -202,6 +202,10 @@ To evaluate a density at many points (e.g. a grid for numerical integration or p
 
   is equivalent to `joint(relabel(M1, ["name1"]), relabel(M2, ["name2"]))`.
 
+  In this keyword form, a record-valued component becomes a nested record under its
+  name — the name adds a level, it does not merge the inner fields (unlike the
+  positional `cat` form above).
+
   For kernels, `joint(K1, K2, ...)` results in a kernel that fans a single input out
   to all component kernels, so each of them receives the same input.
 

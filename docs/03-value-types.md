@@ -84,8 +84,8 @@ scalars, vectors, and matrices.
 ### Records
 
 Records comprise ordered named fields, written as `record(name1=val1, name2=val2, ...)`. Field
-values may be scalars or arrays, but not records. Field access uses dot syntax:
-`r.name1` (lowers to `get(r, "name1")`). Field order is part of the record's identity:
+values may be scalars, arrays, or records. Field access uses dot syntax:
+`r.name1` (lowers to `get(r, "name1")`); nested fields chain, e.g. `r.a.b`. Field order is part of the record's identity:
 `record(a=1, b=2)` and `record(b=2, a=1)` are distinct values. This is significant
 for alignment with parameter spaces and for deterministic serialization.
 Fields are accessed by name, not by position — `get(r, i)` is not supported to avoid
@@ -133,8 +133,13 @@ L_domain = cartprod(a = interval(0, 5), b = cartpow(interval(-10, 10), 3), c = i
 
 ### Tables
 
-Tables are datasets that consist of named columns of equal length.
-Table columns must be vectors, as using higher-dimensional arrays as columns would require a leading-axis convention for row iteration and broadcasting, which FlatPPL intentionally avoids.
+Tables are datasets that consist of named columns. All columns must have the same
+length (row count). Each column is a vector or a table; a vector column's elements may
+themselves be arrays (e.g. a 3-vector per entry). A column may not itself be a
+higher-dimensional array, as this would require a leading-axis convention for row
+iteration and broadcasting, which FlatPPL intentionally avoids.
+Each row of a table is a record; if some columns of the table are tables themselves,
+the corresponding entries of the row records are records themselves.
 
 Tables are constructed from columns via `table(col1 = [...], col2 = [...])`:
 
