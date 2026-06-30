@@ -134,11 +134,13 @@ producing n+2 edge points and n+1 bins (n-1 finite bins plus 2 overflow bins).
   - **CSV and WSV** (`.csv`, `.wsv`) — comma- or whitespace-separated values with
     column names in the first row.
   - **Arrow IPC** (`.arrow`, `.arrows`) — Apache Arrow File and Stream formats.
-  - **Safetensors** (`.safetensors`) — a record whose fields are the file's tensors.
-    Interior dots in a key become double underscores and leading/trailing dots are
-    dropped (`enc.0.weight` → `enc__0__weight`); keys that then collide are a static
-    error. Dtypes (float → `reals`, integer → `integers`, bool → `booleans`) and shapes
-    are checked against `valueset`.
+  - **Safetensors** (`.safetensors`) — a nested record whose leaves are the file's
+    tensors: a key's dot-separated segments form a record path (`enc.0.weight` → field
+    `weight` of record `0` of record `enc`), so the file's module hierarchy becomes
+    nested records. Leading and trailing dots are ignored. Safetensors content
+    that uses a key both as a prefix and a leaf (e.g. both `enc.0` and `enc.0.weight`) cannot be loaded in FlatPPL. Dtypes
+    (float → `reals`, integer → `integers`, bool → `booleans`) and shapes are checked
+    against `valueset`.
 
 ### Field and element access
 
