@@ -535,6 +535,20 @@ After substitution, `mu`, `tau`, `theta` are independent inputs of
 `forward_kernel`. In this specific example `y` depends only on `theta`, so
 the output of `forward_kernel` does not depend on `mu` or `tau`.
 
+**Reification and module scope.** `functionof` and `kernelof` reify within the
+current module only: a parameterized value reached through a loaded-module
+reference cannot become an input — neither by the automatic trace nor as an
+explicit boundary node — so such a reification is a static error. A loaded
+module's callables and fixed values may be used in the reified DAG (applied,
+or referenced and closed over); only taking a cross-module parameterized value
+as an input is disallowed.
+
+Note that `lawof` reifies a measure, which has no input list, so it is
+unrestricted — a measure may reference cross-module values, keeping
+`lawof(draw(m))` equivalent to `m` across module boundaries. A reified
+measure that has a parametric dependency on a node defined in another
+module cannot then be reified to a kernel, due to the restriction above.
+
 ### Interface adaptation
 
 FlatPPL provides `relabel` for structural renaming of outputs. At the value level,
