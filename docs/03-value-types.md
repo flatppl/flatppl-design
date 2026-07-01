@@ -197,10 +197,8 @@ Additional sets may be constructed using the following language constructs:
 
 **Interval.** `interval(lo, hi)` denotes the closed interval $[lo, hi]$.
 
-**Cartesian product.** `cartprod(S1, S2, ...)` produces a Cartesian product of sets `S1`, `S2`, etc., mirroring `joint(M1, M2, ...)` for measures. The result is the set of arrays whose
-elements lie in the respective component sets. For example, `cartprod(reals, posreals)`
-is the set of 2-element arrays with the first element in $\mathbb{R}$ and the second in
-$(0, +\infty]$.
+**Cartesian product.** `cartprod(S1, S2, ...)` produces a Cartesian product of sets `S1`, `S2`, etc., mirroring `joint(M1, M2, ...)` for measures. Each member is the `cat` of one element per component set (so vector components concatenate). The resulting
+set is a set of arrays, not a set of tuples. The element type is the common type of the component element types. For example, `cartprod(reals, posreals)` is the set of 2-element arrays `[a, b]` with `a` in $\mathbb{R}$ and `b` in $(0, +\infty]$, and `cartprod(reals, integers)` is the set of real 2-vectors `[a, b]` with `a` in $\mathbb{R}$ and `b` in $\mathbb{Z}$ — real-valued since `integers` $\subset$ `reals`, with the second element restricted to integers.
 
 The keyword form `cartprod(a = S1, b = S2, ...)` produces a set of records with
 field `a` in `S1`, field `b` in `S2`, etc., mirroring `joint(a = M1, b = M2, ...)`.
