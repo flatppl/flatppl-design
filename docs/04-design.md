@@ -117,7 +117,7 @@ or may not be significant. The total number of inputs is never zero:
 - `record` and `table`: Named variadic inputs with significant order.
 - `functionof` and `kernelof`: One distinguished input, plus optional variadic
   named inputs with significant order.
-- `lawof`, `fixed`: One distinguished input.
+- `lawof`, `fixed`, `inverseof`: One distinguished input.
 - `broadcast`: One distinguished input for the function to be broadcast, plus
   named or unnamed inputs that match the inputs of that function.
 - `broadcasted`: One distinguished input.
@@ -131,6 +131,8 @@ or may not be significant. The total number of inputs is never zero:
   no significant order.
 - `standard_module`: Two distinguished inputs.
 - `aggregate`, `metricsum`, `markovchain`, `kscan`: Three distinguished inputs.
+- `ksuperpose`: Two distinguished inputs (the kernel and the weight vector); the
+  resulting kernel is applied separately to the parameter family.
 - `load_data`: One distinguished input plus optional variadic named inputs with
   significant order.
 - `checked`: Two distinguished inputs.
@@ -607,6 +609,18 @@ semantically identical to `f`, but engines can use the inverse and volume elemen
 computing densities of pushforward measures. `logvolume` may be a function or a scalar
 (`0` for volume-preserving maps). See [pushfwd](06-measure-algebra.md#transformation-and-projection)
 for examples.
+
+**`inverseof(f)`** denotes the inverse of `f`. It is always constructible and satisfies
+`inverseof(inverseof(f))` $\equiv$ `f` as a structural identity, but it does not assert
+that `f` is bijective. The result is *executable* — callable, broadcastable,
+composable — only when an inverse of `f` is statically known: a built-in
+[known bijection](06-measure-algebra.md#engine-contract-for-pushfwd-density-evaluation),
+a `bijection`-annotated function, a [`valuemap`](07-functions.md#finite-value-maps), or
+`inverseof` of one of these. Otherwise it is a non-executable inverse: it may be bound
+and passed to a further `inverseof`, but any other use — calling, broadcasting,
+composing — is a static error. This mirrors `pushfwd` density evaluation, which is
+constructible for any `f` but evaluable only when the inverse is known. FlatPIR types a
+non-executable inverse as [`%noinverse`](11-flatpir.md#type-categories).
 
 ### Placeholders and holes
 

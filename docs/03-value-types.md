@@ -26,7 +26,17 @@ phase = cis(3 * pi / 4)       # unit-modulus complex from angle
 
 When a real and a complex value meet in arithmetic, the real is promoted to complex with zero imaginary part.
 
-**Scalar value categories and sets.** FlatPPL distinguishes boolean, integer, real, and complex scalar values operationally. In particular, conditionals and logical operators require boolean values. However, the predefined value sets satisfy the canonical inclusions `booleans` $\subset$ `integers` $\subset$ `reals`, and there is a canonical embedding of `reals` into `complexes`. Arithmetic may use these canonical embeddings implicitly where specified by the language.
+**String.** An opaque text label like `"electron"` or `"signal"`, written as a string
+literal. Strings are atomic: they admit equality and a total order (lexicographic by
+Unicode code point), but no arithmetic, indexing, concatenation, or any other
+generation, and no implicit Unicode normalization — a string is exactly its code-point
+sequence. Engines may encode strings as integers or hashes internally; since models
+cannot generate strings, this encoding is unobservable, so string-labeled models still
+run on numerical and accelerator backends. Strings are the natural carrier for
+categorical labels (see [finite sets](#sets) and
+[`ksuperpose`](06-measure-algebra.md#additive-superposition)).
+
+**Scalar value categories and sets.** FlatPPL distinguishes boolean, integer, real, complex, and string scalar values operationally. In particular, conditionals and logical operators require boolean values. However, the predefined value sets satisfy the canonical inclusions `booleans` $\subset$ `integers` $\subset$ `reals`, and there is a canonical embedding of `reals` into `complexes`. Arithmetic may use these canonical embeddings implicitly where specified by the language.
 
 ### Predefined constants
 
@@ -45,6 +55,7 @@ When a real and a complex value meet in arithmetic, the real is promoted to comp
 | `integers` | Set | The set of all integers ($\mathbb{Z}$). Default support for `Counting` |
 | `booleans` | Set | The set $\{\mathrm{false}, \mathrm{true}\}$ |
 | `complexes` | Set | The set of all complex numbers ($\mathbb{C}$) |
+| `strings` | Set | The set of all strings (opaque ordered labels) |
 | `rngstates` | Set | The set of RNG state values (algorithm-dependent opaque values) |
 | `anything` | Set | Generic placeholder set for untyped interfaces (see [sets](#sets)) |
 
@@ -187,6 +198,7 @@ regions, and analysis regions. The predefined sets are:
 - `integers` — $\mathbb{Z}$, the set of all integers.
 - `booleans` — $\{\mathrm{false}, \mathrm{true}\}$.
 - `complexes` — $\mathbb{C}$, the set of all complex numbers.
+- `strings` — the set of all strings (opaque ordered labels).
 - `anything` — a broad placeholder set for generic interfaces (e.g., anonymous functions
   via holes). Not formally the union of all other sets; it signals that no specific type
   constraint is imposed.
@@ -216,6 +228,16 @@ simplex $\Delta_{n-1} = \{x \in \mathbb{R}^n : x_i \geq 0,\; \sum_i x_i = 1\}$.
 `Lebesgue(support = stdsimplex(n))` is the intrinsic $(n{-}1)$-dimensional Lebesgue
 measure on the simplex, embedded in $\mathbb{R}^n$: it measures surface area within the
 simplex and assigns zero mass to sets that do not intersect it.
+
+**Finite set.** `finiteset(a, b, c, ...)` denotes the finite set of the given scalar
+values, which must be distinct and of one element type (duplicates are a static error).
+`setof(v)` builds the same set from a vector `v`, so the cardinality equals
+`lengthof(v)` and is statically known when `v`'s length is. Finite sets are discrete
+domains and supports: `elementof(finiteset("a", "b", "c"))` declares a string-labeled
+parameter, `Counting(support = setof(labels))` is the counting measure on those labels.
+A finite set is membership-only and unordered; ordering comes from the generating
+vector, and [`sort`](07-functions.md#sec:functions) recovers a canonical vector from a
+finite set over an ordered element type.
 
 `relabel` applies to set products in the same way as to measures
 (see [interface adaptation](04-design.md#interface-adaptation)).

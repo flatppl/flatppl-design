@@ -151,6 +151,7 @@ To evaluate a density at many points (e.g. a grid for numerical integration or p
 | Construct | Arguments | Description |
 |---|---|---|
 | [`superpose`](#superpose) | `M1, M2, ...` | measure addition $M_1 + M_2 + \cdots$ |
+| [`ksuperpose`](#ksuperpose) | `kernel, weights` | weighted-superposition lift; applied to a parameter family yields $\sum_i w_i\,\kappa(\theta_i)$ |
 
 - **`superpose(M1, M2, ...)`**<a id="superpose"></a> — measure addition:
   $\nu(A) = M_1(A) + M_2(A) + \ldots$ All components must share the same variate
@@ -166,6 +167,28 @@ To evaluate a density at many points (e.g. a grid for numerical integration or p
 
   ```flatppl
   mix = normalize(superpose(weighted(a1, normal1), weighted(a2, normal2)))
+  ```
+
+- **`ksuperpose(kernel, weights)`**<a id="ksuperpose"></a> — lifts a kernel to a
+  weighted superposition, the additive analogue of
+  [`broadcasted`](04-design.md#sec:broadcasting), for mixtures too large for variadic
+  `superpose`. `ksuperpose(kernel, weights)` is itself a kernel; applied to a parameter
+  family it yields the mixture $\nu = \sum_i w_i\,\kappa(\theta_i)$, where row $i$ of
+  the family supplies $\theta_i$. Parameters are passed as to `broadcast` — positional
+  vectors, keyword vectors, or a table — and all collection arguments together with
+  `weights` share one length $N$; non-collection arguments are held constant across
+  components. `weights` must be non-negative, and the result is generally unnormalized.
+  Because the per-component weights do not depend on the variate, the mixture is
+  sampleable whenever the component kernel is (unlike variate-dependent
+  [`weighted`](#density-reweighting)).
+
+  A large Gaussian mixture, and an arbitrary-label categorical built from `Dirac`:
+
+  ```flatppl
+  mix = normalize(ksuperpose(Normal, weights)(mu = means, sigma = sigmas))
+
+  fruit = ["apple", "orange", "tomato"]
+  flavor ~ normalize(ksuperpose(Dirac, P)(fruit))   # variate in setof(fruit)
   ```
 
 #### Independent composition

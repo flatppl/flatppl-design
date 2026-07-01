@@ -235,8 +235,8 @@ all metadata — while authored membership stays structural.
   marker is ill-formed.
 - `%any` — used where no concrete-type constraint is applicable, e.g. for the input
   of `fn(sum(_))`. Counterpart of the value-level set `anything`.
-- `(%scalar real)`, `(%scalar integer)`, `(%scalar boolean)`, `(%scalar complex)` — the
-  four scalar value types.
+- `(%scalar real)`, `(%scalar integer)`, `(%scalar boolean)`, `(%scalar complex)`,
+  `(%scalar string)` — the five scalar value types.
 - `(%array <ndims> <shape> <element-type>)` — arrays. `<ndims>` is the number of
   dimensions (axes), a positive integer literal (not `%dynamic`). Each entry in
   `<shape>` is a positive integer dimension size, or the placeholder `%dynamic` for
@@ -258,6 +258,10 @@ all metadata — while authored membership stays structural.
   total-mass class of the output measure, uniform over all inputs
   (`%normalized` ⇔ a Markov kernel).
 - `(%function (%inputs <name> ...))` — user-defined functions.
+- `%noinverse` — the result of [`inverseof`](04-design.md#function-composition-and-annotation)
+  on a callable whose inverse is not statically known. It carries the original callable, so a
+  further `inverseof` recovers it; applying it, or any use other than a further `inverseof`,
+  is a static error.
 - `(%likelihood (%inputs <name> ...) (%obstype <type>))` — likelihood objects.
   `<type>` is the type of the observed data.
 - `%module` — a module reference, produced only by `load_module` or
