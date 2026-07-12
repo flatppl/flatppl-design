@@ -211,6 +211,16 @@ the set of $3 \times 3$ real matrices. When `S` is a record set, the power is
 the set of tables with those columns: `cartpow(cartprod(a = reals, b = posreals), n)`
 is the set of `n`-row tables.
 
+Omitting `size` — `cartpow(S)` — denotes the Cartesian power of `S` of
+statically-unknown length: the set of one-dimensional arrays over `S` whose
+length is fixed at module load or runtime rather than statically. It
+corresponds to a rank-1 array with a `%dynamic` dimension (see
+[FlatPIR](11-flatpir.md#flatpir-meta-annotations)) and serves as the element domain of a
+dynamically-sized array variate — `elementof(cartpow(posreals))`, for instance,
+admits a positive-real array of any length. Axis-native operations such as
+broadcasting and reductions apply to such a variate exactly as to a
+statically-sized one.
+
 **Standard simplex.** `stdsimplex(n)` denotes the standard $(n{-}1)$-dimensional probability
 simplex $\Delta_{n-1} = \{x \in \mathbb{R}^n : x_i \geq 0,\; \sum_i x_i = 1\}$.
 `Lebesgue(support = stdsimplex(n))` is the intrinsic $(n{-}1)$-dimensional Lebesgue
