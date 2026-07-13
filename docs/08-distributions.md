@@ -38,12 +38,12 @@ statement w.r.t. `Lebesgue(support = S)` follows by restriction.
 | [`Logistic`](#logistic) | `mu`, `s` | `reals` | `reals` |
 | [`LogNormal`](#lognormal) | `mu`, `sigma` | `reals` | `posreals` |
 | [`Exponential`](#exponential) | `rate` | `reals` | `nonnegreals` |
-| [`Gamma`](#gamma) | `shape`, `rate` | `reals` | `posreals` |
+| [`Gamma`](#gamma) | `shape`, `rate` | `reals` | `nonnegreals` |
 | [`Weibull`](#weibull) | `shape`, `scale` | `reals` | `nonnegreals` |
 | [`Pareto`](#pareto) | `shape`, `scale` | `reals` | `posreals` |
 | [`InverseGamma`](#inversegamma) | `shape`, `scale` | `reals` | `posreals` |
 | [`Beta`](#beta) | `alpha`, `beta` | `reals` | `unitinterval` |
-| [`ChiSquared`](#chisq) | `k` | `reals` | `posreals` |
+| [`ChiSquared`](#chisq) | `k` | `reals` | `nonnegreals` |
 | [`VonMises`](#vonmises) | `mu`, `kappa` | `reals` | `reals` |
 | [`Laplace`](#laplace) | `location`, `scale` | `reals` | `reals` |
 
