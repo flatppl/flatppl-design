@@ -99,7 +99,10 @@ canonical syntax):
 - **Auto-splatting** (of records and table columns): `f(record(a = x, b = y, ...))` and
   `f(table(a = x, b = y, ...))` are equivalent to `f(a = x, b = y, ...)`. The order of
   fields or columns is not relevant. A call with field or column names that do not match
-  the callable's argument names is a static error. Auto-splatting is shallow.
+  the callable's argument names is a static error. Auto-splatting is shallow and occurs only
+  when a record or table is the call's sole argument (whatever its field count, a single field
+  included); a record given alongside other arguments, or bound to a parameter by keyword, is an
+  ordinary value and is not splatted.
 
 - **Positional arguments**: `f(x, y, ...)`. Positional arguments are accepted only if
   the callable has ordered inputs, so that the arguments can be mapped to the inputs in order.
