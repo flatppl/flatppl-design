@@ -307,7 +307,13 @@ To evaluate a density at many points (e.g. a grid for numerical integration or p
   Like [`fchain`](04-design.md#function-composition-and-annotation),
   `kchain` and `jointchain` combine well with auto-splatting: a
   record-shaped variate from step $i$ splats into step $i+1$'s keyword
-  inputs by field name.
+  inputs by field name. A non-record variate — for example the `cat`'d
+  variate of a positional `joint` — carries no field names, so it feeds a
+  kernel only when the kernel has a single input, to which the whole value
+  is bound; feeding one to a kernel with two or more inputs is a static
+  error, as a single value cannot be split across inputs by name. Use the
+  named form (`joint(name1 = M1, ...)`) or `relabel` to name the
+  components, producing a record variate whose fields splat by name.
 
 - **`markovchain(kernel, init, n)`**<a id="markovchain"></a> — measure over length-`n` trajectories
   of a time-homogeneous Markov chain.
