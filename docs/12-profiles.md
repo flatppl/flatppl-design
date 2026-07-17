@@ -606,11 +606,14 @@ target; it is not restricted to a single kind of query. Typical outputs are:
   [`logdensityof(M, point)`](06-measure-algebra.md#likelihoods-and-posteriors) — a
   measure `M` and the point at which to evaluate it, in the two-argument form (an
   explicit `point`; no implicit argument tracing);
-- a **sampled value**, [`rand(rstate, M)`](07-functions.md#rand) — a draw from a
-  closed measure `M` threaded through an explicit RNG state
-  ([random value generation](07-functions.md#sec:random)); the RNG state is
-  supplied as an input, so the draw is reproducible (a fixed RNG-state argument
-  yields a fixed result);
+- a **sampled value**, [`rand(rstate, M)`](07-functions.md#rand) — `rand` produces
+  a concrete value from a closed measure `M`, threaded through an explicit RNG
+  state ([random value generation](07-functions.md#sec:random)); the RNG state is
+  supplied as an input, so the result is reproducible (a fixed RNG-state argument
+  yields a fixed value). `rand` is distinct from `draw`
+  ([variates and measures](04-design.md#sec:variate-measure)): applying `rand` to a
+  measure reified from a `draw`-containing DAG is what resolves those draws to
+  concrete values;
 - any other **deterministic expression** over the inputs — a plain function
   evaluation, a transformed parameter, and so on.
 
@@ -618,8 +621,9 @@ Determinization has already eliminated the measure layer, so every output is a
 deterministic expression whatever its kind: a density query reduces structurally to
 the densities of its operands
 (see [density of composed measures](06-measure-algebra.md#density-of-composed-measures)),
-and a `draw` becomes an explicit state-threaded `rand`. The function returns the
-outputs in declared order: a single value, or a tuple for multiple outputs.
+and a sampled output resolves its measure's `draw` nodes to concrete values through
+`rand` (density evaluation instead takes those nodes as inputs). The function returns
+the outputs in declared order: a single value, or a tuple for multiple outputs.
 
 #### `inputs` — the arguments
 
@@ -636,7 +640,7 @@ The [phase](04-design.md#phases) of an input binding governs how it maps:
 | parameterized | `elementof` | function argument | ill-formed (must be listed) |
 | fixed | `external` | function argument | baked constant, or refused per backend |
 | fixed | `load_data` | function argument, **shape only** | baked constant, or refused per backend |
-| stochastic | `draw` | — | eliminated if no output reaches it; otherwise a state-threaded `rand` reading an RNG-state input |
+| stochastic | `draw` | — | not an input; eliminated if no output reaches it, else resolved to a value by `rand` for a sampled output |
 
 A [`load_data`](07-functions.md#load_data) binding is the intermediate case. Its
 value is fixed (set at module initialization) but compile-time-unknown, and its
@@ -664,8 +668,8 @@ retained subgraph is the backward cone of `outputs` together with the declared
 any fixed constant it requires. A hyperparameter constant that feeds an output but
 descends from no input is **kept** — the output cannot be computed without it.
 Everything else — every binding no output reaches — is discarded (a `draw` that
-feeds no output among them; a `draw` that feeds a sampled output is retained as its
-`rand`). Rooting additionally on `inputs` keeps a declared-but-unused argument
+feeds no output among them; a `draw` that a sampled output resolves through `rand`
+is retained). Rooting additionally on `inputs` keeps a declared-but-unused argument
 alive, preserving the ABI.
 
 When neither binding is present, a host may fall back to an implementation-defined
