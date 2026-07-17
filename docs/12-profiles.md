@@ -576,6 +576,87 @@ binned model maps to one `poisson` contribution per bin.
 | `linspace` | `linspaced_vector` | |
 | `broadcast` | vectorized operations | Stan auto-vectorizes for standard distributions; general `broadcast` may require explicit loops |
 
+### <a id="sec:compilation-abi"></a>Compilation ABI: `inputs` and `outputs`
+
+The target-system profiles above rewrite a FlatPPL model into another modelling
+language. A second class of backend instead *compiles* a model to an executable
+numeric function — one that evaluates log-densities at supplied parameter values
+(for example a StableHLO/XLA `func.func`). Such a backend must be told which
+bindings are the function's arguments, in what order, and which are its results:
+the compiled artifact has a fixed signature, whereas a FlatPPL module carries no
+such designation of its own. Two reserved top-level bindings supply it.
+
+```flatppl
+inputs  = v | (v1, ..., vn)
+outputs = v | (v1, ..., vn)
+```
+
+`inputs` and `outputs` are **reserved binding names** for this interface: a module
+that declares either must not bind those names for any other purpose. Each is a
+single value or a tuple, and **tuple order is the ABI order** — the arguments of
+the compiled function appear in `inputs` order and its results in `outputs` order.
+
+#### `outputs` — the results
+
+Each element of `outputs` is a density query
+[`logdensityof(M, point)`](06-measure-algebra.md#likelihoods-and-posteriors) — a
+measure `M` and the point at which to evaluate it. `point` is an explicit record
+over the module's parameters; the query takes the two-argument form and no implicit
+argument tracing is performed. A density query reduces structurally to a
+deterministic expression over the densities of its operands
+(see [density of composed measures](06-measure-algebra.md#density-of-composed-measures)),
+so the measure layer — including any `draw` reached only through it — does not
+survive into the compiled function. The function returns the outputs in declared
+order: a single value, or a tuple for multiple outputs.
+
+#### `inputs` — the arguments
+
+Each element of `inputs` is a binding that becomes a function argument, in order.
+`inputs` is **authoritative and exhaustive**: every parameterized `elementof`
+binding in the module must appear in it, otherwise the declaration is ill-formed —
+a parameter with no argument slot. A declared input that no output depends on is
+still retained as an argument; a stable ABI is not subject to elimination.
+
+The [phase](04-design.md#phases) of an input binding governs how it maps:
+
+| Phase | Construct | Listed in `inputs` | Not listed in `inputs` |
+|---|---|---|---|
+| parameterized | `elementof` | function argument | ill-formed (must be listed) |
+| fixed | `external` | function argument | baked constant, or refused per backend |
+| fixed | `load_data` | function argument, **shape only** | baked constant, or refused per backend |
+| stochastic | `draw` | — | eliminated by the density-query reduction |
+
+A [`load_data`](07-functions.md#load_data) binding is the intermediate case. Its
+value is fixed (set at module initialization) but compile-time-unknown, and its
+length is a dynamic property of the referenced source. Listing it in `inputs`
+promotes the *data* to a runtime argument: the source is read at compile time for
+its length only, which pins the argument's shape, while its contents are **never
+baked into the artifact**. One compiled function then scores any data of that shape
+without re-compilation. A fixed input (`external` or `load_data`) that an output
+reaches but that is *not* listed in `inputs` is instead baked into the artifact as
+a constant, or refused — the choice is left to the backend.
+
+Fixed values do not vary during an evaluation (see [phases](04-design.md#phases));
+listing them in `inputs` promotes them to arguments without changing that they are
+held constant across the parameter sweeps over which the compiled function is
+evaluated.
+
+#### Retained subgraph
+
+A compilation backend need emit only the part of the module the ABI reaches. The
+retained subgraph is the backward cone of `outputs` together with the declared
+`inputs`: every query, every intermediate it depends on, the inputs it uses, and
+any fixed constant it requires. A hyperparameter constant that feeds an output but
+descends from no input is **kept** — the output cannot be computed without it.
+Everything else — bindings no output reaches, and forward-only `draw`s — is
+discarded. Rooting additionally on `inputs` keeps a declared-but-unused argument
+alive, preserving the ABI.
+
+When neither binding is present, a host may fall back to an implementation-defined
+convention for locating the query and its arguments. That fallback is a
+host/tooling concern and carries no normative force; a backend that compiles to a
+fixed signature should require the explicit ABI.
+
 ### Future profiles
 
 Additional profiles for systems such as Pyro, NumPyro, and PyMC may be added
