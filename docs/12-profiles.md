@@ -580,7 +580,8 @@ binned model maps to one `poisson` contribution per bin.
 
 The target-system profiles above rewrite a FlatPPL model into another modelling
 language. A second class of backend instead *compiles* a model to an executable
-numeric function — one that evaluates log-densities at supplied parameter values
+numeric function — one that evaluates a deterministic result (a log-density, a
+sampled value, a function of the parameters, …) at supplied argument values
 (for example a StableHLO/XLA `func.func`). Such a backend must be told which
 bindings are the function's arguments, in what order, and which are its results:
 the compiled artifact has a fixed signature, whereas a FlatPPL module carries no
@@ -598,16 +599,27 @@ the compiled function appear in `inputs` order and its results in `outputs` orde
 
 #### `outputs` — the results
 
-Each element of `outputs` is a density query
-[`logdensityof(M, point)`](06-measure-algebra.md#likelihoods-and-posteriors) — a
-measure `M` and the point at which to evaluate it. `point` is an explicit record
-over the module's parameters; the query takes the two-argument form and no implicit
-argument tracing is performed. A density query reduces structurally to a
-deterministic expression over the densities of its operands
+Each element of `outputs` is a deterministic result the backend lowers to the
+target; it is not restricted to a single kind of query. Typical outputs are:
+
+- a **density**,
+  [`logdensityof(M, point)`](06-measure-algebra.md#likelihoods-and-posteriors) — a
+  measure `M` and the point at which to evaluate it, in the two-argument form (an
+  explicit `point`; no implicit argument tracing);
+- a **sampled value**, [`rand(rstate, M)`](07-functions.md#rand) — a draw from a
+  closed measure `M` threaded through an explicit RNG state
+  ([random value generation](07-functions.md#sec:random)); the RNG state is
+  supplied as an input, so the draw is reproducible (a fixed RNG-state argument
+  yields a fixed result);
+- any other **deterministic expression** over the inputs — a plain function
+  evaluation, a transformed parameter, and so on.
+
+Determinization has already eliminated the measure layer, so every output is a
+deterministic expression whatever its kind: a density query reduces structurally to
+the densities of its operands
 (see [density of composed measures](06-measure-algebra.md#density-of-composed-measures)),
-so the measure layer — including any `draw` reached only through it — does not
-survive into the compiled function. The function returns the outputs in declared
-order: a single value, or a tuple for multiple outputs.
+and a `draw` becomes an explicit state-threaded `rand`. The function returns the
+outputs in declared order: a single value, or a tuple for multiple outputs.
 
 #### `inputs` — the arguments
 
@@ -624,7 +636,7 @@ The [phase](04-design.md#phases) of an input binding governs how it maps:
 | parameterized | `elementof` | function argument | ill-formed (must be listed) |
 | fixed | `external` | function argument | baked constant, or refused per backend |
 | fixed | `load_data` | function argument, **shape only** | baked constant, or refused per backend |
-| stochastic | `draw` | — | eliminated by the density-query reduction |
+| stochastic | `draw` | — | eliminated if no output reaches it; otherwise a state-threaded `rand` reading an RNG-state input |
 
 A [`load_data`](07-functions.md#load_data) binding is the intermediate case. Its
 value is fixed (set at module initialization) but compile-time-unknown, and its
@@ -639,21 +651,25 @@ a constant, or refused — the choice is left to the backend.
 Fixed values do not vary during an evaluation (see [phases](04-design.md#phases));
 listing them in `inputs` promotes them to arguments without changing that they are
 held constant across the parameter sweeps over which the compiled function is
-evaluated.
+evaluated. A sampled output reads an RNG state
+([random value generation](07-functions.md#sec:random)); that state enters as an
+input like any other fixed value — an `external` RNG-state argument the caller
+supplies per evaluation — so a fixed argument reproduces the draw.
 
 #### Retained subgraph
 
 A compilation backend need emit only the part of the module the ABI reaches. The
 retained subgraph is the backward cone of `outputs` together with the declared
-`inputs`: every query, every intermediate it depends on, the inputs it uses, and
+`inputs`: every output, every intermediate it depends on, the inputs it uses, and
 any fixed constant it requires. A hyperparameter constant that feeds an output but
 descends from no input is **kept** — the output cannot be computed without it.
-Everything else — bindings no output reaches, and forward-only `draw`s — is
-discarded. Rooting additionally on `inputs` keeps a declared-but-unused argument
+Everything else — every binding no output reaches — is discarded (a `draw` that
+feeds no output among them; a `draw` that feeds a sampled output is retained as its
+`rand`). Rooting additionally on `inputs` keeps a declared-but-unused argument
 alive, preserving the ABI.
 
 When neither binding is present, a host may fall back to an implementation-defined
-convention for locating the query and its arguments. That fallback is a
+convention for locating the outputs and their arguments. That fallback is a
 host/tooling concern and carries no normative force; a backend that compiles to a
 fixed signature should require the explicit ABI.
 
