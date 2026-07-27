@@ -21,7 +21,7 @@ $\kappa: X \to M(Y)$, where $M(Y)$ is the space of measures on $Y$. When each
 $\kappa(x, \cdot)$ is a probability measure, the kernel is called a **Markov kernel**.
 In FlatPPL, kernels are represented as functions that map value points to measures.
 
-The classical Giry monad ([Giry, 1982](15-references.md#giry1982)) operates on probability measures, which are normalized. FlatPPL extends this to $\sigma$-finite measures in general, e.g. to represent non-normalized posteriors and intensity measures. [Staton et al. (2016)](15-references.md#staton2016) and [Staton (2017)](15-references.md#staton2017) provide the formal basis for this extension using the more general class of s-finite measures; all $\sigma$-finite measures are s-finite, so FlatPPL's algebraic operations are well-founded within that framework.
+The classical Giry monad ([Giry, 1982](16-references.md#giry1982)) operates on probability measures, which are normalized. FlatPPL extends this to $\sigma$-finite measures in general, e.g. to represent non-normalized posteriors and intensity measures. [Staton et al. (2016)](16-references.md#staton2016) and [Staton (2017)](16-references.md#staton2017) provide the formal basis for this extension using the more general class of s-finite measures; all $\sigma$-finite measures are s-finite, so FlatPPL's algebraic operations are well-founded within that framework.
 
 **Density convention.** All density formulas in this section are with respect to a
 reference measure implied by the constituent distribution types: Lebesgue for continuous
@@ -662,8 +662,8 @@ This is the generalization of conditional probability to arbitrary measures.
 The general disintegration theorem allows for disintegration along arbitrary
 measurable functions, not just orthogonal projections. FlatPPL does not support
 such general symbolic disintegration in the style of Hakaru
-([Narayanan et al., 2016](15-references.md#narayanan2016); see also
-[Shan & Ramsey, 2017](15-references.md#shan2017) on exact Bayesian inference by
+([Narayanan et al., 2016](16-references.md#narayanan2016); see also
+[Shan & Ramsey, 2017](16-references.md#shan2017) on exact Bayesian inference by
 symbolic disintegration). 
 FlatPPL instead supports **structural disintegration** via `disintegrate`, which returns
 the kernel $\kappa$ and the marginal $\nu$ together as a tuple. It decomposes the DAG

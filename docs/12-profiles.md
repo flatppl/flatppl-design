@@ -10,7 +10,7 @@ versioning yet.
 ### FlatPPL as an exchange platform
 
 While full FlatPPL implementations are feasible for some languages and package ecosystems
-with modest effort (see [appendix](13-implementations.md#appendix-implementations)), a key strength of FlatPPL is
+with modest effort (see [appendix](14-implementations.md#appendix-implementations)), a key strength of FlatPPL is
 its suitability as an exchange platform between probabilistic modeling
 systems. Rather than requiring pairwise translators between $n$ systems — an $O(n^2)$
 problem — FlatPPL enables a hub-and-spoke architecture: each system needs only one
@@ -612,20 +612,10 @@ Each element of `outputs` is a deterministic result the backend lowers:
 The compiled function returns the results in declared order: a single value, or
 a tuple.
 
-#### <a id="sec:determinization"></a>Determinization
-
-Before code generation the backend **determinizes** the outputs — it eliminates
-the measure layer, reducing every output to a deterministic expression:
-
-- a density query reduces structurally to its operands' densities
-  ([density of composed measures](06-measure-algebra.md#density-of-composed-measures));
-- a sampled output resolves its measure's `draw` nodes to concrete values
-  through `rand`;
-- a density output takes the values of `draw` nodes through its explicit
-  `point` ([variates and measures](04-design.md#sec:variate-measure)).
-
-The result is a deterministic DAG from the declared inputs to the declared
-outputs.
+Before code generation the backend
+[determinizes](13-determinization.md#sec:determinization) the module: every
+output reduces to a deterministic expression, and only the subgraph the ABI
+reaches is emitted.
 
 #### `inputs` — the arguments
 
@@ -640,7 +630,7 @@ governs its mapping:
 | parameterized | `elementof` | function argument | ill-formed (must be listed) |
 | fixed | `external` | function argument | baked constant, or refused per backend |
 | fixed | `load_data` | function argument (shape from its `valueset`, contents at runtime) | baked constant, or refused per backend |
-| stochastic | `draw` | — | eliminated if no output reaches it; otherwise handled by [determinization](#sec:determinization) |
+| stochastic | `draw` | — | eliminated if no output reaches it; otherwise handled by [determinization](13-determinization.md#sec:determinization) |
 
 A promoted [`load_data`](07-functions.md#load_data) argument's shape is its
 declared `valueset`'s shape (the `valueset` fully determines the shape;
@@ -652,15 +642,6 @@ Fixed values do not change after module initialization
 ([phases](04-design.md#phases)); listing a fixed binding in `inputs` relaxes
 that life cycle at the ABI boundary — the caller supplies the value on each
 call. The RNG state of a sampled output is such a promoted fixed input.
-
-#### Retained subgraph
-
-The backend emits only the backward cone of `outputs` together with the
-declared `inputs`: the outputs, their intermediates, and every constant they
-require (kept even when input-independent). Everything no output reaches is
-discarded, except that a declared-but-unused input stays — rooting on `inputs`
-preserves the ABI. A `draw` reaching a sampled output is retained as its
-`rand`.
 
 When neither binding is present, a host may fall back to an
 implementation-defined convention for locating outputs and arguments; that

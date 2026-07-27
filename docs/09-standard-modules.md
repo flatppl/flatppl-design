@@ -278,7 +278,7 @@ $$\mathrm{BW}(\sigma) \;=\; \frac{1}{m^2 - \sigma - i\, m\, \Gamma}.$$
 
 These functions provide the two-body decay kinematics underlying the mass-dependent
 width of [`resonance_breitwigner`](#resonancebreitwigner), following Section 50
-(Resonances) of [Navas et al. (2024)](15-references.md#navas2024).
+(Resonances) of [Navas et al. (2024)](16-references.md#navas2024).
 
 | Function | Arguments | Description | Domains |
 |---|---|---|---|
@@ -317,7 +317,7 @@ where $\chi_\ell$ is the degree-$\ell$ barrier polynomial:
 $$\chi_0 = 1, \quad \chi_1 = 1 + z, \quad \chi_2 = 9 + 3z + z^2, \quad \chi_3 = 225 + 45z + 6z^2 + z^3,$$
 
 continuing through $\ell = 7$. Defined for $0 \leq \ell \leq 7$. The barrier
-factors follow [Blatt & Weisskopf (1952)](15-references.md#blatt1952).
+factors follow [Blatt & Weisskopf (1952)](16-references.md#blatt1952).
 
 Arguments:
 
@@ -333,7 +333,7 @@ width through the ratio $F_\ell(p(\sigma)) / F_\ell(p_0)$.
 The Wigner $d$- and $D$-functions are elements of the $(2j+1)$-dimensional irreducible
 representation of the rotation group, used in angular-distribution and partial-wave
 amplitudes. The conventions follow Section 50 (Resonances) and the Clebsch-Gordan /
-$d$-function tables of [Navas et al. (2024)](15-references.md#navas2024). The small
+$d$-function tables of [Navas et al. (2024)](16-references.md#navas2024). The small
 $d$-function takes the **cosine** of the polar angle, $\cos\beta$, as its argument.
 
 | Function | Arguments | Description | Domains |

@@ -23,7 +23,7 @@ but there are of course many other options:
   Distributions.jl (augmented by other packages) provides implementations of many distributions. In turn, functions, distributions, and measures expressed in
   FlatPPL fit naturally into the MeasureBase.jl and Distributions.jl APIs.
   FlatPPL's `densityof`/`logdensityof` mirror the
-  [DensityInterface.jl](15-references.md#densityinterface) functions of the same
+  [DensityInterface.jl](16-references.md#densityinterface) functions of the same
   name, which MeasureBase.jl and Distributions.jl implement.
 
 ### Distributions

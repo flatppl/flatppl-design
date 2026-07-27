@@ -94,9 +94,9 @@ shapes.
 ### A starting point: RooFit and HS³
 
 The current principal building blocks for statistical modeling in High Energy Physics are
-[**RooFit**](15-references.md#roofit) (a C++ modeling toolkit in ROOT) and the
-[**HEP Statistics Serialization Standard (HS³)**](15-references.md#hs3), a JSON-based interchange format.
-[**pyhf**](15-references.md#pyhf) is a JSON specification and Python implementation of the HistFactory
+[**RooFit**](16-references.md#roofit) (a C++ modeling toolkit in ROOT) and the
+[**HEP Statistics Serialization Standard (HS³)**](16-references.md#hs3), a JSON-based interchange format.
+[**pyhf**](16-references.md#pyhf) is a JSON specification and Python implementation of the HistFactory
 template-fitting model class that originated in RooFit.
 While pyhf comes with a Python engine, both HS³ and pyhf JSON are model descriptions
 for which engines can be, and currently are being, implemented in multiple languages.
@@ -154,7 +154,7 @@ models?
 There is a rich landscape of stochastic/probabilistic languages; in addition to
 RooFit, HS³ and pyhf, the following are particularly relevant in our context:
 
-**Stan** ([Carpenter et al., 2017](15-references.md#carpenter2017)) is a very strong candidate for longevity: it has a large and active user and developer community, bindings for multiple languages (R, Python, Julia and others), and solid funding. However:
+**Stan** ([Carpenter et al., 2017](16-references.md#carpenter2017)) is a very strong candidate for longevity: it has a large and active user and developer community, bindings for multiple languages (R, Python, Julia and others), and solid funding. However:
 
 - Stan is fundamentally Bayesian, though modern Stan does support some frequentist
   workflows. The language is designed around the `model` block, which defines a joint
@@ -170,11 +170,11 @@ are specific to each. Independent implementations of the modeling DSLs are not f
 however, as they leverage very large subsets of the host language and so are tied to that
 language.
 
-[**GraphPPL.jl**](15-references.md#graphppl) (used by [RxInfer](15-references.md#rxinfer)) separates model specification from inference backend, which
+[**GraphPPL.jl**](16-references.md#graphppl) (used by [RxInfer](16-references.md#rxinfer)) separates model specification from inference backend, which
 is architecturally what we want. It is Julia-specific and Bayesian-focused and trades
 generality for high-speed inference.
 
-**Hakaru** ([Narayanan et al., 2016](15-references.md#narayanan2016)) has elegant semantics
+**Hakaru** ([Narayanan et al., 2016](16-references.md#narayanan2016)) has elegant semantics
 built on the Giry monad, expressing programs as measure expressions with support for both
 frequentist and Bayesian reasoning. Hakaru, however, is based on and tied to Haskell,
 and does not appear to be actively maintained.
