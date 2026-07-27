@@ -587,9 +587,9 @@ bindings are the function's arguments, in what order, and which are its results:
 the compiled artifact has a fixed signature, whereas a FlatPPL module carries no
 such designation of its own. Two reserved top-level bindings supply it.
 
-```flatppl
-inputs  = v | (v1, ..., vn)
-outputs = v | (v1, ..., vn)
+```
+inputs  = v          or          inputs  = (v1, ..., vn)
+outputs = w          or          outputs = (w1, ..., wm)
 ```
 
 `inputs` and `outputs` are **reserved binding names** for this interface: a module
@@ -606,23 +606,29 @@ target; it is not restricted to a single kind of query. Typical outputs are:
   [`logdensityof(M, point)`](06-measure-algebra.md#likelihoods-and-posteriors) — a
   measure `M` and the point at which to evaluate it, in the two-argument form (an
   explicit `point`; no implicit argument tracing);
-- a **sampled value**, [`rand(rstate, M)`](07-functions.md#rand) — `rand` produces
-  a concrete value from a closed measure `M`, threaded through an explicit RNG
-  state ([random value generation](07-functions.md#sec:random)); the RNG state is
-  supplied as an input, so the result is reproducible (a fixed RNG-state argument
-  yields a fixed value). `rand` is distinct from `draw`
+- a **sampled value** — [`rand(rstate, M)`](07-functions.md#rand) returns a tuple
+  `(value, new_rstate)` ([random value generation](07-functions.md#sec:random)), so
+  a sampled output is the value component of such a call, `x, rstate2 = rand(rstate, M)`
+  with `x` listed in `outputs` (the updated RNG state `rstate2` may itself be listed
+  as an output when the caller chains evaluations). The RNG state is supplied as an
+  input, so the result is reproducible: the same RNG-state argument yields the same
+  value. `rand`'s tractability restriction applies unchanged — measures involving
+  non-constant weighting or multivariate truncation are not supported
+  ([`rand`](07-functions.md#rand)). `rand` is distinct from `draw`
   ([variates and measures](04-design.md#sec:variate-measure)): applying `rand` to a
   measure reified from a `draw`-containing DAG is what resolves those draws to
   concrete values;
 - any other **deterministic expression** over the inputs — a plain function
   evaluation, a transformed parameter, and so on.
 
-Determinization has already eliminated the measure layer, so every output is a
-deterministic expression whatever its kind: a density query reduces structurally to
+Whatever its kind, every output reduces to a deterministic expression before code
+generation, eliminating the measure layer: a density query reduces structurally to
 the densities of its operands
 (see [density of composed measures](06-measure-algebra.md#density-of-composed-measures)),
 and a sampled output resolves its measure's `draw` nodes to concrete values through
-`rand` (density evaluation instead takes those nodes as inputs). The function returns
+`rand`, whereas density evaluation takes those nodes as inputs to the density —
+their values arrive through the explicit `point` argument
+([variates and measures](04-design.md#sec:variate-measure)). The function returns
 the outputs in declared order: a single value, or a tuple for multiple outputs.
 
 #### `inputs` — the arguments
@@ -639,26 +645,31 @@ The [phase](04-design.md#phases) of an input binding governs how it maps:
 |---|---|---|---|
 | parameterized | `elementof` | function argument | ill-formed (must be listed) |
 | fixed | `external` | function argument | baked constant, or refused per backend |
-| fixed | `load_data` | function argument, **shape only** | baked constant, or refused per backend |
-| stochastic | `draw` | — | not an input; eliminated if no output reaches it, else resolved to a value by `rand` for a sampled output |
+| fixed | `load_data` | function argument (shape from its `valueset`, contents at runtime) | baked constant, or refused per backend |
+| stochastic | `draw` | — | not an input; eliminated if no output reaches it; resolved by `rand` when a sampled output reaches it; valued through the explicit `point` when a density output evaluates over it |
 
 A [`load_data`](07-functions.md#load_data) binding is the intermediate case. Its
-value is fixed (set at module initialization) but compile-time-unknown, and its
-length is a dynamic property of the referenced source. Listing it in `inputs`
-promotes the *data* to a runtime argument: the source is read at compile time for
-its length only, which pins the argument's shape, while its contents are **never
-baked into the artifact**. One compiled function then scores any data of that shape
-without re-compilation. A fixed input (`external` or `load_data`) that an output
+value is fixed (set at module initialization) but compile-time-unknown; its shape
+is not — the declared `valueset` fully determines the result's shape. Listing the
+binding in `inputs` promotes the *data* to a runtime argument whose shape is the
+`valueset`'s shape, while its contents are **never baked into the artifact**. One
+compiled function then scores any data of that shape without re-compilation. (A
+`load_data` whose `valueset` is the placeholder set `anything` declares no shape
+and cannot be promoted; the shape must be supplied by the model — engines should
+not infer it from the source.) A fixed input (`external` or `load_data`) that an output
 reaches but that is *not* listed in `inputs` is instead baked into the artifact as
 a constant, or refused — the choice is left to the backend.
 
-Fixed values do not vary during an evaluation (see [phases](04-design.md#phases));
-listing them in `inputs` promotes them to arguments without changing that they are
-held constant across the parameter sweeps over which the compiled function is
-evaluated. A sampled output reads an RNG state
-([random value generation](07-functions.md#sec:random)); that state enters as an
-input like any other fixed value — an `external` RNG-state argument the caller
-supplies per evaluation — so a fixed argument reproduces the draw.
+Fixed values are set at module initialization and do not change thereafter,
+whereas parameterized values differ between evaluations
+(see [phases](04-design.md#phases)). Listing a fixed binding in `inputs` relaxes
+that life cycle at the ABI boundary: the caller supplies the value on each call,
+and holding it constant across a sweep of calls recovers the initialized-module
+picture. The RNG state read by a sampled output
+([random value generation](07-functions.md#sec:random)) is such a promoted fixed
+input — fixed in phase by ancestry (an `external` binding has no `elementof` or
+`draw` ancestor), but re-chooseable per call once promoted; supplying the same RNG-state
+argument reproduces the draw.
 
 #### Retained subgraph
 
