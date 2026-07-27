@@ -3,14 +3,15 @@
 A compilation backend compiles a model to an executable numeric function (for
 example a StableHLO/XLA `func.func`) rather than rewriting it into another
 modelling language ([profiles](12-profiles.md#sec:profiles)).
-**Determinization** turns a module with a declared ABI into a deterministic
-DAG from `inputs` to `outputs`: each output's measure layer reduces to
-deterministic operations, and the module is sliced to the subgraph the ABI
-reaches.
+**Determinization** turns a module with a declared signature into a
+deterministic DAG from `inputs` to `outputs`: each output's measure layer
+reduces to deterministic operations, and the module is sliced to the subgraph
+the signature reaches.
 
-### <a id="sec:compilation-abi"></a>Compilation ABI: `inputs` and `outputs`
+### <a id="sec:determinization-signature"></a>Signature: `inputs` and `outputs`
 
-Two reserved top-level bindings declare the compiled function's signature:
+Two reserved top-level bindings declare the determinization signature — what
+is input and what is output:
 
 ```
 inputs  = v          or          inputs  = (v1, ..., vn)
@@ -18,8 +19,8 @@ outputs = w          or          outputs = (w1, ..., wm)
 ```
 
 A module that declares either must not bind the name otherwise. Each is a
-single value or a tuple; **tuple order is the ABI order** of the arguments and
-results.
+single value or a tuple; **tuple order is the signature order** of the
+arguments and results.
 
 Each element of `outputs` is a deterministic result:
 
@@ -35,7 +36,8 @@ Each element of `outputs` is a deterministic result:
 
 `inputs` is **authoritative and exhaustive**: every `elementof` binding must
 appear in it (otherwise the declaration is ill-formed), and a declared input
-no output uses is still an argument — the ABI is not subject to elimination.
+no output uses is still an argument — the signature is not subject to
+elimination.
 The [phase](04-design.md#phases) of a binding governs its mapping:
 
 | Phase | Construct | Listed in `inputs` | Not listed in `inputs` |
@@ -50,7 +52,7 @@ declared `valueset`'s shape (`anything` declares none and cannot be promoted);
 its contents are **never baked into the artifact**, so one artifact scores any
 data of that shape. Fixed values do not change after module initialization
 ([phases](04-design.md#phases)); listing one in `inputs` relaxes that at the
-ABI boundary — the caller supplies it per call. The RNG state of a sampled
+signature boundary — the caller supplies it per call. The RNG state of a sampled
 output is such a promoted fixed input.
 
 Absent both bindings, a host may use an implementation-defined convention;
