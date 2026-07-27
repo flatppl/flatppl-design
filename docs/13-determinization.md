@@ -1,12 +1,15 @@
 ## <a id="sec:determinization"></a>Determinization
 
-A compilation backend compiles a model to an executable numeric function (for
-example a StableHLO/XLA `func.func`) rather than rewriting it into another
-modelling language ([profiles](12-profiles.md#sec:profiles)).
-**Determinization** turns a module with a declared signature into a
-deterministic DAG from `inputs` to `outputs`: each output's measure layer
-reduces to deterministic operations, and the module is sliced to the subgraph
-the signature reaches.
+This section defines **determinization**: the transformation of a module with
+a declared signature into a deterministic DAG from its `inputs` to its
+`outputs`, in which each output's measure layer is reduced to deterministic
+operations and the module is sliced to the subgraph the signature reaches. A
+compilation backend uses it to compile a model to an executable numeric
+function (for example a StableHLO/XLA `func.func`) rather than rewriting it
+into another modelling language ([profiles](12-profiles.md#sec:profiles)).
+
+**Note:** Determinization as defined in this section is preliminary and
+subject to change. It is not part of FlatPPL semantic versioning yet.
 
 ### <a id="sec:determinization-signature"></a>Signature: `inputs` and `outputs`
 
@@ -54,8 +57,8 @@ data of that shape. Fixed values do not change after module initialization
 signature boundary, where the caller supplies the value on each call. The RNG state of a sampled
 output is such a promoted fixed input.
 
-Absent both bindings, a host may use an implementation-defined convention;
-that fallback carries no normative force.
+Absent both bindings, an engine may locate outputs and arguments by an
+implementation-defined convention; that fallback carries no normative force.
 
 ### Output reduction
 
@@ -86,13 +89,15 @@ substitute heuristics. The following are refused:
 - the density of a structural projection of a non-product measure (numeric
   marginal or static error, per engine);
 - a `kchain` density with no closed form and no enumerable discrete latent;
-- a sampled output `rand` does not support: non-constant weighting
-  (`weighted`, `logweighted`, `bayesupdate`) or multivariate truncation.
+- a sampled output over a measure that `rand` does not support: one with
+  non-constant weighting (`weighted`, `logweighted`, `bayesupdate`) or
+  multivariate truncation.
 
 ### Retained subgraph
 
-The backend emits the backward cone of `outputs` plus the declared `inputs`:
-the outputs, their intermediates, and every constant they require (kept even
-when input-independent). Everything no output reaches is discarded; a
-declared-but-unused input stays, and a `draw` reaching a sampled output is
-retained as its `rand`.
+The backend emits the ancestor subgraph of `outputs`
+([the backward program slice](04-design.md#application-and-reification))
+together with the declared `inputs`: the outputs, their intermediates, and
+every constant they require (kept even when input-independent). Everything no
+output reaches is discarded; a declared-but-unused input stays, and a `draw`
+reaching a sampled output is retained as its `rand`.
