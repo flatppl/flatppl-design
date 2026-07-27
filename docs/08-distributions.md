@@ -534,7 +534,7 @@ $$\frac{\Gamma(\|\alpha\|_1)}{\prod_i \Gamma(\alpha_i)} \prod_i x_i^{\alpha_i - 
 [Canonical transport](07-functions.md#sec:measure-eval-prims) of `Dirichlet` to/from
 standard uniform is the Connor–Mosimann stick-breaking map — the $i$-th break is
 `Beta(alpha_i, sum_{j>i} alpha_j)`, accumulated by stick-breaking onto `stdsimplex(n)`
-(see [Betancourt (2012)](15-references.md#betancourt2012)).
+(see [Betancourt (2012)](16-references.md#betancourt2012)).
 The break ordering is fixed (descending reverse-cumsum of `alpha`).
 
 <a id="multinomial"></a>**`Multinomial(n, p)`** — The [multinomial distribution](https://en.wikipedia.org/wiki/Multinomial_distribution), the multivariate generalization of the Binomial distribution. The variate is a length-$k$ non-negative integer vector summing to $n$.

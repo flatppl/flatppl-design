@@ -415,7 +415,9 @@ take exactly one leading positional argument; only `broadcast` accepts multiple
 positional arguments before the keyword arguments.
 
 **Note on reserved words.** The keywords `in`, `true`, `false`, `all`,
-and `only` are recognized before `Name` and cannot be used as bindings.
+and `only` are recognized before `Name` and cannot be used as bindings. The
+top-level binding names `inputs` and `outputs` are reserved for the
+[determinization signature](13-determinization.md#sec:determinization-signature).
 
 **Note on holes and placeholders.** The lexical rule for `Name` admits `_` (the hole
 used inside `fn(...)`) and trailing-underscore identifiers `_x_` (placeholders used
