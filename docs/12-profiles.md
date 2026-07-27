@@ -609,13 +609,23 @@ Each element of `outputs` is a deterministic result the backend lowers:
   applies unchanged;
 - any other **deterministic expression** over the inputs.
 
-Every output reduces to a deterministic expression before code generation: a
-density query reduces structurally to its operands' densities
-([density of composed measures](06-measure-algebra.md#density-of-composed-measures));
-a sampled output resolves its measure's `draw` nodes through `rand`, whereas a
-density output takes their values through the explicit `point`
-([variates and measures](04-design.md#sec:variate-measure)). Results are
-returned in declared order: a single value, or a tuple.
+The compiled function returns the results in declared order: a single value, or
+a tuple.
+
+#### <a id="sec:determinization"></a>Determinization
+
+Before code generation the backend **determinizes** the outputs — it eliminates
+the measure layer, reducing every output to a deterministic expression:
+
+- a density query reduces structurally to its operands' densities
+  ([density of composed measures](06-measure-algebra.md#density-of-composed-measures));
+- a sampled output resolves its measure's `draw` nodes to concrete values
+  through `rand`;
+- a density output takes the values of `draw` nodes through its explicit
+  `point` ([variates and measures](04-design.md#sec:variate-measure)).
+
+The result is a deterministic DAG from the declared inputs to the declared
+outputs.
 
 #### `inputs` — the arguments
 
@@ -630,7 +640,7 @@ governs its mapping:
 | parameterized | `elementof` | function argument | ill-formed (must be listed) |
 | fixed | `external` | function argument | baked constant, or refused per backend |
 | fixed | `load_data` | function argument (shape from its `valueset`, contents at runtime) | baked constant, or refused per backend |
-| stochastic | `draw` | — | eliminated if no output reaches it; `rand`-resolved for a sampled output; valued via `point` for a density output |
+| stochastic | `draw` | — | eliminated if no output reaches it; otherwise handled by [determinization](#sec:determinization) |
 
 A promoted [`load_data`](07-functions.md#load_data) argument's shape is its
 declared `valueset`'s shape (the `valueset` fully determines the shape;
