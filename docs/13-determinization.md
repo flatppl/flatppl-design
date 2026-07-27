@@ -91,7 +91,8 @@ substitute heuristics. The following are refused:
 - a `kchain` density with no closed form and no enumerable discrete latent;
 - a sampled output over a measure that `rand` does not support: one with
   non-constant weighting (`weighted`, `logweighted`, `bayesupdate`) or
-  multivariate truncation.
+  multivariate truncation;
+- a function-, kernel-, or measure-valued output: outputs are values.
 
 ### Retained subgraph
 
