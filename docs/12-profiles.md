@@ -578,115 +578,83 @@ binned model maps to one `poisson` contribution per bin.
 
 ### <a id="sec:compilation-abi"></a>Compilation ABI: `inputs` and `outputs`
 
-The target-system profiles above rewrite a FlatPPL model into another modelling
-language. A second class of backend instead *compiles* a model to an executable
-numeric function — one that evaluates a deterministic result (a log-density, a
-sampled value, a function of the parameters, …) at supplied argument values
-(for example a StableHLO/XLA `func.func`). Such a backend must be told which
-bindings are the function's arguments, in what order, and which are its results:
-the compiled artifact has a fixed signature, whereas a FlatPPL module carries no
-such designation of its own. Two reserved top-level bindings supply it.
+The profiles above rewrite a FlatPPL model into another modelling language. A
+compilation backend instead compiles a model to an executable numeric function
+(for example a StableHLO/XLA `func.func`), which requires a fixed signature a
+FlatPPL module does not carry on its own. Two reserved top-level bindings
+supply it:
 
 ```
 inputs  = v          or          inputs  = (v1, ..., vn)
 outputs = w          or          outputs = (w1, ..., wm)
 ```
 
-`inputs` and `outputs` are **reserved binding names** for this interface: a module
-that declares either must not bind those names for any other purpose. Each is a
-single value or a tuple, and **tuple order is the ABI order** — the arguments of
-the compiled function appear in `inputs` order and its results in `outputs` order.
+`inputs` and `outputs` are **reserved binding names**: a module that declares
+either must not bind them for any other purpose. Each is a single value or a
+tuple; **tuple order is the ABI order** of the compiled function's arguments
+and results.
 
 #### `outputs` — the results
 
-Each element of `outputs` is a deterministic result the backend lowers to the
-target; it is not restricted to a single kind of query. Typical outputs are:
+Each element of `outputs` is a deterministic result the backend lowers:
 
 - a **density**,
-  [`logdensityof(M, point)`](06-measure-algebra.md#likelihoods-and-posteriors) — a
-  measure `M` and the point at which to evaluate it, in the two-argument form (an
-  explicit `point`; no implicit argument tracing);
-- a **sampled value** — [`rand(rstate, M)`](07-functions.md#rand) returns a tuple
-  `(value, new_rstate)` ([random value generation](07-functions.md#sec:random)), so
-  a sampled output is the value component of such a call, `x, rstate2 = rand(rstate, M)`
-  with `x` listed in `outputs` (the updated RNG state `rstate2` may itself be listed
-  as an output when the caller chains evaluations). The RNG state is supplied as an
-  input, so the result is reproducible: the same RNG-state argument yields the same
-  value. `rand`'s tractability restriction applies unchanged — measures involving
-  non-constant weighting or multivariate truncation are not supported
-  ([`rand`](07-functions.md#rand)). `rand` is distinct from `draw`
-  ([variates and measures](04-design.md#sec:variate-measure)): applying `rand` to a
-  measure reified from a `draw`-containing DAG is what resolves those draws to
-  concrete values;
-- any other **deterministic expression** over the inputs — a plain function
-  evaluation, a transformed parameter, and so on.
+  [`logdensityof(M, point)`](06-measure-algebra.md#likelihoods-and-posteriors),
+  with an explicit `point`;
+- a **sampled value** — the value component of
+  [`rand(rstate, M)`](07-functions.md#rand), which returns `(value, new_rstate)`
+  ([random value generation](07-functions.md#sec:random)). The RNG state enters
+  as an input, so the same argument reproduces the value; `new_rstate` may
+  itself be an output for chained evaluation. `rand`'s tractability restriction
+  applies unchanged;
+- any other **deterministic expression** over the inputs.
 
-Whatever its kind, every output reduces to a deterministic expression before code
-generation, eliminating the measure layer: a density query reduces structurally to
-the densities of its operands
-(see [density of composed measures](06-measure-algebra.md#density-of-composed-measures)),
-and a sampled output resolves its measure's `draw` nodes to concrete values through
-`rand`, whereas density evaluation takes those nodes as inputs to the density —
-their values arrive through the explicit `point` argument
-([variates and measures](04-design.md#sec:variate-measure)). The function returns
-the outputs in declared order: a single value, or a tuple for multiple outputs.
+Every output reduces to a deterministic expression before code generation: a
+density query reduces structurally to its operands' densities
+([density of composed measures](06-measure-algebra.md#density-of-composed-measures));
+a sampled output resolves its measure's `draw` nodes through `rand`, whereas a
+density output takes their values through the explicit `point`
+([variates and measures](04-design.md#sec:variate-measure)). Results are
+returned in declared order: a single value, or a tuple.
 
 #### `inputs` — the arguments
 
-Each element of `inputs` is a binding that becomes a function argument, in order.
-`inputs` is **authoritative and exhaustive**: every parameterized `elementof`
-binding in the module must appear in it, otherwise the declaration is ill-formed —
-a parameter with no argument slot. A declared input that no output depends on is
-still retained as an argument; a stable ABI is not subject to elimination.
-
-The [phase](04-design.md#phases) of an input binding governs how it maps:
+`inputs` is **authoritative and exhaustive**: every `elementof` binding in the
+module must appear in it (otherwise the declaration is ill-formed), and a
+declared input no output depends on is still retained as an argument — the ABI
+is not subject to elimination. The [phase](04-design.md#phases) of a binding
+governs its mapping:
 
 | Phase | Construct | Listed in `inputs` | Not listed in `inputs` |
 |---|---|---|---|
 | parameterized | `elementof` | function argument | ill-formed (must be listed) |
 | fixed | `external` | function argument | baked constant, or refused per backend |
 | fixed | `load_data` | function argument (shape from its `valueset`, contents at runtime) | baked constant, or refused per backend |
-| stochastic | `draw` | — | not an input; eliminated if no output reaches it; resolved by `rand` when a sampled output reaches it; valued through the explicit `point` when a density output evaluates over it |
+| stochastic | `draw` | — | eliminated if no output reaches it; `rand`-resolved for a sampled output; valued via `point` for a density output |
 
-A [`load_data`](07-functions.md#load_data) binding is the intermediate case. Its
-value is fixed (set at module initialization) but compile-time-unknown; its shape
-is not — the declared `valueset` fully determines the result's shape. Listing the
-binding in `inputs` promotes the *data* to a runtime argument whose shape is the
-`valueset`'s shape, while its contents are **never baked into the artifact**. One
-compiled function then scores any data of that shape without re-compilation. (A
-`load_data` whose `valueset` is the placeholder set `anything` declares no shape
-and cannot be promoted; the shape must be supplied by the model — engines should
-not infer it from the source.) A fixed input (`external` or `load_data`) that an output
-reaches but that is *not* listed in `inputs` is instead baked into the artifact as
-a constant, or refused — the choice is left to the backend.
+A promoted [`load_data`](07-functions.md#load_data) argument's shape is its
+declared `valueset`'s shape (the `valueset` fully determines the shape;
+`anything` declares none and cannot be promoted). Its contents are **never
+baked into the artifact**, so one compiled function scores any data of that
+shape without re-compilation.
 
-Fixed values are set at module initialization and do not change thereafter,
-whereas parameterized values differ between evaluations
-(see [phases](04-design.md#phases)). Listing a fixed binding in `inputs` relaxes
-that life cycle at the ABI boundary: the caller supplies the value on each call,
-and holding it constant across a sweep of calls recovers the initialized-module
-picture. The RNG state read by a sampled output
-([random value generation](07-functions.md#sec:random)) is such a promoted fixed
-input — fixed in phase by ancestry (an `external` binding has no `elementof` or
-`draw` ancestor), but re-chooseable per call once promoted; supplying the same RNG-state
-argument reproduces the draw.
+Fixed values do not change after module initialization
+([phases](04-design.md#phases)); listing a fixed binding in `inputs` relaxes
+that life cycle at the ABI boundary — the caller supplies the value on each
+call. The RNG state of a sampled output is such a promoted fixed input.
 
 #### Retained subgraph
 
-A compilation backend need emit only the part of the module the ABI reaches. The
-retained subgraph is the backward cone of `outputs` together with the declared
-`inputs`: every output, every intermediate it depends on, the inputs it uses, and
-any fixed constant it requires. A hyperparameter constant that feeds an output but
-descends from no input is **kept** — the output cannot be computed without it.
-Everything else — every binding no output reaches — is discarded (a `draw` that
-feeds no output among them; a `draw` that a sampled output resolves through `rand`
-is retained). Rooting additionally on `inputs` keeps a declared-but-unused argument
-alive, preserving the ABI.
+The backend emits only the backward cone of `outputs` together with the
+declared `inputs`: the outputs, their intermediates, and every constant they
+require (kept even when input-independent). Everything no output reaches is
+discarded, except that a declared-but-unused input stays — rooting on `inputs`
+preserves the ABI. A `draw` reaching a sampled output is retained as its
+`rand`.
 
-When neither binding is present, a host may fall back to an implementation-defined
-convention for locating the outputs and their arguments. That fallback is a
-host/tooling concern and carries no normative force; a backend that compiles to a
-fixed signature should require the explicit ABI.
+When neither binding is present, a host may fall back to an
+implementation-defined convention for locating outputs and arguments; that
+fallback carries no normative force.
 
 ### Future profiles
 
