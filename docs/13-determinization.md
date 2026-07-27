@@ -1,10 +1,8 @@
 ## <a id="sec:determinization"></a>Determinization
 
-This section defines **determinization**: the transformation of a module with
-a declared signature into a deterministic DAG from its `inputs` to its
-`outputs`, in which each output's measure layer is reduced to deterministic
-operations and the module is sliced to the subgraph the signature reaches. A
-compilation backend uses it to compile a model to an executable numeric
+This section defines **determinization**: the reduction of a module with a
+declared signature to a deterministic DAG from its `inputs` to its `outputs`.
+A compilation backend uses it to compile a model to an executable numeric
 function (for example a StableHLO/XLA `func.func`) rather than rewriting it
 into another modelling language ([profiles](12-profiles.md#sec:profiles)).
 
@@ -32,15 +30,13 @@ Each element of `outputs` is a deterministic result:
 - a **sampled value** — the value component of
   [`rand(rstate, M)`](07-functions.md#rand), which returns `(value, new_rstate)`
   ([random value generation](07-functions.md#sec:random)); the RNG state is an
-  input (the same argument reproduces the value), and `new_rstate` may itself
-  be an output for chained evaluation;
+  input, so a fixed argument reproduces the value, and `new_rstate` may also
+  be an output;
 - any other **deterministic expression** over the inputs.
 
-`inputs` is authoritative and exhaustive: every `elementof` binding must
-appear in it (otherwise the declaration is ill-formed), and a declared input
-that no output uses remains an argument, since the signature is not subject
-to elimination.
-The [phase](04-design.md#phases) of a binding governs its mapping:
+`inputs` is exhaustive: every `elementof` binding must appear in it (otherwise
+the module is ill-formed), and a declared input that no output uses remains an
+argument. The [phase](04-design.md#phases) of a binding governs its mapping:
 
 | Phase | Construct | Listed in `inputs` | Not listed in `inputs` |
 |---|---|---|---|
@@ -52,10 +48,9 @@ The [phase](04-design.md#phases) of a binding governs its mapping:
 A promoted [`load_data`](07-functions.md#load_data) argument's shape is its
 declared `valueset`'s shape (`anything` declares none and cannot be promoted);
 its contents are never baked into the artifact, so one artifact scores any
-data of that shape. Fixed values do not change after module initialization
-([phases](04-design.md#phases)); listing one in `inputs` relaxes that at the
-signature boundary, where the caller supplies the value on each call. The RNG state of a sampled
-output is such a promoted fixed input.
+data of that shape. Fixed values do not change after module initialization;
+listing one in `inputs` relaxes this: the caller supplies the value on each
+call. The RNG state of a sampled output is such a promoted fixed input.
 
 Absent both bindings, an engine may locate outputs and arguments by an
 implementation-defined convention; that fallback carries no normative force.
@@ -79,7 +74,7 @@ implementation-defined convention; that fallback carries no normative force.
 ### Refused constructs
 
 Determinization reduces in closed form or fails loudly; it does not
-substitute heuristics. The following are refused:
+substitute heuristics. Refused:
 
 - the density of a `pushfwd` of a function neither in the known-bijection
   registry nor a structural projection, unless wrapped in
@@ -96,9 +91,8 @@ substitute heuristics. The following are refused:
 
 ### Retained subgraph
 
-The backend emits the ancestor subgraph of `outputs`
-([the backward program slice](04-design.md#application-and-reification))
-together with the declared `inputs`: the outputs, their intermediates, and
-every constant they require (kept even when input-independent). Everything no
-output reaches is discarded; a declared-but-unused input stays, and a `draw`
-reaching a sampled output is retained as its `rand`.
+The backend emits the ancestor subgraph of `outputs` (its
+[backward program slice](04-design.md#application-and-reification), including
+constants that descend from no input) together with the declared `inputs`;
+everything else is discarded. A `draw` reaching a sampled output is retained
+as its `rand`.
