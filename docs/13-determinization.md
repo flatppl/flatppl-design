@@ -27,7 +27,7 @@ arguments and results.
 Each element of `outputs` is a deterministic result:
 
 - a **density**,
-  [`logdensityof(M, point)`](06-measure-algebra.md#likelihoods-and-posteriors),
+  [`densityof(M, point)` or `logdensityof(M, point)`](06-measure-algebra.md#likelihoods-and-posteriors),
   with an explicit `point`;
 - a **sampled value** — the value component of
   [`rand(rstate, M)`](07-functions.md#rand), which returns `(value, new_rstate)`
@@ -62,8 +62,8 @@ implementation-defined convention; that fallback carries no normative force.
 
 ### Output reduction
 
-- A **density query** reduces structurally to its operands' densities,
-  terminating at `builtin_logdensityof`
+- A **density query** (`densityof` or `logdensityof`) reduces structurally to
+  its operands' densities, terminating at `builtin_logdensityof`
   ([density of composed measures](06-measure-algebra.md#density-of-composed-measures)):
   `weighted`/`logweighted` add the (log-)weight; `superpose` is a `logsumexp`;
   `normalize` subtracts `log(totalmass(M))`; `truncate` gates on the
