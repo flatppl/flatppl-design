@@ -34,13 +34,15 @@ Each element of `outputs` is a deterministic result:
   be an output;
 - any other **deterministic expression** over the inputs.
 
-`inputs` is exhaustive: every `elementof` binding must appear in it (otherwise
-the module is ill-formed), and a declared input that no output uses remains an
-argument. The [phase](04-design.md#phases) of a binding governs its mapping:
+`inputs` is exhaustive over the retained subgraph: every `elementof` binding
+an output depends on must appear in it (otherwise the module is ill-formed);
+one that no output reaches is eliminated like any other unreached binding. A
+declared input that no output uses still remains an argument. The
+[phase](04-design.md#phases) of a binding governs its mapping:
 
 | Phase | Construct | Listed in `inputs` | Not listed in `inputs` |
 |---|---|---|---|
-| parameterized | `elementof` | function argument | ill-formed (must be listed) |
+| parameterized | `elementof` | function argument | ill-formed if an output reaches it; otherwise eliminated |
 | fixed | `external` | function argument | baked constant, or refused per backend |
 | fixed | `load_data` | function argument (shape from its `valueset`, contents at runtime) | baked constant, or refused per backend |
 | stochastic | `draw` | — | eliminated if no output reaches it; otherwise handled by [output reduction](#output-reduction) |
