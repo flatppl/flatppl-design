@@ -213,9 +213,11 @@ is the set of `n`-row tables.
 
 **Standard simplex.** `stdsimplex(n)` denotes the standard $(n{-}1)$-dimensional probability
 simplex $\Delta_{n-1} = \{x \in \mathbb{R}^n : x_i \geq 0,\; \sum_i x_i = 1\}$.
-`Lebesgue(support = stdsimplex(n))` is the intrinsic $(n{-}1)$-dimensional Lebesgue
-measure on the simplex, embedded in $\mathbb{R}^n$: it measures surface area within the
-simplex and assigns zero mass to sets that do not intersect it.
+`Lebesgue(support = stdsimplex(n))` is the $(n{-}1)$-dimensional coordinate Lebesgue
+measure on the simplex: the image of $dx_1 \cdots dx_{n-1}$ under the chart that appends
+$x_n = 1 - \sum_{i<n} x_i$ (dropping any other coordinate gives the same measure). It
+assigns zero mass to sets that do not intersect the simplex. It is not the surface
+(Hausdorff) measure of the embedded simplex, which is larger by the factor $\sqrt{n}$.
 
 `relabel` applies to set products in the same way as to measures
 (see [interface adaptation](04-design.md#interface-adaptation)).
