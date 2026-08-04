@@ -532,8 +532,7 @@ Density w.r.t. `Lebesgue(stdsimplex(n))`:
 $$\frac{\Gamma(\|\alpha\|_1)}{\prod_i \Gamma(\alpha_i)} \prod_i x_i^{\alpha_i - 1}  \quad \text{for } \mathbf{x} \in \left\{\mathbf{p} \in \mathbb{R}^n : \sum_{i=1}^{n} p_i = 1, \, p_i \geq 0 \text{ for } i = 1, 2, \dots, n\right\}$$
 
 The reference measure is the coordinate measure $dx_1 \cdots dx_{n-1}$ of
-[`Lebesgue(stdsimplex(n))`](03-value-types.md#sets), against which this formula
-integrates to 1 (against the surface measure it would integrate to $\sqrt{n}$).
+[`Lebesgue(stdsimplex(n))`](03-value-types.md#sets).
 
 [Canonical transport](07-functions.md#sec:measure-eval-prims) of `Dirichlet` to/from
 standard uniform is the Connor–Mosimann stick-breaking map — the $i$-th break is
