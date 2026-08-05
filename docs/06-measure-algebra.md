@@ -516,7 +516,9 @@ The density of a composed measure is determined by the measure-algebra definitio
 - `joint` and `iid` (the variate is the `cat` of the component variates): for components sharing no stochastic ancestor, $\log\mathrm{densityof}(\mathrm{joint}(M_1, M_2), [x_1, x_2]) = \log\mathrm{densityof}(M_1, x_1) + \log\mathrm{densityof}(M_2, x_2)$; for `iid` always, $\log\mathrm{densityof}(\mathrm{iid}(M, n), x) = \sum_i \log\mathrm{densityof}(M, x_i)$. A `joint` with shared ancestry reduces as its [equivalent record law](#joint); a singular joint has no density and the query is refused.
 - `jointchain` (the product of the constituent conditional densities): $\log\mathrm{densityof}(\mathrm{jointchain}(M, K), [a, b]) = \log\mathrm{densityof}(M, a) + \log\mathrm{densityof}(K(a), b)$.
 
-`kchain` marginalizes the intermediate variate, so its density is the marginal integral $\int \mathrm{densityof}(K(a), x)\,\mathrm{d}M(a)$. This is generally intractable; an engine evaluates it in closed form, or by enumeration of a discrete latent, and otherwise reports a static error.
+`kchain` marginalizes the intermediate variate, so its density is the marginal integral $\int \mathrm{densityof}(K(a), x)\,\mathrm{d}M(a)$.
+
+**Density evaluation is controlled.** A reduction can leave an integral: the marginal of `kchain` or of a shared stochastic ancestor, or the total mass of [`normalize`](#normalize). Any evaluation method is admissible, stochastic estimation included, but the caller controls which may run. By default an engine evaluates such an integral in closed form, by enumeration of a discrete latent, or by a deterministic method with controlled error, and otherwise reports a static error. An engine returns a stochastic estimate of a density only where the caller has explicitly enabled it.
 
 ### Likelihoods and posteriors
 
