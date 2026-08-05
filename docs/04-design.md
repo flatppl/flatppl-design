@@ -310,7 +310,15 @@ computational graph to a probability measure.
 is the total law of x — the probability measure that `x`, considered as a random
 variable, is distributed according to.
 
-**Identity law.** `lawof(draw(m))` is equivalent to `m`.
+**Identity law.** `lawof(draw(m))` is equivalent to `m`. Equal laws do not
+make values interchangeable as [`joint`](06-measure-algebra.md#joint)
+components: a `joint` of two reified laws of the same draw is the singular
+diagonal joint, while `joint(m, m)` is the product of two independent draws.
+
+**Trace of the reified law.** A reified measure or kernel carries its traced
+sub-DAG as part of its value; a stochastic node shared between the traces of
+several [`joint`](06-measure-algebra.md#joint) components enters the composed
+trace once.
 
 **Phase of the reified law.** Although the ancestor subgraph
 of the argument of `lawof` will typically include stochastic nodes, the

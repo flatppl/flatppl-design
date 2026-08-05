@@ -362,7 +362,7 @@ sp = superpose(weighted(n_sig, sig), bkg)
 mix = normalize(superpose(
     weighted(0.7, M1), weighted(0.3, M2)))
 
-# Independent joint
+# Joint of independent components
 j = joint(M1, M2)
 
 # Marginalizing composition

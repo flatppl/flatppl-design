@@ -34,9 +34,11 @@ $\theta$-independent reference measure.
 individual reference measures $\rho_1, \rho_2, \ldots$ (each either `Lebesgue` or
 `Counting` on the corresponding component support), the reference measure of the
 product is the product $\rho_1 \otimes \rho_2 \otimes \cdots$ on the joint variate
-space, and the joint density w.r.t. this product reference is the product of the
-component densities. Mixed continuous-discrete joints are handled uniformly under
-this rule: e.g. `joint(c = Normal(mu = 0, sigma = 1), k = Poisson(rate = 3))` has
+space. For components sharing no stochastic ancestor, the joint density w.r.t.
+this product reference is the product of the component densities; a
+shared-ancestor `joint` keeps the same product reference, with density given by
+its equivalent record law (see [`joint`](#joint)). Mixed continuous-discrete
+joints are handled uniformly under this rule: e.g. `joint(c = Normal(mu = 0, sigma = 1), k = Poisson(rate = 3))` has
 reference measure $\mathrm{Lebesgue}(\mathbb{R}) \otimes \mathrm{Counting}(\mathbb{Z})$
 on $\mathbb{R} \times \mathbb{Z}$, with joint density $\phi(c;\,0,1) \cdot
 \mathrm{Pois}(k;\,3)$ at $(c, k)$.
@@ -170,14 +172,20 @@ To evaluate a density at many points (e.g. a grid for numerical integration or p
   mix = normalize(superpose(weighted(a1, normal1), weighted(a2, normal2)))
   ```
 
-#### Independent composition
+#### Joint composition
 
 | Construct | Arguments | Description |
 |---|---|---|
-| [`joint`](#joint) | `M1, M2, ...` | independent product measure; keyword form names variates |
+| [`joint`](#joint) | `M1, M2, ...` | joint law of the components; shared stochastic ancestors retained; keyword form names variates |
 | [`iid`](#iid) | `M`, `size` | product $M^{\otimes N}$ over arrays of shape `size`, $N = \mathrm{prod}(\text{size})$ |
 
-- **`joint(M1, M2, ...)`**<a id="joint"></a> — independent product measure:
+- **`joint(M1, M2, ...)`**<a id="joint"></a> — the joint law of its components.
+  A component contributes a fresh coordinate; a stochastic node shared
+  between component traces (through a reified component —
+  [`lawof`](04-design.md#sec:lawof), [`kernelof`](04-design.md#sec:kernelof) —
+  or a stochastic constructor parameter) remains a single node of the
+  composed trace. Components that share no stochastic node are independent,
+  and their `joint` is the product measure:
   $(M_1 \otimes M_2)(A \times B) = M_1(A) \cdot M_2(B)$.
 
   The output variate is formed by combining the component variates via `cat`
@@ -211,9 +219,32 @@ To evaluate a density at many points (e.g. a grid for numerical integration or p
   For kernels, `joint(K1, K2, ...)` results in a kernel that fans a single input out
   to all component kernels, so each of them receives the same input.
 
+  **Equivalent record law.** `joint(a = lawof(a), b = lawof(b))` is equivalent
+  to `lawof(record(a = a, b = b))`; the positional form is the corresponding
+  `cat` law (see [reification to measures](04-design.md#sec:lawof)).
+
+  ```flatppl
+  z ~ Normal(mu = m, sigma = s)
+  a ~ Normal(mu = z, sigma = s_a)
+  b ~ Normal(mu = z, sigma = s_b)
+  ```
+
+  For these draws, `joint(a = lawof(a), b = lawof(b))` has cross-covariance
+  $\mathrm{Var}(z) = s^2$; a `joint` of two constructor measures with the same
+  marginals has cross-covariance $0$.
+
+  **Singular joints.** When one component's variate is determined by the
+  others given the shared ancestors (the same draw referenced twice, a
+  deterministic transform of another component), the joint law has no density
+  w.r.t. the product reference measure. Sampling is well-defined; a density
+  query is a static error where statically detectable, and is otherwise
+  refused by the engine.
+
 - **`iid(M, size)`**<a id="iid"></a> — the product measure $M^{\otimes N}$ over arrays of
   shape `size`, where `N = prod(size)`. `size` is an integer (1-D length) or
-  a vector of positive integers (multi-axis shape).
+  a vector of positive integers (multi-axis shape). When `M` is a reified law,
+  each of the $N$ copies carries its own copy of the reified sub-DAG,
+  stochastic ancestors included; `iid` never shares nodes between copies.
 
   For example, to represent the draw of 100 IID samples from a normal distribution, use 
 
@@ -226,7 +257,7 @@ To evaluate a density at many points (e.g. a grid for numerical integration or p
 | Construct | Arguments | Description |
 |---|---|---|
 | [`kchain`](#kchain) | `M, K1, K2, ...` | Kleisli bind; marginalizes intermediate variates, keeps the last |
-| [`jointchain`](#jointchain) | `M, K1, K2, ...` | dependent joint; concatenates all variates (no marginalization) |
+| [`jointchain`](#jointchain) | `M, K1, K2, ...` | kernel-conditioned joint; concatenates all variates (no marginalization) |
 | [`markovchain`](#markovchain) | `kernel`, `init`, `n` | measure over a length-`n` time-homogeneous Markov trajectory |
 | [`kscan`](#kscan) | `kernel`, `init`, `xs` | Kleisli scan; `markovchain` with per-step exogenous inputs `xs` |
 
@@ -261,7 +292,7 @@ To evaluate a density at many points (e.g. a grid for numerical integration or p
   model = lawof(c)
   ```
 
-- **`jointchain(M, K1, K2, ...)`**<a id="jointchain"></a> — dependent joint measure. The first argument is a
+- **`jointchain(M, K1, K2, ...)`**<a id="jointchain"></a> — kernel-conditioned joint measure. The first argument is a
   base measure or kernel; the remaining arguments are non-nullary kernels whose inputs
   bind to the variates of everything to their left.
 
@@ -482,7 +513,7 @@ The density of a composed measure is determined by the measure-algebra definitio
 - `superpose` (measure addition): $\log\mathrm{densityof}(\mathrm{superpose}(M_1, \dots, M_k), x) = \mathrm{logsumexp}_k\, \log\mathrm{densityof}(M_k, x)$.
 - `normalize` (from $M / Z$): $\log\mathrm{densityof}(\mathrm{normalize}(M), x) = \log\mathrm{densityof}(M, x) - \log Z$, with $Z = \mathrm{totalmass}(M)$ finite and nonzero.
 - `truncate` (from $\nu(A) = M(A \cap S)$): $\log\mathrm{densityof}(\mathrm{truncate}(M, S), x)$ is $\log\mathrm{densityof}(M, x)$ for $x \in S$ and $-\infty$ otherwise.
-- `joint` and `iid` (independent products; the variate is the `cat` of the component variates): $\log\mathrm{densityof}(\mathrm{joint}(M_1, M_2), [x_1, x_2]) = \log\mathrm{densityof}(M_1, x_1) + \log\mathrm{densityof}(M_2, x_2)$, and $\log\mathrm{densityof}(\mathrm{iid}(M, n), x) = \sum_i \log\mathrm{densityof}(M, x_i)$.
+- `joint` and `iid` (the variate is the `cat` of the component variates): for components sharing no stochastic ancestor, $\log\mathrm{densityof}(\mathrm{joint}(M_1, M_2), [x_1, x_2]) = \log\mathrm{densityof}(M_1, x_1) + \log\mathrm{densityof}(M_2, x_2)$; for `iid` always, $\log\mathrm{densityof}(\mathrm{iid}(M, n), x) = \sum_i \log\mathrm{densityof}(M, x_i)$. A `joint` with shared ancestry reduces as its [equivalent record law](#joint); a singular joint has no density and the query is refused.
 - `jointchain` (the product of the constituent conditional densities): $\log\mathrm{densityof}(\mathrm{jointchain}(M, K), [a, b]) = \log\mathrm{densityof}(M, a) + \log\mathrm{densityof}(K(a), b)$.
 
 `kchain` marginalizes the intermediate variate, so its density is the marginal integral $\int \mathrm{densityof}(K(a), x)\,\mathrm{d}M(a)$. This is generally intractable; an engine evaluates it in closed form, or by enumeration of a discrete latent, and otherwise reports a static error.
