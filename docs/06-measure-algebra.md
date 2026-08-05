@@ -184,8 +184,8 @@ To evaluate a density at many points (e.g. a grid for numerical integration or p
   always) are independent, and their `joint` is the product measure:
   $(M_1 \otimes M_2)(A \times B) = M_1(A) \cdot M_2(B)$. Reified components
   ([`lawof`](04-design.md#sec:lawof), [`kernelof`](04-design.md#sec:kernelof))
-  keep their dependence: stochastic ancestors shared between component traces
-  are drawn once.
+  keep their dependence: a stochastic node shared between component traces
+  remains a single node of the composed trace.
 
   The output variate is formed by combining the component variates via `cat`
   (see [array operations](07-functions.md#array-and-table-operations)). All components
@@ -242,8 +242,8 @@ To evaluate a density at many points (e.g. a grid for numerical integration or p
 - **`iid(M, size)`**<a id="iid"></a> — the product measure $M^{\otimes N}$ over arrays of
   shape `size`, where `N = prod(size)`. `size` is an integer (1-D length) or
   a vector of positive integers (multi-axis shape). When `M` is a reified law,
-  each of the $N$ copies redraws the reified sub-DAG afresh, stochastic
-  ancestors included; `iid` never shares ancestors between copies.
+  each of the $N$ copies carries its own copy of the reified sub-DAG,
+  stochastic ancestors included; `iid` never shares nodes between copies.
 
   For example, to represent the draw of 100 IID samples from a normal distribution, use 
 

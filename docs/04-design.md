@@ -316,8 +316,9 @@ components: a `joint` of two reified laws of the same draw is the singular
 diagonal joint, while `joint(m, m)` is the product of two independent draws.
 
 **Trace of the reified law.** A reified measure or kernel carries its traced
-sub-DAG as part of its value; `joint` draws stochastic ancestors shared
-between component traces once.
+sub-DAG as part of its value; a stochastic node shared between the traces of
+several [`joint`](06-measure-algebra.md#joint) components enters the composed
+trace once.
 
 **Phase of the reified law.** Although the ancestor subgraph
 of the argument of `lawof` will typically include stochastic nodes, the
