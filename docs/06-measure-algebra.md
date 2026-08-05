@@ -222,6 +222,16 @@ To evaluate a density at many points (e.g. a grid for numerical integration or p
   to `lawof(record(a = a, b = b))`; the positional form is the corresponding
   `cat` law (see [reification to measures](04-design.md#sec:lawof)).
 
+  ```flatppl
+  z ~ Normal(mu = m, sigma = s)
+  a ~ Normal(mu = z, sigma = s_a)
+  b ~ Normal(mu = z, sigma = s_b)
+  ```
+
+  For these draws, `joint(a = lawof(a), b = lawof(b))` has cross-covariance
+  $\mathrm{Var}(z) = s^2$; a `joint` of two constructor measures with the same
+  marginals has cross-covariance $0$.
+
   **Singular joints.** When one component's variate is determined by the
   others given the shared ancestors (the same draw referenced twice, a
   deterministic transform of another component), the joint law has no density
