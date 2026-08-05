@@ -180,12 +180,13 @@ To evaluate a density at many points (e.g. a grid for numerical integration or p
 | [`iid`](#iid) | `M`, `size` | product $M^{\otimes N}$ over arrays of shape `size`, $N = \mathrm{prod}(\text{size})$ |
 
 - **`joint(M1, M2, ...)`**<a id="joint"></a> — the joint law of its components.
-  Components that share no stochastic ancestor (distribution constructors
-  always) are independent, and their `joint` is the product measure:
-  $(M_1 \otimes M_2)(A \times B) = M_1(A) \cdot M_2(B)$. Reified components
-  ([`lawof`](04-design.md#sec:lawof), [`kernelof`](04-design.md#sec:kernelof))
-  keep their dependence: a stochastic node shared between component traces
-  remains a single node of the composed trace.
+  A component contributes a fresh coordinate; a stochastic node shared
+  between component traces (through a reified component —
+  [`lawof`](04-design.md#sec:lawof), [`kernelof`](04-design.md#sec:kernelof) —
+  or a stochastic constructor parameter) remains a single node of the
+  composed trace. Components that share no stochastic node are independent,
+  and their `joint` is the product measure:
+  $(M_1 \otimes M_2)(A \times B) = M_1(A) \cdot M_2(B)$.
 
   The output variate is formed by combining the component variates via `cat`
   (see [array operations](07-functions.md#array-and-table-operations)). All components
