@@ -124,7 +124,7 @@ but can easily be represented in other ways:
   unary `-` follow standard linear-algebra and scalar semantics: `+`
   and `-` require operands of identical shape (scalars, or arrays of
   matching shape), `*` supports matrix and matrix–vector multiplication,
-  and `/` and `^` are scalar-only.
+  `/` requires a scalar divisor, and `^` is scalar-only.
 
 ### Decomposition syntax
 
