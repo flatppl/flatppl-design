@@ -102,7 +102,10 @@ canonical syntax):
   the callable's argument names is a static error. Auto-splatting is shallow and occurs only
   when a record or table is the call's sole argument (whatever its field count, a single field
   included); a record given alongside other arguments, or bound to a parameter by keyword, is an
-  ordinary value and is not splatted.
+  ordinary value and is not splatted. A sole positional record or table therefore always splats:
+  whether its field or column names match the callable's argument names decides only whether the
+  call is valid, never whether the splat occurs. Passing a record or table as one ordinary
+  argument requires the keyword spelling, as in `f(pars = record(...))`.
 
 - **Positional arguments**: `f(x, y, ...)`. Positional arguments are accepted only if
   the callable has ordered inputs, so that the arguments can be mapped to the inputs in order.
