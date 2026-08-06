@@ -299,11 +299,16 @@ density (unless they are marginalized out in the stochastic graph).
 <a id="sec:functionof-measure"></a>**Reifying measure-valued expressions to kernels.**
 If `functionof` is applied to a measure node, it generates a transition kernel — a
 measure-generating callable in FlatPPL — instead of a function. If the measure
-is normalized, the resulting kernel is a Markov kernel.
+is normalized, the resulting kernel is a Markov kernel. The two spellings differ
+when `m` is of stochastic phase: `functionof(m, ...)` reifies the conditional
+kernel, `functionof(lawof(m), ...)` the marginal (see
+[reification to measures](#sec:lawof)). For `m` of fixed or parameterized phase
+they coincide, since `lawof(m)` is then `m`.
 
 So `functionof` reifies a value or measure node in the computational graph to a
 value function or transition kernel. While `lawof` reifies a value node in the
-computational graph to a probability measure.
+computational graph to a probability measure, and maps a measure node to the law
+of a draw from it (see [reification to measures](#sec:lawof) below).
 
 `kernelof` (see below) combines `lawof` and `functionof`.
 
@@ -317,6 +322,25 @@ variable, is distributed according to.
 make values interchangeable as [`joint`](06-measure-algebra.md#joint)
 components: a `joint` of two reified laws of the same draw is the singular
 diagonal joint, while `joint(m, m)` is the product of two independent draws.
+
+`lawof` also accepts a measure argument. `lawof(m)` is `lawof(draw(m))`, the law
+of a draw from `m`; each draw from `m` is a fresh coordinate, while the `draw`
+nodes among `m`'s ancestors remain the same nodes of the trace, so
+`joint(a = lawof(m), b = lawof(m))` is the shared-ancestor joint rather than the
+diagonal one, and the product when `m` has no `draw` ancestors. A probability
+measure of fixed or parameterized phase is its own law, so `lawof(m)` is
+equivalent to `m` and `lawof` is idempotent. A probability
+measure of stochastic phase is a random measure, and `lawof(m)` is the marginal
+law of a draw from it: the mixture $\nu(B) = \int \kappa(z, B)\, dP(z)$ of the
+kernel $\kappa$ carrying those `draw` ancestors to `m`, over their joint law $P$
+— the same integral as [`kchain`](06-measure-algebra.md#kchain). `lawof(m)`
+requires `m`'s `%mass` to be `%normalized`
+(see [total-mass classes](11-flatpir.md#total-mass-classes)); anything else is a
+static error, since an unnormalized measure is not its own law and admits no such
+mixture. `lawof` never normalizes its argument; `normalize(m)` states that
+intent. On a non-nullary kernel, `lawof` lifts pointwise, as the
+[uniform kernel extension](06-measure-algebra.md#sec:measure-algebra) does for
+measure-algebra operations.
 
 **Trace of the reified law.** A reified measure or kernel carries its traced
 sub-DAG as part of its value; a stochastic node shared between the traces of
@@ -460,7 +484,9 @@ For example, `x -> 2 * x + 1` is equivalent to `functionof(2 * _x_ + 1, x = _x_)
 #### <a id="sec:kernelof"></a>Kernels and `kernelof`
 
 `kernelof(x, kwargs...)` reifies (typically stochastic) value nodes to Markov
-kernels. `x` must not be a measure. `kernelof(x, kwargs...)` is equivalent to
+kernels. `x` must not be a measure, since `functionof` already reifies a measure
+node to a kernel directly (see [above](#sec:functionof-measure)).
+`kernelof(x, kwargs...)` is equivalent to
 `functionof(lawof(x), kwargs...)` interpreted within the reified subgraph
 delimited by `kwargs` — the boundary substitution applies before the inner
 `lawof` is interpreted, so an enclosing `kernelof` boundary scopes what the
