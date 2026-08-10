@@ -123,7 +123,8 @@ but can easily be represented in other ways:
 - **No implicit operator broadcasting.** Infix `+`, `-`, `*`, `/`, `^` and
   unary `-` follow standard linear-algebra and scalar semantics: `+`
   and `-` require operands of identical shape (scalars, or arrays of
-  matching shape), `*` supports matrix and matrix–vector multiplication,
+  matching shape), `*` supports the products enumerated in
+  [operator-equivalent functions](07-functions.md#operator-equivalent-functions),
   `/` requires a scalar divisor, and `^` is scalar-only.
 
 ### Decomposition syntax
