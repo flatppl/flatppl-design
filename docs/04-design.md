@@ -104,8 +104,12 @@ canonical syntax):
   included); a record given alongside other arguments, or bound to a parameter by keyword, is an
   ordinary value and is not splatted. A sole positional record or table therefore always splats:
   whether its field or column names match the callable's argument names decides only whether the
-  call is valid, never whether the splat occurs. Passing a record or table as one ordinary
-  argument requires the keyword spelling, as in `f(pars = record(...))`.
+  call is valid, never whether the splat occurs. A callable with exactly one input whose
+  documented domain admits records or tables is exempt and receives a sole positional record or
+  table whole, so that `sum(t)` and `lengthof(t)` reduce over the table rather than splatting.
+  User-defined callables are never exempt: their input domains are inferred, not documented
+  here. Passing a record or table as one ordinary argument requires the keyword spelling, as in
+  `f(pars = record(...))`.
 
 - **Positional arguments**: `f(x, y, ...)`. Positional arguments are accepted only if
   the callable has ordered inputs, so that the arguments can be mapped to the inputs in order.
