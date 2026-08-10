@@ -461,7 +461,7 @@ be passed as arguments to higher-order functions like `broadcast`, `reduce` and 
 |---|---|---|---|
 | `add` | `a`, `b` | `a + b` | scalars or arrays of same shape (real or complex) |
 | `sub` | `a`, `b` | `a - b` | scalars or arrays of same shape (real or complex) |
-| `mul` | `a`, `b` | `a * b` | scalars, matrix-matrix, matrix-vector, scalar-matrix, scalar-vector, transposed-vector–vector, vector–transposed-vector |
+| `mul` | `a`, `b` | `a * b` | scalars, matrix-matrix, matrix-vector, scalar-matrix, scalar-vector, transposed-vector–vector, vector–transposed-vector, transposed-vector–matrix |
 | `divide` | `a`, `b` | `a / b` | scalars, vector-scalar, matrix-scalar (real or complex) |
 | `neg` | `x` | `-x` | scalars or arrays (real or complex) |
 | `pow` | `base`, `exponent` | `base ^ exponent` | scalars (real or complex; complex extension via principal branch, see above) |
@@ -541,7 +541,8 @@ passes — ensuring the invariant is always validated.
 
 Matrix multiplication and addition use the standard `*` and `+` operators.
 The product of a non-transposed vector and a transposed vector is a matrix;
-the product of a transposed vector and a non-transposed vector is a scalar.
+the product of a transposed vector and a non-transposed vector is a scalar;
+the product of a transposed vector and a matrix is a transposed vector.
 
 `transpose` and `adjoint` are self-inverse. The transpose of a vector is
 a transposed vector (see [arrays](03-value-types.md#arrays)), not a
