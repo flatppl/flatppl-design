@@ -594,10 +594,10 @@ the row indices.
 <a id="indicesof0"></a>**`indicesof0(x)`** — zero-based variant of `indicesof`, returning indices
 that start at `0` rather than `1`.
 
-**Table reductions.** When `sum`, `mean`, or `var` is applied to a table, the
-reduction operates column-wise and returns a record whose fields are the
-column names and values are the per-column reductions. Every column must support
-the reduction operation.
+**Table reductions.** When `sum`, `mean`, `var`, `prod`, `maximum`, or `minimum`
+is applied to a table, the reduction operates column-wise and returns a record
+whose fields are the column names and values are the per-column reductions.
+Every column must support the reduction operation.
 
 For multi-axis array contraction using these reductions, see
 [multi-axis aggregation](04-design.md#sec:aggregate).
