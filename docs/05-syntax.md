@@ -352,7 +352,7 @@ MixedArgs       ::= Expression ("," Expression)* ("," KeywordArg)+
 Literal         ::= Number | String | Boolean | ArrayLiteral | RecordLiteral | TupleLiteral
 Boolean         ::= "true" | "false"
 Number          ::= IntegerLit | RealLit
-ArrayLiteral    ::= "[" (Expression ("," Expression)* ","?)? "]"
+ArrayLiteral    ::= "[" Expression ("," Expression)* ","? "]"
 RecordLiteral   ::= "record" "(" KeywordArg ("," KeywordArg)* ","? ")"
 TupleLiteral    ::= "(" Expression "," Expression ("," Expression)* ","? ")"
 
