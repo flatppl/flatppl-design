@@ -304,6 +304,13 @@ To evaluate a density at many points (e.g. a grid for numerical integration or p
   product measure, whose log-density is $0$: the empty sum in the
   [density rule for composed measures](#density-of-composed-measures).
 
+  When `M` is record-valued and `size` is a scalar length, the variate is an
+  `n`-row [table](03-value-types.md#tables) — one row per draw of `M`'s
+  record — the measure-side image of `cartpow` over a record set, which
+  [mirrors `iid(M, size)`](03-value-types.md#sets) and denotes the set of
+  `n`-row tables. Only a scalar `size` produces a table variate; a multi-axis
+  `size` retains the array shape.
+
   For example, to represent the draw of 100 IID samples from a normal distribution, use 
 
   ```flatppl
