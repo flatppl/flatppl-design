@@ -518,6 +518,8 @@ The density of a composed measure is determined by the measure-algebra definitio
 
 `kchain` marginalizes the intermediate variate, so its density is the marginal integral $\int \mathrm{densityof}(K(a), x)\,\mathrm{d}M(a)$. This is generally intractable; an engine evaluates it in closed form, or by enumeration of a discrete latent, and otherwise reports a static error.
 
+**Reproducibility.** An engine may compute a density by any method the reductions above admit, stochastic methods included, provided the value is reproducible with respect to that engine: the same query, on the same engine and hardware, yields the same value. A Monte Carlo estimate computed from a fixed seed therefore satisfies this requirement.
+
 ### Likelihoods and posteriors
 
 #### Likelihood construction
