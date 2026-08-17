@@ -221,10 +221,16 @@ To evaluate a density at many points (e.g. a grid for numerical integration or p
   inputs are the union of the component kernels' inputs by name; a component
   receives the inputs it declares and is unaffected by the others, as in
   [reification with interdependent boundary nodes](04-design.md#sec:kernelof).
-  Components that share a stochastic node must bind every boundary ancestor of
-  that node under the same input name; a `joint` whose sharing components
-  disagree on that name is a static error. Measure components are permitted and
-  are the nullary case: they ignore the input. The keyword form applies
+  Components that share a stochastic node must agree on that node's ancestry:
+  every ancestor of the shared node that any component binds as a boundary
+  input must be bound by every sharing component, under the same input name. A
+  `joint` in which a sharing component binds such an ancestor under a different
+  name, or does not bind it at all — in particular a measure component, which
+  binds nothing — is a static error. Measure components are permitted and
+  are the nullary case: they ignore the input. A measure component may be
+  parameterized and may share stochastic nodes with kernel components; only a
+  shared node with a boundary-bound ancestor is excluded, by the naming clause
+  above. The keyword form applies
   unchanged, producing a kernel whose output variate is a record. At each input
   point the result is the `joint` of the component output measures, so the
   ancestry rule above governs it: component kernels whose traces share a
