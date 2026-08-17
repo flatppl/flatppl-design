@@ -317,11 +317,11 @@ variable, is distributed according to.
 **Identity law.** `lawof(draw(m))` is equivalent to `m` for `m` of fixed or
 parameterized phase; for stochastic-phase `m` it is the marginal law of a draw
 from `m`. Equal laws do not make values interchangeable as
-[`joint`](06-measure-algebra.md#joint)
-components: a `joint` of two reified laws of the same draw is the singular
-diagonal joint. Otherwise `joint(m, m)` contributes a fresh coordinate per
-occurrence, so the two draws are independent given `m`'s stochastic ancestors —
-which remain shared — and independent outright when `m` has none.
+[`joint`](06-measure-algebra.md#joint) components: a `joint` of two reified laws
+of the same draw is the singular diagonal joint. Otherwise `joint(m, m)`
+contributes a fresh coordinate per occurrence, so the two draws are independent
+given `m`'s stochastic ancestors — which remain shared — and independent
+outright when `m` has none.
 
 **Trace of the reified law.** A reified measure or kernel carries its traced
 sub-DAG as part of its value; a stochastic node shared between the traces of
@@ -563,10 +563,10 @@ or referenced and closed over); only taking a cross-module parameterized value
 as an input is disallowed.
 
 Note that `lawof` reifies a measure, which has no input list, so it is
-unrestricted — a measure may reference cross-module values, keeping the
-identity law intact across module boundaries. A reified
-measure that has a parametric dependency on a node defined in another
-module cannot then be reified to a kernel, due to the restriction above.
+unrestricted — a measure may reference cross-module values, keeping the identity
+law intact across module boundaries. A reified measure that has a parametric
+dependency on a node defined in another module cannot then be reified to a
+kernel, due to the restriction above.
 
 ### Interface adaptation
 
