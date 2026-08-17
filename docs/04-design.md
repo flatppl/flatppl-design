@@ -467,7 +467,10 @@ delimited by `kwargs` — the boundary substitution applies before the inner
 inner `lawof` marginalizes over.
 
 **Identity law.** `kernelof(draw(K(a, b, ...)), a = a, b = b, ...)` is
-equivalent to `K`.
+equivalent to `K`. Equal output laws do not make kernels interchangeable as
+[`joint`](06-measure-algebra.md#joint) components: a `joint` of two reifications
+of one draw is the singular diagonal at every input, while a `joint` of two
+constructor kernels contributes a fresh coordinate per occurrence.
 
 Consider this Bayesian example:
 

@@ -217,7 +217,25 @@ To evaluate a density at many points (e.g. a grid for numerical integration or p
   positional `cat` form above).
 
   For kernels, `joint(K1, K2, ...)` results in a kernel that fans a single input out
-  to all component kernels, so each of them receives the same input.
+  to all component kernels, so each of them receives the same input. The result's
+  inputs are the union of the component kernels' inputs by name; a component
+  receives the inputs it declares and is unaffected by the others, as in
+  [reification with interdependent boundary nodes](04-design.md#sec:kernelof).
+  Components that share a stochastic node must bind every boundary ancestor of
+  that node under the same input name; a `joint` whose sharing components
+  disagree on that name is a static error. Measure components are permitted and
+  are the nullary case: they ignore the input. The keyword form applies
+  unchanged, producing a kernel whose output variate is a record. At each input
+  point the result is the `joint` of the component output measures, so the
+  ancestry rule above governs it: component kernels whose traces share a
+  stochastic node yield the correlated record law at each input, and components
+  sharing no stochastic node yield the product — the fanned input is a value, not
+  a stochastic node, and so induces no dependence by itself. The result's
+  total-mass class is the product of the components' classes, as in the measure
+  case; when components sharing a stochastic node include more than one
+  non-normalized member the product is not an upper bound on the composed mass,
+  and no class stronger than unknown is statically justified. A fan-out of Markov
+  kernels is a Markov kernel.
 
   **Equivalent record law.** `joint(a = lawof(a), b = lawof(b))` is equivalent
   to `lawof(record(a = a, b = b))`; the positional form is the corresponding
