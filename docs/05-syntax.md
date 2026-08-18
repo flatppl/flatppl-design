@@ -228,7 +228,7 @@ is not a function (`f(arg1, ...) ~ expr` is not legal).
 Axis names are written `.<name>` and are symbolic index labels used by
 [`aggregate`](04-design.md#sec:aggregate). They are lexically scoped to
 the enclosing aggregation and are not values: an axis name is legal only
-as an entry in `aggregate`'s `output_axes` array literal, as an index
+as an entry in `aggregate`'s `output_axes` axis list, as an index
 inside `[...]` within the body, or as a binder on the left-hand side of
 `:=`. Used anywhere else it is a static error.
 
@@ -306,8 +306,8 @@ Decomposition      ::= Name ("," Name)+ "=" Expression
 TildeBinding       ::= Name "~" Expression
 TildeDecomposition ::= Name ("," Name)+ "~" Expression
 FunctionDefinition ::= Name "(" Name ("," Name)* ")" "=" Expression
-AggregateBinding   ::= Name "[" (Axis ("," Axis)*)? "]" ":=" Expression
-MetricsumBinding   ::= Name ":" Name "[" (Axis ("," Axis)*)? "]" ":=" Expression
+AggregateBinding   ::= Name AxisList ":=" Expression
+MetricsumBinding   ::= Name ":" Name AxisList ":=" Expression
 
 (* Expressions — lambda at top, logical OR/AND above comparisons,
    exponentiation below multiplicative *)
@@ -322,7 +322,7 @@ Multiplicative  ::= Unary (MulOp Unary)*
 Unary           ::= ("-" | ".-") Unary | ("!" | ".!") Unary | Exponential
 Exponential     ::= Postfix (("^" | ".^") Unary)?
 Postfix         ::= Primary (FieldAccess | DotCall | Indexing | Call)*
-Primary         ::= Literal | Name | Axis | "(" Expression ")"
+Primary         ::= Literal | Name | Axis | AxisList | "(" Expression ")"
 
 FieldAccess     ::= "." Name
 DotCall         ::= "." "(" CallArgs ")"
@@ -334,6 +334,7 @@ AxisName        ::= Letter
                     (* Identifier that must not start with "_" or end with "_";
                        trailing "_" is reserved as the lower-variance marker. *)
 VarianceMarker  ::= "^" | "_"
+AxisList        ::= "[" (Axis ("," Axis)*)? "]"
 
 CompOp          ::= "<" | ">" | "==" | "!=" | "<=" | ">=" | "in"
                   | ".<" | ".>" | ".==" | ".!=" | ".<=" | ".>="
@@ -429,6 +430,12 @@ syntactic restrictions on where they may appear are documented in
 but `Axis` is legal only inside an [aggregation](#axis-names) — as an entry
 of `aggregate`'s `output_axes`, as an `[...]` index in its body, or as a
 binder of an `AggregateBinding`. Anywhere else it is a static error.
+The grammar likewise admits `AxisList` as a `Primary`, but it is legal only
+as the `output_axes` argument of an `aggregate` or `metricsum` call and as
+the axis-list binder of an `AggregateBinding` or `MetricsumBinding`;
+anywhere else it is a static error. Unlike `ArrayLiteral`, `AxisList` may be
+empty — `aggregate(sum, [], expr)` and `x[] := expr` both denote full
+reduction to a scalar.
 
 **Note on tuples.** `(x)` is a parenthesised expression. `(x, y)` is a tuple. The
 single-element form `(x,)` is not in the grammar — single-element tuples are not
@@ -457,4 +464,8 @@ A `.Name` token is
 `FieldAccess` when it follows a `Postfix`-able expression, and `Axis`
 otherwise (at the start of a `Primary`). Inside `[...]`, a `!` token
 followed immediately by `,` or `]` is the `only` axis keyword;
-otherwise it is the unary logical-not operator starting an Expression.
+otherwise it is the unary logical-not operator starting an Expression. In
+the `output_axes` position of an `aggregate`/`metricsum` call and in the
+axis-list binder of an `AggregateBinding`/`MetricsumBinding`, `[...]` parses
+as `AxisList`, not `ArrayLiteral`, since only `Axis` tokens are legal there;
+this is what admits the empty `[]` in that position.
