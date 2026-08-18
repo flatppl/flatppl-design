@@ -305,11 +305,9 @@ To evaluate a density at many points (e.g. a grid for numerical integration or p
   [density rule for composed measures](#density-of-composed-measures).
 
   When `M` is record-valued and `size` is a scalar length, the variate is an
-  $N$-row [table](03-value-types.md#tables) — one row per draw of `M`'s record.
-  This is the measure-side image of [`cartpow`](03-value-types.md#sets), which
-  mirrors `iid(M, size)` and takes a record set to the set of tables with those
-  columns. Only a scalar `size` produces a table variate; a multi-axis `size`
-  retains the array shape.
+  $N$-row [table](03-value-types.md#tables) — one row per draw of `M`'s record —
+  mirroring [`cartpow`](03-value-types.md#sets) on a record set. A multi-axis
+  `size` retains the array shape.
 
   For example, to represent the draw of 100 IID samples from a normal distribution, use 
 
