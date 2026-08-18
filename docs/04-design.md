@@ -106,13 +106,12 @@ canonical syntax):
   whether its field or column names match the callable's argument names decides only whether the
   call is valid, never whether the splat occurs. A callable with exactly one input whose
   documented domain admits records or tables is exempt and receives a sole positional record or
-  table whole, so that `sum(t)` and `lengthof(t)` reduce over the table rather than splatting.
-  User-defined callables are never exempt: their input domains are inferred, not documented
-  here. Passing a record or table as one ordinary argument requires the keyword spelling, as in
-  `f(pars = record(...))`. Auto-splatting is a rule of the ordinary calling convention; among
-  the special operations it applies only to `record` and `table` as callees, where it effects
-  the record–table conversions of [tables](03-value-types.md#tables) — `table(r)` and
-  `record(t)`. No other special operation splats a sole record or table argument.
+  table whole, so `sum(t)` reduces over the table rather than splatting. User-defined callables
+  are never exempt. Passing a record or table as one ordinary argument requires the keyword
+  spelling, as in `f(pars = record(...))`. Auto-splatting is a rule of the ordinary calling
+  convention; among the special operations it applies only to `record` and `table` as callees,
+  effecting the record–table conversions of [tables](03-value-types.md#tables); no other
+  special operation splats a sole record or table argument.
 
 - **Positional arguments**: `f(x, y, ...)`. Positional arguments are accepted only if
   the callable has ordered inputs, so that the arguments can be mapped to the inputs in order.
