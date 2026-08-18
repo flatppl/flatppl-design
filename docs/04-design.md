@@ -286,8 +286,8 @@ implicit (built-in) or explicit. `x ~ m` (equivalent to `x = draw(m)`)
 introduces a stochastic node `x` by drawing a variate from a normalized
 measure (i.e. a probability measure) `m`. In the other direction,
 `m = lawof(x)` reifies the ancestor subgraph of `x` as a probability
-measure — the law of `x` as a random variable. `lawof(draw(m))` is identical
-to `m` (see [reification to measures](#sec:lawof) below).
+measure — the law of `x` as a random variable. The identity law relating the
+two directions is stated under [reification to measures](#sec:lawof) below.
 
 `draw` differs fundamentally from [`rand`](07-functions.md#sec:random): `rand` produces
 a concrete random value, while `draw` introduces a stochastic node that represents the
@@ -317,10 +317,14 @@ a draw from it (see [below](#sec:lawof)).
 is the total law of x — the probability measure that `x`, considered as a random
 variable, is distributed according to.
 
-**Identity law.** `lawof(draw(m))` is equivalent to `m`. Equal laws do not
-make values interchangeable as [`joint`](06-measure-algebra.md#joint)
-components: a `joint` of two reified laws of the same draw is the singular
-diagonal joint, while `joint(m, m)` is the product of two independent draws.
+**Identity law.** `lawof(draw(m))` is equivalent to `m` for `m` of fixed or
+parameterized phase; for stochastic-phase `m` it is the marginal law of a draw
+from `m`. Equal laws do not make values interchangeable as
+[`joint`](06-measure-algebra.md#joint) components: a `joint` of two reified laws
+of the same draw is the singular diagonal joint. Otherwise `joint(m, m)`
+contributes a fresh coordinate per occurrence, so the two draws are independent
+given `m`'s stochastic ancestors — which remain shared — and independent
+outright when `m` has none.
 
 `lawof` also accepts a measure argument: `lawof(m)` is `lawof(draw(m))`, the law
 of a draw from `m`. Each draw from `m` is a fresh coordinate, while the `draw`
@@ -582,10 +586,10 @@ or referenced and closed over); only taking a cross-module parameterized value
 as an input is disallowed.
 
 Note that `lawof` reifies a measure, which has no input list, so it is
-unrestricted — a measure may reference cross-module values, keeping
-`lawof(draw(m))` equivalent to `m` across module boundaries. A reified
-measure that has a parametric dependency on a node defined in another
-module cannot then be reified to a kernel, due to the restriction above.
+unrestricted — a measure may reference cross-module values, keeping the identity
+law intact across module boundaries. A reified measure that has a parametric
+dependency on a node defined in another module cannot then be reified to a
+kernel, due to the restriction above.
 
 ### Interface adaptation
 
