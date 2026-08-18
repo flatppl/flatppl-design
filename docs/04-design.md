@@ -104,8 +104,14 @@ canonical syntax):
   included); a record given alongside other arguments, or bound to a parameter by keyword, is an
   ordinary value and is not splatted. A sole positional record or table therefore always splats:
   whether its field or column names match the callable's argument names decides only whether the
-  call is valid, never whether the splat occurs. Passing a record or table as one ordinary
-  argument requires the keyword spelling, as in `f(pars = record(...))`.
+  call is valid, never whether the splat occurs. A callable with exactly one input whose
+  documented domain admits records or tables is exempt and receives a sole positional record or
+  table whole, so `sum(t)` reduces over the table rather than splatting. User-defined callables
+  are never exempt. Passing a record or table as one ordinary argument requires the keyword
+  spelling, as in `f(pars = record(...))`. Auto-splatting is a rule of the ordinary calling
+  convention; no special operation splats a sole record or table argument. `table(r)` and
+  `record(t)` perform the record–table conversions of [tables](03-value-types.md#tables)
+  directly, as dedicated conversions rather than as an instance of auto-splatting.
 
 - **Positional arguments**: `f(x, y, ...)`. Positional arguments are accepted only if
   the callable has ordered inputs, so that the arguments can be mapped to the inputs in order.
@@ -139,7 +145,8 @@ or may not be significant. The total number of inputs is never zero:
 - `aggregate`, `metricsum`, `markovchain`, `kscan`: Three distinguished inputs.
 - `load_data`: One distinguished input plus optional variadic named inputs with
   significant order.
-- `checked`: Two distinguished inputs.
+- `checked`: Named parameters `value` and `condition`, per [§07](07-functions.md#checked);
+  the canonical calling form is keyword-based.
 
 ### <a id="sec:tuples"></a>Tuples
 
