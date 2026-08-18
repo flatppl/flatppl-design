@@ -465,7 +465,5 @@ A `.Name` token is
 otherwise (at the start of a `Primary`). Inside `[...]`, a `!` token
 followed immediately by `,` or `]` is the `only` axis keyword;
 otherwise it is the unary logical-not operator starting an Expression. In
-the `output_axes` position of an `aggregate`/`metricsum` call and in the
-axis-list binder of an `AggregateBinding`/`MetricsumBinding`, `[...]` parses
-as `AxisList`, not `ArrayLiteral`, since only `Axis` tokens are legal there;
-this is what admits the empty `[]` in that position.
+`AxisList`'s legal positions (as above), `[...]` parses as `AxisList`, not
+`ArrayLiteral` — which is what admits the empty `[]` there.
