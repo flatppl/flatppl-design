@@ -286,9 +286,8 @@ implicit (built-in) or explicit. `x ~ m` (equivalent to `x = draw(m)`)
 introduces a stochastic node `x` by drawing a variate from a normalized
 measure (i.e. a probability measure) `m`. In the other direction,
 `m = lawof(x)` reifies the ancestor subgraph of `x` as a probability
-measure — the law of `x` as a random variable. `lawof(draw(m))` is equivalent
-to `m` for `m` of fixed or parameterized phase
-(see [reification to measures](#sec:lawof) below).
+measure — the law of `x` as a random variable. The identity law relating the
+two directions is stated under [reification to measures](#sec:lawof) below.
 
 `draw` differs fundamentally from [`rand`](07-functions.md#sec:random): `rand` produces
 a concrete random value, while `draw` introduces a stochastic node that represents the
