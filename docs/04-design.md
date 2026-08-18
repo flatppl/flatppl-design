@@ -299,11 +299,15 @@ density (unless they are marginalized out in the stochastic graph).
 <a id="sec:functionof-measure"></a>**Reifying measure-valued expressions to kernels.**
 If `functionof` is applied to a measure node, it generates a transition kernel — a
 measure-generating callable in FlatPPL — instead of a function. If the measure
-is normalized, the resulting kernel is a Markov kernel.
+is normalized, the resulting kernel is a Markov kernel. For stochastic-phase `m`,
+`functionof(m, ...)` reifies the conditional kernel and `functionof(lawof(m), ...)`
+the marginal (see [reification to measures](#sec:lawof)); for fixed or
+parameterized phase the two coincide.
 
 So `functionof` reifies a value or measure node in the computational graph to a
 value function or transition kernel. While `lawof` reifies a value node in the
-computational graph to a probability measure.
+computational graph to a probability measure, and a measure node to the law of
+a draw from it (see [below](#sec:lawof)).
 
 `kernelof` (see below) combines `lawof` and `functionof`.
 
@@ -317,6 +321,26 @@ variable, is distributed according to.
 make values interchangeable as [`joint`](06-measure-algebra.md#joint)
 components: a `joint` of two reified laws of the same draw is the singular
 diagonal joint, while `joint(m, m)` is the product of two independent draws.
+
+`lawof` also accepts a measure argument: `lawof(m)` is `lawof(draw(m))`, the law
+of a draw from `m`. Each draw from `m` is a fresh coordinate, while the `draw`
+nodes among `m`'s ancestors remain the same nodes of the trace. A probability
+measure of fixed or parameterized phase is its own law, so `lawof(m)` is
+equivalent to `m` and `lawof` is idempotent. For
+stochastic-phase `m` — a random measure — `lawof(m)` is the marginal law of a
+draw from it: the mixture $\nu(B) = \int \kappa(z, B)\, dP(z)$ of the kernel
+$\kappa$ carrying `m`'s `draw` ancestors to `m`, over their joint law $P$ — the
+same integral as [`kchain`](06-measure-algebra.md#kchain). `lawof(m)` requires
+`m`'s `%mass` to be `%normalized` (see
+[total-mass classes](11-flatpir.md#total-mass-classes)); any other settled class
+— `%null`, `%finite`, `%locallyfinite`, or `%unknown` — is a static error, since
+an unnormalized measure is not its own law. `%deferred` is an inference state,
+not a total-mass class, and triggers no error; an engine that admits a
+`%deferred`-mass argument assumes normalization rather than proving it, and must
+leave the result's `%mass` `%deferred`. `lawof` never normalizes its argument;
+`normalize(m)` states that intent. On a non-nullary kernel, `lawof` lifts
+pointwise, as the [uniform kernel extension](06-measure-algebra.md#sec:measure-algebra)
+does for measure-algebra operations.
 
 **Trace of the reified law.** A reified measure or kernel carries its traced
 sub-DAG as part of its value; a stochastic node shared between the traces of
