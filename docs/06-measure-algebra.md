@@ -231,7 +231,8 @@ To evaluate a density at many points (e.g. a grid for numerical integration or p
 
   For these draws, `joint(a = lawof(a), b = lawof(b))` has cross-covariance
   $\mathrm{Var}(z) = s^2$; a `joint` of two constructor measures with the same
-  marginals has cross-covariance $0$.
+  marginals has cross-covariance $0$ only when their parameters reach no shared
+  stochastic node.
 
   **Singular joints.** When one component's variate is determined by the
   others given the shared ancestors (the same draw referenced twice, a
