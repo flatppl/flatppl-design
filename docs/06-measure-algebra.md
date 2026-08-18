@@ -232,14 +232,11 @@ To evaluate a density at many points (e.g. a grid for numerical integration or p
   shared node with a boundary-bound ancestor is excluded, by the naming clause
   above. The keyword form applies unchanged, producing a kernel whose output
   variate is a record. At each input point the result is the `joint` of the
-  component output measures, so the ancestry rule above governs it: component
-  kernels whose traces share a stochastic node yield the correlated record law
-  at each input, and components sharing no stochastic node yield the product —
-  the fanned input is a value, not a stochastic node, and so induces no
-  dependence by itself. The result's total-mass class is the product of the
-  components' classes, as in the measure case; when components sharing a
-  stochastic node include more than one non-normalized member the product is
-  not an upper bound on the composed mass, and no class stronger than unknown
+  component output measures, governed by the sharing rules above; the fanned
+  input is a value, not a stochastic node, and so induces no dependence by
+  itself. The result's total-mass class is the product of the components'
+  classes, as in the measure case; when components sharing a stochastic node
+  include more than one non-normalized member, no class stronger than unknown
   is statically justified. A fan-out of Markov kernels is a Markov kernel.
 
   **Equivalent record law.** `joint(a = lawof(a), b = lawof(b))` is equivalent
