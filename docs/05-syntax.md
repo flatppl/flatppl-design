@@ -434,8 +434,8 @@ The grammar likewise admits `AxisList` as a `Primary`, but it is legal only
 as the `output_axes` argument of an `aggregate` or `metricsum` call and as
 the axis-list binder of an `AggregateBinding` or `MetricsumBinding`;
 anywhere else it is a static error. Unlike `ArrayLiteral`, `AxisList` may be
-empty — `aggregate(sum, [], expr)` and `x[] := expr` both denote full
-reduction to a scalar.
+empty: `aggregate(sum, [], expr)` denotes
+[full reduction to a scalar](04-design.md#sec:aggregate).
 
 **Note on tuples.** `(x)` is a parenthesised expression. `(x, y)` is a tuple. The
 single-element form `(x,)` is not in the grammar — single-element tuples are not
@@ -466,4 +466,4 @@ otherwise (at the start of a `Primary`). Inside `[...]`, a `!` token
 followed immediately by `,` or `]` is the `only` axis keyword;
 otherwise it is the unary logical-not operator starting an Expression. In
 `AxisList`'s legal positions (as above), `[...]` parses as `AxisList`, not
-`ArrayLiteral` — which is what admits the empty `[]` there.
+`ArrayLiteral`.
