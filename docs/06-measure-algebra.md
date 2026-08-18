@@ -242,7 +242,7 @@ To evaluate a density at many points (e.g. a grid for numerical integration or p
   refused by the engine.
 
 - **`iid(M, size)`**<a id="iid"></a> — the product measure $M^{\otimes N}$ over arrays of
-  shape `size`, where `N = prod(size)`. `size` is an integer (1-D length) or
+  shape `size`, where `N = prod(size)`. `size` is a positive integer (1-D length) or
   a vector of positive integers (multi-axis shape). When `M` is a reified law,
   each of the $N$ copies carries its own copy of the reified sub-DAG,
   stochastic ancestors included; `iid` never shares nodes between copies.

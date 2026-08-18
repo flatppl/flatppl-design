@@ -922,9 +922,10 @@ appear in `output_axes`, yielding an array of the shape declared by
   function $f: S^n \to S$ where `f_reduction(v)` is invariant under
   permutations of `v`. The eligible built-ins are `sum`, `prod`, `mean`,
   `var`, `std`, `maximum` and `minimum`.
-- `output_axes`: a non-empty array literal of distinct axis names
-  `[.name1, .name2, ...]` listing the retained axes in output order.
-  Repeated names are a static error.
+- `output_axes`: an [axis list](05-syntax.md#axis-names) of distinct axis
+  names `[.name1, .name2, ...]` listing the retained axes in output order.
+  Repeated names are a static error. The empty axis list `[]` is legal and
+  denotes full reduction to a scalar.
 - `expr`: an expression in which array indexing may contain axis
   names, like `A[.i, 1, .j]` or `get(A, .i, 1, .j)`. Every axis
   name in `output_axes` must occur at least once in `expr`; any further

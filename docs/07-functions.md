@@ -53,7 +53,7 @@ flat vector.
   ```
 
 <a id="fill"></a>**`fill(x, size)`** — creates an array of shape `size` filled with value `x`.
-`size` is an integer (1-D length) or a vector of positive integers
+`size` is a positive integer (1-D length) or a vector of positive integers
 (multi-axis shape); e.g. `fill(0, 10)`, `fill(0, [2, 3])`,
 `fill(0, sizeof(A))`.
 
