@@ -1029,8 +1029,7 @@ broadcast((a, b) -> a * b, A, B)
 ```
 
 for every eligible `f_reduction` that is the identity on a one-element
-input — `sum`, `prod`, `mean`, `maximum`, and `minimum`. `var` and `std`
-are undefined over a single element.
+input; `var` and `std` are undefined over a single element.
 
 ### <a id="sec:metricsum"></a>Metric-aware Einstein summation
 
