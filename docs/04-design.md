@@ -1166,9 +1166,9 @@ other modules written in FlatPPL though, to make models composable:
 
 `source` may be a file path or a URL (see [Remote file caching](#sec:url-cache)).
 
-Each `load_module` call instantiates the loaded module independently: two calls
-share no nodes, even with identical `source` and substitutions, so reified
-callables obtained through different calls have disjoint stochastic ancestors.
+Each `load_module` call instantiates the loaded module independently: two
+calls share no nodes, even with identical `source` and substitutions, so
+reified callables from different calls have disjoint stochastic ancestors.
 To share one instance, bind the module reference once and reuse the name.
 
 In the canonical syntax, bound names in the loaded module are accessed via dot syntax:
