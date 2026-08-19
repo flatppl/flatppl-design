@@ -1019,7 +1019,7 @@ an aggregation (using
 [singleton-axis indexing](07-functions.md#field-and-element-access))
 
 ```flatppl
-aggregate(any_f_reduction, [.i, .j], A[.i, .j] * B[.i, !])
+aggregate(f_reduction, [.i, .j], A[.i, .j] * B[.i, !])
 ```
 
 is equivalent to
@@ -1027,6 +1027,10 @@ is equivalent to
 ```flatppl
 broadcast((a, b) -> a * b, A, B)
 ```
+
+for every eligible `f_reduction` that is the identity on a one-element
+input — `sum`, `prod`, `mean`, `maximum`, and `minimum`. `var` and `std`
+are undefined over a single element.
 
 ### <a id="sec:metricsum"></a>Metric-aware Einstein summation
 
