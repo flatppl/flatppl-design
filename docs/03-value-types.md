@@ -151,8 +151,7 @@ Implementations may choose whichever table realization and memory
 layout they prefer, also on a case-by-case basis.
 
 Tables can also be constructed from records of equal-length vectors via `table(r)` and converted
-to such records via `record(t)`, due to FlatPPL [auto-splatting](04-design.md#sec:calling-convention)
-semantics.
+to such records via `record(t)`.
 
 **Indexing.** Tables support both column and row access:
 
