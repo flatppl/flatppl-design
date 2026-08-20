@@ -203,6 +203,8 @@ indices, or arrays of integer indices. Tuples use a single integer literal index
 | [`joinblocks`](#joinblocks) | `A` | inverse of `splitblocks` (remove one level of nesting) | array of equal-shaped arrays |
 | [`partition`](#partition) | `xs, spec` | split vector into sub-vectors | vector, positive integer or integer vector |
 | [`reverse`](#reverse) | `xs` | reverse element/row order | vectors, tables |
+| `cumsum` | `xs` | cumulative sum $(x_1, x_1+x_2, \dots)$ | vectors |
+| `cumprod` | `xs` | cumulative product $(x_1, x_1 x_2, \dots)$ | vectors |
 | [`addaxes`](#addaxes) | `A, n_leading, n_trailing` | add singular axes before/after array axes | array, non-negative integer, non-negative integer |
 | [`blockdiagmat`](#blockdiagmat) | `mats` | block-diagonal matrix from a vector of matrices | vector of matrices |
 | [`bandedmat`](#bandedmat) | `v, rows` | banded matrix with `v` shifted along each row | vector, positive integer |
@@ -562,12 +564,10 @@ the Hermitian variant is `cross(conj(a), b)`.
 | Function | Arguments | Description | Domains |
 |---|---|---|---|
 | `sum` | `xs` | $\sum_i x_i$ | real/complex arrays |
-| `cumsum` | `xs` | cumulative sum $(x_1, x_1+x_2, \dots)$ | vectors |
 | `mean` | `xs` | $\bar{x} = \frac{1}{n} \sum_i x_i$ | real/complex arrays |
 | `var` | `xs` | $\frac{1}{n-1} \sum_i (x_i - \bar{x})^2$ | real arrays |
 | `std` | `xs` | $\sqrt{\mathrm{var}(\mathbf{x})}$ | real arrays |
 | `prod` | `xs` | $\prod_i x_i$ | real/complex arrays |
-| `cumprod` | `xs` | cumulative product $(x_1, x_1 x_2, \dots)$ | vectors |
 | `maximum` | `xs` | $\max_i x_i$ | real arrays |
 | `minimum` | `xs` | $\min_i x_i$ | real arrays |
 | `lengthof` | `x` | number of elements (vector) / rows (table) | vectors, tables |
