@@ -924,7 +924,7 @@ appear in `output_axes`, yielding an array of the shape declared by
 - `f_reduction`: an order-invariant vector-to-scalar reduction — i.e. a
   function $f: S^n \to S$ where `f_reduction(v)` is invariant under
   permutations of `v`. The eligible built-ins are `sum`, `prod`, `mean`,
-  `var`, `std`, `maximum` and `minimum`.
+  `var`, `std`, `maximum`, `minimum`, `median`, `lany` and `lall`.
 - `output_axes`: an [axis list](05-syntax.md#axis-names) of distinct axis
   names `[.name1, .name2, ...]` listing the retained axes in output order.
   Repeated names are a static error. The empty axis list `[]` is legal and
