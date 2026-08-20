@@ -859,7 +859,8 @@ automatically expand singleton dimensions: All collection arguments (arrays and
 tables) must have the same number of axes. Tables count as having one axis
 (the table's rows) here. Along each axis, all collections must have the same
 size or be singular (size one). Size-one array axes are implicitly expanded by
-repetition to match the size of the other collection arguments along these axes. `addaxes` (see [array operations](07-functions.md#array-and-table-operations))
+repetition to match the size of the other collection arguments along these axes.
+A size-one axis expanded against a zero-length axis yields length 0. `addaxes` (see [array operations](07-functions.md#array-and-table-operations))
 may be used to reshape all input arrays to the same number of axes.
 
 For example, given a function `f`, a matrix `A` and a vector `b`

@@ -286,7 +286,10 @@ To evaluate a density at many points (e.g. a grid for numerical integration or p
   shape `size`, where `N = prod(size)`. `size` is a positive integer (1-D length) or
   a vector of positive integers (multi-axis shape). When `M` is a reified law,
   each of the $N$ copies carries its own copy of the reified sub-DAG,
-  stochastic ancestors included; `iid` never shares nodes between copies.
+  stochastic ancestors included; `iid` never shares nodes between copies. A `size`
+  derived from data may resolve to 0, giving the empty product measure, whose
+  log-density is $0$: the empty sum in the
+  [density rule for composed measures](#density-of-composed-measures).
 
   For example, to represent the draw of 100 IID samples from a normal distribution, use 
 
