@@ -652,8 +652,8 @@ returns the empty vector.
 **Empty inputs.** Over an empty input `l1norm`, `l2norm`, and `linfnorm` are $0$,
 `logsumexp` is $-\infty$, and `softmax`, `logsoftmax`, `l1unit`, and `l2unit` are the
 empty vector. `linfnorm` is $0$ rather than $-\infty$ because a norm is non-negative.
-`l1unit` and `l2unit` are undefined when the input is non-empty and
-its norm is $0$, since only then is a quotient evaluated.
+For `l1unit` and `l2unit`, engines raise a runtime error when the input is non-empty
+and its norm is $0$, since only then is a quotient evaluated.
 
 ### Logic and conditionals
 
