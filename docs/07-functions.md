@@ -557,7 +557,7 @@ Both inputs must have length 3. On complex inputs `cross` is **bilinear over
 $\mathbb{C}$** (no conjugation): $\mathrm{cross}(\alpha\mathbf{a}, \beta\mathbf{b}) = \alpha\beta\,\mathrm{cross}(\mathbf{a}, \mathbf{b})$;
 the Hermitian variant is `cross(conj(a), b)`.
 
-### Reductions
+### <a id="sec:reductions"></a>Reductions
 
 | Function | Arguments | Description | Domains |
 |---|---|---|---|
@@ -569,7 +569,7 @@ the Hermitian variant is `cross(conj(a), b)`.
 | `maximum` | `xs` | $\max_i x_i$ | real arrays |
 | `minimum` | `xs` | $\min_i x_i$ | real arrays |
 | [`median`](#median) | `xs` | middle order statistic of `xs` | real arrays |
-| [`quantile`](#quantile) | `xs, p` | `p`-quantile of `xs` by linear interpolation | real arrays, `interval(0, 1)` |
+| [`quantile`](#quantile) | `xs`, `p` | `p`-quantile of `xs` by linear interpolation | real arrays, `interval(0, 1)` |
 | `lengthof` | `x` | number of elements (vector) / rows (table) | vectors, tables |
 | `sizeof` | `x` | returns the dimensions of `x` in a vector | vectors, arrays |
 | [`indicesof`](#indicesof) | `x` | 1-based axis indices | vectors, arrays, tables |
@@ -662,8 +662,7 @@ rather than reducing it, and they are not eligible reductions for
 | `lall` | `xs` | `true` if every element of `xs` is `true` | boolean arrays |
 
 `lany` is the `lor`-reduction of its input and `lall` the `land`-reduction. Both
-are order-invariant and both reduce a table column-wise, as described under
-[reductions](#reductions).
+reduce a table column-wise, as described under [reductions](#sec:reductions).
 
 **Conditionals:**
 
