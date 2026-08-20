@@ -176,17 +176,21 @@ To evaluate a density at many points (e.g. a grid for numerical integration or p
 - **`ksuperpose(kernel, weights)`**<a id="ksuperpose"></a> — lifts a kernel to a weighted
   superposition. `ksuperpose(kernel, weights)` is itself a kernel; applied to a parameter
   family it yields the mixture $\nu = \sum_i w_i\,\kappa(\theta_i)$, where row $i$ of the
-  family supplies $\theta_i$. Parameters are passed as to
+  family supplies $\theta_i$. The number of components $N$ is the length of `weights`,
+  which need not be statically known. Parameters are passed as to
   [`broadcast`](04-design.md#sec:broadcasting) — positional vectors, keyword vectors, or a
-  table — but the family has a single axis: every collection argument together with
-  `weights` has length $N$, or is a table of $N$ rows, and a collection argument with more
-  than one axis is a static error. $N$ need not be statically known. A collection of
-  length one is expanded along the axis; non-collection arguments are held constant across
+  table — but the family has a single axis: along it every collection argument must have
+  size $N$ or be singular (size one), and size-one arguments are expanded by repetition to
+  size $N$. A table counts as having one axis, its rows; a collection argument with more
+  than one axis is a static error. `weights` is a distinguished input rather than a member
+  of the family, so it never expands. Non-collection arguments are held constant across
   the components. `weights` must be non-negative and need not be normalized, so the result
   is generally unnormalized, of total mass
   $\sum_i w_i\,\mathrm{totalmass}(\kappa(\theta_i))$, which is $\sum_i w_i$ for a Markov
-  `kernel`; when $\sum_i w_i = 0$ it is the null measure. Because the weights do not
-  depend on the variate, the mixture is sampleable whenever `kernel` is. For example:
+  `kernel`. When $\sum_i w_i = 0$, every weight being zero, the result is the zero
+  measure: its density is $0$ and its log-density $-\infty$ everywhere, and sampling is
+  undefined. Because the weights do not depend on the variate, the mixture is sampleable
+  whenever `kernel` is. For example:
 
   ```flatppl
   mix = normalize(ksuperpose(Normal, weights)(mu = means, sigma = sigmas))
@@ -552,7 +556,7 @@ The density of a composed measure is determined by the measure-algebra definitio
 
 - `weighted` / `logweighted` (from $\mathrm{d}\nu = \text{weight}\cdot\mathrm{d}M$): $\log\mathrm{densityof}(\mathrm{weighted}(w, M), x) = \log w(x) + \log\mathrm{densityof}(M, x)$, and $\log\mathrm{densityof}(\mathrm{logweighted}(\ell, M), x) = \ell(x) + \log\mathrm{densityof}(M, x)$, where $w$ and $\ell$ are a constant or a function of the variate.
 - `superpose` (measure addition): $\log\mathrm{densityof}(\mathrm{superpose}(M_1, \dots, M_k), x) = \mathrm{logsumexp}_k\, \log\mathrm{densityof}(M_k, x)$.
-- `ksuperpose` (weighted measure addition over the parameter family): $\log\mathrm{densityof}(\mathrm{ksuperpose}(\kappa, w)(\theta), x) = \mathrm{logsumexp}_i\left(\log w_i + \log\mathrm{densityof}(\kappa(\theta_i), x)\right)$, so a zero weight contributes $-\infty$ and drops out.
+- `ksuperpose` (weighted measure addition over the parameter family): $\log\mathrm{densityof}(\mathrm{ksuperpose}(\kappa, w)(\theta), x) = \mathrm{logsumexp}_i\left(\log w_i + \log\mathrm{densityof}(\kappa(\theta_i), x)\right)$, so a zero weight contributes $-\infty$ and drops out. The components come from one kernel and so share one reference measure, which is the reference measure of the mixture.
 - `normalize` (from $M / Z$): $\log\mathrm{densityof}(\mathrm{normalize}(M), x) = \log\mathrm{densityof}(M, x) - \log Z$, with $Z = \mathrm{totalmass}(M)$ finite and nonzero.
 - `truncate` (from $\nu(A) = M(A \cap S)$): $\log\mathrm{densityof}(\mathrm{truncate}(M, S), x)$ is $\log\mathrm{densityof}(M, x)$ for $x \in S$ and $-\infty$ otherwise.
 - `joint` and `iid` (the variate is the `cat` of the component variates): for components sharing no stochastic ancestor, $\log\mathrm{densityof}(\mathrm{joint}(M_1, M_2), [x_1, x_2]) = \log\mathrm{densityof}(M_1, x_1) + \log\mathrm{densityof}(M_2, x_2)$; for `iid` always, $\log\mathrm{densityof}(\mathrm{iid}(M, n), x) = \sum_i \log\mathrm{densityof}(M, x_i)$. A `joint` with shared ancestry reduces as its [equivalent record law](#joint); a singular joint has no density and the query is refused.
