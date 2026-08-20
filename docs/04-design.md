@@ -1028,8 +1028,9 @@ is equivalent to
 broadcast((a, b) -> a * b, A, B)
 ```
 
-for every eligible numeric `f_reduction` that is the identity on a one-element
-input; `var` and `std` are undefined over a single element.
+for every eligible `f_reduction` that is the identity on a one-element
+input; `var` and `std` are undefined over a single element, and `lany` and
+`lall` require boolean input.
 
 ### <a id="sec:metricsum"></a>Metric-aware Einstein summation
 
