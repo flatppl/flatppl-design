@@ -196,13 +196,13 @@ highlights, not exhaustive — see the linked sections for complete listings.
 | [Array and table generation](07-functions.md#sec:functions) | `array`, `table`, `rowstack`, `colstack`, `partition`, `linspace`, `extlinspace`, `fill`, `zeros`, `ones`, `eye`, `onehot`, `load_data` |
 | [Binning](07-functions.md#sec:functions) | `bincounts` |
 | [Shape functions](07-functions.md#sec:functions) | `polynomial`, `bernstein`, `stepwise` |
-| [Math and logic](07-functions.md#sec:functions) | `identity`, `exp`, `log`, `pow`, `sqrt`, `abs`, `sin`, `cos`, `min`, `max`, `floor`, `ceil`, `round`, `div`, `mod`, `gamma`, `loggamma`, `logit`, `invlogit`, `probit`, `invprobit`, `ifelse`, `land`, `lor`, `lnot`, `lxor` |
+| [Math and logic](07-functions.md#sec:functions) | `identity`, `exp`, `log`, `pow`, `sqrt`, `abs`, `sin`, `cos`, `min`, `max`, `floor`, `ceil`, `round`, `div`, `mod`, `gamma`, `loggamma`, `logit`, `invlogit`, `probit`, `invprobit`, `ifelse`, `land`, `lor`, `lnot`, `lxor`, `lany`, `lall` |
 | [Predicates](07-functions.md#sec:functions) | `isfinite`, `isinf`, `isnan`, `iszero` |
 | [Linear algebra](07-functions.md#sec:functions) | `transpose`, `adjoint`, `det`, `logabsdet`, `inv`, `trace`, `linsolve`, `lower_cholesky`, `cross` |
 | [Operator functions](07-functions.md#sec:functions) | `add`, `sub`, `mul`, `divide`, `neg`, `equal`, `unequal`, `lt`, `le`, `gt`, `ge` |
 | [Complex arithmetic](07-functions.md#sec:functions) | `complex`, `real`, `imag`, `conj`, `abs2`, `cis` |
 | [Reductions](07-functions.md#sec:functions) | `sum`, `mean`, `var`, `prod`, `maximum`, `minimum`, `lengthof` |
-| [Norms and normalization](07-functions.md#sec:functions) | `l1norm`, `l2norm`, `l1unit`, `l2unit`, `logsumexp`, `softmax`, `logsoftmax` |
+| [Norms and normalization](07-functions.md#sec:functions) | `l1norm`, `l2norm`, `linfnorm`, `l1unit`, `l2unit`, `logsumexp`, `softmax`, `logsoftmax` |
 | [Distributions](08-distributions.md#sec:distributions) | `Normal`, `Poisson`, `PoissonProcess`, `BinnedPoissonProcess`, `Exponential`, `Dirichlet`, ... |
 | [Fundamental measures](06-measure-algebra.md#sec:measure-algebra) | `Lebesgue`, `Counting`, `Dirac` |
 | [Random value generation](07-functions.md#sec:random) | `rand`, `rngstate`, `rnginit` |
