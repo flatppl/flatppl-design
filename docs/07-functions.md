@@ -568,10 +568,25 @@ the Hermitian variant is `cross(conj(a), b)`.
 | `prod` | `xs` | $\prod_i x_i$ | real/complex arrays |
 | `maximum` | `xs` | $\max_i x_i$ | real arrays |
 | `minimum` | `xs` | $\min_i x_i$ | real arrays |
+| [`median`](#median) | `xs` | middle order statistic of `xs` | real arrays |
+| [`quantile`](#quantile) | `xs, p` | `p`-quantile of `xs` by linear interpolation | real arrays, `interval(0, 1)` |
 | `lengthof` | `x` | number of elements (vector) / rows (table) | vectors, tables |
 | `sizeof` | `x` | returns the dimensions of `x` in a vector | vectors, arrays |
 | [`indicesof`](#indicesof) | `x` | 1-based axis indices | vectors, arrays, tables |
 | [`indicesof0`](#indicesof0) | `x` | 0-based axis indices | vectors, arrays, tables |
+
+<a id="median"></a>**`median(xs)`** — writing $x_{(1)} \le \dots \le x_{(n)}$ for the order
+statistics of the $n$ elements of `xs`, `median(xs)` is $x_{((n+1)/2)}$ for odd $n$
+and $\tfrac{1}{2}\left(x_{(n/2)} + x_{(n/2+1)}\right)$ for even $n$.
+
+<a id="quantile"></a>**`quantile(xs, p)`** — linear interpolation between the order
+statistics of `xs`. With $h = (n-1)p + 1$ and $k = \lfloor h \rfloor$,
+
+$$\mathrm{quantile}(\mathbf{x}, p) = x_{(k)} + (h - k)\left(x_{(k+1)} - x_{(k)}\right),$$
+
+taking the second term to vanish when $k = n$. So `quantile(xs, 0)` is
+`minimum(xs)`, `quantile(xs, 1)` is `maximum(xs)`, and `quantile(xs, 0.5)` is
+`median(xs)`.
 
 For multi-dimensional arrays, use `sizeof` to obtain shape information:
 
@@ -593,10 +608,11 @@ the row indices.
 <a id="indicesof0"></a>**`indicesof0(x)`** — zero-based variant of `indicesof`, returning indices
 that start at `0` rather than `1`.
 
-**Table reductions.** When `sum`, `mean`, `var`, `std`, `prod`, `maximum`, or
-`minimum` is applied to a table, the reduction operates column-wise and returns
-a record whose fields are the column names and values are the per-column
-reductions. Every column must support the reduction operation.
+**Table reductions.** When `sum`, `mean`, `var`, `std`, `prod`, `maximum`,
+`minimum`, `median`, `lany`, or `lall` is applied to a table, the reduction
+operates column-wise and returns a record whose fields are the column names and
+values are the per-column reductions. Every column must support the reduction
+operation.
 
 For multi-axis array contraction using these reductions, see
 [multi-axis aggregation](04-design.md#sec:aggregate).
@@ -607,6 +623,8 @@ For multi-axis array contraction using these reductions, see
 |---|---|---|---|
 | `cumsum` | `xs` | cumulative sum $(x_1, x_1+x_2, \dots)$ | vectors |
 | `cumprod` | `xs` | cumulative product $(x_1, x_1 x_2, \dots)$ | vectors |
+| `cummax` | `xs` | running maximum $(x_1, \max(x_1, x_2), \dots)$ | real vectors |
+| `cummin` | `xs` | running minimum $(x_1, \min(x_1, x_2), \dots)$ | real vectors |
 
 Cumulative operations are scans: they preserve the shape of their input
 rather than reducing it, and they are not eligible reductions for
@@ -618,6 +636,7 @@ rather than reducing it, and they are not eligible reductions for
 |---|---|---|---|
 | `l1norm` | `v` | $\sum_i \lvert v_i\rvert$ | real/complex vectors |
 | `l2norm` | `v` | $\sqrt{\sum_i \lvert v_i\rvert^2}$ | real/complex vectors |
+| `linfnorm` | `v` | $\max_i \lvert v_i\rvert$ | real/complex vectors |
 | `l1unit` | `v` | $v / \lVert v\rVert_1$ | real/complex vectors |
 | `l2unit` | `v` | $v / \lVert v\rVert_2$ | real/complex vectors |
 | `logsumexp` | `v` | $\log \sum_i e^{v_i}$ | real vectors |
@@ -634,6 +653,17 @@ rather than reducing it, and they are not eligible reductions for
 | `lor` | `a`, `b` | `a \|\| b` | `booleans` |
 | `lnot` | `a` | `!a` | `booleans` |
 | `lxor` | `a`, `b` | (no infix operator) | `booleans` |
+
+**Boolean reductions:**
+
+| Function | Arguments | Description | Domains |
+|---|---|---|---|
+| `lany` | `xs` | `true` if at least one element of `xs` is `true` | boolean arrays |
+| `lall` | `xs` | `true` if every element of `xs` is `true` | boolean arrays |
+
+`lany` is the `lor`-reduction of its input and `lall` the `land`-reduction. Both
+are order-invariant and both reduce a table column-wise, as described under
+[reductions](#reductions).
 
 **Conditionals:**
 
