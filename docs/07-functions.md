@@ -203,6 +203,8 @@ indices, or arrays of integer indices. Tuples use a single integer literal index
 | [`joinblocks`](#joinblocks) | `A` | inverse of `splitblocks` (remove one level of nesting) | array of equal-shaped arrays |
 | [`partition`](#partition) | `xs, spec` | split vector into sub-vectors | vector, positive integer or integer vector |
 | [`reverse`](#reverse) | `xs` | reverse element/row order | vectors, tables |
+| `cumsum` | `xs` | cumulative sum $(x_1, x_1+x_2, \dots)$ | vectors |
+| `cumprod` | `xs` | cumulative product $(x_1, x_1 x_2, \dots)$ | vectors |
 | [`addaxes`](#addaxes) | `A, n_leading, n_trailing` | add singular axes before/after array axes | array, non-negative integer, non-negative integer |
 | [`blockdiagmat`](#blockdiagmat) | `mats` | block-diagonal matrix from a vector of matrices | vector of matrices |
 | [`bandedmat`](#bandedmat) | `v, rows` | banded matrix with `v` shifted along each row | vector, positive integer |
