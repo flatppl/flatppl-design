@@ -926,7 +926,7 @@ appear in `output_axes`, yielding an array of the shape declared by
 - `f_reduction`: an order-invariant vector-to-scalar reduction — i.e. a
   function $f: S^n \to S$ where `f_reduction(v)` is invariant under
   permutations of `v`. The eligible built-ins are `sum`, `prod`, `mean`,
-  `var`, `std`, `maximum` and `minimum`.
+  `var`, `std`, `maximum`, `minimum`, `median`, `lany` and `lall`.
 - `output_axes`: an [axis list](05-syntax.md#axis-names) of distinct axis
   names `[.name1, .name2, ...]` listing the retained axes in output order.
   Repeated names are a static error. The empty axis list `[]` is legal and
@@ -1031,7 +1031,8 @@ broadcast((a, b) -> a * b, A, B)
 ```
 
 for every eligible `f_reduction` that is the identity on a one-element
-input; `var` and `std` are undefined over a single element.
+input; `var` and `std` are undefined over a single element, and `lany` and
+`lall` require boolean input.
 
 ### <a id="sec:metricsum"></a>Metric-aware Einstein summation
 
