@@ -155,6 +155,7 @@ To evaluate a density at many points (e.g. a grid for numerical integration or p
 | Construct | Arguments | Description |
 |---|---|---|
 | [`superpose`](#superpose) | `M1, M2, ...` | measure addition $M_1 + M_2 + \cdots$ |
+| [`ksuperpose`](#ksuperpose) | `kernel, weights` | weighted-superposition lift; applied to a parameter family yields $\sum_i w_i\,\kappa(\theta_i)$ |
 
 - **`superpose(M1, M2, ...)`**<a id="superpose"></a> — measure addition:
   $\nu(A) = M_1(A) + M_2(A) + \ldots$ All components must share the same variate
@@ -170,6 +171,26 @@ To evaluate a density at many points (e.g. a grid for numerical integration or p
 
   ```flatppl
   mix = normalize(superpose(weighted(a1, normal1), weighted(a2, normal2)))
+  ```
+
+- **`ksuperpose(kernel, weights)`**<a id="ksuperpose"></a> — lifts a kernel to a weighted
+  superposition: the result is itself a kernel, and applying it to a parameter family
+  yields the mixture $\nu = \sum_i w_i\,\kappa(\theta_i)$, with $\theta_i$ read from row
+  $i$ of the family. The number of components $N$ is the length of `weights`, which need
+  not be statically known. The family is passed as to
+  [`broadcast`](04-design.md#sec:broadcasting) — positional vectors, keyword vectors, or
+  a table (one axis, its rows) — restricted to a single axis: each collection argument
+  has size $N$ or is singular (size one, expanded by repetition), more than one axis is a
+  static error, and non-collection arguments are held constant across the components.
+  `weights` is a distinguished input, not a member of the family, and never expands. It
+  must be non-negative but need not be normalized: the result has total mass
+  $\sum_i w_i\,\mathrm{totalmass}(\kappa(\theta_i))$ — $\sum_i w_i$ for a Markov
+  `kernel` — and when every weight is zero it is the zero measure (density $0$,
+  log-density $-\infty$, sampling undefined). Because the weights do not depend on the
+  variate, the mixture is sampleable whenever `kernel` is. For example:
+
+  ```flatppl
+  mix = normalize(ksuperpose(Normal, weights)(mu = means, sigma = sigmas))
   ```
 
 #### Joint composition
@@ -532,6 +553,7 @@ The density of a composed measure is determined by the measure-algebra definitio
 
 - `weighted` / `logweighted` (from $\mathrm{d}\nu = \text{weight}\cdot\mathrm{d}M$): $\log\mathrm{densityof}(\mathrm{weighted}(w, M), x) = \log w(x) + \log\mathrm{densityof}(M, x)$, and $\log\mathrm{densityof}(\mathrm{logweighted}(\ell, M), x) = \ell(x) + \log\mathrm{densityof}(M, x)$, where $w$ and $\ell$ are a constant or a function of the variate.
 - `superpose` (measure addition): $\log\mathrm{densityof}(\mathrm{superpose}(M_1, \dots, M_k), x) = \mathrm{logsumexp}_k\, \log\mathrm{densityof}(M_k, x)$.
+- `ksuperpose` (weighted measure addition over the parameter family): $\log\mathrm{densityof}(\mathrm{ksuperpose}(\kappa, w)(\theta), x) = \mathrm{logsumexp}_i\left(\log w_i + \log\mathrm{densityof}(\kappa(\theta_i), x)\right)$, so a zero weight contributes $-\infty$ and drops out. All components come from one kernel and so share one reference measure — the mixture's.
 - `normalize` (from $M / Z$): $\log\mathrm{densityof}(\mathrm{normalize}(M), x) = \log\mathrm{densityof}(M, x) - \log Z$, with $Z = \mathrm{totalmass}(M)$ finite and nonzero.
 - `truncate` (from $\nu(A) = M(A \cap S)$): $\log\mathrm{densityof}(\mathrm{truncate}(M, S), x)$ is $\log\mathrm{densityof}(M, x)$ for $x \in S$ and $-\infty$ otherwise.
 - `joint` and `iid` (the variate is the `cat` of the component variates): for components sharing no stochastic ancestor, $\log\mathrm{densityof}(\mathrm{joint}(M_1, M_2), [x_1, x_2]) = \log\mathrm{densityof}(M_1, x_1) + \log\mathrm{densityof}(M_2, x_2)$; for `iid` always, $\log\mathrm{densityof}(\mathrm{iid}(M, n), x) = \sum_i \log\mathrm{densityof}(M, x_i)$. A `joint` with shared ancestry reduces as its [equivalent record law](#joint); a singular joint has no density and the query is refused.
