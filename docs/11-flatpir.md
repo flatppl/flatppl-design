@@ -242,7 +242,9 @@ all metadata — while authored membership stays structural.
   `<shape>` is a positive integer dimension size, or the placeholder `%dynamic` for
   a dimension whose size is determined at load or runtime rather than statically
   (e.g. `(%array 2 (%dynamic 3) (%scalar real))` is a 2D real array with three
-  columns and a dynamic row count).
+  columns and a dynamic row count). A `%dynamic` dimension may resolve to any
+  non-negative size, including 0. A dimension whose size is derived from data is
+  `%dynamic` even when that size is constant-foldable.
 - `(%tvector <length> <element-type>)` — transposed vectors. `<length>` is a
   positive integer literal or `%dynamic`. A distinct type from `(%array 1 ...)`.
 - `(%record (<field> <type>) ...)` — records with named fields.

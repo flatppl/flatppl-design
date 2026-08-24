@@ -614,6 +614,11 @@ operates column-wise and returns a record whose fields are the column names and
 values are the per-column reductions. Every column must support the reduction
 operation.
 
+**Empty inputs.** Over an empty input, `sum` is $0$, `prod` is $1$, `maximum` is
+$-\infty$, `minimum` is $+\infty$, and `lengthof` is $0$: the identity of each
+reduction. `mean`, `var`, `std`, `median`, and `quantile` have no such identity, and
+engines raise a runtime error on an empty input.
+
 For multi-axis array contraction using these reductions, see
 [multi-axis aggregation](04-design.md#sec:aggregate).
 
@@ -628,7 +633,8 @@ For multi-axis array contraction using these reductions, see
 
 Cumulative operations are scans: they preserve the shape of their input
 rather than reducing it, and they are not eligible reductions for
-[multi-axis aggregation](04-design.md#sec:aggregate).
+[multi-axis aggregation](04-design.md#sec:aggregate). Over an empty input each
+returns the empty vector.
 
 ### Norms and normalization
 
@@ -642,6 +648,12 @@ rather than reducing it, and they are not eligible reductions for
 | `logsumexp` | `v` | $\log \sum_i e^{v_i}$ | real vectors |
 | `softmax` | `v` | $(e^{v_i} / \sum_j e^{v_j})_i$ | real vectors |
 | `logsoftmax` | `v` | $(v_i - \log \sum_j e^{v_j})_i$ | real vectors |
+
+**Empty inputs.** Over an empty input `l1norm`, `l2norm`, and `linfnorm` are $0$,
+`logsumexp` is $-\infty$, and `softmax`, `logsoftmax`, `l1unit`, and `l2unit` are the
+empty vector. `linfnorm` is $0$ rather than $-\infty$ because a norm is non-negative.
+For `l1unit` and `l2unit`, engines raise a runtime error when the input is non-empty
+and its norm is $0$, since only then is a quotient evaluated.
 
 ### Logic and conditionals
 
@@ -662,7 +674,9 @@ rather than reducing it, and they are not eligible reductions for
 | `lall` | `xs` | `true` if every element of `xs` is `true` | boolean arrays |
 
 `lany` is the `lor`-reduction of its input and `lall` the `land`-reduction. Both
-reduce a table column-wise, as described under [reductions](#sec:reductions).
+reduce a table column-wise, as described under [reductions](#sec:reductions). Over an
+empty input `lany` is `false` and `lall` is `true`, the identities of `lor` and
+`land`.
 
 **Conditionals:**
 
