@@ -341,6 +341,14 @@ CompOp          ::= "<" | ">" | "==" | "!=" | "<=" | ">=" | "in"
                   | ".<" | ".>" | ".==" | ".!=" | ".<=" | ".>="
 AddOp           ::= "+" | "-" | ".+" | ".-"
 MulOp           ::= "*" | "/" | ".*" | "./"
+ContinuationOp  ::= AddOp | MulOp | CompOp | "^" | ".^"
+                  | "&&" | "||" | ".&&" | ".||"
+                  | "->" | "=" | "~" | ":=" | ":"
+                    (* Every infix binary operator, the lambda arrow, and the
+                       binding operators. Only a TRAILING occurrence continues a
+                       line (see "Statement separation"); a line beginning with
+                       an operator starts a new statement, and is a parse error
+                       unless that operator is unary. *)
 
 (* Calls *)
 Call            ::= "(" CallArgs ")"
@@ -406,6 +414,18 @@ rate = superpose(
     weighted(mu_sig * efficiency, signal_template),
     bkg_template
 )
+```
+
+At paren/bracket depth 0, a newline is likewise treated as whitespace when the
+line's last token is a `ContinuationOp`, so the statement continues on the next
+line that carries a token. A trailing line comment, and any blank or
+comment-only lines in between, do not end the continuation. A `^` or `_`
+immediately following an [axis name](#axis-names) is that axis's variance
+marker, not a `ContinuationOp`.
+
+```flatppl
+rate = mu_sig * signal_yield +      # trailing operator continues the line
+       mu_bkg * bkg_yield
 ```
 
 **Note on `MixedArgs`.** Syntactically, any `Call` may use `MixedArgs` (one or more
