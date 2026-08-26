@@ -126,6 +126,21 @@ To evaluate a density at many points (e.g. a grid for numerical integration or p
   `normalize(weighted(f, Lebesgue(support = S)))` produces a probability distribution
   whose density w.r.t. Lebesgue on $S$ is proportional to $f$.
 
+  **Weight arity.** When the variate $x$ of $M$ is a $k$-element array with
+  $k \geq 2$, a weight function of exactly $k$ scalar parameters binds one
+  component of $x$ per parameter, in component order. Arity selects the form: one
+  parameter takes the whole variate, $k$ parameters take its components, and any
+  other arity is an error. The rule holds for `weighted` and `logweighted` alone;
+  every other construct that takes a function, `pushfwd` among them, passes the
+  whole variate.
+
+  ```flatppl
+  # over Lebesgue(support = cartprod(interval(0, 1), interval(0, 1))),
+  # these two weights are the same
+  w_components(x, y) = x * y
+  w_variate(v) = v[1] * v[2]
+  ```
+
 - **`logweighted(logweight, base)`**<a id="logweighted"></a> — like `weighted`, but the weight
  or weighting function is given in
   log-space: $d\nu = \exp(g) \cdot dM$.
@@ -554,7 +569,7 @@ The intent is that engines do not silently substitute heuristics: density-of-pus
 
 The density of a composed measure is determined by the measure-algebra definitions above. For a point $x$ in the variate space, `logdensityof` reduces structurally to the densities of its operands, terminating at the per-kernel primitive `builtin_logdensityof`:
 
-- `weighted` / `logweighted` (from $\mathrm{d}\nu = \text{weight}\cdot\mathrm{d}M$): $\log\mathrm{densityof}(\mathrm{weighted}(w, M), x) = \log w(x) + \log\mathrm{densityof}(M, x)$, and $\log\mathrm{densityof}(\mathrm{logweighted}(\ell, M), x) = \ell(x) + \log\mathrm{densityof}(M, x)$, where $w$ and $\ell$ are a constant or a function of the variate.
+- `weighted` / `logweighted` (from $\mathrm{d}\nu = \text{weight}\cdot\mathrm{d}M$): $\log\mathrm{densityof}(\mathrm{weighted}(w, M), x) = \log w(x) + \log\mathrm{densityof}(M, x)$, and $\log\mathrm{densityof}(\mathrm{logweighted}(\ell, M), x) = \ell(x) + \log\mathrm{densityof}(M, x)$, where $w$ and $\ell$ are a constant or a function of the variate (see [`weighted`](#weighted) for the arity rule).
 - `superpose` (measure addition): $\log\mathrm{densityof}(\mathrm{superpose}(M_1, \dots, M_k), x) = \mathrm{logsumexp}_k\, \log\mathrm{densityof}(M_k, x)$.
 - `ksuperpose` (weighted measure addition over the parameter family): $\log\mathrm{densityof}(\mathrm{ksuperpose}(\kappa, w)(\theta), x) = \mathrm{logsumexp}_i\left(\log w_i + \log\mathrm{densityof}(\kappa(\theta_i), x)\right)$, so a zero weight contributes $-\infty$ and drops out. All components come from one kernel and so share one reference measure — the mixture's.
 - `normalize` (from $M / Z$): $\log\mathrm{densityof}(\mathrm{normalize}(M), x) = \log\mathrm{densityof}(M, x) - \log Z$, with $Z = \mathrm{totalmass}(M)$ finite and nonzero.
