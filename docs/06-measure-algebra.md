@@ -126,17 +126,15 @@ To evaluate a density at many points (e.g. a grid for numerical integration or p
   `normalize(weighted(f, Lebesgue(support = S)))` produces a probability distribution
   whose density w.r.t. Lebesgue on $S$ is proportional to $f$.
 
-  **Weight arity.** When the variate $x$ of $M$ is a $k$-element array with
-  $k \geq 2$, a weight function of exactly $k$ scalar parameters binds one
-  component of $x$ per parameter, in component order. Arity selects the form: one
-  parameter takes the whole variate, $k$ parameters take its components, and any
-  other arity is an error. The rule holds for `weighted` and `logweighted` alone;
-  every other construct that takes a function, `pushfwd` among them, passes the
+  **Weight arity.** A one-parameter weight receives the variate whole. If the
+  variate is a $k$-element array with $k \geq 2$, a weight of exactly $k$ scalar
+  parameters instead receives one component per parameter, in order; any other
+  arity is an error. Only `weighted` and `logweighted` admit the $k$-parameter
+  form; every other function-taking construct, including `pushfwd`, passes the
   whole variate.
 
   ```flatppl
-  # over Lebesgue(support = cartprod(interval(0, 1), interval(0, 1))),
-  # these two weights are the same
+  # equivalent over Lebesgue(support = cartprod(interval(0, 1), interval(0, 1)))
   w_components(x, y) = x * y
   w_variate(v) = v[1] * v[2]
   ```
