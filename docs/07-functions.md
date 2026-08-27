@@ -222,6 +222,11 @@ indices, or arrays of integer indices. Tuples use a single integer literal index
 
   Example: `cat(record(a=1, b=2), record(c=3))` produces `record(a=1, b=2, c=3)`.
 
+- **`cat(x)`** with a single argument is `x` for a vector or a record, and
+  `vector(x)` for a scalar.
+
+  Example: `cat([1, 2])` produces `[1, 2]`, and `cat(1)` produces `[1]`.
+
 Duplicate field names across the input records are a static error. Concatenation
 of a mix of value types (e.g. scalars with vectors, or vectors with records)
 is not permitted.
