@@ -235,7 +235,7 @@ y = 2 * x
 ```
 
 The distinction between `external` and `elementof` determines phase classification
-(see below), closure behavior in `functionof`
+(see below), which ancestors `functionof` resolves to values
 (see [application and reification](#application-and-reification)), and cross-module
 binding rules for `load_module` (see [Multi-file models](#sec:modules)).
 
@@ -259,7 +259,7 @@ it. This is conservative — a projection such as `r.a` technically depends on t
 entire record's ancestors, even though its value is just one field. Engines may
 sharpen this by flattening projections with statically known selectors (`r.field`,
 `t[i]` with integer literal index, or the corresponding `get(...)` and decomposition
-forms) before phase or closure analysis, which recovers the selected component's
+forms) before phase analysis or the ancestor trace, which recovers the selected component's
 phase directly.
 
 Both fixed and parameterized bindings are deterministic, but their values have
@@ -272,7 +272,7 @@ initialized module, given different inputs. Note that this is a mental model,
 applications are not required to use an explicit initialization state to implement
 these semantics.
 
-Phase governs closure behavior
+Phase governs which ancestors are resolved to values at reification
 (see [application and reification](#application-and-reification)) and load-time
 binding rules (see [Multi-file models](#sec:modules)).
 
@@ -373,8 +373,8 @@ When called with a single argument (without boundary specifications, see below),
 `functionof` traces the ancestor subgraph of its argument back to all leaves of
 parametric phase — that is, all `elementof` leaves. These leaf nodes become the
 inputs of the reified callable (a function or a kernel). Fixed ancestors
-(including `external(...)` and `load_data(...)` nodes) are closed over and do
-not become inputs.
+(including `external(...)` and `load_data(...)` nodes) are resolved to their
+values and do not become inputs.
 
 `functionof` can be called with additional keyword arguments to designate and
 label boundary nodes, stopping the graph trace there — so these nodes become,
@@ -382,6 +382,11 @@ under their new names, the inputs of the resulting function or kernel.
 Boundary inputs themselves may be of parametric or stochastic phase, but not
 fixed phase. `functionof` effectively substitutes each boundary node `a` with
 an input node `elementof(valueset(a))` under the given name.
+
+FlatPPL has no closures. A reified callable's inputs are the leaves of its own
+ancestor subgraph together with the [placeholders](#placeholders-and-holes) it
+binds; it captures no enclosing environment, and a fixed ancestor is resolved to
+its value rather than retained as a binding.
 
 Referential transparency is a core property of FlatPPL. This requires that
 the sub-graph to be reified by `functionof` must not contain stochastic nodes
@@ -417,7 +422,7 @@ The sub-DAG must be fully deterministic and so must not contain any `draw` nodes
 
 The argument names of the resulting function are the names of the leaf nodes of the
 reified sub-DAG; the input nodes of the function are decoupled from these leaf nodes.
-Fixed ancestor nodes are closed over and not exposed as inputs. As the graph nodes
+Fixed ancestor nodes are resolved to their values and not exposed as inputs. As the graph nodes
 are not ordered, the function only supports keyword arguments, not positional arguments.
 
 The output type of the reified function matches the type of the argument of `functionof`:
@@ -458,7 +463,7 @@ arguments, with positional order determined by the order in which boundary
 inputs are specified. Without a boundary specification, inputs are traced
 back to the parameterized-phase ancestor leaves of the reified expression
 (i.e. `elementof` nodes). Fixed-phase ancestors (e.g. `external` and
-`load_data`) are closed over instead. The reified function then only supports
+`load_data`) are resolved to their values instead. The reified function then only supports
 keyword arguments, as no argument order can be inferred. A specified boundary
 node `a` can be thought of as being substituted with a new node, generated via
 `elementof(valueset(a))`, in the reified graph. Substitution applies to all
@@ -598,7 +603,7 @@ current module only: a parameterized value reached through a loaded-module
 reference cannot become an input — neither by the automatic trace nor as an
 explicit boundary node — so such a reification is a static error. A loaded
 module's callables and fixed values may be used in the reified DAG (applied,
-or referenced and closed over); only taking a cross-module parameterized value
+or referenced and resolved to their values); only taking a cross-module parameterized value
 as an input is disallowed.
 
 Note that `lawof` reifies a measure, which has no input list, so it is
