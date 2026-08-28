@@ -137,6 +137,9 @@ lexical form:
 true         ; boolean
 ```
 
+A scalar literal atom carries no leading sign: a negated numeric literal is
+the operator call `(neg 1.0)`, never a signed atom.
+
 Composite literal values are expressed via constructor calls (`(complex …)`,
 `(vector …)`, `(record …)`, `(tuple …)`; see [Expressions](#expressions)).
 
