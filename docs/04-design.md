@@ -235,7 +235,7 @@ y = 2 * x
 ```
 
 The distinction between `external` and `elementof` determines phase classification
-(see below), which ancestors `functionof` resolves to values
+(see below), the ancestors `functionof` resolves to values
 (see [application and reification](#application-and-reification)), and cross-module
 binding rules for `load_module` (see [Multi-file models](#sec:modules)).
 
@@ -259,8 +259,8 @@ it. This is conservative — a projection such as `r.a` technically depends on t
 entire record's ancestors, even though its value is just one field. Engines may
 sharpen this by flattening projections with statically known selectors (`r.field`,
 `t[i]` with integer literal index, or the corresponding `get(...)` and decomposition
-forms) before phase analysis or the ancestor trace, which recovers the selected component's
-phase directly.
+forms) before phase analysis or the ancestor trace, which recovers the selected
+component's phase directly.
 
 Both fixed and parameterized bindings are deterministic, but their values have
 different life cycles: A FlatPPL module can be thought of as having an initialized
@@ -385,8 +385,8 @@ an input node `elementof(valueset(a))` under the given name.
 
 FlatPPL has no closures. A reified callable's inputs are the leaves of its own
 ancestor subgraph together with the [placeholders](#placeholders-and-holes) it
-binds; it captures no enclosing environment, and a fixed ancestor is resolved to
-its value rather than retained as a binding.
+binds. It captures no enclosing environment: a fixed ancestor is resolved to its
+value rather than retained as a binding.
 
 Referential transparency is a core property of FlatPPL. This requires that
 the sub-graph to be reified by `functionof` must not contain stochastic nodes
@@ -422,8 +422,9 @@ The sub-DAG must be fully deterministic and so must not contain any `draw` nodes
 
 The argument names of the resulting function are the names of the leaf nodes of the
 reified sub-DAG; the input nodes of the function are decoupled from these leaf nodes.
-Fixed ancestor nodes are resolved to their values and not exposed as inputs. As the graph nodes
-are not ordered, the function only supports keyword arguments, not positional arguments.
+Fixed ancestor nodes are resolved to their values and not exposed as inputs. As
+the graph nodes are not ordered, the function only supports keyword arguments,
+not positional arguments.
 
 The output type of the reified function matches the type of the argument of `functionof`:
 
@@ -463,8 +464,8 @@ arguments, with positional order determined by the order in which boundary
 inputs are specified. Without a boundary specification, inputs are traced
 back to the parameterized-phase ancestor leaves of the reified expression
 (i.e. `elementof` nodes). Fixed-phase ancestors (e.g. `external` and
-`load_data`) are resolved to their values instead. The reified function then only supports
-keyword arguments, as no argument order can be inferred. A specified boundary
+`load_data`) are resolved to their values instead. The reified function then only
+supports keyword arguments, as no argument order can be inferred. A specified boundary
 node `a` can be thought of as being substituted with a new node, generated via
 `elementof(valueset(a))`, in the reified graph. Substitution applies to all
 boundary nodes before the ancestor trace runs, so a boundary node whose only
@@ -495,10 +496,9 @@ Either form resolves to `functionof(expr', arg1 = _arg1_, ...)`, where
 free occurrence of each `arg_i` rewritten to the placeholder `_arg_i_`.
 Inside the body, `arg_i` refers to the lambda's input, not to any module
 binding of the same name. There is no nullary lambda. A lambda body must not
-itself be a lambda — a curried form such as `x -> y -> x + y` is a static
-error, since its rewrite places a placeholder bound by the outer `functionof`
-inside the inner one, which the [scoping
-rule](#placeholders-and-holes) forbids.
+itself be a lambda. A curried form such as `x -> y -> x + y` is a static error:
+its rewrite places a placeholder bound by the outer `functionof` inside the
+inner one, which the [scoping rule](#placeholders-and-holes) forbids.
 
 For example, `x -> 2 * x + 1` is equivalent to `functionof(2 * _x_ + 1, x = _x_)`, and `(x, y) -> x * y + 1` is equivalent to
 `functionof(_x_ * _y_ + 1, x = _x_, y = _y_)`.
@@ -603,8 +603,8 @@ current module only: a parameterized value reached through a loaded-module
 reference cannot become an input — neither by the automatic trace nor as an
 explicit boundary node — so such a reification is a static error. A loaded
 module's callables and fixed values may be used in the reified DAG (applied,
-or referenced and resolved to their values); only taking a cross-module parameterized value
-as an input is disallowed.
+or referenced and resolved to their values); only taking a cross-module
+parameterized value as an input is disallowed.
 
 Note that `lawof` reifies a measure, which has no input list, so it is
 unrestricted — a measure may reference cross-module values, keeping the identity
