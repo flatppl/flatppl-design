@@ -150,6 +150,10 @@ or may not be significant. The total number of inputs is never zero:
 - `checked`: Named parameters `value` and `condition`, per [§07](07-functions.md#checked);
   the canonical calling form is keyword-based.
 
+A distinguished input has no name and so cannot be passed by keyword. The
+[measure combinators](06-measure-algebra.md#sec:measure-algebra) likewise take their
+inputs positionally: a keyword spelling such as `normalize(M = mu)` is a static error.
+
 ### <a id="sec:tuples"></a>Tuples
 
 Some operations produce a single output that naturally groups several distinct
