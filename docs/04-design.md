@@ -383,10 +383,8 @@ Boundary inputs themselves may be of parametric or stochastic phase, but not
 fixed phase. `functionof` effectively substitutes each boundary node `a` with
 an input node `elementof(valueset(a))` under the given name.
 
-FlatPPL has no closures. A reified callable's inputs are the leaves of its own
-ancestor subgraph together with the [placeholders](#placeholders-and-holes) it
-binds. It captures no enclosing environment: a fixed ancestor is resolved to its
-value rather than retained as a binding.
+FlatPPL has no closures: a reified callable captures no enclosing environment,
+and a fixed ancestor is resolved to its value rather than retained as a binding.
 
 Referential transparency is a core property of FlatPPL. This requires that
 the sub-graph to be reified by `functionof` must not contain stochastic nodes
@@ -496,9 +494,8 @@ Either form resolves to `functionof(expr', arg1 = _arg1_, ...)`, where
 free occurrence of each `arg_i` rewritten to the placeholder `_arg_i_`.
 Inside the body, `arg_i` refers to the lambda's input, not to any module
 binding of the same name. There is no nullary lambda. A lambda body must not
-itself be a lambda. A curried form such as `x -> y -> x + y` is a static error:
-its rewrite places a placeholder bound by the outer `functionof` inside the
-inner one, which the [scoping rule](#placeholders-and-holes) forbids.
+itself be a lambda: a curried form such as `x -> y -> x + y` is a static error
+under the [placeholder scoping rule](#placeholders-and-holes).
 
 For example, `x -> 2 * x + 1` is equivalent to `functionof(2 * _x_ + 1, x = _x_)`, and `(x, y) -> x * y + 1` is equivalent to
 `functionof(_x_ * _y_ + 1, x = _x_, y = _y_)`.
