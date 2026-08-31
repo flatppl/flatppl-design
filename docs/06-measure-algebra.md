@@ -306,8 +306,9 @@ To evaluate a density at many points (e.g. a grid for numerical integration or p
 
   When `M` is record-valued and `size` is a scalar length, the variate is an
   $N$-row [table](03-value-types.md#tables) — one row per draw of `M`'s record —
-  mirroring [`cartpow`](03-value-types.md#sets) on a record set. A multi-axis
-  `size` retains the array shape.
+  mirroring [`cartpow`](03-value-types.md#sets) on a record set. A `size` that
+  resolves to zero is then an error rather than the empty product measure above,
+  as a table has no zero-row form. A multi-axis `size` retains the array shape.
 
   For example, to represent the draw of 100 IID samples from a normal distribution, use 
 
