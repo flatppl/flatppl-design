@@ -624,6 +624,9 @@ $-\infty$, `minimum` is $+\infty$, and `lengthof` is $0$: the identity of each
 reduction. `mean`, `var`, `std`, `median`, and `quantile` have no such identity, and
 engines raise a runtime error on an empty input.
 
+**NaN inputs.** A NaN propagates through the order operations `max`, `min`, `maximum`,
+`minimum`, `cummax`, `cummin`, `linfnorm`, `median`, and `quantile`.
+
 For multi-axis array contraction using these reductions, see
 [multi-axis aggregation](04-design.md#sec:aggregate).
 
