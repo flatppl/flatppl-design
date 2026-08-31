@@ -1075,9 +1075,9 @@ exactly twice — once upper and once lower; every output index must
 occur in `expr` with the same variance and may not also be contracted;
 bare neutral aggregate axes (`.i` without a variance marker) are not
 allowed inside `metricsum`. A non-output index occurring once is legal and
-is summed over — with no metric factor when upper, after the `inv(metric)`
-insertion when lower — so its variance is semantically significant and the
-result is coordinate-dependent rather than tensorial.
+is summed over — with no metric factor when upper, and after the
+`inv(metric)` insertion when lower. Its variance is therefore semantically
+significant, and the result is coordinate-dependent rather than tensorial.
 
 **Equivalence to `aggregate` under identity metric.** `metricsum(eye(n), ...)`
 is equivalent to an `aggregate(sum, ...)` with co-/contravariant axis names
