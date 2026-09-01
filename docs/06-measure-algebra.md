@@ -188,13 +188,19 @@ To evaluate a density at many points (e.g. a grid for numerical integration or p
 
 - **`ksuperpose(kernel, weights)`**<a id="ksuperpose"></a> — lifts a kernel to a weighted
   superposition: the result is itself a kernel, and applying it to a parameter family
-  yields the mixture $\nu = \sum_i w_i\,\kappa(\theta_i)$, with $\theta_i$ read from row
-  $i$ of the family. The number of components $N$ is the length of `weights`, which need
-  not be statically known. The family is passed as to
-  [`broadcast`](04-design.md#sec:broadcasting) — positional vectors, keyword vectors, or
-  a table (one axis, its rows) — restricted to a single axis: each collection argument
-  has size $N$ or is singular (size one, expanded by repetition), more than one axis is a
-  static error, and non-collection arguments are held constant across the components.
+  yields the mixture $\nu = \sum_i w_i\,\kappa(\theta_i)$, with $\theta_i$ read from
+  position $i$ along the family axis. The number of components $N$ is the length of
+  `weights`, which need not be statically known. The family is passed as to
+  [`broadcast`](04-design.md#sec:broadcasting) — positional collections, keyword
+  collections, or a table, whose columns are its collection arguments — with one family
+  axis per collection argument: an argument's family axes are its leading axes in excess
+  of the rank (number of axes) of the parameter it feeds, that count must be one, and any
+  other count is a static error. Within the family the same-number-of-axes requirement of
+  *Collection arguments* does not apply, so the components may be multivariate — a vector
+  parameter takes an $N \times d$ matrix beside a matrix parameter taking an
+  $N \times d \times d$ array. Along the family axis each collection argument has size $N$
+  or is singular (size one, expanded by repetition), and non-collection arguments are held
+  constant across the components.
   `weights` is a distinguished input, not a member of the family, and never expands. It
   must be non-negative but need not be normalized: the result has total mass
   $\sum_i w_i\,\mathrm{totalmass}(\kappa(\theta_i))$ — $\sum_i w_i$ for a Markov
