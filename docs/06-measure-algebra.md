@@ -196,9 +196,9 @@ To evaluate a density at many points (e.g. a grid for numerical integration or p
   collection arguments. Each collection argument supplies one value per component, so it
   carries one extra leading axis — its family axis — in front of the shape its parameter
   expects: a scalar parameter takes a length-$N$ vector, a vector parameter an
-  $N \times d$ matrix, a matrix parameter an $N \times d \times d$ array. Anything else is
-  a static error. A collection whose family axis has size one supplies the same value to
-  every component, as does a non-collection argument.
+  $N \times d$ matrix, a matrix parameter an $N \times d \times d$ array. Any other axis
+  structure is a static error. A collection whose family axis has size one supplies the
+  same value to every component, as does a non-collection argument.
   `weights` is a distinguished input, not a member of the family, and never expands. It
   must be non-negative but need not be normalized: the result has total mass
   $\sum_i w_i\,\mathrm{totalmass}(\kappa(\theta_i))$ — $\sum_i w_i$ for a Markov
