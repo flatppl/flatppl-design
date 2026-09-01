@@ -187,23 +187,16 @@ To evaluate a density at many points (e.g. a grid for numerical integration or p
   ```
 
 - **`ksuperpose(kernel, weights)`**<a id="ksuperpose"></a> — lifts a kernel to a weighted
-  superposition: the result is itself a kernel, and applying it to a parameter family
-  yields the mixture $\nu = \sum_i w_i\,\kappa(\theta_i)$, with $\theta_i$ read from
-  position $i$ along the family axis. The number of components $N$ is the length of
-  `weights`, which need not be statically known. The family is passed as to
-  [`broadcast`](04-design.md#sec:broadcasting) — positional collections, keyword
-  collections, or a table whose rows are the components and whose columns are its
-  arguments. Each collection argument stacks one value per component along one extra
-  leading axis, its family axis: a scalar parameter takes a length-$N$ vector, a vector
-  parameter an $N \times d$ matrix, a matrix parameter an $N \times d \times d$ array, and
-  any other axis structure is a static error. A non-collection argument, or a collection
-  whose family axis has size one, supplies the same value to every component.
-  `weights` is a distinguished input, not a member of the family, and never expands. It
-  must be non-negative but need not be normalized: the result has total mass
-  $\sum_i w_i\,\mathrm{totalmass}(\kappa(\theta_i))$ — $\sum_i w_i$ for a Markov
-  `kernel` — and when every weight is zero it is the zero measure (density $0$,
-  log-density $-\infty$, sampling undefined). Because the weights do not depend on the
-  variate, the mixture is sampleable whenever `kernel` is. For example:
+  mixture: applied to a parameter family it yields $\nu = \sum_i w_i\,\kappa(\theta_i)$,
+  one component per weight ($N$ of them, not necessarily statically known), with
+  $\theta_i$ the parameters of component $i$. Each collection argument — passed as to
+  [`broadcast`](04-design.md#sec:broadcasting), or as one table whose columns are the
+  parameters — stacks one value per component along one extra leading axis: a scalar
+  parameter takes a length-$N$ vector, a vector parameter an $N \times d$ matrix, a matrix
+  parameter an $N \times d \times d$ array, and any other axis structure is a static error.
+  A non-collection argument, or a collection whose leading axis has size one, is shared by
+  every component, and the weights must be non-negative but need not sum to one. For
+  example:
 
   ```flatppl
   mix = normalize(ksuperpose(Normal, weights)(mu = means, sigma = sigmas))
