@@ -194,10 +194,10 @@ To evaluate a density at many points (e.g. a grid for numerical integration or p
   [`broadcast`](04-design.md#sec:broadcasting) — positional collections, keyword
   collections, or a table, whose columns are its collection arguments — with one family
   axis per collection argument: an argument's family axes are its leading axes in excess
-  of the rank (number of axes) of the parameter it feeds, that count must be one, and any
-  other count is a static error. Within the family the same-number-of-axes requirement of
+  of the rank (number of axes) of the parameter it feeds, and any count other than one is
+  a static error. Within the family the same-number-of-axes requirement of
   *Collection arguments* does not apply, so the components may be multivariate — a vector
-  parameter takes an $N \times d$ matrix beside a matrix parameter taking an
+  parameter takes an $N \times d$ matrix while a matrix parameter takes an
   $N \times d \times d$ array. Along the family axis each collection argument has size $N$
   or is singular (size one, expanded by repetition), and non-collection arguments are held
   constant across the components.
