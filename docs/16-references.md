@@ -12,6 +12,9 @@ Blatt, J. M., Weisskopf, V. F. (1952). *Theoretical Nuclear Physics.* Springer, 
 <a id="carpenter2017"></a>
 Carpenter, B. et al. (2017). Stan: A probabilistic programming language. *J. Stat. Softw.* 76(1). <https://mc-stan.org/>
 
+<a id="cover2006"></a>
+Cover, T. M., Thomas, J. A. (2006). *Elements of Information Theory*, 2nd ed. Wiley-Interscience, Hoboken. ISBN 9780471241959.
+
 <a id="densityinterface"></a>
 DensityInterface.jl. <https://github.com/JuliaMath/DensityInterface.jl>
 
@@ -50,6 +53,9 @@ Staton, S. et al. (2016). Semantics for probabilistic programming. LICS. <https:
 
 <a id="staton2017"></a>
 Staton, S. (2017). Commutative semantics for probabilistic programming. *ESOP*, LNCS 10201:855–879. <https://doi.org/10.1007/978-3-662-54434-1_32>
+
+<a id="vonhippel1972"></a>
+von Hippel, F., Quigg, C. (1972). Centrifugal-barrier effects in resonance partial decay widths, shapes, and production amplitudes. *Phys. Rev. D* 5, 624–638. <https://doi.org/10.1103/PhysRevD.5.624>
 
 <a id="weiser1981"></a>
 Weiser, M. (1981). Program slicing. *Proc. 5th ICSE*, 439–449. IEEE Press. <https://dl.acm.org/doi/10.5555/800078.802557>
