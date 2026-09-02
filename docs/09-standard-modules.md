@@ -5,6 +5,11 @@ FlatPPL supports standard modules (see
 built into the FlatPPL `base` module. The following standard modules are
 currently defined:
 
+Standard-module members follow the general
+[calling conventions](04-design.md#sec:calling-convention). The names and order of the
+arguments specified below define the names and positional order of each member's
+arguments.
+
 ### Module `particle-physics`
 
 The `particle-physics` standard module provides distributions commonly used in
@@ -41,7 +46,8 @@ hepphys.interp_*(left, center, right, alpha)
 | [`interp_poly6_lin`](#interp_poly6_lin) | 6th-order polynomial | linear | `poly6` | code4p |
 | [`interp_poly6_exp`](#interp_poly6_exp) | 6th-order polynomial | exponential | — | code4 |
 
-`interp_poly6_exp` exists in pyhf (code4) but is not part of the HS³ standard yet.
+`interp_poly6_exp` exists in [pyhf](16-references.md#pyhf) (code4) but is not part of the
+HS³ standard yet.
 
 <a id="interp_pwlin"></a>**`interp_pwlin(left, center, right, alpha)`** — piecewise linear interpolation:
 
@@ -74,13 +80,18 @@ $\alpha = \pm 1$ — matching the value, first, and second derivatives to the li
 extrapolation (so $f(-1) = \mathrm{left}$, $f(+1) = \mathrm{right}$).
 
 <a id="interp_poly6_exp"></a>**`interp_poly6_exp(left, center, right, alpha)`** — 6th-order polynomial inside
-$[-1, +1]$, exponential extrapolation outside. For $|\alpha| > 1$:
+$[-1, +1]$, exponential extrapolation outside. Requires strictly positive values for
+`left`, `center` and `right`. The extrapolation is the exponential through the anchors:
 
-$$f(\alpha) = f(\pm 1) \cdot \exp\!\left((\alpha \mp 1) \cdot f'(\pm 1) / f(\pm 1)\right)$$
+$$\text{For } \alpha > +1:\quad f(\alpha) = \mathrm{center} \cdot (\mathrm{right}/\mathrm{center})^{\alpha}$$
+$$\text{For } \alpha < -1:\quad f(\alpha) = \mathrm{center} \cdot (\mathrm{left}/\mathrm{center})^{-\alpha}$$
 
-The polynomial coefficients differ from `interp_poly6_lin` because the $C^2$ conditions
-at $\alpha = \pm 1$ match the value and derivatives of the exponential extrapolation.
-The result stays positive, making this appropriate for multiplicative factors.
+so its boundary derivatives are $f'(+1) = \mathrm{right} \cdot \log(\mathrm{right}/\mathrm{center})$
+and $f'(-1) = \mathrm{left} \cdot \log(\mathrm{center}/\mathrm{left})$. With $f(0) = \mathrm{center}$
+fixing the constant term, the six polynomial coefficients are determined by $C^2$ continuity
+at $\alpha = \pm 1$ — matching the value, first, and second derivatives of that extrapolation
+(so $f(-1) = \mathrm{left}$, $f(+1) = \mathrm{right}$). The result stays positive, making this
+appropriate for multiplicative factors.
 
 #### Distributions
 
@@ -312,12 +323,25 @@ $p$, and barrier radius $d$. With $z = (d\,p)^2$,
 
 $$F_\ell = \sqrt{\frac{z^{\ell}}{\chi_\ell(z)}},$$
 
-where $\chi_\ell$ is the degree-$\ell$ barrier polynomial:
+where $\chi_\ell$ is the degree-$\ell$ barrier polynomial
+
+$$\chi_\ell(z) = z^{\ell + 1}\left(j_\ell(\sqrt{z})^2 + y_\ell(\sqrt{z})^2\right),$$
+
+with $j_\ell$ and $y_\ell$ the spherical Bessel functions of the first and second kind.
+Defined for $0 \leq \ell \leq 7$:
 
 $$\chi_0 = 1, \quad \chi_1 = 1 + z, \quad \chi_2 = 9 + 3z + z^2, \quad \chi_3 = 225 + 45z + 6z^2 + z^3,$$
 
-continuing through $\ell = 7$. Defined for $0 \leq \ell \leq 7$. The barrier
-factors follow [Blatt & Weisskopf (1952)](16-references.md#blatt1952).
+$$\chi_4 = 11025 + 1575z + 135z^2 + 10z^3 + z^4,$$
+
+$$\chi_5 = 893025 + 99225z + 6300z^2 + 315z^3 + 15z^4 + z^5,$$
+
+$$\chi_6 = 108056025 + 9823275z + 496125z^2 + 18900z^3 + 630z^4 + 21z^5 + z^6,$$
+
+$$\chi_7 = 18261468225 + 1404728325z + 58939650z^2 + 1819125z^3 + 47250z^4 + 1134z^5 + 28z^6 + z^7.$$
+
+The barrier factors follow [Blatt & Weisskopf (1952)](16-references.md#blatt1952) in the
+closed form of [von Hippel & Quigg (1972)](16-references.md#vonhippel1972).
 
 Arguments:
 
@@ -618,4 +642,9 @@ Returns an $N \times M$ matrix $\mathbf{D}$ where the $D_{i,j} = \text{distance}
 
 <a id="minkowski"></a>**`minkowski(u, v, p)`** — Computes the $L_p$ Minkowski distance $\left(\sum_i |u_i - v_i|^p\right)^{1/p}$.
 
-<a id="jensenshannon"></a>**`jensenshannon(u, v)`** — Computes the Jensen-Shannon distance $\sqrt{\frac{1}{2} D_{KL}(u \parallel m) + \frac{1}{2} D_{KL}(v \parallel m)}$ between two probability vectors $u$ and $v$ where $m = \frac{u + v}{2}$. 
+<a id="jensenshannon"></a>**`jensenshannon(u, v)`** — Computes the Jensen-Shannon distance $\sqrt{\frac{1}{2} D_{KL}(u \parallel m) + \frac{1}{2} D_{KL}(v \parallel m)}$ between two probability vectors $u$ and $v$ where $m = \frac{u + v}{2}$.
+A component of $u$ or $v$ may be zero, so the Kullback-Leibler terms use the standard
+convention $0 \log 0 = 0$, equivalently $0 \log(0/q) = 0$, which extends $x \log x$
+continuously to $x = 0$ ([Cover & Thomas (2006)](16-references.md#cover2006)).
+A zero component of $m$ forces that component of both $u$ and $v$ to zero, so no term
+divides a positive value by zero. 
