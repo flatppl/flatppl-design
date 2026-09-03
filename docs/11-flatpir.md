@@ -299,9 +299,10 @@ on expression category without name-based dispatch.
 (load_data (%kwarg source "...") (%kwarg valueset ...))
 ```
 
-Most built-in callables support both positional arguments and `%kwarg` entries,
-matching the surface FlatPPL form. `draw` and `elementof` are positional-only;
-user-defined callables reified without explicit boundary declarations are keyword-only
+Ordinary built-in callables support both positional arguments and `%kwarg` entries,
+matching the surface FlatPPL form. Special operations take their distinguished inputs
+positionally; user-defined callables reified without explicit boundary declarations
+are keyword-only
 (see [calling conventions](04-design.md#sec:calling-convention)).
 
 Some FlatPPL forms have FlatPIR shapes distinct from ordinary calls and have

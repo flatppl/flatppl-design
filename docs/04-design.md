@@ -119,9 +119,9 @@ canonical syntax):
 All built-in ordinary callables have a defined input order and accept both positional and
 keyword arguments.
 
-Special operations have zero to three distinguished, unnamed, ordered inputs of fixed arity.
-They may have additional variadic named or unnamed inputs, the order of which may
-or may not be significant. The total number of inputs is never zero:
+Special operations have zero to three *distinguished inputs*: unnamed, ordered inputs
+of fixed arity. They may have additional variadic named or unnamed inputs, the order
+of which may or may not be significant. The total number of inputs is never zero:
 
 - `elementof`, `external`, `draw`: One distinguished input.
 - `vector`: Unnamed variadic inputs with significant order.
@@ -153,6 +153,9 @@ or may not be significant. The total number of inputs is never zero:
 A distinguished input has no name and so cannot be passed by keyword. The
 [measure combinators](06-measure-algebra.md#sec:measure-algebra) likewise take their
 inputs positionally: a keyword spelling such as `normalize(M = mu)` is a static error.
+Where this specification refers to a distinguished input by a name, as in
+`aggregate(f_reduction, output_axes, expr)`, the name identifies the input in prose
+only. A call binds the input by position, never by keyword argument.
 
 ### <a id="sec:tuples"></a>Tuples
 
