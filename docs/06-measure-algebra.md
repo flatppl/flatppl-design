@@ -186,6 +186,16 @@ To evaluate a density at many points (e.g. a grid for numerical integration or p
   mix = normalize(superpose(weighted(a1, normal1), weighted(a2, normal2)))
   ```
 
+  **Provably normalized superpositions.** A superposition of probability
+  measures weighted by $w_i$ is itself a probability measure when every $w_i$
+  lies in $[0, 1]$ and the weights sum to one. Every conforming engine
+  establishes this for two readings of the weights: literals whose values as
+  written sum to exactly one, compared exactly and never through a
+  floating-point sum; and the complement pair
+  `weighted(w, M1), weighted(1 - w, M2)`, where both occurrences of `w` are the
+  same node and `w` is confined to the unit interval. Where neither reading
+  applies the superposition is not classified as normalized.
+
 - **`ksuperpose(kernel, weights)`**<a id="ksuperpose"></a> — lifts a kernel to a weighted
   mixture: applied to a parameter family it yields $\nu = \sum_i w_i\,\kappa(\theta_i)$,
   one component per weight ($N$ of them, not necessarily statically known), with
