@@ -316,8 +316,9 @@ $$p_k \quad \text{for } k \in \{1, \ldots, n\}$$
 
 Categories are numbered starting from 1, consistent with FlatPPL's 1-based indexing convention.
 
-For a categorical over arbitrary values rather than integer indices, superpose Diracs at
-those values: `ksuperpose(Dirac, p)(value = labels)` (see
+For a categorical over arbitrary values (e.g. [string](03-value-types.md#sec:valuetypes)
+labels) rather than integer indices, superpose Diracs at those values:
+`ksuperpose(Dirac, p)(value = labels)`, whose variate ranges over `setof(labels)` (see
 [`ksuperpose`](06-measure-algebra.md#ksuperpose)); simplex weights make it normalized.
 
 <a id="categorical0"></a>**`Categorical0(p)`** — Zero-based variant of `Categorical`, with support $\{0, 1, \ldots, n-1\}$.
