@@ -185,14 +185,14 @@ highlights, not exhaustive — see the linked sections for complete listings.
 
 | Family | Constructs |
 |---|---|
-| [Special operations](04-design.md#sec:design) | `draw`, `lawof`, `functionof`, `kernelof`, `fn`, `fchain`, `bijection`, `fixed`, `elementof`, `external`, `valueset`, `vector`, `checked` |
+| [Special operations](04-design.md#sec:design) | `draw`, `lawof`, `functionof`, `kernelof`, `fn`, `fchain`, `bijection`, `inverseof`, `fixed`, `elementof`, `external`, `valueset`, `vector`, `checked` |
 | [Interface adaptation](04-design.md#sec:design) | `relabel` |
-| [Measure combinators](06-measure-algebra.md#sec:measure-algebra) | `weighted`, `logweighted`, `normalize`, `totalmass`, `superpose`, `joint`, `jointchain`, `kchain`, `markovchain`, `kscan`, `iid`, `truncate`, `pushfwd`, `locscale` |
+| [Measure combinators](06-measure-algebra.md#sec:measure-algebra) | `weighted`, `logweighted`, `normalize`, `totalmass`, `superpose`, `ksuperpose`, `joint`, `jointchain`, `kchain`, `markovchain`, `kscan`, `iid`, `truncate`, `pushfwd`, `locscale` |
 | [Likelihoods and posteriors](06-measure-algebra.md#likelihoods-and-posteriors) | `likelihoodof`, `joint_likelihood`, `densityof`, `logdensityof`, `bayesupdate` |
 | [Structural disintegration](06-measure-algebra.md#structural-disintegration) | `disintegrate`, `restrict` |
 | [Broadcasting](04-design.md#sec:broadcasting) | `broadcast`, `broadcasted` |
 | [Reductions and aggregation](04-design.md#sec:aggregate) | `reduce`, `scan`, `aggregate`, `metricsum` |
-| [Data access and reshaping](07-functions.md#sec:functions) | `get`, `get0`, `cat`, `record`, `tuple`, `all`, `filter`, `selectbins`, `reverse` |
+| [Data access and reshaping](07-functions.md#sec:functions) | `get`, `get0`, `cat`, `record`, `tuple`, `all`, `filter`, `selectbins`, `reverse`, `sort`, `valuemap` |
 | [Array and table generation](07-functions.md#sec:functions) | `array`, `table`, `rowstack`, `colstack`, `partition`, `linspace`, `extlinspace`, `fill`, `zeros`, `ones`, `eye`, `onehot`, `load_data` |
 | [Binning](07-functions.md#sec:functions) | `bincounts` |
 | [Shape functions](07-functions.md#sec:functions) | `polynomial`, `bernstein`, `stepwise` |
@@ -208,8 +208,8 @@ highlights, not exhaustive — see the linked sections for complete listings.
 | [Random value generation](07-functions.md#sec:random) | `rand`, `rngstate`, `rnginit` |
 | [Module operations](04-design.md#sec:modules) | `load_module`, `standard_module`, `flatppl_compat` |
 | [Constants](03-value-types.md#sec:valuetypes) | `true`, `false`, `inf`, `pi`, `im` |
-| [Predefined sets](03-value-types.md#sec:valuetypes) | `reals`, `posreals`, `nonnegreals`, `unitinterval`, `posintegers`, `nonnegintegers`, `integers`, `booleans`, `complexes`, `rngstates`, `anything` |
-| [Set constructors](03-value-types.md#sets) | `interval`, `cartprod`, `cartpow`, `stdsimplex` |
+| [Predefined sets](03-value-types.md#sec:valuetypes) | `reals`, `posreals`, `nonnegreals`, `unitinterval`, `posintegers`, `nonnegintegers`, `integers`, `booleans`, `complexes`, `strings`, `rngstates`, `anything` |
+| [Set constructors](03-value-types.md#sets) | `interval`, `cartprod`, `cartpow`, `stdsimplex`, `finiteset`, `setof` |
 | [Selectors and operators](04-design.md#sec:calling-convention) | `all` (slicing), `in` (membership) |
 
 ### A tour of FlatPPL
