@@ -22,3 +22,9 @@ pixi run clean        # Remove build output
 The generated files are written to the `build/` directory.
 
 Requires [Pixi](https://pixi.sh). All other dependencies (pandoc, typst) are installed automatically.
+
+## Funding
+
+This work was supported by Germany's Federal Ministry of Research, Technology
+and Space (BMFTR) within the ErUM-Data programme under grant FKZ 05D25PC1
+(DEMOS consortium).

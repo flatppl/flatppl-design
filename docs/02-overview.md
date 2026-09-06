@@ -60,10 +60,10 @@ powerful but does not cover all of our requirements. Many strictly Bayesian Flat
 models could be converted to Stan model blocks though and run on the Stan engine. Accelerator support for RooFit seems less likely for now in general. 
 
 **Python.** pyhf covers the HistFactory subset of HS³, zfit has partial support, and
-[pyhs3](16-references.md#pyhs3) provides a first Python HS³ implementation. In regard to FlatPPL there is more room for direct support in the Python ecosystem than in C++/RooFit. JAX offers a
+[pyhs3](17-references.md#pyhs3) provides a first Python HS³ implementation. In regard to FlatPPL there is more room for direct support in the Python ecosystem than in C++/RooFit. JAX offers a
 natural path to accelerator-oriented execution via MLIR/StableHLO.
 
-**Julia.** There is only a prototype HS³ implementation in Julia (HS3.jl). Julia has a rich ecosystem of statistics packages like Distributions.jl and MeasureBase.jl that provide an excellent basis for an inference-agnostic implementation of FlatPPL, orthogonal to inference packages like ProfileLikelihood.jl, [BAT.jl](16-references.md#bat) and others. FlatPPL and HS³ models could be supported in Julia via the same graph engine. The Julia equivalent to JAX is Reactant.jl, like JAX it targets accelerators via MLIR/StableHLO.
+**Julia.** There is only a prototype HS³ implementation in Julia (HS3.jl). Julia has a rich ecosystem of statistics packages like Distributions.jl and MeasureBase.jl that provide an excellent basis for an inference-agnostic implementation of FlatPPL, orthogonal to inference packages like ProfileLikelihood.jl, [BAT.jl](17-references.md#bat) and others. FlatPPL and HS³ models could be supported in Julia via the same graph engine. The Julia equivalent to JAX is Reactant.jl, like JAX it targets accelerators via MLIR/StableHLO.
 
 ### <a id="sec:first-example"></a>A first example
 

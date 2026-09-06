@@ -46,7 +46,7 @@ hepphys.interp_*(left, center, right, alpha)
 | [`interp_poly6_lin`](#interp_poly6_lin) | 6th-order polynomial | linear | `poly6` | code4p |
 | [`interp_poly6_exp`](#interp_poly6_exp) | 6th-order polynomial | exponential | — | code4 |
 
-`interp_poly6_exp` exists in [pyhf](16-references.md#pyhf) (code4) but is not part of the
+`interp_poly6_exp` exists in [pyhf](17-references.md#pyhf) (code4) but is not part of the
 HS³ standard yet.
 
 <a id="interp_pwlin"></a>**`interp_pwlin(left, center, right, alpha)`** — piecewise linear interpolation:
@@ -289,7 +289,7 @@ $$\mathrm{BW}(\sigma) \;=\; \frac{1}{m^2 - \sigma - i\, m\, \Gamma}.$$
 
 These functions provide the two-body decay kinematics underlying the mass-dependent
 width of [`resonance_breitwigner`](#resonancebreitwigner), following Section 50
-(Resonances) of [Navas et al. (2024)](16-references.md#navas2024).
+(Resonances) of [Navas et al. (2024)](17-references.md#navas2024).
 
 | Function | Arguments | Description | Domains |
 |---|---|---|---|
@@ -340,8 +340,8 @@ $$\chi_6 = 108056025 + 9823275z + 496125z^2 + 18900z^3 + 630z^4 + 21z^5 + z^6,$$
 
 $$\chi_7 = 18261468225 + 1404728325z + 58939650z^2 + 1819125z^3 + 47250z^4 + 1134z^5 + 28z^6 + z^7.$$
 
-The barrier factors follow [Blatt & Weisskopf (1952)](16-references.md#blatt1952) in the
-closed form of [von Hippel & Quigg (1972)](16-references.md#vonhippel1972).
+The barrier factors follow [Blatt & Weisskopf (1952)](17-references.md#blatt1952) in the
+closed form of [von Hippel & Quigg (1972)](17-references.md#vonhippel1972).
 
 Arguments:
 
@@ -357,7 +357,7 @@ width through the ratio $F_\ell(p(\sigma)) / F_\ell(p_0)$.
 The Wigner $d$- and $D$-functions are elements of the $(2j+1)$-dimensional irreducible
 representation of the rotation group, used in angular-distribution and partial-wave
 amplitudes. The conventions follow Section 50 (Resonances) and the Clebsch-Gordan /
-$d$-function tables of [Navas et al. (2024)](16-references.md#navas2024). The small
+$d$-function tables of [Navas et al. (2024)](17-references.md#navas2024). The small
 $d$-function takes the **cosine** of the polar angle, $\cos\beta$, as its argument.
 
 | Function | Arguments | Description | Domains |
@@ -645,6 +645,6 @@ Returns an $N \times M$ matrix $\mathbf{D}$ where the $D_{i,j} = \text{distance}
 <a id="jensenshannon"></a>**`jensenshannon(u, v)`** — Computes the Jensen-Shannon distance $\sqrt{\frac{1}{2} D_{KL}(u \parallel m) + \frac{1}{2} D_{KL}(v \parallel m)}$ between two probability vectors $u$ and $v$ where $m = \frac{u + v}{2}$.
 A component of $u$ or $v$ may be zero, so the Kullback-Leibler terms use the standard
 convention $0 \log 0 = 0$, equivalently $0 \log(0/q) = 0$, which extends $x \log x$
-continuously to $x = 0$ ([Cover & Thomas (2006)](16-references.md#cover2006)).
+continuously to $x = 0$ ([Cover & Thomas (2006)](17-references.md#cover2006)).
 A zero component of $m$ forces that component of both $u$ and $v$ to zero, so no term
 divides a positive value by zero. 
