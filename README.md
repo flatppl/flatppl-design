@@ -2,9 +2,17 @@
 
 Design proposal for a lightweight probabilistic language.
 
-## Published version
+## Websites
 
-The latest rendered version is available at [spec.flatppl.org](https://spec.flatppl.org/).
+- [flatppl.org](https://flatppl.org/): project homepage, served from
+  [flatppl/flatppl.github.io](https://github.com/flatppl/flatppl.github.io);
+  `www.flatppl.org` redirects there.
+- [spec.flatppl.org](https://spec.flatppl.org/): the latest rendered version of
+  this document, served from this repository.
+- [live.flatppl.org](https://live.flatppl.org/): the playground, served from
+  [flatppl/flatppl-js](https://github.com/flatppl/flatppl-js).
+
+All three are GitHub Pages sites under the `flatppl.org` domain.
 
 ## Locals builds
 
