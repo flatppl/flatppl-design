@@ -30,7 +30,10 @@ _prerender-math = { cmd = "node docs/templates/prerender-katex.js", depends-on =
 _check-html = { cmd = "node docs/templates/check-html.js build/index.html docs", depends-on = [
     "_prerender-math",
 ] }
-build-html = { depends-on = ["_check-html"] }
+_pandoc-legal = { cmd = "pandoc docs/legal-notice.md -o build/legal-notice.html --standalone --template=docs/templates/page.html --css=style.css --title-prefix=FlatPPL --metadata lang=en", depends-on = [
+    "_copy-assets",
+] }
+build-html = { depends-on = ["_check-html", "_pandoc-legal"] }
 build-pdf = { cmd = "node docs/templates/check-typst.js build/flatppl-design.typ build/flatppl-design.pdf", depends-on = [
     "build-typst",
 ] }

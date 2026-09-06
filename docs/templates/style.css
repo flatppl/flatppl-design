@@ -1079,12 +1079,64 @@ code.flatppl span.do { color: var(--syntax-comment); font-style: italic; } /* do
 code.flatppl span.re { color: var(--syntax-comment); } /* holes                */
 
 /* ── Print ────────────────────────────────────────────── */
+/* ── Footer ───────────────────────────────────────────── */
+/* Sticky at the viewport bottom while the page scrolls, but in normal
+   document flow, so it never covers content: at the end of the page it
+   rests in its natural place. It sits below the sidebar (z-index 100), and
+   the inner row mirrors the #content box so the link shares the text
+   column's left edge. */
+#page-footer {
+    position: sticky;
+    bottom: 0;
+    z-index: 50;
+    background: var(--bg-color);
+    border-top: 1px solid var(--border-color);
+}
+
+#page-footer-inner {
+    margin-left: max(16em, calc((100vw - 52rem) / 2));
+    max-width: 52rem;
+    padding: 0.5em 2em 0.5em 3em;
+}
+
+/* Font size on the link, not the box: the row's em-based margins and
+   padding must match #content's, so the link shares its left edge. */
+#page-footer a {
+    font-size: 0.85em;
+    color: var(--sidebar-sub-text);
+    text-decoration: none;
+}
+
+#page-footer a:hover {
+    color: var(--link-color);
+    text-decoration: underline;
+}
+
+body.sidebar-hidden #page-footer-inner {
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* ── Auxiliary pages (page.html) ──────────────────────── */
+/* No sidebar: center the content column and the footer row. */
+body.aux-page #content,
+body.aux-page #page-footer-inner {
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.page-nav {
+    margin: 0 0 2em 0;
+    font-size: 0.9em;
+}
+
 @media print {
 
     #sidebar,
     #sidebar-toggle,
     #theme-toggle-container,
-    .download-link {
+    .download-link,
+    #page-footer {
         display: none;
     }
 
@@ -1148,6 +1200,11 @@ code.flatppl span.re { color: var(--syntax-comment); } /* holes                *
     #content {
         margin-left: 0;
         padding: 3.5em 1.2em 2em;
+    }
+
+    #page-footer-inner {
+        margin-left: 0;
+        padding: 0.5em 1.2em;
     }
 }
 

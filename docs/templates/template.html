@@ -2,38 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" $if(lang)$ lang="$lang$" xml:lang="$lang$" $endif$$if(dir)$ dir="$dir$"
   $endif$>
 
-<head>
-  <meta charset="utf-8" />
-  <meta name="generator" content="pandoc" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
-  $for(author-meta)$
-  <meta name="author" content="$author-meta$" />
-  $endfor$
-  $if(date-meta)$
-  <meta name="dcterms.date" content="$date-meta$" />
-  $endif$
-  $if(keywords)$
-  <meta name="keywords" content="$for(keywords)$$keywords$$sep$, $endfor$" />
-  $endif$
-  $if(description-meta)$
-  <meta name="description" content="$description-meta$" />
-  $endif$
-  <title>$if(title-prefix)$$title-prefix$ – $endif$$pagetitle$</title>
-  <link rel="icon" href="favicon.ico" type="image/x-icon" />
-  <script src="./theme-init.js"></script>
-  <style>
-    $styles.html()$
-  </style>
-  $for(css)$
-  <link rel="stylesheet" href="$css$" />
-  $endfor$
-  $for(header-includes)$
-  $header-includes$
-  $endfor$
-  $if(math)$
-  $math$
-  $endif$
-</head>
+$head.html()$
 
 <body>
   <a class="skip-to-content" href="#content">Skip to content</a>
@@ -107,6 +76,7 @@
     $include-after$
     $endfor$
   </main>
+  $footer.html()$
   <script src="./fuse.min.js" defer></script>
   <script src="./search-helpers.js" defer></script>
   <script src="./docs-app.js" defer></script>
