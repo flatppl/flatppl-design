@@ -22,7 +22,7 @@ are the primary initial target audience. FlatPPL itself, however, is carefully d
 not to be physics-specific, but to be broadly usable for statistical scientific models
 in general.
 
-This document serves both as a design proposal and as a language reference draft. New readers
+New readers
 may want to read the first four sections (motivation, overview, value types, and language
 design), then consult the following reference-style chapters (measure algebra, functions,
 distributions) as needed. Later sections provide worked examples, interoperability
