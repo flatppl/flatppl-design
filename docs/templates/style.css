@@ -1096,7 +1096,8 @@ code.flatppl span.re { color: var(--syntax-comment); } /* holes                *
 #page-footer-inner {
     margin-left: max(16em, calc((100vw - 52rem) / 2));
     max-width: 52rem;
-    padding: 0.5em 2em 0.5em 3em;
+    padding: 0.1em 2em 0.1em 3em;
+    line-height: 1.3;
 }
 
 /* Font size on the link, not the box: the row's em-based margins and
@@ -1105,6 +1106,11 @@ code.flatppl span.re { color: var(--syntax-comment); } /* holes                *
     font-size: 0.85em;
     color: var(--sidebar-sub-text);
     text-decoration: none;
+    /* Taller tap target on touch screens without growing the row: the
+       negative margins cancel the padding in the line layout. */
+    display: inline-block;
+    padding: 0.6em 0;
+    margin: -0.6em 0;
 }
 
 #page-footer a:hover {
@@ -1204,7 +1210,7 @@ body.aux-page #page-footer-inner {
 
     #page-footer-inner {
         margin-left: 0;
-        padding: 0.5em 1.2em;
+        padding: 0.1em 1.2em;
     }
 }
 
