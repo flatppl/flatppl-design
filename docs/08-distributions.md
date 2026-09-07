@@ -108,7 +108,7 @@ Density w.r.t. `Lebesgue(reals)`:
 
 $$\frac{1}{\pi\gamma\left(1 + \left(\frac{x - x_0}{\gamma}\right)^2\right)} \quad \text{for } x \in \mathbb{R}$$
 
-<a id="studentt"></a>**`StudentT(nu)`** — [Student's t-distribution](https://en.wikipedia.org/wiki/Student%27s_t-distribution) (standard form, zero mean, unit scale).
+<a id="studentt"></a>**`StudentT(nu)`** — [Student's t-distribution](https://en.wikipedia.org/wiki/Student%27s_t-distribution) (standard form, zero location, unit scale).
 
 Domain/Support: `reals`/`reals`.
 
