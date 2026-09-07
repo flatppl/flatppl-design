@@ -116,7 +116,6 @@ transformed = 2 * a + 1
 f = functionof(transformed, a = a)
 A = [1.0, 2.0, 3.0, 4.0]
 result = broadcast(f, a = A)           # [3.0, 5.0, 7.0, 9.0]
-result = broadcast(f, A)              # same, positional (f has declared order)
 
 # Stochastic broadcast
 noisy ~ Normal(mu = a, sigma = 0.1)
