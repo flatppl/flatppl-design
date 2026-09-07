@@ -1006,37 +1006,12 @@ code.flatppl span.do { color: var(--syntax-comment); font-style: italic; } /* do
 code.flatppl span.re { color: var(--syntax-comment); } /* holes                */
 
 /* ── Print ────────────────────────────────────────────── */
-/* ── Shared footer host layout ────────────────────────── */
-/* Keep the release fragment sticky and align its first link with the prose
-   column. The legacy footer selectors remain aliases for older snapshots. */
-.fp-shell-footer,
-#page-footer {
+/* Keep the shared footer visible at the viewport edge without changing its
+   cross-site dimensions or spacing. */
+.fp-shell-footer {
     position: sticky;
     bottom: 0;
     z-index: 50;
-    background: var(--bg-color);
-    border-top: 1px solid var(--border-color);
-    padding: 0.1em 2em 0.1em calc(max(var(--fp-nav-width), calc((100vw - var(--fp-col-width)) / 2)) + 3em);
-    line-height: 1.3;
-}
-
-.fp-shell-footer a,
-#page-footer a {
-    color: var(--sidebar-sub-text);
-    text-decoration: none;
-    display: inline-block;
-    padding: 0.6em 0;
-    margin: -0.6em 0;
-}
-
-.fp-shell-footer a:hover,
-#page-footer a:hover {
-    color: var(--link-color);
-    text-decoration: underline;
-}
-
-body.sidebar-hidden .fp-shell-footer {
-    padding-left: calc(max(0px, calc((100vw - var(--fp-col-width)) / 2)) + 3em);
 }
 
 /* ── Auxiliary pages (page.html) ──────────────────────── */
@@ -1044,10 +1019,6 @@ body.sidebar-hidden .fp-shell-footer {
 body.aux-page #main-content {
     margin-left: auto;
     margin-right: auto;
-}
-
-body.aux-page .fp-shell-footer {
-    padding-left: calc(max(0px, calc((100vw - var(--fp-col-width)) / 2)) + 3em);
 }
 
 .page-nav {
@@ -1061,8 +1032,7 @@ body.aux-page .fp-shell-footer {
     #sidebar-toggle,
     .download-link,
     .fp-shell-header,
-    .fp-shell-footer,
-    #page-footer {
+    .fp-shell-footer {
         display: none;
     }
 
@@ -1128,11 +1098,6 @@ body.aux-page .fp-shell-footer {
         padding: 3.5em 1.2em 2em;
     }
 
-    .fp-shell-footer,
-    body.sidebar-hidden .fp-shell-footer,
-    body.aux-page .fp-shell-footer {
-        padding: 0.1em 1.2em;
-    }
 }
 
 /* ── Motion ───────────────────────────────────────────── */
