@@ -560,7 +560,7 @@ theta1 = elementof(reals)
 theta2 = elementof(posreals)
 a = 5.0 * theta1
 b = abs(theta1) * theta2
-obs_dist = iid(Normal(mu = a, sigma = b), 10)
+obs_dist = joint(obs = iid(Normal(mu = a, sigma = b), 10))
 
 prior = joint(theta1 = Normal(mu = 0.0, sigma = 1.0),
               theta2 = Exponential(rate = 1.0))
