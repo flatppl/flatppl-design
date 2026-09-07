@@ -574,11 +574,17 @@ Parameters:
 
 - `intensity`: finite-mass measure or kernel over scalar or record-valued points.
 
-Density w.r.t. `iid(Lebesgue, k)`:
+For a closed intensity measure $\mu$ with reference measure $\rho$, let
+$\Lambda = \mathrm{totalmass}(\mu)$ and
+$\lambda(t) = \mathrm{densityof}(\mu, t)$.
+The reference measure on the stratum of arrays or tables with $k$ entries is
+$\rho^{\otimes k}$. The count strata have counting weight one; the empty stratum
+has unit reference mass. The density, including the probability of the count, is
 
-$$\left(\prod_{i=1}^{k} \lambda(t_i)\right) \exp\!\left(-\int_{T_0}^{T}\lambda(t) \, \mathrm{d}t\right),$$
+$$\frac{e^{-\Lambda}}{k!}\prod_{i=1}^{k}\lambda(t_i).$$
 
-where the interval of interest is $[T_0, T]$, $k$ events $\{t_1, t_2, \dots, t_k\}$ are observed in $[T_0, T]$, and $\lambda(t)$ is equal to `intensity(t)`. 
+The empty product is one. For a kernel-valued intensity, this formula applies
+to each closed output measure.
 
 Given a normalized distribution `shape` and an expected count `n`, the intensity is
 constructed via `weighted(n, shape)`. Conversely, any intensity decomposes as
