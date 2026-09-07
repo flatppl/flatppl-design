@@ -842,7 +842,7 @@ used by user code, as binary RNG state representations are engine-dependent.
 | Function | Arguments | Description | Domains |
 |---|---|---|---|
 | [`builtin_logdensityof`](#builtin_logdensityof) | `kernel, kernel_input, x` | log-density of `kernel(kernel_input)` at `x` w.r.t. the kernel's reference measure | kernel, kernel input, value |
-| [`builtin_sample`](#builtin_sample) | `rngstate, kernel, kernel_input, n, m, ...` | IID samples from `kernel(kernel_input)`; returns `(X, new_rngstate)` | `rngstates`, kernel, kernel input, non-negative integers |
+| [`builtin_sample`](#builtin_sample) | `rngstate, kernel, kernel_input, n, m, ...` | IID samples from `kernel(kernel_input)`; returns `(X, new_rngstate)` | `rngstates`, kernel, kernel input, positive integers |
 | [`builtin_touniform`](#builtin_touniform) | `kernel, kernel_input, x` | canonical transport of variate to standard uniform | kernel, kernel input, value |
 | [`builtin_fromuniform`](#builtin_fromuniform) | `kernel, kernel_input, u` | inverse transport from standard uniform | kernel, kernel input, uniform variate |
 | [`builtin_tonormal`](#builtin_tonormal) | `kernel, kernel_input, x` | canonical transport of variate to standard normal | kernel, kernel input, value |
@@ -862,6 +862,8 @@ input value, not on the resulting measure `kernel(kernel_input)`:
 <a id="builtin_sample"></a>**`builtin_sample(rngstate, kernel, kernel_input, n, m, ...)`** — draws
 from `kernel(kernel_input)`. Returns `(X, new_rngstate)` with an IID-sampled
 array `X` of size `(n, m, ...)`, or a scalar `X` if no `n, m, ...` are given.
+Written sample sizes must be positive. Data-derived sizes may be zero, including
+when an engine can constant-fold them, as specified for FlatPIR array shapes.
 
 <a id="builtin_touniform"></a>**`builtin_touniform(kernel, kernel_input, x)`** /
 <a id="builtin_fromuniform"></a>**`builtin_fromuniform(kernel, kernel_input, u)`** — the canonical
