@@ -15,14 +15,23 @@
   <meta name="description" content="$description-meta$" />
   $endif$
   <title>$if(title-prefix)$$title-prefix$ – $endif$$pagetitle$</title>
-  <link rel="icon" href="favicon.ico" type="image/x-icon" />
+  <link rel="apple-touch-icon" sizes="180x180" href="./flatppl-theme/assets/apple-touch-icon.png" />
+  <link rel="icon" type="image/png" sizes="32x32" href="./flatppl-theme/assets/favicon-32x32.png" />
+  <link rel="icon" type="image/png" sizes="16x16" href="./flatppl-theme/assets/favicon-16x16.png" />
+  <link rel="icon" href="./flatppl-theme/assets/favicon.ico" type="image/x-icon" />
+  <link rel="manifest" href="./flatppl-theme/assets/site.webmanifest" />
   <script src="./theme-init.js"></script>
   <style>
     $styles.html()$
   </style>
+  <link rel="stylesheet" href="./flatppl-theme/tokens.css" />
+  <link rel="stylesheet" href="./flatppl-theme/components.css" />
+  <link rel="stylesheet" href="./flatppl-theme/shell.css" />
   $for(css)$
   <link rel="stylesheet" href="$css$" />
   $endfor$
+  <link rel="stylesheet" href="./flatppl-syntax.css" />
+  <script src="./flatppl-theme/shell.js" defer></script>
   $for(header-includes)$
   $header-includes$
   $endfor$

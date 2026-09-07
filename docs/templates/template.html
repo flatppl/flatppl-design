@@ -1,11 +1,11 @@
 <!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml" $if(lang)$ lang="$lang$" xml:lang="$lang$" $endif$$if(dir)$ dir="$dir$"
+<html xmlns="http://www.w3.org/1999/xhtml" data-fp-active="spec" $if(lang)$ lang="$lang$" xml:lang="$lang$" $endif$$if(dir)$ dir="$dir$"
   $endif$>
 
 $head.html()$
 
 <body>
-  <a class="skip-to-content" href="#content">Skip to content</a>
+  <!-- flatppl-theme:header -->
   <nav id="sidebar" role="navigation" aria-label="Section navigation">
     <div id="sidebar-title"><span id="sidebar-title-text">$pagetitle$</span><button id="sidebar-collapse"
         aria-label="Collapse sidebar" aria-controls="sidebar" aria-expanded="true">&#x2039;</button></div>
@@ -14,20 +14,17 @@ $head.html()$
           docs&hellip;</span><kbd id="search-shortcut-hint"></kbd></button>
     </div>
     <ul id="sidebar-nav"></ul>
-    <div id="theme-toggle-container">
-      <button id="theme-toggle" aria-label="Toggle color theme">Theme</button>
-    </div>
   </nav>
   <button id="sidebar-toggle" aria-label="Toggle navigation">&#9776;</button>
   <div id="sidebar-backdrop"></div>
-  <dialog id="search-dialog" aria-label="Search the documentation">
-    <input type="search" id="search-dialog-input" placeholder="Search the docs&hellip;" aria-label="Search"
+  <dialog class="fp-dialog" id="search-dialog" aria-label="Search the documentation">
+    <input class="fp-input" type="search" id="search-dialog-input" placeholder="Search the docs&hellip;" aria-label="Search"
       autocomplete="off" spellcheck="false" />
     <ul id="search-dialog-results" aria-label="Search results"></ul>
     <p id="search-dialog-empty" hidden>No matches</p>
     <span id="search-dialog-status" aria-live="polite" aria-atomic="true" class="sr-only"></span>
   </dialog>
-  <main id="content" tabindex="-1">
+  <main class="fp-prose" id="main-content" tabindex="-1">
     $for(include-before)$
     $include-before$
     $endfor$
@@ -76,7 +73,7 @@ $head.html()$
     $include-after$
     $endfor$
   </main>
-  $footer.html()$
+  <!-- flatppl-theme:footer -->
   <script src="./fuse.min.js" defer></script>
   <script src="./search-helpers.js" defer></script>
   <script src="./docs-app.js" defer></script>

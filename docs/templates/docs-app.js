@@ -18,7 +18,7 @@
   }
 
   // Collect top-level sections (h1 with single-number data-number)
-  var sections = document.querySelectorAll('#content h1[data-number]');
+  var sections = document.querySelectorAll('#main-content h1[data-number]');
   var sectionItems = []; // {li, id, subIds}
 
   sections.forEach(function (h) {
@@ -28,13 +28,14 @@
 
     var li = document.createElement('li');
     var a = document.createElement('a');
+    a.className = 'fp-nav-item';
     a.textContent = cleanHeading(h);
     a.href = '#' + h.id;
     li.appendChild(a);
 
     // Find subsections (h2 with data-number starting with this section's number + ".")
     var prefix = num + '.';
-    var subHeadings = document.querySelectorAll('#content h2[data-number]');
+    var subHeadings = document.querySelectorAll('#main-content h2[data-number]');
     var subUl = null;
     var subIds = [];
     var subLinks = [];
@@ -50,6 +51,7 @@
       }
       var sli = document.createElement('li');
       var sa = document.createElement('a');
+      sa.className = 'fp-nav-item';
       sa.textContent = cleanHeading(sh);
       sa.href = '#' + sh.id;
       sli.appendChild(sa);
@@ -222,45 +224,6 @@
 
   updateSidebarInert();
 
-  // Theme toggle
-  var themeToggle = document.getElementById('theme-toggle');
-  var mq = window.matchMedia('(prefers-color-scheme: dark)');
-
-  // localStorage may be unavailable (opaque origins, private-mode restrictions, etc.)
-  function storageGet(key) {
-    try { return localStorage.getItem(key); } catch (e) { return null; }
-  }
-  function storageSet(key, val) {
-    try { localStorage.setItem(key, val); } catch (e) { }
-  }
-
-  function applyThemeUI(theme) {
-    themeToggle.textContent = theme === 'dark' ? 'Light' : 'Dark';
-    themeToggle.setAttribute('aria-label', theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode');
-  }
-
-  function setTheme(theme, save) {
-    document.documentElement.setAttribute('data-theme', theme);
-    if (save) { storageSet('theme', theme); }
-    applyThemeUI(theme);
-  }
-
-  // data-theme already set by theme-init.js; sync button UI
-  var initialTheme = document.documentElement.getAttribute('data-theme') || 'light';
-  applyThemeUI(initialTheme);
-
-  // Track system preference changes (only when user has no saved preference)
-  mq.addEventListener('change', function (e) {
-    if (!storageGet('theme')) {
-      setTheme(e.matches ? 'dark' : 'light', false);
-    }
-  });
-
-  themeToggle.addEventListener('click', function () {
-    var current = document.documentElement.getAttribute('data-theme') || 'light';
-    setTheme(current === 'light' ? 'dark' : 'light', true);
-  });
-
   // Full-text search. Index content blocks once on load; open a centred
   // dialog on demand so the main nav is never displaced.
   var searchTrigger = document.getElementById('sidebar-search-trigger');
@@ -287,7 +250,7 @@
     // derivation) has no node:test coverage — node has no DOM. The pure layer it
     // feeds is fully unit-tested; a jsdom smoke test would close this boundary
     // if the glue ever grows logic worth isolating.
-    var contentEl = document.getElementById('content');
+    var contentEl = document.getElementById('main-content');
     var syntheticIdCounter = 0;
     var blockEls = [];
     var blocks = [];
@@ -340,7 +303,7 @@
     // cleanHeading (the same normalizer the index uses), so the prefix-match
     // can't drift from the heading paths in SearchHelpers.buildIndexEntries.
     var demoteHeadings = [];
-    var docTitleEl = document.querySelector('#content .title');
+    var docTitleEl = document.querySelector('#main-content .title');
     if (docTitleEl) { demoteHeadings.push(cleanHeading(docTitleEl).toLowerCase()); }
     // Key the overview-chapter demotion off its STABLE anchor id (`sec:overview`,
     // a hand-placed cross-reference target that html-anchors.lua hoists onto the
@@ -403,7 +366,7 @@
         var li = document.createElement('li');
         var a = document.createElement('a');
         a.href = '#' + entry.targetId;
-        a.className = 'search-result';
+        a.className = 'fp-nav-item search-result';
         if (entry.heading) {
           var h = document.createElement('span');
           h.className = 'search-result-heading';
@@ -558,7 +521,7 @@
 
 // Heading anchor links (#)
 (function () {
-  document.querySelectorAll('#content h1[id], #content h2[id], #content h3[id], #content h4[id], #content h5[id], #content h6[id]').forEach(function (h) {
+  document.querySelectorAll('#main-content h1[id], #main-content h2[id], #main-content h3[id], #main-content h4[id], #main-content h5[id], #main-content h6[id]').forEach(function (h) {
     var a = document.createElement('a');
     a.className = 'heading-anchor';
     a.href = '#' + h.id;
@@ -570,7 +533,8 @@
 
 // Wrap tables for horizontal scroll on narrow viewports
 (function () {
-  document.querySelectorAll('#content table').forEach(function (table) {
+  document.querySelectorAll('#main-content table').forEach(function (table) {
+    table.classList.add('fp-table');
     var wrapper = document.createElement('div');
     wrapper.className = 'table-wrapper';
     table.parentNode.insertBefore(wrapper, table);
