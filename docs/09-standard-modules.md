@@ -74,7 +74,10 @@ Outside $[-1, +1]$, the function continues linearly with slope $S + 2A$ (right) 
 $S - 2A$ (left).
 
 <a id="interp_poly6_lin"></a>**`interp_poly6_lin(left, center, right, alpha)`** — 6th-order polynomial inside
-$[-1, +1]$, linear extrapolation outside. With $f(0) = \mathrm{center}$ fixing the
+$[-1, +1]$, linear extrapolation outside.
+The exterior lines have slope $\mathrm{center} - \mathrm{left}$ on the left
+and $\mathrm{right} - \mathrm{center}$ on the right.
+With $f(0) = \mathrm{center}$ fixing the
 constant term, the six polynomial coefficients are determined by $C^2$ continuity at
 $\alpha = \pm 1$ — matching the value, first, and second derivatives to the linear
 extrapolation (so $f(-1) = \mathrm{left}$, $f(+1) = \mathrm{right}$).
