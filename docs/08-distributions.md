@@ -40,7 +40,7 @@ statement w.r.t. `Lebesgue(support = S)` follows by restriction.
 | [`Exponential`](#exponential) | `rate` | `reals` | `nonnegreals` |
 | [`Gamma`](#gamma) | `shape`, `rate` | `reals` | `nonnegreals` |
 | [`Weibull`](#weibull) | `shape`, `scale` | `reals` | `nonnegreals` |
-| [`Pareto`](#pareto) | `shape`, `scale` | `reals` | `posreals` |
+| [`Pareto`](#pareto) | `shape`, `scale` | `reals` | `interval(scale, inf)` |
 | [`InverseGamma`](#inversegamma) | `shape`, `scale` | `reals` | `posreals` |
 | [`Beta`](#beta) | `alpha`, `beta` | `reals` | `unitinterval` |
 | [`ChiSquared`](#chisq) | `k` | `reals` | `nonnegreals` |
@@ -193,7 +193,7 @@ $$\frac{k}{\lambda}\left(\frac{x}{\lambda}\right)^{k-1} e^{-(x/\lambda)^k} \quad
 
 <a id="pareto"></a>**`Pareto(shape, scale)`** — The [Pareto distribution](https://en.wikipedia.org/wiki/Pareto_distribution).
 
-Domain/Support: `reals`/`posreals`.
+Domain/Support: `reals`/`interval(scale, inf)`.
 
 Parameters:
 
