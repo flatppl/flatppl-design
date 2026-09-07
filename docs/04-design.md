@@ -655,9 +655,6 @@ named_K = relabel(K, ["x", "y", "z"])
 For functions, `relabel(f, names)` is post-composition with `relabel` on the function
 result; for measures it is equivalent to `pushfwd(fn(relabel(_, names)), M)`; for kernels it acts on the output measures.
 
-See [built-in functions](07-functions.md#sec:functions) for full reference documentation
-on `relabel`.
-
 ### Function composition and annotation
 
 **`fchain(f1, f2, f3, ...)`** composes deterministic functions left-associatively:
