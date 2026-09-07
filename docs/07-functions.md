@@ -585,13 +585,16 @@ statistics of the $n$ elements of `xs`, `median(xs)` is $x_{((n+1)/2)}$ for odd 
 and $\tfrac{1}{2}\left(x_{(n/2)} + x_{(n/2+1)}\right)$ for even $n$.
 
 <a id="quantile"></a>**`quantile(xs, p)`** — linear interpolation between the order
-statistics of `xs`. With $h = (n-1)p + 1$ and $k = \lfloor h \rfloor$,
+statistics of `xs`. With $h = (n-1)p + 1$, $k = \lfloor h \rfloor$, and $t = h-k$,
 
-$$\mathrm{quantile}(\mathbf{x}, p) = x_{(k)} + (h - k)\left(x_{(k+1)} - x_{(k)}\right),$$
+$$\mathrm{quantile}(\mathbf{x}, p) =
+\begin{cases}
+x_{(k)}, & t = 0 \text{ or } k = n,\\
+(1-t)x_{(k)} + t x_{(k+1)}, & \text{otherwise}.
+\end{cases}$$
 
-taking the second term to vanish when $k = n$. So `quantile(xs, 0)` is
-`minimum(xs)`, `quantile(xs, 1)` is `maximum(xs)`, and `quantile(xs, 0.5)` is
-`median(xs)`.
+Thus `quantile(xs, 0)` is `minimum(xs)`, `quantile(xs, 1)` is `maximum(xs)`,
+and `quantile(xs, 0.5)` is `median(xs)`.
 
 For multi-dimensional arrays, use `sizeof` to obtain shape information:
 
