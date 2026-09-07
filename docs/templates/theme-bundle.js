@@ -4,11 +4,11 @@ const path = require("node:path");
 
 const EXPECTED_SOURCE = {
   repository: "https://github.com/flatppl/flatppl-theme",
-  commit: "671f2423c99c5da8a53b0450156ecad94fae2e84",
-  release: "v0.1.2",
+  commit: "d0470679cf145f83a792a823c5d4c83d0d31743c",
+  release: "v0.1.3",
 };
 const EXPECTED_MANIFEST_SHA256 =
-  "71281230f642de7243a051642079aea7ac698446c6b89321808715acaa7dc06b";
+  "7bac1959dbe0cbc61ad45184e3dfff52423bc3ae5989871dbaf1f40390c14edc";
 
 function filesUnder(root, directory = root) {
   return fs.readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
@@ -32,7 +32,7 @@ function verifyThemeBundle(bundle) {
   const errors = [];
   if (manifest.schema !== 1) errors.push("manifest: unsupported schema");
   if (manifest.name !== "flatppl-theme") errors.push("manifest: unexpected name");
-  if (manifest.version !== "0.1.2") errors.push("manifest: unexpected version");
+  if (manifest.version !== "0.1.3") errors.push("manifest: unexpected version");
   for (const [field, expected] of Object.entries(EXPECTED_SOURCE)) {
     if (manifest.source?.[field] !== expected) errors.push(`manifest: unexpected source ${field}`);
   }
@@ -100,7 +100,7 @@ function main(args) {
   if (command === "check" && bundle) {
     const errors = verifyThemeBundle(bundle);
     if (errors.length > 0) throw new Error(errors.join("\n"));
-    console.log("flatppl-theme v0.1.2: manifest and hashes verified");
+    console.log("flatppl-theme v0.1.3: manifest and hashes verified");
     return;
   }
   if (command === "prepare" && bundle && templates && output) {
