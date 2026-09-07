@@ -90,8 +90,9 @@ so its boundary derivatives are $f'(+1) = \mathrm{right} \cdot \log(\mathrm{righ
 and $f'(-1) = \mathrm{left} \cdot \log(\mathrm{center}/\mathrm{left})$. With $f(0) = \mathrm{center}$
 fixing the constant term, the six polynomial coefficients are determined by $C^2$ continuity
 at $\alpha = \pm 1$ — matching the value, first, and second derivatives of that extrapolation
-(so $f(-1) = \mathrm{left}$, $f(+1) = \mathrm{right}$). The result stays positive, making this
-appropriate for multiplicative factors.
+(so $f(-1) = \mathrm{left}$, $f(+1) = \mathrm{right}$). Positive anchors do not guarantee
+a positive polynomial between the anchors. Non-negativity over the intended input
+range is required when using the result as a measure weight.
 
 #### Distributions
 
