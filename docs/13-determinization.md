@@ -85,10 +85,11 @@ implementation-defined convention; that fallback carries no normative force.
   unless marginalized out
   ([variates and measures](04-design.md#sec:variate-measure)).
 - A **sampled output** resolves its measure's `draw` nodes through `rand`.
-  Sampled outputs consume the RNG-state input sequentially in `outputs` order,
-  with state splitting during fan-out
-  ([random value generation](07-functions.md#sec:random)); an exported RNG
-  state is the state after the last sampled output.
+  Each `rand` call uses its explicit state argument, including when calls
+  share a state. The order of `outputs` affects only result order. An
+  RNG-state output retains the value of its declared expression. State
+  splitting within fan-out operations follows
+  [random value generation](07-functions.md#sec:random).
 - Other deterministic expressions pass through unchanged.
 
 Reduction is per output: a `draw` reached by both kinds of output is resolved
