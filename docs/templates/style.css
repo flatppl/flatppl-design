@@ -824,17 +824,6 @@ section.footnotes ol {
     border-radius: 8px;
 }
 
-/* ── Text selection ───────────────────────────────────── */
-::selection {
-    background: var(--fp-select);
-    color: var(--heading-color);
-}
-
-[data-theme="dark"] ::selection {
-    background: var(--fp-select);
-    color: var(--heading-color);
-}
-
 /* ── KaTeX math ───────────────────────────────────────── */
 .katex {
     color: inherit;
