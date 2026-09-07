@@ -16,9 +16,9 @@ Equivalent to `fn(_)`.
 
 | Function | Arguments | Description | Domains |
 |---|---|---|---|
-| [`vector`](#vector) | `x1, x2, ...` | 1D array from given elements | scalars |
+| [`vector`](#vector) | `x1, x2, ...` | 1D array from given elements | scalars or arrays |
 | [`array`](#array) | `data, size, dimorder` | n-D array from flat vector | vector, integer vector, integer vector |
-| [`fill`](#fill) | `x, size` | array of shape `size` filled with `x` | scalar, integer or integer vector |
+| [`fill`](#fill) | `x, size` | array of shape `size` filled with `x` | scalar or array, integer or integer vector |
 | [`zeros`](#zeros) | `size` | real-valued zero array of shape `size` | integer or integer vector |
 | [`ones`](#ones) | `size` | real-valued one array of shape `size` | integer or integer vector |
 | [`eye`](#eye) | `n` | $n \times n$ identity matrix $\mathbf{I}_n$ | positive integer |
