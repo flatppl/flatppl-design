@@ -71,6 +71,8 @@ elsewhere, for $i \in \{1, \ldots, n\}$.
 <a id="linspace"></a>**`linspace(from, to, n)`** — returns an endpoint-inclusive range of `n` real numbers,
 evenly spaced from `from` to `to` (both included). The range is semantically a vector
 of reals.
+When `n = 1`, `from` and `to` must be equal.
+The result contains that endpoint as its sole real value.
 
   ```flatppl
   linspace(0.0, 10.0, 5)     # equivalent to [0.0, 2.5, 5.0, 7.5, 10.0]
