@@ -581,8 +581,9 @@ $$\left(\prod_{i=1}^{k} \lambda(t_i)\right) \exp\!\left(-\int_{T_0}^{T}\lambda(t
 where the interval of interest is $[T_0, T]$, $k$ events $\{t_1, t_2, \dots, t_k\}$ are observed in $[T_0, T]$, and $\lambda(t)$ is equal to `intensity(t)`. 
 
 Given a normalized distribution `shape` and an expected count `n`, the intensity is
-constructed via `weighted(n, shape)`. Conversely, any intensity decomposes as
+constructed via `weighted(n, shape)`. Conversely, an intensity with positive finite mass decomposes as
 `totalmass(intensity)` (expected count) and `normalize(intensity)` (shape distribution).
+A zero intensity produces no events and has no normalized shape distribution.
 
 For binned models, see [`BinnedPoissonProcess`](#binnedpoissonprocess).
 
