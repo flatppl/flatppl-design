@@ -413,6 +413,7 @@ order.
 |---|---|---|---|
 | `exp` | `x` | $e^x$ | `reals`, `complexes` |
 | `log` | `x` | $\ln(x)$ | `posreals`, `complexes` |
+| `log2` | `x` | $\log_{2}(x)$ | `posreals` |
 | `log10` | `x` | $\log_{10}(x)$ | `posreals` |
 | `sqrt` | `x` | $\sqrt{x}$ | `nonnegreals`, `complexes` |
 | `abs` | `x` | $\vert x\vert$ | `reals`, `complexes` |
