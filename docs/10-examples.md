@@ -69,7 +69,9 @@ range-restricted likelihood for a sideband fit is also straightforward:
 ```flatppl
 sideband = interval(0.0, 3.0)
 sideband_data = filter(fn(_ in sideband), [3.1, 5.7, 2.4, 8.9, 4.2])
-sideband_model = normalize(truncate(kernelof(events, raw_eff_syst = raw_eff_syst), sideband))
+sideband_model = functionof(
+    PoissonProcess(intensity = truncate(rate, sideband)),
+    mu_sig = mu_sig, raw_eff_syst = raw_eff_syst)
 L_obs_sideband = likelihoodof(sideband_model, sideband_data)
 L_sideband = joint_likelihood(L_obs_sideband, L_constr)
 ```
