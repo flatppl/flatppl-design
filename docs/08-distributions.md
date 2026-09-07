@@ -357,7 +357,7 @@ Domain/Support: `integers`/`nonnegintegers`.
 
 Parameters:
 
-- `p = elementof(unitinterval)`: success probability. 
+- `p = elementof(unitinterval)`: success probability, with $p > 0$.
 
 **Note.** We define the geometric in terms of performing Bernoulli trials with success probability $p$ until a success is observed. The number of failures until this success is geometrically distributed.
 
