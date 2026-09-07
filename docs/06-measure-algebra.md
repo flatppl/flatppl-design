@@ -794,8 +794,17 @@ variates out of the joint.
 Selectors work like in `get`: `"b"` selects the bare value, `["b"]` selects a
 `record(b = ...)`.
 
-`kernel, base_measure = disintegrate(selector, joint_measure)` must satisfy the
-condition that `jointchain(base_measure, kernel)` is equivalent to `joint_measure`.
+The returned kernel and base measure satisfy the disintegration identity above
+when the selected and remaining variates are identified with their original
+fields or coordinate positions.
+
+`jointchain(base_measure, kernel)` is directly equivalent to `joint_measure`
+only when its `cat` output already has the original variate structure and order.
+Otherwise reconstruction requires explicit output adaptation before composition
+where needed, followed by restoration of the original field or coordinate order.
+For example, a bare scalar field selected by `"b"` can be restored with
+`relabel(kernel, ["b"])` before composition. A final `pushfwd` can restore field
+or coordinate order using the existing value constructors.
 
 For the large class of joint models whose factorization structure is explicit in the
 DAG, `disintegrate` can be implemented via straightforward graph inspection. For
