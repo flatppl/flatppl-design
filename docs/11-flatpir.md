@@ -369,7 +369,7 @@ as `(Normal (%kwarg mu 0.0) (%kwarg sigma 1.0))`.
 - `(%field <name> <value>)` — named entries in data constructors (e.g., `record`,
   `cartprod`, `joint`, `table`). Order is part of the structure.
 - `(%assign <name> <value>)` — substitutions and interface bindings (e.g., the
-  substitution arguments of `load_module` and `standard_module`). Unordered
+  substitution arguments of `load_module`). Unordered
   (matched by name).
 
 **Composite literal values.** Scalar literals are covered [above](#literal-values);
