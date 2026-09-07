@@ -13,7 +13,8 @@ efficiency = 0.9 + 0.05 * raw_eff_syst
 ```
 
 Signal and background shapes are defined as step-function densities, normalized over the
-analysis region:
+analysis region. The bin edges, bin contents, and analysis bounds `lo` and `hi`
+are fixed inputs:
 
 ```flatppl
 sig_shape = fn(stepwise(bin_edges, signal_bins, _))
@@ -45,7 +46,7 @@ combined likelihood `L` is a likelihood object on the parameter space
 ```flatppl
 # Observation likelihood: boundary input keeps raw_eff_syst as a parameter
 L_obs = likelihoodof(
-    kernelof(events, raw_eff_syst = raw_eff_syst),
+    kernelof(events, mu_sig = mu_sig, raw_eff_syst = raw_eff_syst),
     [3.1, 5.7, 2.4, 8.9, 4.2])
 
 # Constraint: auxiliary measurement model for the nuisance parameter
