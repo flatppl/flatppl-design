@@ -745,16 +745,16 @@ joint model, the joint must be split into a forward kernel (observation model), 
 measure (prior). The forward kernel can then be combined with some observed data to build a
 likelihood.
 
-In measure theory, such a decomposition is known as disintegration. Given a space of
-parameters $\mathcal{A}$ and a space of observations $\mathcal{B}$, and a joint measure
-$\mu$ on the joint measurable space $\mathcal{A} \times \mathcal{B}$, the disintegration
-theorem states that (for standard Borel spaces, which all FlatPPL spaces are) there
-exists a kernel $\kappa: \mathcal{A} \to M(\mathcal{B})$ and a
-marginal measure $\nu$ on $\mathcal{A}$ such that:
+In measure theory, such a decomposition is known as disintegration. Given a
+joint measure $\mu$ on the standard Borel space $\mathcal{A} \times \mathcal{B}$,
+let $\nu$ be its marginal on $\mathcal{A}$. If $\nu$ is $\sigma$-finite, the
+disintegration theorem gives a kernel
+$\kappa: \mathcal{A} \to M(\mathcal{B})$ such that:
 
 $$\mu(A \times B) = \int_A \kappa(a, B)\, d\nu(a)$$
 
-This is the generalization of conditional probability to arbitrary measures.
+This generalizes conditional probability to joint measures with a
+$\sigma$-finite marginal.
 
 The general disintegration theorem allows for disintegration along arbitrary
 measurable functions, not just orthogonal projections. FlatPPL does not support
