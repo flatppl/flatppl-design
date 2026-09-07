@@ -316,22 +316,23 @@ To evaluate a density at many points (e.g. a grid for numerical integration or p
 
 | Construct | Arguments | Description |
 |---|---|---|
-| [`kchain`](#kchain) | `M, K1, K2, ...` | Kleisli bind; marginalizes intermediate variates, keeps the last |
+| [`kchain`](#kchain) | `M, K1, K2, ...` | accumulated-feed composition; marginalizes intermediate variates, keeps the last |
 | [`jointchain`](#jointchain) | `M, K1, K2, ...` | kernel-conditioned joint; concatenates all variates (no marginalization) |
 | [`markovchain`](#markovchain) | `kernel`, `init`, `n` | measure over a length-`n` time-homogeneous Markov trajectory |
 | [`kscan`](#kscan) | `kernel`, `init`, `xs` | Kleisli scan; `markovchain` with per-step exogenous inputs `xs` |
 
-- **`kchain(M, K1, K2, ...)`**<a id="kchain"></a> — left-associative Kleisli composition (monadic bind).
+- **`kchain(M, K1, K2, ...)`**<a id="kchain"></a> — accumulated-feed kernel composition.
   Keeps only the last kernel's variates, marginalizing out all intermediate variates.
-  In contrast to standard Kleisli composition, the first argument may also be a measure
-  (a nullary kernel). See `jointchain` below for the variant that retains all variates.
+  The first transition kernel receives the base variate unchanged. Each later kernel
+  receives the `cat` of the variates of all preceding components, as in `jointchain`.
+  The first argument may be a measure (a nullary kernel).
+  See `jointchain` below for the variant that retains all variates.
 
   Mathematically, we define the chain of a measure $\mu(A)$ and a transition kernel $\kappa$ as
 
   $$\nu(B) = \int \kappa(a, B)\, d\mu(a)$$
 
   This involves a marginalization integral, which is generally intractable.
-  Left-associative.
 
   ```flatppl
   prior_predictive = kchain(prior, forward_kernel)
