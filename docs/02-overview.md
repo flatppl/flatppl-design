@@ -225,8 +225,8 @@ Scalars, arrays, nested arrays, matrices, records, and basic operations:
 ```flatppl
 # Scalars
 x = 3.14
-n = 42
-b = true
+count = 42
+flag = true
 
 # Collections
 v = [1.0, 2.0, 3.0]
@@ -235,8 +235,8 @@ M = rowstack([[1, 2, 3], [4, 5, 6]])
 r = record(mu=3.0, sigma=1.0)
 
 # Indexing, field access, slicing
-y = A[i]
-z = A[i, j]
+array_entry = A[i]
+matrix_entry = A[i, j]
 w = r.mu
 col_j = M[:, j]
 
@@ -319,7 +319,7 @@ K = kernelof(b, x = a)
 C = broadcast(f, x = A)
 
 # Same, positional
-C = broadcast(f, A)
+C_positional = broadcast(f, A)
 
 # Kernel over array
 D ~ broadcast(K, x = A)
