@@ -284,12 +284,13 @@ To evaluate a density at many points (e.g. a grid for numerical integration or p
   marginals has cross-covariance $0$ only when their parameters reach no shared
   stochastic node.
 
-  **Singular joints.** When one component's variate is determined by the
-  others given the shared ancestors (the same draw referenced twice, a
-  deterministic transform of another component), the joint law has no density
-  w.r.t. the product reference measure. Sampling is well-defined; a density
-  query is a static error where statically detectable, and is otherwise
-  refused by the engine.
+  **Singular joints.** A joint law has no density w.r.t. its product reference
+  measure when it is not absolutely continuous w.r.t. that measure. This occurs,
+  for example, when the same scalar draw with a Lebesgue density appears twice.
+  Deterministic dependence between discrete variates does not imply the absence
+  of a density w.r.t. product counting measure. Sampling remains well-defined.
+  When no density exists, a density query is a static error where statically
+  detectable, and is otherwise refused by the engine.
 
 - **`iid(M, size)`**<a id="iid"></a> — the product measure $M^{\otimes N}$ over arrays of
   shape `size`, where `N = prod(size)`. `size` is a positive integer (1-D length) or
