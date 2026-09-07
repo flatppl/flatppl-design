@@ -77,6 +77,8 @@ Parameters:
 - `mu = elementof(reals)`: the mean $\mu$.
 - `sigma = elementof(posreals)`: the standard deviation $\sigma$.
 
+Both parameters must be finite.
+
 Density w.r.t. `Lebesgue(reals)`: 
 
 $$\frac{1}{\sigma\sqrt{2\pi}} \exp\!\left(-\frac{(x - \mu)^2}{2\sigma^2}\right) \quad \text{for } x \in \mathbb{R}$$
