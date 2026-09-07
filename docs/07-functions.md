@@ -861,7 +861,7 @@ input value, not on the resulting measure `kernel(kernel_input)`:
 
 <a id="builtin_sample"></a>**`builtin_sample(rngstate, kernel, kernel_input, n, m, ...)`** — draws
 from `kernel(kernel_input)`. Returns `(X, new_rngstate)` with an IID-sampled
-array `X` of size `(n, m, ...)`, or a scalar `X` if no `n, m, ...` are given.
+array `X` of size `(n, m, ...)`, or one variate `X` if no `n, m, ...` are given.
 
 <a id="builtin_touniform"></a>**`builtin_touniform(kernel, kernel_input, x)`** /
 <a id="builtin_fromuniform"></a>**`builtin_fromuniform(kernel, kernel_input, u)`** — the canonical
