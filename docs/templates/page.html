@@ -1,11 +1,12 @@
 <!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml" $if(lang)$ lang="$lang$" xml:lang="$lang$" $endif$$if(dir)$ dir="$dir$"
+<html xmlns="http://www.w3.org/1999/xhtml" data-fp-active="spec" $if(lang)$ lang="$lang$" xml:lang="$lang$" $endif$$if(dir)$ dir="$dir$"
   $endif$>
 
 $head.html()$
 
 <body class="aux-page">
-  <main id="content" tabindex="-1">
+  <!-- flatppl-theme:header -->
+  <main class="fp-prose" id="main-content" tabindex="-1">
     <p class="page-nav"><a href="./">&larr; FlatPPL, the Flat Portable Probabilistic Language</a></p>
     $if(title)$
     <header id="title-block-header">
@@ -14,7 +15,7 @@ $head.html()$
     $endif$
     $body$
   </main>
-  $footer.html()$
+  <!-- flatppl-theme:footer -->
 </body>
 
 </html>
