@@ -268,7 +268,7 @@ Arguments:
 - `m = elementof(posreals)`: pole mass.
 - `width = elementof(posreals)`: on-shell width $\Gamma$.
 - `ma = elementof(nonnegreals)`, `mb = elementof(nonnegreals)`: daughter masses.
-- `l = elementof(nonnegintegers)`: orbital angular momentum $\ell$.
+- `l = elementof(nonnegintegers)`: orbital angular momentum $\ell$ (with $\ell \leq 7$).
 - `d = elementof(posreals)`: Blatt-Weisskopf radius.
 
 Definition:
