@@ -423,7 +423,8 @@ C = broadcast(f, a = A, b = B)      # apply f elementwise over arrays A, B
 
 `functionof(e)` captures the entire computation leading to `e` — the sub-DAG
 that contains `e` and all its ancestors — as a reusable function object.
-The sub-DAG must be fully deterministic and so must not contain any `draw` nodes.
+The reified computation must be deterministic: stochastic ancestors must be
+absorbed by `lawof` as described above, or excluded by a designated boundary.
 
 The argument names of the resulting function are the names of the leaf nodes of the
 reified sub-DAG; the input nodes of the function are decoupled from these leaf nodes.
