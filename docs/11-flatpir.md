@@ -464,8 +464,9 @@ inference proceeds as follows:
 
 1. For each binding whose RHS is `(load_module "..." ...)`, locate A's
    `.flatpir` file.
-2. If A is not yet annotated, run inference on it first (with cycle detection).
-3. Read A's public bindings and their type annotations.
+2. Infer A's unresolved type information first (with cycle detection), even
+   if A already carries some annotations.
+3. Read A's public bindings and their inferred types.
 4. Translate A's `self` references: each `(%ref self X)` becomes `(%ref <module> X)`
    (using the binding's alias as the module name), unless the load supplies a
    substitution for `X`, in which case the substitution expression replaces the
