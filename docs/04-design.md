@@ -43,6 +43,11 @@ and kernels.
 form the interface of a FlatPPL module. They must match the regular expression
 `^[A-Za-z][A-Za-z0-9_]*$`.
 
+A binding whose value is a module reference (from `load_module` or `standard_module`,
+see [Module composition](#sec:modules)) is never part of the public interface,
+whatever its name: it names a namespace for member lookups, not a value another
+module can import.
+
 **Private bindings.** Binding names that begin with a single underscore and do not
 end with an underscore (regular expression
 `^_[A-Za-z]([A-Za-z0-9_]*[A-Za-z0-9])?$`), e.g. `_tmp`, are private to a module.

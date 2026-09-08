@@ -58,6 +58,8 @@ A FlatPIR file contains exactly one `(%module ...)` form with these elements:
   are the root set for rewriting passes; unlisted bindings may be elided during term-rewriting.
   Exactly one `(%public ...)` form appears per module: the interface is a single set of
   names (see [binding names](04-design.md#sec:binding-names)).
+  A `load_module` or `standard_module` alias never appears here (see
+  [public bindings](04-design.md#sec:binding-names)).
 - `(%bind <name> <expression> [(%doc <markup> <line>...)])` — pairs a name
   with an expression and an optional documentation form. The `(%doc ...)`
   sub-form, when present, is always last; see [Documentation](#documentation)
