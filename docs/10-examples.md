@@ -100,10 +100,13 @@ truncation, density-defined distributions, module loading, and hypothesis testin
 some_mean = elementof(cartpow(reals, 3))
 some_cov = elementof(cartpow(reals, [3, 3]))
 x = elementof(reals)
-c0 = elementof(reals)
-c1 = elementof(reals)
-c2 = elementof(reals)
-c3 = elementof(reals)
+# Bernstein coefficients: non-negative with a positive sum, so the density stays
+# non-negative and `normalize` has a finite positive mass to divide by. The bounds
+# `lo` and `hi` must be finite and ordered, lo < hi.
+c0 = elementof(nonnegreals)
+c1 = elementof(nonnegreals)
+c2 = elementof(nonnegreals)
+c3 = elementof(nonnegreals)
 lo = elementof(reals)
 hi = elementof(reals)
 
@@ -132,9 +135,21 @@ noisy_array ~ broadcast(K, a = A)  # independent Normal draws at each element
 # Truncated distribution (model physics)
 positive_sigma ~ normalize(truncate(Normal(mu = 1.0, sigma = 0.5), interval(0, inf)))
 
-# Density-defined distribution (Bernstein polynomial)
-bern = fn(bernstein(coefficients = [c0, c1, c2, c3], x = _))
-smooth_bkg = normalize(weighted(bern, Lebesgue(support = interval(lo, hi))))
+# Density-defined distribution (Bernstein polynomial). The callback form takes
+# fixed inputs only: a `fn` hole cannot capture fitted ancestors.
+bern = fn(bernstein(coefficients = [0.2, 0.5, 0.8, 0.4], x = _))
+smooth_bkg = normalize(weighted(bern, Lebesgue(support = interval(0.0, 10.0))))
+
+# Same cubic Bernstein density with fitted coefficients, as a Beta mixture.
+# Each Beta density below is four times its Bernstein basis function, and that
+# common factor cancels under `normalize`.
+smooth_bkg_fitted = locscale(
+    normalize(superpose(
+        weighted(c0, Beta(alpha = 1, beta = 4)),
+        weighted(c1, Beta(alpha = 2, beta = 3)),
+        weighted(c2, Beta(alpha = 3, beta = 2)),
+        weighted(c3, Beta(alpha = 4, beta = 1)))),
+    lo, hi - lo)
 
 # Module loading and composition
 sig = load_module("signal_channel.flatppl")
