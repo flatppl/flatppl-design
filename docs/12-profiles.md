@@ -37,7 +37,7 @@ A profile is specified as a tree grammar over
 [FlatPIR](11-flatpir.md#intermediate-representation): a set of productions (term
 patterns). It is purely inclusive — a fully inferred FlatPIR term conforms iff it derives
 from those productions — and is matched over **canonical** FlatPIR (keyword arguments
-positionalized and ordered, reified-callable placeholders and `aggregate` / `metricsum`
+positionalized where permitted and otherwise sorted, reified-callable placeholders and `aggregate` / `metricsum`
 axis labels α-canonicalized, aliases resolved; FlatPIR
 [normalization](11-flatpir.md#flatpir-normalization)), so each construct has one normal
 form to match rather than every surface variant.
@@ -60,7 +60,7 @@ production is a FlatPPL term with metavariable syntax:
   each).
 - a trailing **`*`** / **`+`** on a metavariable matches a _sequence_ (zero-or-more /
   one-or-more): `?_*` a run of closed terms, `??+` of open ones — covering the variadic
-  heads (`vector`, `cat`, the placeholder tail of `functionof`).
+  heads such as `vector` and `cat`.
 - **`(%meta (<type> <phase> <valueset>) <pattern>)`** wraps a sub-pattern where FlatPIR
   places an annotation (see [`%meta`](11-flatpir.md#flatpir-meta-annotations)),
   constraining the wrapped node's inferred type, phase, and value set; each slot is itself

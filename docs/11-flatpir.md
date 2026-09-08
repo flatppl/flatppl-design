@@ -369,7 +369,7 @@ as `(Normal (%kwarg mu 0.0) (%kwarg sigma 1.0))`.
 - `(%field <name> <value>)` — named entries in data constructors (e.g., `record`,
   `cartprod`, `joint`, `table`). Order is part of the structure.
 - `(%assign <name> <value>)` — substitutions and interface bindings (e.g., the
-  substitution arguments of `load_module` and `standard_module`). Unordered
+  substitution arguments of `load_module`). Unordered
   (matched by name).
 
 **Composite literal values.** Scalar literals are covered [above](#literal-values);
@@ -462,10 +462,11 @@ Each module is annotated independently: types are computed from its own perspect
 (using `self` for current-module references). When module B loads module A, B's
 inference proceeds as follows:
 
-1. For each binding whose RHS is `(load_module "..." ...)`, locate A's
-   `.flatpir` file.
-2. If A is not yet annotated, run inference on it first (with cycle detection).
-3. Read A's public bindings and their type annotations.
+1. For each binding whose RHS is `(load_module "..." ...)`, resolve A's
+   source and obtain its FlatPIR representation.
+2. Infer A's unresolved type information first (with cycle detection), even
+   if A already carries some annotations.
+3. Read A's public bindings and their inferred types.
 4. Translate A's `self` references: each `(%ref self X)` becomes `(%ref <module> X)`
    (using the binding's alias as the module name), unless the load supplies a
    substitution for `X`, in which case the substitution expression replaces the
