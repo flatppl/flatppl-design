@@ -96,9 +96,8 @@ density output's ([variates and measures](04-design.md#sec:variate-measure)).
 
 ### Refused constructs
 
-Density reductions follow the contracts in
-[density of composed measures](06-measure-algebra.md#density-of-composed-measures),
-including their reproducibility rule. Refused:
+Determinization reduces in closed form or fails loudly; it does not silently
+substitute heuristics. Refused:
 
 - the density of a `pushfwd` of a function neither in the known-bijection
   registry nor a structural projection: a static error by default, unless
