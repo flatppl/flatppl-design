@@ -1,5 +1,7 @@
 ---
 title: Legal Notice
+description: "Provider and privacy information for the FlatPPL specification website."
+canonical-url: "https://spec.flatppl.org/legal-notice.html"
 ---
 
 The following provides mandatory data concerning the provider of this
