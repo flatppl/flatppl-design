@@ -378,8 +378,10 @@ positive_normal = truncate(Normal(mu = 0, sigma = 1),
     interval(0, inf))
 
 # Fundamental measures and density-defined distributions
+# c0, c1, c2, lo, and hi are fixed, finite real inputs.
+# The coefficients are nonnegative with positive sum, and lo < hi.
 leb = Lebesgue(support = reals)
-bern = fn(bernstein(coefficients = [c0, c1, c2], x = _))
+bern = fn(bernstein(coefficients = [c0, c1, c2], x = (_ - lo)/(hi - lo)))
 smooth_shape = normalize(weighted(bern, Lebesgue(support = interval(lo, hi))))
 ```
 
