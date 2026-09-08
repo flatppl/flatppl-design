@@ -10,18 +10,26 @@ spaces arising in FlatPPL are standard Borel spaces ($\mathbb{R}$, $\mathbb{Z}$,
 finite products thereof), where the $\sigma$-algebra is the standard Borel
 $\sigma$-algebra and can be left implicit. A **measure** on $X$ is a $\sigma$-additive
 function $\mu: \Sigma_X \to [0, \infty]$. A **probability measure** has $\mu(X) = 1$.
-All measures in FlatPPL are **$\sigma$-finite** (admitting a countable cover of
-finite-measure sets), which ensures that product and marginalization operations are
-well-defined and that the Radon-Nikodym theorem applies whenever a measure is
-absolutely continuous with respect to its reference measure (so densities exist). In the rest of this document, "measure"
-means "$\sigma$-finite measure."
+All measures in FlatPPL are **s-finite** (countable sums of finite measures), and all
+densities take values in $[0, \infty]$. The class is s-finite rather than
+$\sigma$-finite because the measure algebra is not closed in the smaller class:
+`pushfwd(x -> 0, Lebesgue(support = reals))` is $\infty \cdot \delta_0$, which is
+s-finite but not $\sigma$-finite, whereas s-finite kernels are closed under composition
+and satisfy Fubini ([Staton, 2017](17-references.md#staton2017)), so product,
+marginalization, and kernel composition operations are well-defined throughout.
+Reference measures, against which densities are taken, are $\sigma$-finite, so the
+Radon-Nikodym theorem applies whenever a measure is absolutely continuous with respect
+to its reference measure (so densities exist). $\sigma$-finiteness is not a blanket
+property of FlatPPL measures: operations that need it, such as
+[`disintegrate`](#disintegrate) and [`restrict`](#restrict), require it of their input.
+In the rest of this document, "measure" means "s-finite measure."
 
 A **transition kernel** (or **kernel**) from $X$ to $Y$ is a measurable function
 $\kappa: X \to M(Y)$, where $M(Y)$ is the space of measures on $Y$. When each
 $\kappa(x, \cdot)$ is a probability measure, the kernel is called a **Markov kernel**.
 In FlatPPL, kernels are represented as functions that map value points to measures.
 
-The classical Giry monad ([Giry, 1982](17-references.md#giry1982)) operates on probability measures, which are normalized. FlatPPL extends this to $\sigma$-finite measures in general, e.g. to represent non-normalized posteriors and intensity measures. [Staton et al. (2016)](17-references.md#staton2016) and [Staton (2017)](17-references.md#staton2017) provide the formal basis for this extension using the more general class of s-finite measures; all $\sigma$-finite measures are s-finite, so FlatPPL's algebraic operations are well-founded within that framework.
+The classical Giry monad ([Giry, 1982](17-references.md#giry1982)) operates on probability measures, which are normalized. FlatPPL extends this to s-finite measures in general, e.g. to represent non-normalized posteriors and intensity measures. [Staton et al. (2016)](17-references.md#staton2016) and [Staton (2017)](17-references.md#staton2017) provide the formal basis for this extension.
 
 **Density convention.** All density formulas in this section are with respect to a
 reference measure implied by the constituent distribution types: Lebesgue for continuous
