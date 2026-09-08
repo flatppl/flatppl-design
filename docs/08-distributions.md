@@ -234,7 +234,7 @@ $$\frac{x^{\alpha-1}(1-x)^{\beta-1}}{B(\alpha, \beta)} \quad \text{for } x \in (
 
 <a id="chisq"></a>**`ChiSquared(k)`** — The [Chi-squared distribution](https://en.wikipedia.org/wiki/Chi-squared_distribution).
 
-Domain/Support: `reals`/`posreals`.
+Domain/Support: `reals`/`nonnegreals`.
 
 Parameters:
 
