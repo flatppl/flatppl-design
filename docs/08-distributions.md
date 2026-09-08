@@ -597,6 +597,11 @@ Parameters:
 - `bins`: bin edges (vector) or record of bin edge vectors (multi-dimensional binning). Same format as for `bincounts`.
 - `intensity`: finite-mass measure or kernel over the underlying event space (scalar or record-valued), not the binned count space. See [`PoissonProcess`](#poissonprocess).
 
-`BinnedPoissonProcess(bins, intensity)` is equivalent to `pushfwd(fn(bincounts(bins, _)), PoissonProcess(intensity))`.
+At fixed bin values, `BinnedPoissonProcess(bins, intensity)` is equivalent to
+`pushfwd(fn(bincounts(bins, _)), PoissonProcess(intensity))` for scalar events.
+For record-valued events with fields matching the bin coordinates, use
+`pushfwd(fn(bincounts(bins, record(_))), PoissonProcess(intensity))`:
+`record` converts the event table to the record of equally-sized coordinate arrays
+required by `bincounts`.
 
 For natively binned models where expected counts per bin are computed directly, `broadcast(Poisson, expected_counts)` is the more natural form (see [`Poisson`](#poisson)).
