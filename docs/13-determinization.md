@@ -77,11 +77,9 @@ implementation-defined convention; that fallback carries no normative force.
   gates on the truncation set (`-inf` outside); `joint`/`iid`/`jointchain` sum
   the component/conditional densities (for `joint`, when components share no
   stochastic ancestor; a shared-ancestor `joint` reduces as its
-  [equivalent record law](06-measure-algebra.md#joint)); `pushfwd` inverts under the
+  [equivalent record law](06-measure-algebra.md#joint)); `pushfwd` follows the
   [engine contract](06-measure-algebra.md#engine-contract-for-pushfwd-density-evaluation)
-  (a structural projection of a measure without explicit product structure has
-  no closed-form marginal: an engine computes it numerically or reports a
-  static error). `draw` nodes take their values from the explicit `point`,
+  for bijections and structural projections. `draw` nodes take their values from the explicit `point`,
   unless marginalized out
   ([variates and measures](04-design.md#sec:variate-measure)).
 - A **sampled output** resolves its measure's `draw` nodes through `rand`.

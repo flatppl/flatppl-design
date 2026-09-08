@@ -337,7 +337,7 @@ variable, is distributed according to.
 parameterized phase; for stochastic-phase `m` it is the marginal law of a draw
 from `m`. Equal laws do not make values interchangeable as
 [`joint`](06-measure-algebra.md#joint) components: a `joint` of two reified laws
-of the same draw is the singular diagonal joint. Otherwise `joint(m, m)`
+of the same draw is the diagonal joint. Otherwise `joint(m, m)`
 contributes a fresh coordinate per occurrence, so the two draws are independent
 given `m`'s stochastic ancestors — which remain shared — and independent
 outright when `m` has none.
@@ -519,7 +519,7 @@ inner `lawof` marginalizes over.
 **Identity law.** `kernelof(draw(K(a, b, ...)), a = a, b = b, ...)` is
 equivalent to `K`. Equal output laws do not make kernels interchangeable as
 [`joint`](06-measure-algebra.md#joint) components: a `joint` of two reifications
-of one draw is the singular diagonal at every input, while a `joint` of two
+of one draw is the diagonal joint at every input, while a `joint` of two
 constructor kernels contributes a fresh coordinate per occurrence.
 
 Consider this Bayesian example:

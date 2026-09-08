@@ -284,12 +284,13 @@ To evaluate a density at many points (e.g. a grid for numerical integration or p
   marginals has cross-covariance $0$ only when their parameters reach no shared
   stochastic node.
 
-  **Singular joints.** When one component's variate is determined by the
-  others given the shared ancestors (the same draw referenced twice, a
-  deterministic transform of another component), the joint law has no density
-  w.r.t. the product reference measure. Sampling is well-defined; a density
-  query is a static error where statically detectable, and is otherwise
-  refused by the engine.
+  **Singular joints.** A joint law has no density w.r.t. its product reference
+  measure when it is not absolutely continuous w.r.t. that measure. This occurs,
+  for example, when the same scalar draw with a Lebesgue density appears twice.
+  Deterministic dependence between discrete variates does not imply the absence
+  of a density w.r.t. product counting measure. Sampling remains well-defined.
+  When no density exists, a density query is a static error where statically
+  detectable, and is otherwise refused by the engine.
 
 - **`iid(M, size)`**<a id="iid"></a> — the product measure $M^{\otimes N}$ over arrays of
   shape `size`, where `N = prod(size)`. `size` is a positive integer (1-D length) or
@@ -316,22 +317,23 @@ To evaluate a density at many points (e.g. a grid for numerical integration or p
 
 | Construct | Arguments | Description |
 |---|---|---|
-| [`kchain`](#kchain) | `M, K1, K2, ...` | Kleisli bind; marginalizes intermediate variates, keeps the last |
+| [`kchain`](#kchain) | `M, K1, K2, ...` | accumulated-feed composition; marginalizes intermediate variates, keeps the last |
 | [`jointchain`](#jointchain) | `M, K1, K2, ...` | kernel-conditioned joint; concatenates all variates (no marginalization) |
 | [`markovchain`](#markovchain) | `kernel`, `init`, `n` | measure over a length-`n` time-homogeneous Markov trajectory |
 | [`kscan`](#kscan) | `kernel`, `init`, `xs` | Kleisli scan; `markovchain` with per-step exogenous inputs `xs` |
 
-- **`kchain(M, K1, K2, ...)`**<a id="kchain"></a> — left-associative Kleisli composition (monadic bind).
+- **`kchain(M, K1, K2, ...)`**<a id="kchain"></a> — accumulated-feed kernel composition.
   Keeps only the last kernel's variates, marginalizing out all intermediate variates.
-  In contrast to standard Kleisli composition, the first argument may also be a measure
-  (a nullary kernel). See `jointchain` below for the variant that retains all variates.
+  The first transition kernel receives the base variate unchanged. Each later kernel
+  receives the `cat` of the variates of all preceding components, as in `jointchain`.
+  The first argument may be a measure (a nullary kernel).
+  See `jointchain` below for the variant that retains all variates.
 
   Mathematically, we define the chain of a measure $\mu(A)$ and a transition kernel $\kappa$ as
 
   $$\nu(B) = \int \kappa(a, B)\, d\mu(a)$$
 
   This involves a marginalization integral, which is generally intractable.
-  Left-associative.
 
   ```flatppl
   prior_predictive = kchain(prior, forward_kernel)
@@ -555,11 +557,20 @@ To evaluate a density at many points (e.g. a grid for numerical integration or p
 
 $$\log \mathrm{densityof}(\mathrm{pushfwd}(f, M), y) = \log \mathrm{densityof}(M, f^{-1}(y)) - \mathrm{logvolume}(f^{-1}(y))$$
 
-equivalently $\mathrm{densityof}(\mathrm{pushfwd}(f, M), y) = \mathrm{densityof}(M, f^{-1}(y)) \cdot \exp\!\left(-\mathrm{logvolume}(f^{-1}(y))\right)$. The forward log-volume is evaluated at the preimage $f^{-1}(y)$ and **subtracted** (e.g. for `exp_bijection`, `logvolume = identity`, giving the log-normal density $\log \mathrm{densityof}(M, \log y) - \log y$). Engines must support density evaluation in the following three cases:
+equivalently $\mathrm{densityof}(\mathrm{pushfwd}(f, M), y) = \mathrm{densityof}(M, f^{-1}(y)) \cdot \exp\!\left(-\mathrm{logvolume}(f^{-1}(y))\right)$. The forward log-volume is evaluated at the preimage $f^{-1}(y)$ and **subtracted** (e.g. for `exp_bijection`, `logvolume = identity`, giving the log-normal density $\log \mathrm{densityof}(M, \log y) - \log y$).
 
-1. **Known-bijection registry.** Every conforming engine must recognize a fixed set of built-in bijections by name — `exp`/`log`, `log10`, `log1p`/`expm1`, `logit`/`invlogit`, `probit`/`invprobit`, `atan`, `sinh`/`asinh`, `tanh`, affine maps composed from `add`/`sub`/`neg`/`mul`/`divide` (with positive scaling), `pow` with literal exponent (of which `sqrt` = `pow(_, 1/2)` is a case), `cis`, and matrix-vector affine maps such as `mu + lower_cholesky(cov) * _` — together with every explicitly `bijection`-annotated user function. For these, density evaluation is analytic using the recorded inverse and forward log-volume. A domain-restricted forward — `log`/`log10` on `posreals`, `sqrt` (and `pow`) on `nonnegreals`, `log1p` on `interval(-1, inf)`, `logit`/`probit` on `interval(0, 1)` — additionally requires the base measure's support to lie within that domain; where it does not, density evaluation is refused rather than yielding a silently sub-probability measure.
+For an injective map between spaces with counting reference measures, the
+forward `logvolume` is zero on the source support: point masses are preserved.
 
-2. **Structural projection.** The non-bijective projection pattern `pushfwd(fn(get(_, [...])), M)` denotes a marginalization. Engines must support density evaluation when this projection acts on a measure with explicit product structure (`joint`, `iid`, `jointchain`), in which case the marginal density is closed-form. For projections of measures without explicit product structure, engines may either compute the marginal numerically or report a static error.
+Engines must support density evaluation in the following three cases:
+
+1. **Known-bijection registry.** Every conforming engine must recognize a fixed set of built-in bijections by name — `exp`/`log`, `log10`, `log1p`/`expm1`, `logit`/`invlogit`, `probit`/`invprobit`, `atan`, `sinh`/`asinh`, `tanh`, affine maps composed from `add`/`sub`/`neg`/`mul`/`divide` (with positive scaling), `pow` with finite nonzero literal exponent (of which `sqrt` = `pow(_, 1/2)` is a case), and matrix-vector affine maps such as `mu + lower_cholesky(cov) * _` — together with every explicitly `bijection`-annotated user function. For these, density evaluation is analytic using the recorded inverse and forward log-volume. A domain-restricted forward — `log`/`log10` on `posreals`, `sqrt` (and `pow`) on `nonnegreals`, `log1p` on `interval(-1, inf)`, `logit`/`probit` on `interval(0, 1)` — additionally requires the base measure's support to lie within that domain; where it does not, density evaluation is refused rather than yielding a silently sub-probability measure.
+
+   `cis` and zero-exponent powers are outside this registry: `cis` is periodic on
+   `reals`, and a zero-exponent power is constant wherever it is defined.
+   Unannotated uses follow the default density-evaluation rule in case 3 below.
+
+2. **Structural projection.** The non-bijective projection pattern `pushfwd(fn(get(_, [...])), M)` denotes a marginalization. Engines must support projections onto whole factors of independent `joint` or `iid` products when the required factor densities and total masses are supported. Omitted factors contribute their total masses. Engines must also support `jointchain` prefix projections when the omitted transitions are normalized and the retained prefix density is supported. Other `jointchain` projections and `joint` projections with shared ancestry follow the [density rules for composed measures](#density-of-composed-measures), including their marginalization and refusal rules. Constructor structure alone does not guarantee a closed form. For projections of measures without explicit product structure, engines may either compute the marginal numerically or report a static error.
 
 3. **Arbitrary unannotated `f`.** For a user function that is neither in the known-bijection registry nor a structural projection, `densityof`/`logdensityof` of the pushforward is a **static error** by default. Users must explicitly wrap such functions with `bijection(f, f_inv, logvolume)` to make density evaluation well-defined. Engines may optionally provide opt-in fallbacks (term-rewriting-based symbolic inversion, autodiff Jacobian for square maps), but no engine is required to do so.
 
@@ -571,6 +582,9 @@ The density of a composed measure is determined by the measure-algebra definitio
 
 - `weighted` / `logweighted` (from $\mathrm{d}\nu = \text{weight}\cdot\mathrm{d}M$): $\log\mathrm{densityof}(\mathrm{weighted}(w, M), x) = \log w(x) + \log\mathrm{densityof}(M, x)$, and $\log\mathrm{densityof}(\mathrm{logweighted}(\ell, M), x) = \ell(x) + \log\mathrm{densityof}(M, x)$, where $w$ and $\ell$ are a constant or a function of the variate (see [`weighted`](#weighted) for the arity rule).
 - `superpose` (measure addition): $\log\mathrm{densityof}(\mathrm{superpose}(M_1, \dots, M_k), x) = \mathrm{logsumexp}_k\, \log\mathrm{densityof}(M_k, x)$.
+  This sum requires all constituent densities to be expressed w.r.t. the same
+  reference measure. Density values taken w.r.t. different references cannot
+  be added directly.
 - `ksuperpose` (weighted measure addition over the parameter family): $\log\mathrm{densityof}(\mathrm{ksuperpose}(\kappa, w)(\theta), x) = \mathrm{logsumexp}_i\left(\log w_i + \log\mathrm{densityof}(\kappa(\theta_i), x)\right)$, so a zero weight contributes $-\infty$ and drops out. All components come from one kernel and so share one reference measure — the mixture's.
 - `normalize` (from $M / Z$): $\log\mathrm{densityof}(\mathrm{normalize}(M), x) = \log\mathrm{densityof}(M, x) - \log Z$, with $Z = \mathrm{totalmass}(M)$ finite and nonzero.
 - `truncate` (from $\nu(A) = M(A \cap S)$): $\log\mathrm{densityof}(\mathrm{truncate}(M, S), x)$ is $\log\mathrm{densityof}(M, x)$ for $x \in S$ and $-\infty$ otherwise.
@@ -745,16 +759,16 @@ joint model, the joint must be split into a forward kernel (observation model), 
 measure (prior). The forward kernel can then be combined with some observed data to build a
 likelihood.
 
-In measure theory, such a decomposition is known as disintegration. Given a space of
-parameters $\mathcal{A}$ and a space of observations $\mathcal{B}$, and a joint measure
-$\mu$ on the joint measurable space $\mathcal{A} \times \mathcal{B}$, the disintegration
-theorem states that (for standard Borel spaces, which all FlatPPL spaces are) there
-exists a kernel $\kappa: \mathcal{A} \to M(\mathcal{B})$ and a
-marginal measure $\nu$ on $\mathcal{A}$ such that:
+In measure theory, such a decomposition is known as disintegration. Given a
+joint measure $\mu$ on the standard Borel space $\mathcal{A} \times \mathcal{B}$,
+let $\nu$ be its marginal on $\mathcal{A}$. If $\nu$ is $\sigma$-finite, the
+disintegration theorem gives a kernel
+$\kappa: \mathcal{A} \to M(\mathcal{B})$ such that:
 
 $$\mu(A \times B) = \int_A \kappa(a, B)\, d\nu(a)$$
 
-This is the generalization of conditional probability to arbitrary measures.
+This generalizes conditional probability to joint measures with a
+$\sigma$-finite marginal.
 
 The general disintegration theorem allows for disintegration along arbitrary
 measurable functions, not just orthogonal projections. FlatPPL does not support
@@ -794,8 +808,17 @@ variates out of the joint.
 Selectors work like in `get`: `"b"` selects the bare value, `["b"]` selects a
 `record(b = ...)`.
 
-`kernel, base_measure = disintegrate(selector, joint_measure)` must satisfy the
-condition that `jointchain(base_measure, kernel)` is equivalent to `joint_measure`.
+The returned kernel and base measure satisfy the disintegration identity above
+when the selected and remaining variates are identified with their original
+fields or coordinate positions.
+
+`jointchain(base_measure, kernel)` is directly equivalent to `joint_measure`
+only when its `cat` output already has the original variate structure and order.
+Otherwise reconstruction requires explicit output adaptation before composition
+where needed, followed by restoration of the original field or coordinate order.
+For example, a bare scalar field selected by `"b"` can be restored with
+`relabel(kernel, ["b"])` before composition. A final `pushfwd` can restore field
+or coordinate order using the existing value constructors.
 
 For the large class of joint models whose factorization structure is explicit in the
 DAG, `disintegrate` can be implemented via straightforward graph inspection. For
