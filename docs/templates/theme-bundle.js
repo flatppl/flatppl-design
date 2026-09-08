@@ -81,7 +81,8 @@ function prepareTheme(bundle, templates, output) {
   fs.rmSync(publicBundle, { recursive: true, force: true });
   fs.cpSync(bundle, publicBundle, { recursive: true });
 
-  const header = fs.readFileSync(path.join(bundle, "header.html"), "utf8");
+  const header = fs.readFileSync(path.join(bundle, "header.html"), "utf8")
+    .replace('href="https://github.com/flatppl"', 'href="https://github.com/flatppl/flatppl-design"');
   const footer = fs.readFileSync(path.join(bundle, "footer.html"), "utf8");
   for (const filename of ["template.html", "page.html"]) {
     let template = fs.readFileSync(path.join(templates, filename), "utf8");

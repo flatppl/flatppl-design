@@ -56,7 +56,8 @@ test("the Pandoc build uses the shared shell fragments and syntax map", (context
 
   prepareTheme(themeBundle, templates, output);
 
-  const header = fs.readFileSync(path.join(themeBundle, "header.html"), "utf8").trim();
+  const header = fs.readFileSync(path.join(themeBundle, "header.html"), "utf8").trim()
+    .replace('href="https://github.com/flatppl"', 'href="https://github.com/flatppl/flatppl-design"');
   const footer = fs.readFileSync(path.join(themeBundle, "footer.html"), "utf8").trim();
   const rendered = fs.readFileSync(path.join(output, "template.html"), "utf8");
   assert.ok(rendered.includes(header));
