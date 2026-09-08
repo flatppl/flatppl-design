@@ -1366,7 +1366,10 @@ If not set, the following default is used:
   the first `.` in the URL's final path segment — so a multi-part extension is
   kept whole; a final segment with no `.` uses just `<key>`.
   `<ext>` is part of a single filename. It must not be interpreted as a path
-  or change the `objects/<kk>/` parent directory.
+  or change the `objects/<kk>/` parent directory. If `<ext>` contains a
+  character outside `[A-Za-z0-9._-]`, or exceeds 32 characters, the object is
+  stored as `<key>` alone, the same fallback used when the final segment has
+  no `.`.
 - `objects/<kk>/<key>_meta.json` is a mandatory JSON metadata file with fields
   `url` (the original URL), `resolved_url` (the URL fetched after any
   redirects), `retrieved` (ISO 8601 UTC time), `content_type`, and the HTTP
