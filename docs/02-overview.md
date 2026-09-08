@@ -85,9 +85,9 @@ flatppl_compat = "0.3"
 
 # Inputs: expected signal and background event counts
 % Expected number of signal events.
-n_sig = elementof(reals)
+n_sig = elementof(nonnegreals)
 % Expected number of background events.
-n_bkg = elementof(reals)
+n_bkg = elementof(nonnegreals)
 
 % Standard-normal systematic shift applied to the detector resolution.
 raw_syst ~ Normal(mu = 0.0, sigma = 1.0)
