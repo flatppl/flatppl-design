@@ -30,7 +30,7 @@ statement w.r.t. `Lebesgue(support = S)` follows by restriction.
 
 | Distribution | Parameters | Domain | Support |
 |---|---|---|---|
-| [`Uniform`](#uniform) | `support` | `reals` | `support` |
+| [`Uniform`](#uniform) | `support` | ambient value space of `support` | `support` |
 | [`Normal`](#normal) | `mu`, `sigma` | `reals` | `reals` |
 | [`GeneralizedNormal`](#generalizednormal) | `mean`, `alpha`, `beta` | `reals` | `reals` |
 | [`Cauchy`](#cauchy) | `location`, `scale` | `reals` | `reals` |
