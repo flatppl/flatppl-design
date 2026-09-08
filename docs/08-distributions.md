@@ -580,10 +580,12 @@ For a closed intensity measure $\mu$ with reference measure $\rho$, let
 $\Lambda = \mathrm{totalmass}(\mu)$ and
 $\lambda(t) = \mathrm{densityof}(\mu, t)$.
 The reference measure on the stratum of arrays or tables with $k$ entries is
-$\rho^{\otimes k}$. The count strata have counting weight one; the empty stratum
-has unit reference mass. The density, including the probability of the count, is
+$\rho^{\otimes k}/k!$, the reference measure on unordered $k$-point
+configurations, which counts each configuration once. The count strata have
+counting weight one; the empty stratum has unit reference mass. The density,
+including the probability of the count, is
 
-$$\frac{e^{-\Lambda}}{k!}\prod_{i=1}^{k}\lambda(t_i).$$
+$$e^{-\Lambda}\prod_{i=1}^{k}\lambda(t_i).$$
 
 The empty product is one. For a kernel-valued intensity, this formula applies
 to each closed output measure.
