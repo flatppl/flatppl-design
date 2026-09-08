@@ -106,7 +106,8 @@ documentation.
   lines joined by `\n`; the `\n` escape never appears inside a
   `<line-string>` — line structure is carried by the list shape. A blank
   source line becomes `""`. Only `\"` and `\\` escapes apply within a
-  line-string.
+  line-string, the stricter subset of the
+  [string-literal escapes](#literal-values) below.
 - `(%doc md)` with zero content lines is semantically equivalent to
   omitting `(%doc ...)` entirely; the absent form is canonical for
   undocumented bindings.
@@ -139,6 +140,10 @@ true         ; boolean
 
 A scalar literal carries no leading sign: a negated numeric literal is the
 call `(neg 1.0)`.
+
+A string literal is delimited by `"` and admits exactly the escapes `\"`,
+`\\`, `\n`, `\r`, `\t` and `\0`. A reader refuses any other backslash sequence
+and any raw control character between the delimiters.
 
 Composite literal values are expressed via constructor calls (`(complex …)`,
 `(vector …)`, `(record …)`, `(tuple …)`; see [Expressions](#expressions)).
