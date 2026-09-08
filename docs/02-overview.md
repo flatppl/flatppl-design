@@ -437,9 +437,12 @@ starting_values = record(mu_sig = 1.0, raw_syst = fixed(0.0), n_bkg = 50.0)
 Likelihood construction, combination, and posterior construction:
 
 ```flatppl
-L = likelihoodof(kernelof(obs), data)
+L = likelihoodof(kernelof(events), observed_data)
 R = interval(2.0, 8.0)
-L_sub = likelihoodof(normalize(truncate(kernelof(obs), R)), filter(fn(_ in R), data))
+model_R = functionof(
+    PoissonProcess(intensity = truncate(intensity, R)),
+    n_sig = n_sig, n_bkg = n_bkg, raw_syst = raw_syst)
+L_sub = likelihoodof(model_R, filter(fn(_ in R), observed_data))
 L_total = joint_likelihood(L1, L2)
 
 # Unnormalized posterior
