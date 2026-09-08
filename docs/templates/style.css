@@ -836,6 +836,15 @@ section.footnotes ol {
     padding: 0.2em 0;
 }
 
+/* Long inline equations must not widen the document on small screens. */
+:not(.katex-display) > .katex {
+    display: inline-block;
+    max-width: 100%;
+    overflow-x: auto;
+    padding: 0.2em 0;
+    vertical-align: middle;
+}
+
 /* ── Syntax highlighting (One Dark, dark mode only) ───── */
 [data-theme="dark"] code span.al {
     color: var(--syntax-red);
