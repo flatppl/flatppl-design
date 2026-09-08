@@ -15,6 +15,15 @@
   <meta name="description" content="$description-meta$" />
   $endif$
   <title>$if(title-prefix)$$title-prefix$ – $endif$$pagetitle$</title>
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="$pagetitle$" />
+  $if(description-meta)$
+  <meta property="og:description" content="$description-meta$" />
+  $endif$
+  $if(canonical-url)$
+  <meta property="og:url" content="$canonical-url$" />
+  <link rel="canonical" href="$canonical-url$" />
+  $endif$
   <link rel="apple-touch-icon" sizes="180x180" href="./flatppl-theme/assets/apple-touch-icon.png" />
   <link rel="icon" type="image/png" sizes="32x32" href="./flatppl-theme/assets/favicon-32x32.png" />
   <link rel="icon" type="image/png" sizes="16x16" href="./flatppl-theme/assets/favicon-16x16.png" />

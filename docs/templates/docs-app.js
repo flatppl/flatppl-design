@@ -522,12 +522,27 @@
 // Heading anchor links (#)
 (function () {
   document.querySelectorAll('#main-content h1[id], #main-content h2[id], #main-content h3[id], #main-content h4[id], #main-content h5[id], #main-content h6[id]').forEach(function (h) {
-    var a = document.createElement('a');
+    var a = h.querySelector('.heading-anchor') || document.createElement('a');
     a.className = 'heading-anchor';
     a.href = '#' + h.id;
-    a.setAttribute('aria-label', 'Link to this section');
+    a.setAttribute('aria-label', 'Copy section link');
+    a.title = 'Copy section link';
     a.textContent = '#';
-    h.appendChild(a);
+    if (!a.parentNode) h.appendChild(a);
+    a.addEventListener('click', function (event) {
+      if (event.ctrlKey || event.metaKey || event.shiftKey || event.altKey || !navigator.clipboard) return;
+      event.preventDefault();
+      navigator.clipboard.writeText(a.href).then(function () {
+        document.getElementById('section-link-status').textContent = 'Section link copied';
+        a.title = 'Copied';
+        a.textContent = '✓';
+        setTimeout(function () {
+          a.title = 'Copy section link';
+          a.textContent = '#';
+          document.getElementById('section-link-status').textContent = '';
+        }, 1500);
+      }, function () { location.hash = a.hash; });
+    });
   });
 })();
 

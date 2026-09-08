@@ -9,6 +9,7 @@ nodejs = ">=24,<25"
 
 [tasks]
 _mkdir = "mkdir -p build"
+_site-metadata = { cmd = "node docs/templates/site-metadata.js", depends-on = ["_mkdir"] }
 check-theme = "node docs/templates/theme-bundle.js check vendor/flatppl-theme"
 _prepare-theme = { cmd = "node docs/templates/theme-bundle.js prepare vendor/flatppl-theme docs/templates build", depends-on = [
     "_mkdir",
@@ -24,7 +25,8 @@ _katex = { cmd = "node docs/templates/vendor-katex.js", depends-on = [
     "_mkdir",
 ] }
 _fuse = { cmd = "node docs/templates/vendor-fuse.js", depends-on = ["_mkdir"] }
-_pandoc-html = { cmd = "pandoc docs/0[0-9]-*.md docs/1[0-9]-*.md -o build/index.html --standalone --template=build/template.html --toc --toc-depth=2 --number-sections --shift-heading-level-by=-1 --syntax-definition=build/flatppl.xml --syntax-highlighting=tango --css=style.css --katex=./katex/ -B docs/templates/header.html --lua-filter=docs/templates/strip-file-refs.lua --lua-filter=docs/templates/html-anchors.lua --metadata lang=en", depends-on = [
+_pandoc-html = { cmd = "pandoc docs/0[0-9]-*.md docs/1[0-9]-*.md -o build/index.html --standalone --template=build/template.html --metadata-file=build/site-metadata.json --toc --toc-depth=2 --number-sections --shift-heading-level-by=-1 --syntax-definition=build/flatppl.xml --syntax-highlighting=tango --css=style.css --katex=./katex/ -B docs/templates/header.html --lua-filter=docs/templates/strip-file-refs.lua --lua-filter=docs/templates/html-anchors.lua --metadata lang=en", depends-on = [
+    "_site-metadata",
     "_copy-assets",
     "_katex",
     "_fuse",

@@ -707,8 +707,13 @@ hr {
 }
 
 /* ── Heading anchors ──────────────────────────────────── */
+.source-revision {
+    color: var(--fp-text-muted);
+    font-size: var(--fp-size-sm);
+}
+
 .heading-anchor {
-    visibility: hidden;
+    opacity: 0;
     text-decoration: none;
     color: var(--anchor-color);
     margin-left: 0.3em;
@@ -722,13 +727,17 @@ h3:hover .heading-anchor,
 h4:hover .heading-anchor,
 h5:hover .heading-anchor,
 h6:hover .heading-anchor {
-    visibility: visible;
+    opacity: 1;
 }
 
 .heading-anchor:hover,
 .heading-anchor:focus {
     color: var(--link-color);
-    visibility: visible;
+    opacity: 1;
+}
+
+@media (hover: none) {
+    .heading-anchor { opacity: 1; }
 }
 
 /* suppress anchor links inside TOC and sidebar to avoid duplicating the link UI */

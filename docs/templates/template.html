@@ -25,9 +25,13 @@ $head.html()$
     <span id="search-dialog-status" aria-live="polite" aria-atomic="true" class="sr-only"></span>
   </dialog>
   <main class="fp-prose" id="main-content" tabindex="-1">
+    <span id="section-link-status" class="sr-only" role="status"></span>
     $for(include-before)$
     $include-before$
     $endfor$
+    $if(source-revision)$
+    <p class="source-revision">Source revision <a href="https://github.com/flatppl/flatppl-design/commit/$source-revision$"><code>$source-short$</code></a> · <time datetime="$source-date$">$source-date$</time>$if(source-dirty)$ (local changes)$endif$</p>
+    $endif$
     $if(title)$
     <header id="title-block-header">
       <h1 class="title">$title$</h1>
