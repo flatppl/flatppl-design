@@ -47,10 +47,12 @@ body {
     -moz-osx-font-smoothing: grayscale;
 }
 
-/* The shared document shell stays in normal flow; its layer covers the
-   off-canvas document navigation when the product menu is expanded. */
+html { scroll-padding-top: calc(var(--fp-header-h) + 1rem); }
+
+/* Keep navigation visible above the document and off-canvas sidebar. */
 .fp-shell-header {
-    position: relative;
+    position: sticky;
+    top: 0;
     z-index: 300;
     margin: 0;
 }
