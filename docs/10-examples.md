@@ -5,11 +5,13 @@
 This example walks through a realistic HEP model step by step.
 
 **Signal and background model.** We begin with a systematic uncertainty on the signal
-efficiency, modeled as a unit-normal nuisance parameter:
+efficiency, modeled as a unit-normal nuisance parameter. The nuisance parameter enters
+log-normally, so `efficiency` is a positive scale factor on the signal yield — the
+HistFactory normalization-systematic convention — and not a probability:
 
 ```flatppl
 raw_eff_syst ~ Normal(mu = 0.0, sigma = 1.0)
-efficiency = 0.9 + 0.05 * raw_eff_syst
+efficiency = 0.9 * exp(0.056 * raw_eff_syst)
 ```
 
 Signal and background shapes are defined as step-function densities, normalized over the
@@ -24,8 +26,10 @@ bkg_template = normalize(weighted(bkg_shape, Lebesgue(interval(lo, hi))))
 ```
 
 **Observation model.** The rate measure superposes signal (scaled by signal strength `mu_sig`
-and efficiency) with background. The module input `mu_sig = elementof(reals)` plays the role of the model's
-parameter of interest. Events are drawn from a Poisson point process:
+and efficiency) with background. The module input `mu_sig = elementof(nonnegreals)` plays the
+role of the model's parameter of interest; `weighted` needs a nonnegative weight, and
+`mu_sig * efficiency` is nonnegative exactly when `mu_sig` is. Events are drawn from a
+Poisson point process:
 
 ```flatppl
 rate = superpose(

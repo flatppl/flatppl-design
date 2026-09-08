@@ -77,7 +77,7 @@ events, with a systematic uncertainty on the signal resolution:
 # Particle mass measurement
 
 Unbinned Poisson-process model: a Gaussian signal peak at known mass on a
-falling exponential background, with a Gaussian-shifted resolution
+falling exponential background, with a log-normal resolution
 systematic. Returns a likelihood object `L` parameterized by the expected
 signal and background counts.
 %%%
@@ -89,9 +89,9 @@ n_sig = elementof(nonnegreals)
 % Expected number of background events.
 n_bkg = elementof(nonnegreals)
 
-% Standard-normal systematic shift applied to the detector resolution.
+% Standard-normal systematic shift scaling the detector resolution.
 raw_syst ~ Normal(mu = 0.0, sigma = 1.0)
-resolution = 2.5 + 0.3 * raw_syst
+resolution = 2.5 * exp(0.12 * raw_syst)
 
 # Signal: Gaussian peak at known mass, uncertain resolution
 signal_shape = Normal(mu = 125.0, sigma = resolution)
