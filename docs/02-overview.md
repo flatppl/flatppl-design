@@ -164,7 +164,7 @@ See [calling conventions and anonymous functions](04-design.md#sec:calling-conve
 Values can be reified as functions via `functionof(...)`.
 
 **Tuples** are ordered bundles of objects. Tuples may contain any
-objects except for other tuples (see [Tuples](04-design.md#sec:tuples)).
+objects, including other tuples (see [Tuples](04-design.md#sec:tuples)).
 
 Measures, likelihood objects, functions, and tuples are first-class in the sense
 that they can be bound to names, passed to operations and referenced by other bindings.
