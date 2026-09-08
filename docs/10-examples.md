@@ -13,7 +13,8 @@ efficiency = 0.9 + 0.05 * raw_eff_syst
 ```
 
 Signal and background shapes are defined as step-function densities, normalized over the
-analysis region:
+analysis region. The bin edges, bin contents, and analysis bounds `lo` and `hi`
+are fixed inputs:
 
 ```flatppl
 sig_shape = fn(stepwise(bin_edges, signal_bins, _))
@@ -45,7 +46,7 @@ combined likelihood `L` is a likelihood object on the parameter space
 ```flatppl
 # Observation likelihood: boundary input keeps raw_eff_syst as a parameter
 L_obs = likelihoodof(
-    kernelof(events, raw_eff_syst = raw_eff_syst),
+    kernelof(events, mu_sig = mu_sig, raw_eff_syst = raw_eff_syst),
     [3.1, 5.7, 2.4, 8.9, 4.2])
 
 # Constraint: auxiliary measurement model for the nuisance parameter
@@ -69,7 +70,9 @@ range-restricted likelihood for a sideband fit is also straightforward:
 ```flatppl
 sideband = interval(0.0, 3.0)
 sideband_data = filter(fn(_ in sideband), [3.1, 5.7, 2.4, 8.9, 4.2])
-sideband_model = normalize(truncate(kernelof(events, raw_eff_syst = raw_eff_syst), sideband))
+sideband_model = functionof(
+    PoissonProcess(intensity = truncate(rate, sideband)),
+    mu_sig = mu_sig, raw_eff_syst = raw_eff_syst)
 L_obs_sideband = likelihoodof(sideband_model, sideband_data)
 L_sideband = joint_likelihood(L_obs_sideband, L_constr)
 ```
@@ -116,7 +119,6 @@ transformed = 2 * a + 1
 f = functionof(transformed, a = a)
 A = [1.0, 2.0, 3.0, 4.0]
 result = broadcast(f, a = A)           # [3.0, 5.0, 7.0, 9.0]
-result = broadcast(f, A)              # same, positional (f has declared order)
 
 # Stochastic broadcast
 noisy ~ Normal(mu = a, sigma = 0.1)
