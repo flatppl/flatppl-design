@@ -81,9 +81,11 @@ An unqualified name (no `self.` or `base.` prefix) resolves as follows:
 
 Unresolvable names are static errors.
 
-This makes built-in names shadowable: a module may bind any name except for
-`self` and `base`. Adding new built-ins to FlatPPL is therefore a non-breaking
-change.
+Built-in names are shadowable except for the numeric constants `im`, `pi`, and
+`inf`, which cannot be bound or used as lambda or function-definition argument
+names. The reserved modules `self` and `base` and the
+[reserved words](05-syntax.md#formal-grammar) also cannot be bound.
+Adding new shadowable built-ins to FlatPPL is therefore a non-breaking change.
 
 ### <a id="sec:calling-convention"></a>Calling conventions
 
