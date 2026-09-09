@@ -10,9 +10,13 @@ nodejs = ">=24,<25"
 [tasks]
 _mkdir = "mkdir -p build"
 _site-metadata = { cmd = "node docs/templates/site-metadata.js", depends-on = ["_mkdir"] }
-check-theme = "node docs/templates/theme-bundle.js check vendor/flatppl-theme"
+_fetch-theme = { cmd = "node docs/templates/fetch-theme.js vendor/flatppl-theme", depends-on = ["_mkdir"] }
+check-theme = { cmd = "node docs/templates/theme-bundle.js check vendor/flatppl-theme", depends-on = [
+    "_fetch-theme",
+] }
 _prepare-theme = { cmd = "node docs/templates/theme-bundle.js prepare vendor/flatppl-theme docs/templates build", depends-on = [
     "_mkdir",
+    "_fetch-theme",
     "check-theme",
 ] }
 _fetch-grammar = { cmd = "bash docs/templates/fetch-grammar.sh", depends-on = ["_mkdir"] }

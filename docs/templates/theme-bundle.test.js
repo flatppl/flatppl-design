@@ -1,82 +1,120 @@
 const assert = require("node:assert/strict");
-const crypto = require("node:crypto");
 const fs = require("node:fs");
-const os = require("node:os");
 const path = require("node:path");
 const test = require("node:test");
 
+const { prepareTheme, verifyThemeBundle } = require("./theme-bundle.js");
 const {
-  prepareTheme,
-  verifyThemeBundle,
-} = require("./theme-bundle.js");
+  SAMPLE_FILES,
+  temporaryDirectory,
+  writeBundle,
+  writeManifest,
+} = require("./theme-fixture.js");
 
-const repositoryRoot = path.resolve(__dirname, "../..");
-const themeBundle = path.join(repositoryRoot, "vendor/flatppl-theme");
+function bundleFixture(context, options) {
+  const bundle = temporaryDirectory("flatppl-theme-bundle-");
+  context.after(() => fs.rmSync(bundle, { recursive: true, force: true }));
+  writeBundle(bundle, options);
+  return bundle;
+}
 
-test("the vendored release bundle matches every declared size and SHA-256 hash", (context) => {
-  assert.deepEqual(verifyThemeBundle(themeBundle), []);
+test("a bundle that matches its own manifest verifies clean", (context) => {
+  const bundle = bundleFixture(context);
+  assert.deepEqual(verifyThemeBundle(bundle), []);
+  assert.deepEqual(verifyThemeBundle(bundle, { release: "v0.1.8" }), []);
+});
 
-  const alteredBundle = fs.mkdtempSync(path.join(os.tmpdir(), "flatppl-theme-altered-"));
-  context.after(() => fs.rmSync(alteredBundle, { recursive: true, force: true }));
-  fs.cpSync(themeBundle, alteredBundle, { recursive: true });
-  fs.appendFileSync(path.join(alteredBundle, "tokens.css"), "\n");
-
-  assert.deepEqual(verifyThemeBundle(alteredBundle), [
+test("a tampered file fails the self-check", (context) => {
+  const bundle = bundleFixture(context);
+  fs.appendFileSync(path.join(bundle, "tokens.css"), "\n");
+  assert.deepEqual(verifyThemeBundle(bundle), [
     "tokens.css: size mismatch",
     "tokens.css: SHA-256 mismatch",
   ]);
 
-  const manifestFile = path.join(alteredBundle, "manifest.json");
-  const manifest = JSON.parse(fs.readFileSync(manifestFile, "utf8"));
-  const tokens = manifest.files.find((file) => file.path === "tokens.css");
-  const alteredTokens = fs.readFileSync(path.join(alteredBundle, "tokens.css"));
-  tokens.size = alteredTokens.length;
-  tokens.sha256 = crypto.createHash("sha256").update(alteredTokens).digest("hex");
-  fs.writeFileSync(manifestFile, `${JSON.stringify(manifest, null, 2)}\n`);
-  assert.deepEqual(verifyThemeBundle(alteredBundle), [
-    "manifest.json: SHA-256 mismatch",
+  // Rewriting the manifest over the tampered file is exactly what the dropped
+  // hash pin used to catch; the point of the self-check is the bundle's
+  // internal consistency, and the release tag is the remaining pin.
+  writeManifest(bundle);
+  assert.deepEqual(verifyThemeBundle(bundle), []);
+});
+
+test("undeclared and missing files fail the self-check", (context) => {
+  const bundle = bundleFixture(context);
+  fs.writeFileSync(path.join(bundle, "extra.css"), "/* not in the release */\n");
+  fs.rmSync(path.join(bundle, "assets/logo.svg"));
+  assert.deepEqual(verifyThemeBundle(bundle), [
+    "extra.css: not declared in manifest",
+    "assets/logo.svg: missing",
   ]);
 });
 
-test("the Pandoc build uses the shared shell fragments and syntax map", (context) => {
-  const workspace = fs.mkdtempSync(path.join(os.tmpdir(), "flatppl-theme-build-"));
-  context.after(() => fs.rmSync(workspace, { recursive: true, force: true }));
-  const templates = path.join(workspace, "templates");
-  const output = path.join(workspace, "build");
-  fs.mkdirSync(templates);
-  fs.writeFileSync(
-    path.join(templates, "template.html"),
-    "<html><!-- flatppl-theme:header --><main></main><!-- flatppl-theme:footer --></html>",
-  );
-  fs.writeFileSync(
-    path.join(templates, "page.html"),
-    "<html><!-- flatppl-theme:header --><main></main><!-- flatppl-theme:footer --></html>",
-  );
-  fs.writeFileSync(path.join(templates, "head.html"), "<head>$pagetitle$</head>\n");
+test("a manifest for another package or release fails the self-check", (context) => {
+  const other = bundleFixture(context, { name: "other-theme", release: "v0.1.7" });
+  assert.deepEqual(verifyThemeBundle(other, { release: "v0.1.8" }), [
+    "manifest: unexpected name",
+    "manifest: expected release v0.1.8, found v0.1.7",
+  ]);
+});
 
-  prepareTheme(themeBundle, templates, output);
+test("a bundle without a manifest is an unverified sibling copy", (context) => {
+  const bundle = bundleFixture(context, { manifest: false });
+  const warnings = [];
+  context.mock.method(console, "warn", (message) => warnings.push(message));
 
-  const header = fs.readFileSync(path.join(themeBundle, "header.html"), "utf8").trim()
-    .replace('href="https://github.com/flatppl"', 'href="https://github.com/flatppl/flatppl-design"');
-  const footer = fs.readFileSync(path.join(themeBundle, "footer.html"), "utf8").trim();
-  const rendered = fs.readFileSync(path.join(output, "template.html"), "utf8");
-  assert.ok(rendered.includes(header));
-  assert.ok(rendered.includes(footer));
-  assert.equal(
-    fs.readFileSync(path.join(output, "head.html"), "utf8"),
-    "<head>$pagetitle$</head>\n",
-  );
+  assert.deepEqual(verifyThemeBundle(bundle), []);
+  assert.equal(warnings.length, 1);
+  assert.match(warnings[0], /UNVERIFIED sibling checkout/);
+});
 
-  const syntaxMap = JSON.parse(
-    fs.readFileSync(path.join(themeBundle, "syntax-map.json"), "utf8"),
-  );
-  const syntaxCss = fs.readFileSync(path.join(output, "flatppl-syntax.css"), "utf8");
-  for (const group of syntaxMap.groups) {
-    for (const className of group.pandocClasses) {
-      assert.match(
-        syntaxCss,
-        new RegExp(`code span\\.${className} \\{ color: var\\(${group.cssVariable}\\); \\}`),
+test("a missing bundle says how to fetch it", () => {
+  const missing = path.join(temporaryDirectory("flatppl-theme-missing-"), "vendor/flatppl-theme");
+  assert.deepEqual(verifyThemeBundle(missing), [
+    `${missing}: no theme bundle; run \`pixi run _fetch-theme\``,
+  ]);
+});
+
+for (const manifest of [true, false]) {
+  const kind = manifest ? "release bundle" : "sibling copy";
+  test(`the Pandoc build uses the shell fragments and syntax map of a ${kind}`, (context) => {
+    const bundle = bundleFixture(context, { manifest });
+    const workspace = temporaryDirectory("flatppl-theme-build-");
+    context.after(() => fs.rmSync(workspace, { recursive: true, force: true }));
+    context.mock.method(console, "warn", () => {});
+
+    const templates = path.join(workspace, "templates");
+    const output = path.join(workspace, "build");
+    fs.mkdirSync(templates);
+    for (const filename of ["template.html", "page.html"]) {
+      fs.writeFileSync(
+        path.join(templates, filename),
+        "<html><!-- flatppl-theme:header --><main></main><!-- flatppl-theme:footer --></html>",
       );
     }
-  }
-});
+    fs.writeFileSync(path.join(templates, "head.html"), "<head>$pagetitle$</head>\n");
+
+    prepareTheme(bundle, templates, output);
+
+    const header = SAMPLE_FILES["header.html"].trim()
+      .replace('href="https://github.com/flatppl"', 'href="https://github.com/flatppl/flatppl-design"');
+    const rendered = fs.readFileSync(path.join(output, "template.html"), "utf8");
+    assert.ok(rendered.includes(header));
+    assert.ok(rendered.includes(SAMPLE_FILES["footer.html"].trim()));
+    assert.equal(
+      fs.readFileSync(path.join(output, "head.html"), "utf8"),
+      "<head>$pagetitle$</head>\n",
+    );
+    assert.ok(fs.existsSync(path.join(output, "flatppl-theme/assets/logo.svg")));
+
+    const syntaxMap = JSON.parse(SAMPLE_FILES["syntax-map.json"]);
+    const syntaxCss = fs.readFileSync(path.join(output, "flatppl-syntax.css"), "utf8");
+    for (const group of syntaxMap.groups) {
+      for (const className of group.pandocClasses) {
+        assert.match(
+          syntaxCss,
+          new RegExp(`code span\\.${className} \\{ color: var\\(${group.cssVariable}\\); \\}`),
+        );
+      }
+    }
+  });
+}

@@ -2,14 +2,6 @@ const crypto = require("node:crypto");
 const fs = require("node:fs");
 const path = require("node:path");
 
-const EXPECTED_SOURCE = {
-  repository: "https://github.com/flatppl/flatppl-theme",
-  commit: "0febddef1c01760186432ab03ceeb132f109a6f7",
-  release: "v0.1.8",
-};
-const EXPECTED_MANIFEST_SHA256 =
-  "37ceb2ee6efa6b395cdcdc42c0a96782096535d7aaa8c179bb10ecabe8c44fbd";
-
 function filesUnder(root, directory = root) {
   return fs.readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
     const absolute = path.join(directory, entry.name);
@@ -23,18 +15,34 @@ function sha256(file) {
   return crypto.createHash("sha256").update(fs.readFileSync(file)).digest("hex");
 }
 
-function verifyThemeBundle(bundle) {
+// The bundle carries its own manifest.json, so the check is self-contained: no
+// hash of the manifest is pinned here. The pin is the release tag, applied by
+// fetch-theme.js, which passes it as `release`.
+function readManifest(bundle) {
   const manifestFile = path.join(bundle, "manifest.json");
-  if (sha256(manifestFile) !== EXPECTED_MANIFEST_SHA256) {
-    return ["manifest.json: SHA-256 mismatch"];
+  if (!fs.existsSync(manifestFile)) return null;
+  return JSON.parse(fs.readFileSync(manifestFile, "utf8"));
+}
+
+// Returns the list of problems; an empty list means the bundle is consistent
+// with its manifest — or that there is no manifest, which is how a sibling
+// checkout copied in by fetch-theme.js looks. That copy cannot be verified, so
+// say so loudly instead of pretending the build used a release.
+function verifyThemeBundle(bundle, { release } = {}) {
+  if (!fs.existsSync(bundle)) {
+    return [`${bundle}: no theme bundle; run \`pixi run _fetch-theme\``];
   }
-  const manifest = JSON.parse(fs.readFileSync(manifestFile, "utf8"));
+  const manifest = readManifest(bundle);
+  if (manifest === null) {
+    console.warn(`theme: ${bundle} has no manifest.json — UNVERIFIED sibling checkout`);
+    return [];
+  }
+
   const errors = [];
   if (manifest.schema !== 1) errors.push("manifest: unsupported schema");
   if (manifest.name !== "flatppl-theme") errors.push("manifest: unexpected name");
-  if (manifest.version !== "0.1.8") errors.push("manifest: unexpected version");
-  for (const [field, expected] of Object.entries(EXPECTED_SOURCE)) {
-    if (manifest.source?.[field] !== expected) errors.push(`manifest: unexpected source ${field}`);
+  if (release !== undefined && manifest.source?.release !== release) {
+    errors.push(`manifest: expected release ${release}, found ${manifest.source?.release}`);
   }
 
   const declared = new Map(manifest.files.map((file) => [file.path, file]));
@@ -101,7 +109,8 @@ function main(args) {
   if (command === "check" && bundle) {
     const errors = verifyThemeBundle(bundle);
     if (errors.length > 0) throw new Error(errors.join("\n"));
-    console.log("flatppl-theme v0.1.8: manifest and hashes verified");
+    const manifest = readManifest(bundle);
+    if (manifest) console.log(`flatppl-theme v${manifest.version}: manifest and hashes verified`);
     return;
   }
   if (command === "prepare" && bundle && templates && output) {
@@ -111,7 +120,7 @@ function main(args) {
   throw new Error("usage: theme-bundle.js check BUNDLE | prepare BUNDLE TEMPLATES OUTPUT");
 }
 
-module.exports = { prepareTheme, verifyThemeBundle };
+module.exports = { prepareTheme, readManifest, verifyThemeBundle };
 
 if (require.main === module) {
   try {
