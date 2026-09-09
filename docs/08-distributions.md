@@ -44,7 +44,7 @@ statement w.r.t. `Lebesgue(support = S)` follows by restriction.
 | [`InverseGamma`](#inversegamma) | `shape`, `scale` | `reals` | `posreals` |
 | [`Beta`](#beta) | `alpha`, `beta` | `reals` | `unitinterval` |
 | [`ChiSquared`](#chisq) | `k` | `reals` | `nonnegreals` |
-| [`VonMises`](#vonmises) | `mu`, `kappa` | `reals` | `reals` |
+| [`VonMises`](#vonmises) | `mu`, `kappa` | `interval(-pi, pi)` | `interval(-pi, pi)` |
 | [`Laplace`](#laplace) | `location`, `scale` | `reals` | `reals` |
 
 <a id="uniform"></a>**`Uniform(support)`** — The uniform distribution on `support`.
@@ -236,7 +236,7 @@ $$\frac{x^{\alpha-1}(1-x)^{\beta-1}}{B(\alpha, \beta)} \quad \text{for } x \in (
 
 <a id="chisq"></a>**`ChiSquared(k)`** — The [Chi-squared distribution](https://en.wikipedia.org/wiki/Chi-squared_distribution).
 
-Domain/Support: `reals`/`posreals`.
+Domain/Support: `reals`/`nonnegreals`.
 
 Parameters:
 
@@ -250,7 +250,7 @@ $$\frac{1}{2^{k/2} \Gamma(k/2)} x^{(k/2)-1} e^{-x/2}\quad \text{for } x > 0$$
 
 <a id="vonmises"></a>**`VonMises(mu, kappa)`** — The [von Mises distribution](https://en.wikipedia.org/wiki/Von_Mises_distribution).
 
-Domain/Support: `reals`/`reals`.
+Domain/Support: `interval(-pi, pi)`/`interval(-pi, pi)`.
 
 Parameters:
 
@@ -259,8 +259,8 @@ Parameters:
 
 Density w.r.t. `Lebesgue(reals)`:
 
-$$\frac{e^{\kappa \cos(x - \mu)}}{2 \pi I_0(\kappa)} \quad \text{for } x \in \mathbb{R},$$ 
-where $I_0(\cdot)$ is the modified Bessel function of the first kind of order 0. The density is $2\pi$-periodic in $x$; the canonical fundamental domain is $[\mu - \pi, \mu + \pi]$. 
+$$\frac{e^{\kappa \cos(x - \mu)}}{2 \pi I_0(\kappa)} \quad \text{for } x \in (-\pi, \pi],$$
+where $I_0(\cdot)$ is the modified Bessel function of the first kind of order 0. The density is $2\pi$-periodic in $x$ and hence not integrable over $\mathbb{R}$; it integrates to 1 over the single period $(-\pi, \pi]$ for every $\mu$. The set `interval(-pi, pi)` names that period. Its two endpoints are the same point of the circle.
 
 <a id="laplace"></a>**`Laplace(location, scale)`** — The [Laplace (double exponential) distribution](https://en.wikipedia.org/wiki/Laplace_distribution).
 
