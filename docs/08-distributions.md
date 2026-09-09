@@ -316,7 +316,8 @@ Categories are numbered starting from 1, consistent with FlatPPL's 1-based index
 
 For a categorical over arbitrary values rather than integer indices, superpose Diracs at
 those values: `normalize(ksuperpose(Dirac, p)(value = labels))` (see
-[`ksuperpose`](06-measure-algebra.md#ksuperpose)).
+[`ksuperpose`](06-measure-algebra.md#ksuperpose)); because `p` lies in
+`stdsimplex(n)`, that `normalize` is provably the identity.
 
 <a id="categorical0"></a>**`Categorical0(p)`** — Zero-based variant of `Categorical`, with support $\{0, 1, \ldots, n-1\}$.
 

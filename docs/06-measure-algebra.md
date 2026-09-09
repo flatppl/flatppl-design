@@ -186,15 +186,20 @@ To evaluate a density at many points (e.g. a grid for numerical integration or p
   mix = normalize(superpose(weighted(a1, normal1), weighted(a2, normal2)))
   ```
 
-  **Provably normalized superpositions.** A `superpose` of probability measures
-  weighted by $w_i$ is itself a probability measure when every $w_i$ lies in
-  $[0, 1]$ and the weights sum to one. Every conforming engine must recognize
-  this in two forms: weights written as numeric literals whose values as written
-  sum to exactly one, compared exactly and never through a floating-point sum;
-  and the complement pair `weighted(w, M1), weighted(1 - w, M2)`, where both
-  occurrences of `w` are the same node and `w`'s
-  [value set](03-value-types.md#sets) lies within `unitinterval`. Where neither
-  form applies, the result's total-mass class is not `%normalized` (see
+  **Provably normalized superpositions.** A `superpose` or
+  [`ksuperpose`](#ksuperpose) of probability measures weighted by $w_i$ is itself
+  a probability measure when every $w_i$ lies in $[0, 1]$ and the weights sum to
+  one. Every conforming engine must recognize this in three forms: weights
+  written as numeric literals whose values as written sum to exactly one,
+  compared exactly and never through a floating-point sum; the complement pair
+  `weighted(w, M1), weighted(1 - w, M2)`, where both occurrences of `w` are the
+  same node and `w`'s [value set](03-value-types.md#sets) lies within
+  `unitinterval`; and a weights vector `p` whose value set lies within
+  `stdsimplex(n)`, either passed whole as the `weights` argument of
+  `ksuperpose`, or indexed across a `superpose` as
+  `weighted(p[1], M1), ..., weighted(p[n], Mn)`, where the index literals are
+  exactly `1` through `n`, each written once. Where no form applies, the
+  result's total-mass class is not `%normalized` (see
   [total-mass classes](11-flatpir.md#total-mass-classes)).
 
 - **`ksuperpose(kernel, weights)`**<a id="ksuperpose"></a> — lifts a kernel to a weighted
@@ -206,8 +211,9 @@ To evaluate a density at many points (e.g. a grid for numerical integration or p
   parameter takes a length-$N$ vector, a vector parameter an $N \times d$ matrix, a matrix
   parameter an $N \times d \times d$ array, and any other axis structure is a static error.
   A non-collection argument, or a collection whose leading axis has size one, is shared by
-  every component, and the weights must be non-negative but need not sum to one. For
-  example:
+  every component. The weights must be non-negative but need not sum to one; where they
+  provably do, the superposition is a probability measure (see
+  [provably normalized superpositions](#superpose)). For example:
 
   ```flatppl
   mix = normalize(ksuperpose(Normal, weights)(mu = means, sigma = sigmas))
