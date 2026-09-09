@@ -6,8 +6,8 @@ This example walks through a realistic HEP model step by step.
 
 **Signal and background model.** We begin with a systematic uncertainty on the signal
 efficiency, modeled as a unit-normal nuisance parameter. The nuisance parameter enters
-log-normally, so `efficiency` is a positive scale factor on the signal yield — the
-HistFactory normalization-systematic convention — and not a probability:
+log-normally, so `efficiency` is a positive scale factor on the signal yield (the
+HistFactory normalization-systematic convention) and not a probability:
 
 ```flatppl
 raw_eff_syst ~ Normal(mu = 0.0, sigma = 1.0)
