@@ -49,6 +49,23 @@ test("undeclared and missing files fail the self-check", (context) => {
   ]);
 });
 
+test("symlinks in a bundle fail the self-check", (context) => {
+  const bundle = bundleFixture(context);
+  // A link has no content to hash, so leaving it out of the walk would let a
+  // bundle name a path that the copy into build/ resolves on the build machine.
+  fs.symlinkSync("/etc/hosts", path.join(bundle, "extra.css"));
+  fs.symlinkSync("/etc", path.join(bundle, "assets/etc"));
+  fs.rmSync(path.join(bundle, "tokens.css"));
+  fs.symlinkSync("/etc/hosts", path.join(bundle, "tokens.css"));
+
+  assert.deepEqual(verifyThemeBundle(bundle), [
+    "assets/etc: not a regular file",
+    "extra.css: not a regular file",
+    "tokens.css: not a regular file",
+    "tokens.css: missing",
+  ]);
+});
+
 test("a manifest for another package or release fails the self-check", (context) => {
   const other = bundleFixture(context, { name: "other-theme", release: "v0.1.7" });
   assert.deepEqual(verifyThemeBundle(other, { release: "v0.1.8" }), [

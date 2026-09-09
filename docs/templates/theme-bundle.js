@@ -2,13 +2,27 @@ const crypto = require("node:crypto");
 const fs = require("node:fs");
 const path = require("node:path");
 
-function filesUnder(root, directory = root) {
-  return fs.readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
+// Splits a bundle into the regular files to check and everything else. A
+// symlink is "everything else" on purpose: it has no content to hash, so
+// ignoring it would let a bundle smuggle in a path that the later recursive
+// copy resolves against the build machine rather than the bundle.
+function walkBundle(root, directory = root) {
+  const files = [];
+  const irregular = [];
+  for (const entry of fs.readdirSync(directory, { withFileTypes: true })) {
     const absolute = path.join(directory, entry.name);
-    if (entry.isDirectory()) return filesUnder(root, absolute);
-    if (!entry.isFile()) return [];
-    return [path.relative(root, absolute).split(path.sep).join("/")];
-  }).sort();
+    const relative = path.relative(root, absolute).split(path.sep).join("/");
+    if (entry.isDirectory()) {
+      const nested = walkBundle(root, absolute);
+      files.push(...nested.files);
+      irregular.push(...nested.irregular);
+    } else if (entry.isFile()) {
+      files.push(relative);
+    } else {
+      irregular.push(relative);
+    }
+  }
+  return { files: files.sort(), irregular: irregular.sort() };
 }
 
 function sha256(file) {
@@ -46,7 +60,9 @@ function verifyThemeBundle(bundle, { release } = {}) {
   }
 
   const declared = new Map(manifest.files.map((file) => [file.path, file]));
-  const actual = filesUnder(bundle).filter((file) => file !== "manifest.json");
+  const { files, irregular } = walkBundle(bundle);
+  for (const file of irregular) errors.push(`${file}: not a regular file`);
+  const actual = files.filter((file) => file !== "manifest.json");
   for (const file of actual) {
     if (!declared.has(file)) errors.push(`${file}: not declared in manifest`);
   }
@@ -87,7 +103,9 @@ function prepareTheme(bundle, templates, output) {
 
   const publicBundle = path.join(output, "flatppl-theme");
   fs.rmSync(publicBundle, { recursive: true, force: true });
-  fs.cpSync(bundle, publicBundle, { recursive: true });
+  // Verification rejects anything but regular files and directories; copying
+  // without dereferencing keeps that true even for an unverified sibling copy.
+  fs.cpSync(bundle, publicBundle, { recursive: true, dereference: false });
 
   const header = fs.readFileSync(path.join(bundle, "header.html"), "utf8")
     .replace('href="https://github.com/flatppl"', 'href="https://github.com/flatppl/flatppl-design"');

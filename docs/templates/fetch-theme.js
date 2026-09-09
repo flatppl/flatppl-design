@@ -4,7 +4,7 @@
 //   1. A sibling checkout — FLATPPL_THEME_DIR, else <repo-root>/../flatppl-theme
 //      when it exists. The theme's source files are copied as they are, without
 //      a manifest, so the verifier reports the copy as UNVERIFIED. Re-copied on
-//      every build so local theme edits show up immediately.
+//      every build, so an edit in the checkout takes effect on the next build.
 //   2. The pinned GitHub release otherwise — the tarball of tag
 //      FLATPPL_THEME_REF (default DEFAULT_REF), extracted and then checked
 //      against its own manifest.json. The tag is the only pin; no manifest hash
@@ -18,16 +18,24 @@ const fs = require("node:fs");
 const path = require("node:path");
 const { spawnSync } = require("node:child_process");
 
-const { verifyThemeBundle } = require("./theme-bundle.js");
+const { readManifest, verifyThemeBundle } = require("./theme-bundle.js");
 
 const REPOSITORY = "https://github.com/flatppl/flatppl-theme";
 const DEFAULT_REF = "v0.1.8";
 const DOWNLOAD_ATTEMPTS = 4;
+const DOWNLOAD_TIMEOUT_MS = 30_000;
 const RETRY_DELAY_MS = 2000;
 
-// The theme's own release contents (scripts/bundle.ts REQUIRED_FILES). A
-// sibling checkout keeps these at the same paths relative to its repository
-// root, so the list doubles as the copy list and as the completeness check.
+// Every error out of here ends with the way out of it, so a caller that only
+// has the Error (a test, another script) shows it as well as the CLI does.
+const SETUP_HINT =
+  "theme: point FLATPPL_THEME_DIR at a flatppl-theme checkout, or make the pinned"
+  + " release reachable (FLATPPL_THEME_REF, currently pinned in fetch-theme.js)";
+
+// The files this build needs from the theme (its scripts/bundle.ts
+// REQUIRED_FILES). A sibling checkout keeps them at the same paths relative to
+// its repository root, so the list doubles as the copy list, as the
+// completeness check on a checkout, and as the drift check on a release.
 const THEME_FILES = [
   "assets/android-chrome-192x192.png",
   "assets/android-chrome-512x512.png",
@@ -50,6 +58,7 @@ const THEME_FILES = [
   "syntax-map.json",
   "tokens.css",
 ];
+const ASSETS = "assets";
 
 const repositoryRoot = path.resolve(__dirname, "../..");
 
@@ -71,7 +80,9 @@ function siblingThemeDirectory(env, root = repositoryRoot) {
   const requested = env.FLATPPL_THEME_DIR;
   if (requested) {
     if (!fs.existsSync(requested)) {
-      throw new Error(`FLATPPL_THEME_DIR is set to ${requested}, which does not exist`);
+      throw new Error(
+        `FLATPPL_THEME_DIR is set to ${requested}, which does not exist\n${SETUP_HINT}`,
+      );
     }
     return path.resolve(requested);
   }
@@ -83,11 +94,19 @@ function copySiblingTheme(themeDirectory, dropDirectory) {
   const missing = THEME_FILES.filter((file) => !fs.existsSync(path.join(themeDirectory, file)));
   if (missing.length > 0) {
     throw new Error(
-      `${themeDirectory} is not a flatppl-theme checkout; missing:\n${missing.join("\n")}`,
+      `${themeDirectory} is not a flatppl-theme checkout; missing:\n${missing.join("\n")}\n`
+      + SETUP_HINT,
     );
   }
   fs.rmSync(dropDirectory, { recursive: true, force: true });
-  for (const file of THEME_FILES) {
+  // The theme's release build copies assets/ recursively, so copy the whole
+  // directory rather than the listed asset paths: an asset added upstream and
+  // referenced from header.html has to reach the build without an edit here.
+  fs.cpSync(path.join(themeDirectory, ASSETS), path.join(dropDirectory, ASSETS), {
+    recursive: true,
+    dereference: false,
+  });
+  for (const file of THEME_FILES.filter((entry) => !entry.startsWith(`${ASSETS}/`))) {
     const target = path.join(dropDirectory, file);
     fs.mkdirSync(path.dirname(target), { recursive: true });
     fs.copyFileSync(path.join(themeDirectory, file), target);
@@ -97,7 +116,11 @@ function copySiblingTheme(themeDirectory, dropDirectory) {
 function extractTarball(tarball, target) {
   const result = spawnSync("tar", ["-xzf", tarball, "-C", target], { stdio: "pipe" });
   if (result.error) {
-    throw new Error(`cannot run tar to extract the theme release: ${result.error.message}`);
+    throw new Error(
+      `cannot run tar to extract the theme release: ${result.error.message}\n`
+      + "theme: tar has to be on PATH to unpack the release; a sibling checkout"
+      + " (FLATPPL_THEME_DIR) needs no tar",
+    );
   }
   if (result.status !== 0) {
     throw new Error(`tar failed on the theme release:\n${result.stderr.toString().trim()}`);
@@ -112,7 +135,12 @@ async function downloadTarball(url, file) {
   let lastError;
   for (let attempt = 1; attempt <= DOWNLOAD_ATTEMPTS; attempt += 1) {
     try {
-      const response = await fetch(url, { redirect: "follow" });
+      // Per-attempt deadline: a stalled connection has to fail into the retry
+      // rather than hold the build open indefinitely.
+      const response = await fetch(url, {
+        redirect: "follow",
+        signal: AbortSignal.timeout(DOWNLOAD_TIMEOUT_MS),
+      });
       if (!response.ok) throw new Error(`HTTP ${response.status} ${response.statusText}`);
       fs.writeFileSync(file, Buffer.from(await response.arrayBuffer()));
       return;
@@ -121,13 +149,14 @@ async function downloadTarball(url, file) {
       if (attempt < DOWNLOAD_ATTEMPTS) await sleep(RETRY_DELAY_MS * attempt);
     }
   }
-  throw new Error(`cannot download ${url}: ${lastError.message}`);
+  throw new Error(`cannot download ${url}: ${lastError.message}\n${SETUP_HINT}`);
 }
 
-// Downloads into a staging directory next to the drop directory (same
-// filesystem, so the swap is a rename) and only publishes a bundle whose
-// manifest self-check passes for the pinned tag.
-async function fetchRelease(ref, dropDirectory) {
+// Downloads into a staging directory inside the drop directory's parent, so the
+// swap is a rename within one filesystem, and only publishes a bundle that
+// passes the self-check for the pinned tag and declares everything this build
+// reads.
+async function fetchRelease(ref, dropDirectory, download) {
   const parent = path.dirname(dropDirectory);
   fs.mkdirSync(parent, { recursive: true });
   const staging = fs.mkdtempSync(path.join(parent, ".flatppl-theme-download-"));
@@ -135,12 +164,23 @@ async function fetchRelease(ref, dropDirectory) {
     const tarball = path.join(staging, "flatppl-theme.tar.gz");
     const contents = path.join(staging, "bundle");
     fs.mkdirSync(contents);
-    await downloadTarball(releaseTarballUrl(ref), tarball);
+    await download(releaseTarballUrl(ref), tarball);
     extractTarball(tarball, contents);
     const errors = verifyThemeBundle(contents, { release: ref });
     if (errors.length > 0) {
       throw new Error(
-        `the flatppl-theme ${ref} release does not match its own manifest:\n${errors.join("\n")}`,
+        `the flatppl-theme ${ref} release does not match its own manifest:\n${errors.join("\n")}\n`
+        + SETUP_HINT,
+      );
+    }
+    const declared = new Set(readManifest(contents).files.map((file) => file.path));
+    const absent = THEME_FILES.filter((file) => !declared.has(file));
+    if (absent.length > 0) {
+      throw new Error(
+        `the flatppl-theme ${ref} release does not declare files this build reads:\n`
+        + `${absent.join("\n")}\n`
+        + "theme: re-pin FLATPPL_THEME_REF, or update THEME_FILES in"
+        + " docs/templates/fetch-theme.js to match the theme's REQUIRED_FILES",
       );
     }
     fs.rmSync(dropDirectory, { recursive: true, force: true });
@@ -151,13 +191,17 @@ async function fetchRelease(ref, dropDirectory) {
 }
 
 // True when the drop directory already holds a verified bundle for this tag, so
-// a rebuild does not re-download it.
+// a rebuild does not re-download it. A bundle left over from another tag fails
+// the release check and is replaced.
 function cachedRelease(ref, dropDirectory) {
   if (!fs.existsSync(path.join(dropDirectory, "manifest.json"))) return false;
   return verifyThemeBundle(dropDirectory, { release: ref }).length === 0;
 }
 
-async function fetchTheme(dropDirectory, { env = process.env, log = console.log } = {}) {
+async function fetchTheme(
+  dropDirectory,
+  { env = process.env, log = console.log, download = downloadTarball } = {},
+) {
   const target = path.resolve(dropDirectory);
   const sibling = siblingThemeDirectory(env);
   if (sibling) {
@@ -171,13 +215,14 @@ async function fetchTheme(dropDirectory, { env = process.env, log = console.log 
     log(`theme: using cached flatppl-theme ${ref} (verified)`);
     return { source: "cache", ref };
   }
-  await fetchRelease(ref, target);
+  await fetchRelease(ref, target, download);
   log(`theme: fetched flatppl-theme ${ref} from GitHub (verified)`);
   return { source: "release", ref };
 }
 
 module.exports = {
   DEFAULT_REF,
+  SETUP_HINT,
   THEME_FILES,
   copySiblingTheme,
   fetchTheme,
@@ -190,10 +235,6 @@ if (require.main === module) {
   const dropDirectory = process.argv[2] || path.join(repositoryRoot, "vendor/flatppl-theme");
   fetchTheme(dropDirectory).catch((error) => {
     console.error(`theme: ${error.message}`);
-    console.error(
-      "theme: a build needs either a flatppl-theme checkout (FLATPPL_THEME_DIR)"
-        + " or network access to the pinned release (FLATPPL_THEME_REF)",
-    );
     process.exit(1);
   });
 }
