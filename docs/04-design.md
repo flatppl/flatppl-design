@@ -295,8 +295,9 @@ vice versa.
 
 ![](diagrams/reification.svg)
 
-A function represents a reified deterministic DAG, either implicit
-(built-in) or explicitly constructed.
+A function represents a reified DAG that is deterministic given its inputs and
+any [captured draws](#sec:captured-draws), either implicit (built-in) or
+explicitly constructed.
 Ordinary function application `y = f(a, b, ...)` introduces a deterministic
 node `y` into the graph. `functionof(y)` goes in the opposite direction:
 it reifies the ancestor subgraph of `y` as a first-class function — the
@@ -376,8 +377,9 @@ trace once.
 of the argument of `lawof` will typically include stochastic nodes, the
 resulting measure is itself deterministic (of parameterized or fixed phase):
 `lawof` absorbs stochasticity into the reified law rather than propagating it
-outward. Thus functionof can reify subgraphs that include stochastic nodes as
-long as they are reified to measures (see below).
+outward. So a `functionof` whose stochastic ancestors are all reified to
+measures is itself deterministic, while one over a captured `draw` is not (see
+below).
 
 #### <a id="sec:functionof"></a>Reification to functions and kernels
 
@@ -395,16 +397,10 @@ Boundary inputs themselves may be of parametric or stochastic phase, but not
 fixed phase. `functionof` effectively substitutes each boundary node `a` with
 an input node `elementof(valueset(a))` under the given name.
 
-FlatPPL has no closures: a reified callable captures no enclosing environment,
-and a fixed ancestor is resolved to its value rather than retained as a binding.
-
-Referential transparency is a core property of FlatPPL. This requires that
-the sub-graph to be reified by `functionof` must not contain stochastic nodes
-that are not reified to measures. This means that the sub-graph must not contain
-`draw` nodes and nodes derived from them which are not ancestors of `lawof` nodes
-in that subgraph (since `lawof` absorbs stochastic phase). `lawof` nodes in the
-sub-graph of a `functionof` only operate within that subgraph, including
-marginalization.
+FlatPPL has no closures over fixed or parameterized ancestors: a fixed ancestor
+is resolved to its value rather than retained as a binding, and a parameterized
+ancestor of the reified sub-graph is traced back to an input. A `draw` ancestor
+is neither: see [captured draws](#sec:captured-draws) below.
 
 Consider a simple deterministic computation:
 
@@ -428,8 +424,7 @@ C = broadcast(f, a = A, b = B)      # apply f elementwise over arrays A, B
 
 `functionof(e)` captures the entire computation leading to `e` — the sub-DAG
 that contains `e` and all its ancestors — as a reusable function object.
-The reified computation must be deterministic: stochastic ancestors must be
-absorbed by `lawof` as described above, or excluded by a designated boundary.
+Here the sub-DAG contains no `draw` node, so `f` is of parameterized phase.
 
 The argument names of the resulting function are the names of the leaf nodes of the
 reified sub-DAG; the input nodes of the function are decoupled from these leaf nodes.
@@ -512,6 +507,41 @@ under the [placeholder scoping rule](#placeholders-and-holes).
 
 For example, `x -> 2 * x + 1` is equivalent to `functionof(2 * _x_ + 1, x = _x_)`, and `(x, y) -> x * y + 1` is equivalent to
 `functionof(_x_ * _y_ + 1, x = _x_, y = _y_)`.
+
+**<a id="sec:captured-draws"></a>Captured draws.** Referential transparency is a
+core property of FlatPPL: a name refers to a node of the graph, and a reference
+from inside a reified sub-graph refers to that same node. So the sub-graph
+reified by `functionof`, and hence by any lambda, may contain `draw` nodes of
+the enclosing graph. Such a captured draw remains a shared ancestor of the
+reification and of the enclosing graph, with a single realisation. The reified
+callable is conditional on that realisation: it is neither resampled per call
+nor marginalized, so any number of calls uses the one realisation. The maths is
+conditioning rather than marginalization (a measure-valued reification is the
+conditional kernel given the realisation of the shared parameter), and the
+enclosing graph carries that parameter's own law.
+
+The phase of a reification follows the reified sub-graph by the same ancestor
+rule as any other binding (see [phases](#phases)): it is stochastic when the
+sub-graph holds a captured `draw` whose phase no `lawof` node absorbs. A `lawof`
+node in the reified sub-graph absorbs the stochastic phase of its own ancestors
+and marginalizes them, and operates only within that sub-graph.
+
+A step kernel that shares a drawn scale with the enclosing graph:
+
+```flatppl
+drift  = 0.4    # known per-step drift
+x_init = 0.0    # known initial state
+n      = 120    # trajectory length
+sigma_step ~ normalize(truncate(Cauchy(0, 1), interval(0, inf)))
+step_kernel = prev -> Normal(prev + drift, sigma_step)
+x ~ markovchain(step_kernel, x_init, n)
+```
+
+`step_kernel` is unary: `prev` is its only input, `drift` is fixed and resolved
+to its value, and `sigma_step` is captured. Every step of the chain uses the one
+realisation of `sigma_step`, so `x` is a trajectory conditional on that scale.
+Wrapping the body in `lawof` instead would marginalize `sigma_step` at each
+step, which is a different model.
 
 #### <a id="sec:kernelof"></a>Kernels and `kernelof`
 
