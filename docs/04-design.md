@@ -1270,7 +1270,7 @@ modules load a common third module.
 of the FlatPPL file containing that `load_module(...)` call, not the host process's working
 directory. For embedded FlatPPL code, relative paths are resolved relative to the directory of the source file containing the embedded FlatPPL code block. The forward slash `/` is the mandatory path separator
 on all platforms. Parent-directory traversal via `..` is allowed.
-Absolute file paths are permitted but discouraged, as they prevent relocatable model repositories.
+Outside a bundle, absolute file paths are permitted but discouraged, as they prevent relocatable model repositories.
 
 **Aliasing** is just assignment: `sig_model = sig_module.model` creates a local alias — a
 reference to the same underlying object in the loaded module's DAG, not a clone.
@@ -1287,6 +1287,10 @@ directory containing a `main.flatppl`, it is loaded from there. A missing
 
 Within a bundle (directory or ZIP), relative paths — in both `load_module` and
 `load_data` — resolve only inside the bundle and must not escape its root via `..`.
+Confinement is physical: a path inside a bundle resolves only if its canonical
+form, with symbolic links resolved, lies under the bundle root. Absolute file
+sources are not allowed inside a bundle. A ZIP bundle is invalid if any entry name
+is absolute or contains a `..` segment.
 
 ### FlatPPL version compatibility
 
@@ -1373,7 +1377,10 @@ annotations and do not carry user-written surface comments.)
 ### <a id="sec:url-cache"></a>Remote file caching
 
 A `load_module(url)` or [`load_data(url)`](07-functions.md#load_data) `source`
-may be an `http`/`https` URL rather than a local path. FlatPPL is meant to be
+may be an `http`/`https` URL rather than a local path. A `source` URL uses one
+of the schemes `file`, `http` or `https`, and any other scheme is a static
+error. A `file://` URL denotes a local path and is not cached.
+FlatPPL is meant to be
 supported by multiple engines and tools in a variety of host languages, and
 the design leaves a lot of freedom to individual FlatPPL implementations. But
 caching of remote content to local files should be consistent across various
@@ -1409,8 +1416,8 @@ If not set, the following default is used:
   validators `etag` and `last_modified` (any may be `null` if the server omits
   it). Readers ignore unknown fields.
 - `trust/<kk>/<key>` is a per-URL trust marker — its presence means the URL is
-  trusted — keyed by the same `<kk>`/`<key>` as the object. Trust is based on
-  the original URLs, not on redirect URLs.
+  trusted — keyed by the same `<kk>`/`<key>` as the object. A redirect
+  destination has its own marker, keyed by that destination's hash.
 - `tmp/` holds temporary files during downloads, must be on the same
   filesystem as `objects/` to achieve atomic renames.
 
@@ -1432,7 +1439,10 @@ attempted.
 **Trust.** Before fetching a URL that has no trust marker, interactive tooling
 must obtain the user's approval and then create its `trust/<kk>/<key>` marker.
 Non-interactive
-tooling must error if a requested URL is not marked as trusted. If the environment
+tooling must error if a requested URL is not marked as trusted. Every redirect
+destination passes the same trust check as the original URL before that hop is
+followed, and a destination that fails the check is an error, like an
+unresolvable redirect. If the environment
 variable `FLATPPL_TRUST` is set, all URLs are trusted implicitly by interactive
 and non-interactive tooling, but no trust markers are created.
 
