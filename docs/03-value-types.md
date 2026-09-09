@@ -162,7 +162,9 @@ to such records via `record(t)`.
 `lengthof(t)` returns the number of table rows.
 
 **Broadcasting.** When a table is passed to `broadcast`, it is traversed row-wise and each
-row treated as a record passed to the function used in the broadcast.
+row treated as a record passed to the function used in the broadcast. See
+[broadcasting](04-design.md#sec:broadcasting) for the result shape when that function
+returns a record.
 
 **Data carriers by model shape.** FlatPPL uses ordinary values as data carriers:
 
