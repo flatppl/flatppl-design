@@ -25,13 +25,21 @@ pixi run build-pdf    # PDF only
 pixi run build-md     # Markdown with YAML frontmatter
 pixi run build-typst  # Typst source
 pixi run test-js      # Browser-side JavaScript checks
-pixi run check-theme  # Verify the pinned shared-theme manifest and hashes
+pixi run check-theme  # Fetch the shared theme and check it against its manifest
 pixi run clean        # Remove build output
 ```
 
 The generated files are written to the `build/` directory.
-The HTML build vendors the pinned `flatppl-theme` release from
-`vendor/flatppl-theme/`; update it only as a complete release bundle.
+
+The HTML build needs the shared
+[`flatppl-theme`](https://github.com/flatppl/flatppl-theme) bundle, which is not
+committed here: `docs/templates/fetch-theme.js` puts it into
+`vendor/flatppl-theme/` on every build. A sibling checkout wins —
+`FLATPPL_THEME_DIR`, otherwise `../flatppl-theme` when it exists — and is copied
+in unverified, so local theme edits show up in the next build. Without one the
+pinned release tarball is downloaded (tag `FLATPPL_THEME_REF`, default `v0.1.8`)
+and checked against its own `manifest.json`. `FLATPPL_THEME_NO_SIBLING=1` ignores
+a sibling checkout, which is how to exercise the release path locally.
 
 Requires [Pixi](https://pixi.sh). All other dependencies (pandoc, typst) are installed automatically.
 
