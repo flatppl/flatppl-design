@@ -36,10 +36,11 @@ The HTML build needs the shared
 committed here: `docs/templates/fetch-theme.js` puts it into
 `vendor/flatppl-theme/` on every build. A sibling checkout wins —
 `FLATPPL_THEME_DIR`, otherwise `../flatppl-theme` when it exists — and is copied
-in unverified, so local theme edits show up in the next build. Without one the
-pinned release tarball is downloaded (tag `FLATPPL_THEME_REF`, default `v0.1.8`)
-and checked against its own `manifest.json`. `FLATPPL_THEME_NO_SIBLING=1` ignores
-a sibling checkout, which is how to exercise the release path locally.
+in unverified; an edit in that checkout reaches the site on the next build,
+since nothing watches it. Without one, the pinned release tarball is downloaded
+(tag `FLATPPL_THEME_REF`, default `v0.1.8`) and checked against its own
+`manifest.json`. `FLATPPL_THEME_NO_SIBLING=1` ignores a sibling checkout, which
+is how to exercise the release path locally.
 
 Requires [Pixi](https://pixi.sh). All other dependencies (pandoc, typst) are installed automatically.
 
