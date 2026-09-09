@@ -229,9 +229,9 @@ is not a function (`f(arg1, ...) ~ expr` is not legal).
 Axis names are written `.<name>` and are symbolic index labels used by
 [`aggregate`](04-design.md#sec:aggregate). They are lexically scoped to
 the enclosing aggregation and are not values: an axis name is legal only
-as an entry in `aggregate`'s `output_axes` axis list, as an index
-inside `[...]` within the body, or as a binder on the left-hand side of
-`:=`. Used anywhere else it is a static error.
+as an entry in its `output_axes` axis list, as an index inside `[...]`
+or a selector in the equivalent `get(...)` call within its body, or as
+a binder on the left-hand side of `:=`. Used anywhere else it is a static error.
 
 The aggregation form `C[.i, .j, ...] := expr` is shorthand for
 sum-[`aggregate`](04-design.md#sec:aggregate); see there for the desugaring.
@@ -451,8 +451,9 @@ syntactic restrictions on where they may appear are documented in
 
 **Note on axis names.** The grammar admits `Axis` (`.<name>`) as a `Primary`,
 but `Axis` is legal only inside an [aggregation](#axis-names) — as an entry
-of `aggregate`'s `output_axes`, as an `[...]` index in its body, or as a
-binder of an `AggregateBinding`. Anywhere else it is a static error.
+of its `output_axes`, as an `[...]` index or a selector in the equivalent
+`get(...)` call in its body, or as a binder of an `AggregateBinding` or
+`MetricsumBinding`. Anywhere else it is a static error.
 The grammar likewise admits `AxisList` as a `Primary`, but it is legal only
 as the `output_axes` argument of an `aggregate` or `metricsum` call and as
 the axis-list binder of an `AggregateBinding` or `MetricsumBinding`;
