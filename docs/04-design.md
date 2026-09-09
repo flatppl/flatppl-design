@@ -506,13 +506,13 @@ For example, `x -> 2 * x + 1` is equivalent to `functionof(2 * _x_ + 1, x = _x_)
 **<a id="sec:captured-draws"></a>Captured draws.** Referential transparency is a
 core property of FlatPPL: a name refers to a node of the graph, and a reference
 from inside a reified sub-graph refers to that same node. So the sub-graph
-reified by `functionof` — and hence by any lambda — may contain `draw` nodes of
+reified by `functionof`, and hence by any lambda, may contain `draw` nodes of
 the enclosing graph. Such a captured draw remains a shared ancestor of the
 reification and of the enclosing graph, with a single realisation. The reified
 callable is conditional on that realisation: it is neither resampled per call
 nor marginalized, so any number of calls uses the one realisation. The maths is
-conditioning rather than marginalization — a measure-valued reification is the
-conditional kernel given the realisation of the shared parameter — and the
+conditioning rather than marginalization (a measure-valued reification is the
+conditional kernel given the realisation of the shared parameter), and the
 enclosing graph carries that parameter's own law.
 
 The phase of a reification follows the reified sub-graph by the same ancestor
