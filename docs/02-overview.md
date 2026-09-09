@@ -77,7 +77,7 @@ events, with a systematic uncertainty on the signal resolution:
 # Particle mass measurement
 
 Unbinned Poisson-process model: a Gaussian signal peak at known mass on a
-falling exponential background, with a Gaussian-shifted resolution
+falling exponential background, with a log-normal resolution
 systematic. Returns a likelihood object `L` parameterized by the expected
 signal and background counts.
 %%%
@@ -85,13 +85,13 @@ flatppl_compat = "0.3"
 
 # Inputs: expected signal and background event counts
 % Expected number of signal events.
-n_sig = elementof(reals)
+n_sig = elementof(nonnegreals)
 % Expected number of background events.
-n_bkg = elementof(reals)
+n_bkg = elementof(nonnegreals)
 
-% Standard-normal systematic shift applied to the detector resolution.
+% Standard-normal systematic shift scaling the detector resolution.
 raw_syst ~ Normal(mu = 0.0, sigma = 1.0)
-resolution = 2.5 + 0.3 * raw_syst
+resolution = 2.5 * exp(0.12 * raw_syst)
 
 # Signal: Gaussian peak at known mass, uncertain resolution
 signal_shape = Normal(mu = 125.0, sigma = resolution)
@@ -225,8 +225,8 @@ Scalars, arrays, nested arrays, matrices, records, and basic operations:
 ```flatppl
 # Scalars
 x = 3.14
-n = 42
-b = true
+count = 42
+flag = true
 
 # Collections
 v = [1.0, 2.0, 3.0]
@@ -235,8 +235,8 @@ M = rowstack([[1, 2, 3], [4, 5, 6]])
 r = record(mu=3.0, sigma=1.0)
 
 # Indexing, field access, slicing
-y = A[i]
-z = A[i, j]
+array_entry = A[i]
+matrix_entry = A[i, j]
 w = r.mu
 col_j = M[:, j]
 
@@ -319,7 +319,7 @@ K = kernelof(b, x = a)
 C = broadcast(f, x = A)
 
 # Same, positional
-C = broadcast(f, A)
+C_positional = broadcast(f, A)
 
 # Kernel over array
 D ~ broadcast(K, x = A)
@@ -439,9 +439,12 @@ starting_values = record(mu_sig = 1.0, raw_syst = fixed(0.0), n_bkg = 50.0)
 Likelihood construction, combination, and posterior construction:
 
 ```flatppl
-L = likelihoodof(kernelof(obs), data)
+L = likelihoodof(kernelof(events), observed_data)
 R = interval(2.0, 8.0)
-L_sub = likelihoodof(normalize(truncate(kernelof(obs), R)), filter(fn(_ in R), data))
+model_R = functionof(
+    PoissonProcess(intensity = truncate(intensity, R)),
+    n_sig = n_sig, n_bkg = n_bkg, raw_syst = raw_syst)
+L_sub = likelihoodof(model_R, filter(fn(_ in R), observed_data))
 L_total = joint_likelihood(L1, L2)
 
 # Unnormalized posterior

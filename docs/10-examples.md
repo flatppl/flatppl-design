@@ -5,15 +5,18 @@
 This example walks through a realistic HEP model step by step.
 
 **Signal and background model.** We begin with a systematic uncertainty on the signal
-efficiency, modeled as a unit-normal nuisance parameter:
+efficiency, modeled as a unit-normal nuisance parameter. The nuisance parameter enters
+log-normally, so `efficiency` is a positive scale factor on the signal yield (the
+HistFactory normalization-systematic convention) and not a probability:
 
 ```flatppl
 raw_eff_syst ~ Normal(mu = 0.0, sigma = 1.0)
-efficiency = 0.9 + 0.05 * raw_eff_syst
+efficiency = 0.9 * exp(0.056 * raw_eff_syst)
 ```
 
 Signal and background shapes are defined as step-function densities, normalized over the
-analysis region:
+analysis region. The bin edges, bin contents, and analysis bounds `lo` and `hi`
+are fixed inputs:
 
 ```flatppl
 sig_shape = fn(stepwise(bin_edges, signal_bins, _))
@@ -23,8 +26,10 @@ bkg_template = normalize(weighted(bkg_shape, Lebesgue(interval(lo, hi))))
 ```
 
 **Observation model.** The rate measure superposes signal (scaled by signal strength `mu_sig`
-and efficiency) with background. The module input `mu_sig = elementof(reals)` plays the role of the model's
-parameter of interest. Events are drawn from a Poisson point process:
+and efficiency) with background. The module input `mu_sig = elementof(nonnegreals)` plays the
+role of the model's parameter of interest; `weighted` needs a nonnegative weight, and
+`mu_sig * efficiency` is nonnegative exactly when `mu_sig` is. Events are drawn from a
+Poisson point process:
 
 ```flatppl
 rate = superpose(
@@ -45,7 +50,7 @@ combined likelihood `L` is a likelihood object on the parameter space
 ```flatppl
 # Observation likelihood: boundary input keeps raw_eff_syst as a parameter
 L_obs = likelihoodof(
-    kernelof(events, raw_eff_syst = raw_eff_syst),
+    kernelof(events, mu_sig = mu_sig, raw_eff_syst = raw_eff_syst),
     [3.1, 5.7, 2.4, 8.9, 4.2])
 
 # Constraint: auxiliary measurement model for the nuisance parameter
@@ -69,7 +74,9 @@ range-restricted likelihood for a sideband fit is also straightforward:
 ```flatppl
 sideband = interval(0.0, 3.0)
 sideband_data = filter(fn(_ in sideband), [3.1, 5.7, 2.4, 8.9, 4.2])
-sideband_model = normalize(truncate(kernelof(events, raw_eff_syst = raw_eff_syst), sideband))
+sideband_model = functionof(
+    PoissonProcess(intensity = truncate(rate, sideband)),
+    mu_sig = mu_sig, raw_eff_syst = raw_eff_syst)
 L_obs_sideband = likelihoodof(sideband_model, sideband_data)
 L_sideband = joint_likelihood(L_obs_sideband, L_constr)
 ```
@@ -93,10 +100,13 @@ truncation, density-defined distributions, module loading, and hypothesis testin
 some_mean = elementof(cartpow(reals, 3))
 some_cov = elementof(cartpow(reals, [3, 3]))
 x = elementof(reals)
-c0 = elementof(reals)
-c1 = elementof(reals)
-c2 = elementof(reals)
-c3 = elementof(reals)
+# Bernstein coefficients: non-negative with a positive sum, so the density stays
+# non-negative and `normalize` has a finite positive mass to divide by. The bounds
+# `lo` and `hi` must be finite and ordered, lo < hi.
+c0 = elementof(nonnegreals)
+c1 = elementof(nonnegreals)
+c2 = elementof(nonnegreals)
+c3 = elementof(nonnegreals)
 lo = elementof(reals)
 hi = elementof(reals)
 
@@ -116,7 +126,6 @@ transformed = 2 * a + 1
 f = functionof(transformed, a = a)
 A = [1.0, 2.0, 3.0, 4.0]
 result = broadcast(f, a = A)           # [3.0, 5.0, 7.0, 9.0]
-result = broadcast(f, A)              # same, positional (f has declared order)
 
 # Stochastic broadcast
 noisy ~ Normal(mu = a, sigma = 0.1)
@@ -126,9 +135,21 @@ noisy_array ~ broadcast(K, a = A)  # independent Normal draws at each element
 # Truncated distribution (model physics)
 positive_sigma ~ normalize(truncate(Normal(mu = 1.0, sigma = 0.5), interval(0, inf)))
 
-# Density-defined distribution (Bernstein polynomial)
-bern = fn(bernstein(coefficients = [c0, c1, c2, c3], x = _))
-smooth_bkg = normalize(weighted(bern, Lebesgue(support = interval(lo, hi))))
+# Density-defined distribution (Bernstein polynomial). The callback form takes
+# fixed inputs only: a `fn` hole cannot capture fitted ancestors.
+bern = fn(bernstein(coefficients = [0.2, 0.5, 0.8, 0.4], x = _))
+smooth_bkg = normalize(weighted(bern, Lebesgue(support = interval(0.0, 10.0))))
+
+# Same cubic Bernstein density with fitted coefficients, as a Beta mixture.
+# Each Beta density below is four times its Bernstein basis function, and that
+# common factor cancels under `normalize`.
+smooth_bkg_fitted = locscale(
+    normalize(superpose(
+        weighted(c0, Beta(alpha = 1, beta = 4)),
+        weighted(c1, Beta(alpha = 2, beta = 3)),
+        weighted(c2, Beta(alpha = 3, beta = 2)),
+        weighted(c3, Beta(alpha = 4, beta = 1)))),
+    lo, hi - lo)
 
 # Module loading and composition
 sig = load_module("signal_channel.flatppl")
