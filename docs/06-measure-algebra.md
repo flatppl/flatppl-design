@@ -296,7 +296,7 @@ To evaluate a density at many points (e.g. a grid for numerical integration or p
   a vector of positive integers (multi-axis shape). When `M` is a reified law,
   each of the $N$ copies carries its own copy of the reified sub-DAG,
   stochastic ancestors included; `iid` never shares nodes between copies. A
-  stochastic node may not serve both as a constructor parameter of `M` and as an
+  stochastic node may not be both a constructor parameter of `M` and an
   ancestor captured in `M`'s reified sub-DAG, since one node cannot be both
   shared across all copies and fresh in each; such an `iid` is a static
   error. A `size` derived from data rather than written in source may resolve to
