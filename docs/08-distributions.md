@@ -258,7 +258,7 @@ Parameters:
 Density w.r.t. `Lebesgue(reals)`:
 
 $$\frac{e^{\kappa \cos(x - \mu)}}{2 \pi I_0(\kappa)} \quad \text{for } x \in (-\pi, \pi],$$
-where $I_0(\cdot)$ is the modified Bessel function of the first kind of order 0. The density is $2\pi$-periodic in $x$ and hence not integrable over $\mathbb{R}$; it integrates to 1 over the single period $(-\pi, \pi]$ for every $\mu$. The set `interval(-pi, pi)` names that period, its two endpoints being the same point of the circle.
+where $I_0(\cdot)$ is the modified Bessel function of the first kind of order 0. The density is $2\pi$-periodic in $x$ and hence not integrable over $\mathbb{R}$; it integrates to 1 over the single period $(-\pi, \pi]$ for every $\mu$. The set `interval(-pi, pi)` names that period. Its two endpoints are the same point of the circle.
 
 <a id="laplace"></a>**`Laplace(location, scale)`** — The [Laplace (double exponential) distribution](https://en.wikipedia.org/wiki/Laplace_distribution).
 
