@@ -115,7 +115,7 @@ Parameters:
 - `m0 = elementof(reals)`: peak position.
 - `sigma = elementof(posreals)`: width.
 - `alpha = elementof(posreals)`: transition point (in units of $\sigma$).
-- `n = elementof(posreals)`: power-law exponent.
+- `n = elementof(posreals)`: finite power-law exponent, with $n > 1$.
 
 Density w.r.t. `Lebesgue(reals)`:
 
@@ -139,7 +139,7 @@ Parameters:
 - `m0 = elementof(reals)`: peak position.
 - `sigmaL = elementof(posreals)`, `sigmaR = elementof(posreals)`: left/right widths.
 - `alphaL = elementof(posreals)`, `alphaR = elementof(posreals)`: left/right transition points.
-- `nL = elementof(posreals)`, `nR = elementof(posreals)`: left/right power-law exponents.
+- `nL = elementof(posreals)`, `nR = elementof(posreals)`: finite left/right power-law exponents, each greater than one.
 
 Density w.r.t. `Lebesgue(reals)`:
 
