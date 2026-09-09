@@ -74,7 +74,10 @@ Outside $[-1, +1]$, the function continues linearly with slope $S + 2A$ (right) 
 $S - 2A$ (left).
 
 <a id="interp_poly6_lin"></a>**`interp_poly6_lin(left, center, right, alpha)`** — 6th-order polynomial inside
-$[-1, +1]$, linear extrapolation outside. With $f(0) = \mathrm{center}$ fixing the
+$[-1, +1]$, linear extrapolation outside.
+The exterior lines have slope $\mathrm{center} - \mathrm{left}$ on the left
+and $\mathrm{right} - \mathrm{center}$ on the right.
+With $f(0) = \mathrm{center}$ fixing the
 constant term, the six polynomial coefficients are determined by $C^2$ continuity at
 $\alpha = \pm 1$ — matching the value, first, and second derivatives to the linear
 extrapolation (so $f(-1) = \mathrm{left}$, $f(+1) = \mathrm{right}$).
@@ -90,8 +93,9 @@ so its boundary derivatives are $f'(+1) = \mathrm{right} \cdot \log(\mathrm{righ
 and $f'(-1) = \mathrm{left} \cdot \log(\mathrm{center}/\mathrm{left})$. With $f(0) = \mathrm{center}$
 fixing the constant term, the six polynomial coefficients are determined by $C^2$ continuity
 at $\alpha = \pm 1$ — matching the value, first, and second derivatives of that extrapolation
-(so $f(-1) = \mathrm{left}$, $f(+1) = \mathrm{right}$). The result stays positive, making this
-appropriate for multiplicative factors.
+(so $f(-1) = \mathrm{left}$, $f(+1) = \mathrm{right}$). Positive anchors do not guarantee
+a positive polynomial between the anchors. Non-negativity over the intended input
+range is required when using the result as a measure weight.
 
 #### Distributions
 
@@ -268,7 +272,7 @@ Arguments:
 - `m = elementof(posreals)`: pole mass.
 - `width = elementof(posreals)`: on-shell width $\Gamma$.
 - `ma = elementof(nonnegreals)`, `mb = elementof(nonnegreals)`: daughter masses.
-- `l = elementof(nonnegintegers)`: orbital angular momentum $\ell$.
+- `l = elementof(nonnegintegers)`: orbital angular momentum $\ell$ (with $\ell \leq 7$).
 - `d = elementof(posreals)`: Blatt-Weisskopf radius.
 
 Definition:
@@ -444,7 +448,7 @@ Parameters:
 - `alpha = elementof(cartpow(reals, n))`: intercept $n$ vector (one intercept per class), where $n$ is the number of classes (so $n = $ `lengthof(alpha)`).
 - `beta = elementof(cartpow(reals, [k, n]))`: $k \times n$ matrix of regression coefficients (columns correspond to classes).
 
-`CategoricalLogitGLM(x, alpha, beta)` is mathematically equivalent to `Categorical(softmax(alpha + transpose(x) * beta))`, but is computed in a numerically stable manner.
+`CategoricalLogitGLM(x, alpha, beta)` is mathematically equivalent to `Categorical(softmax(alpha + transpose(beta) * x))`, but is computed in a numerically stable manner.
 
 <a id="normalglm"></a>**`NormalGLM(x, alpha, beta, sigma)`** — An efficient implementation of the log density for a generalized linear model in $k$ parameters with a Gaussian distribution and an identity link (linear regression).
 

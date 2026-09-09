@@ -71,6 +71,8 @@ elsewhere, for $i \in \{1, \ldots, n\}$.
 <a id="linspace"></a>**`linspace(from, to, n)`** — returns an endpoint-inclusive range of `n` real numbers,
 evenly spaced from `from` to `to` (both included). The range is semantically a vector
 of reals.
+When `n = 1`, `from` and `to` must be equal.
+The result contains that endpoint as its sole real value.
 
   ```flatppl
   linspace(0.0, 10.0, 5)     # equivalent to [0.0, 2.5, 5.0, 7.5, 10.0]
@@ -585,13 +587,16 @@ statistics of the $n$ elements of `xs`, `median(xs)` is $x_{((n+1)/2)}$ for odd 
 and $\tfrac{1}{2}\left(x_{(n/2)} + x_{(n/2+1)}\right)$ for even $n$.
 
 <a id="quantile"></a>**`quantile(xs, p)`** — linear interpolation between the order
-statistics of `xs`. With $h = (n-1)p + 1$ and $k = \lfloor h \rfloor$,
+statistics of `xs`. With $h = (n-1)p + 1$, $k = \lfloor h \rfloor$, and $t = h-k$,
 
-$$\mathrm{quantile}(\mathbf{x}, p) = x_{(k)} + (h - k)\left(x_{(k+1)} - x_{(k)}\right),$$
+$$\mathrm{quantile}(\mathbf{x}, p) =
+\begin{cases}
+x_{(k)}, & t = 0 \text{ or } k = n,\\
+(1-t)x_{(k)} + t x_{(k+1)}, & \text{otherwise}.
+\end{cases}$$
 
-taking the second term to vanish when $k = n$. So `quantile(xs, 0)` is
-`minimum(xs)`, `quantile(xs, 1)` is `maximum(xs)`, and `quantile(xs, 0.5)` is
-`median(xs)`.
+Thus `quantile(xs, 0)` is `minimum(xs)`, `quantile(xs, 1)` is `maximum(xs)`,
+and `quantile(xs, 0.5)` is `median(xs)`.
 
 For multi-dimensional arrays, use `sizeof` to obtain shape information:
 
@@ -773,7 +778,7 @@ where `coefficients` is a length-$n$ vector $[c_1, c_2, \ldots, c_n]$. The first
 
 $$B(x) = \sum_{k=0}^{n} c_{k+1} \binom{n}{k} x^k (1 - x)^{n-k}$$
 
-where `coefficients` is a length-$(n+1)$ vector $[c_1, \ldots, c_{n+1}]$ giving the Bernstein-basis coefficients in degree order. Defined on $x \in [0, 1]$; the support interval of the surrounding `Lebesgue` (in `normalize(weighted(fn(bernstein(...)), Lebesgue(support = interval(lo, hi))))`) provides the rescaling range. Guaranteed non-negative on $[0, 1]$ when all coefficients are non-negative.
+where `coefficients` is a length-$(n+1)$ vector $[c_1, \ldots, c_{n+1}]$ giving the Bernstein-basis coefficients in degree order. Defined on $x \in [0, 1]$. To use coordinates on a finite interval $[\mathrm{lo}, \mathrm{hi}]$ with $\mathrm{lo} < \mathrm{hi}$, pass the rescaled argument $(x - \mathrm{lo})/(\mathrm{hi} - \mathrm{lo})$ explicitly. Guaranteed non-negative on $[0, 1]$ when all coefficients are non-negative.
 
 <a id="stepwise"></a>**`stepwise(edges, values, x)`** — piecewise-constant step function. Strictly
 piecewise constant (no implicit interpolation). The length of vector `values`
