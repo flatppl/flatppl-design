@@ -147,8 +147,6 @@ of which may or may not be significant. The total number of inputs is never zero
 - `aggregate`, `metricsum`, `markovchain`, `kscan`: Three distinguished inputs.
 - `ksuperpose`: Two distinguished inputs (the kernel and the weight vector); the
   resulting kernel is applied separately to the parameter family.
-- `load_data`: One distinguished input plus optional variadic named inputs with
-  significant order.
 - `checked`: Named parameters `value` and `condition`, per [§07](07-functions.md#checked);
   the canonical calling form is keyword-based.
 
