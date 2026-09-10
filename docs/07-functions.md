@@ -139,12 +139,10 @@ producing n+2 edge points and n+1 bins (n-1 finite bins plus 2 overflow bins).
   - **Safetensors** (`.safetensors`) — a nested record whose leaves are the file's
     tensors: a key's dot-separated segments form a record path (`enc.0.weight` → field
     `weight` of record `0` of record `enc`), so the file's module hierarchy becomes
-    nested records. Leading and trailing dots are ignored. Safetensors content
-    that uses a key both as a prefix and a leaf (e.g. both `enc.0` and `enc.0.weight`) cannot be loaded in FlatPPL.
-    Content in which two keys give the same record path after that trimming
-    (e.g. both `enc.weight` and `enc.weight.`) cannot be loaded either, and
-    neither can content with a key that has an empty segment (e.g. `enc..weight`)
-    or that consists only of dots. Dtypes
+    nested records. Leading and trailing dots are ignored. After trimming, keys
+    must be nonempty, have no empty segments, and identify distinct record paths;
+    no path may be both a prefix and a leaf (e.g. `enc.0` and `enc.0.weight`).
+    Content violating these rules cannot be loaded. Dtypes
     (float → `reals`, integer → `integers`, bool → `booleans`) and shapes are checked
     against `valueset`.
 

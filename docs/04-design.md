@@ -1285,12 +1285,10 @@ loads `main.flatppl` from the archive root. If there is no root
 directory containing a `main.flatppl`, it is loaded from there. A missing
 `main.flatppl` is an error.
 
-Within a bundle (directory or ZIP), relative paths — in both `load_module` and
-`load_data` — resolve only inside the bundle and must not escape its root via `..`.
-Confinement is physical: a path inside a bundle resolves only if its canonical
-form, with symbolic links resolved, lies under the bundle root. Absolute file
-sources are not allowed inside a bundle. A ZIP bundle is invalid if any entry name
-is absolute or contains a `..` segment.
+Within a bundle (directory or ZIP), file paths in `load_module` and `load_data`
+must be relative and, after resolving symbolic links, remain within the canonical
+bundle root. ZIP entries with absolute names or `..` segments are rejected before
+extraction or resolution.
 
 ### FlatPPL version compatibility
 
@@ -1377,10 +1375,9 @@ annotations and do not carry user-written surface comments.)
 ### <a id="sec:url-cache"></a>Remote file caching
 
 A `load_module(url)` or [`load_data(url)`](07-functions.md#load_data) `source`
-may be an `http`/`https` URL rather than a local path. A `source` URL uses one
-of the schemes `file`, `http` or `https`, and any other scheme is a static
-error. A `file://` URL denotes a local path and is not cached.
-FlatPPL is meant to be
+may be an `http`/`https` URL rather than a local path. Only `file`, `http` and
+`https` URL schemes are allowed; any other scheme is a static error.
+A `file://` URL denotes a local path and is not cached. FlatPPL is meant to be
 supported by multiple engines and tools in a variety of host languages, and
 the design leaves a lot of freedom to individual FlatPPL implementations. But
 caching of remote content to local files should be consistent across various
@@ -1439,10 +1436,9 @@ attempted.
 **Trust.** Before fetching a URL that has no trust marker, interactive tooling
 must obtain the user's approval and then create its `trust/<kk>/<key>` marker.
 Non-interactive
-tooling must error if a requested URL is not marked as trusted. Every redirect
-destination passes the same trust check as the original URL before that hop is
-followed, and a destination that fails the check is an error, like an
-unresolvable redirect. If the environment
+tooling must error if a requested URL is not marked as trusted. Each redirect
+destination must pass the same scheme and trust checks before the hop is followed.
+If the environment
 variable `FLATPPL_TRUST` is set, all URLs are trusted implicitly by interactive
 and non-interactive tooling, but no trust markers are created.
 
