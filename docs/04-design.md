@@ -887,7 +887,8 @@ D ~ K.(A)
 
 *Return type:*
 
-- `broadcast(function, ...)` returns an **array value**.
+- `broadcast(function, ...)` returns an **array value**, except for the record and
+  tuple results described below.
 - `broadcast(kernel, ...)` returns an **array-valued measure**: the independent product
   measure of the kernel applications at each array position.
 
@@ -935,12 +936,10 @@ a table row reaching the callable as a record is unaffected.
 *Tuple-returning callables:* if `f` returns a tuple, `broadcast(f, ...)` returns a
 tuple of arrays (componentwise), not an array of tuples.
 
-*Record-returning callables:* if `f` returns a record, `broadcast(f, ...)` returns a
-table whose columns are the record's fields, one row per broadcast position, so a
-broadcast over a table with a record-returning callable is again a table. This
-requires a single broadcast axis; a multi-axis broadcast whose callable returns a
-record is a static error. A scalar-returning callable over a table returns an
-ordinary vector.
+*Record-returning callables:* with collection operands, `broadcast(f, ...)`
+collects record results row-wise into a table, with the record's fields as columns
+(nested records become nested tables). This requires one broadcast axis;
+multiple axes are a static error.
 
 **`broadcasted(f)`** returns a callable that is equivalent to applying `broadcast` to
 `f` — that is, `broadcasted(f)(args...)` is equivalent to `broadcast(f, args...)`.
