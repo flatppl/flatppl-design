@@ -103,7 +103,7 @@ producing n+2 edge points and n+1 bins (n-1 finite bins plus 2 overflow bins).
 `valueset` from an external source. `valueset` fully determines the result's shape.
 
   - `source`: a file path or URL. File path resolution follows the same rules as with
-    `load_module`, and URL sources are fetched and
+    `load_module`, and `http`/`https` URL sources are fetched and
     [cached](04-design.md#sec:url-cache).
   - `valueset`: the set the loaded value belongs to. A scalar set yields a scalar,
     `cartpow` an array, `cartprod` a record, and a power of a record set a table
@@ -139,8 +139,10 @@ producing n+2 edge points and n+1 bins (n-1 finite bins plus 2 overflow bins).
   - **Safetensors** (`.safetensors`) — a nested record whose leaves are the file's
     tensors: a key's dot-separated segments form a record path (`enc.0.weight` → field
     `weight` of record `0` of record `enc`), so the file's module hierarchy becomes
-    nested records. Leading and trailing dots are ignored. Safetensors content
-    that uses a key both as a prefix and a leaf (e.g. both `enc.0` and `enc.0.weight`) cannot be loaded in FlatPPL. Dtypes
+    nested records. Leading and trailing dots are ignored. After trimming, keys
+    must be nonempty, have no empty segments, and identify distinct record paths;
+    no path may be both a prefix and a leaf (e.g. `enc.0` and `enc.0.weight`).
+    Content violating these rules cannot be loaded. Dtypes
     (float → `reals`, integer → `integers`, bool → `booleans`) and shapes are checked
     against `valueset`.
 
