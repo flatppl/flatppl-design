@@ -313,8 +313,7 @@ partition([1, 2, 3, 4, 5], [2, 3])  # [[1, 2], [3, 4, 5]]
 <a id="sort"></a>**`sort(xs)`** returns the elements of `xs` in ascending order as a vector.
 `xs` may be a vector (sorted stably) or a [finite set](03-value-types.md#sets) (its
 elements as a canonical vector). The element type must be ordered — boolean, integer,
-real, or string (lexicographic by Unicode code point); complex values have no order and
-are rejected.
+or real; complex and string values have no order and are rejected.
 
 <a id="addaxes"></a>**`addaxes(A, n_leading, n_trailing)`** reshapes array `A` by adding
 `n_leading` singular (size-one) axes before the axes of `A` and `n_trailing`
@@ -498,9 +497,6 @@ Exact equality (`equal` / `==` and `unequal` / `!=`) is restricted to discrete
 domains to avoid dependence on numerical precision. To compare real-valued quantities for
 exact equality, use a function that guarantees a discrete result like `integer(x)`,
 `floor(x)`, `ceil(x)`, or `round(x)`.
-
-The order comparisons `lt`/`le`/`gt`/`ge` and `min`/`max` also accept strings, ordered
-lexicographically by Unicode code point. Complex values are unordered and rejected.
 
 ### Scalar predicates
 
