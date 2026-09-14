@@ -29,10 +29,10 @@ When a real and a complex value meet in arithmetic, the real is promoted to comp
 **String.** An opaque text label like `"electron"` or `"signal"`, written as a string
 literal. Strings are atomic. They admit equality but no order, arithmetic, indexing,
 concatenation, or any other generation. There is no implicit Unicode normalization: a
-string is exactly its code-point sequence. Engines may encode strings as integers or
-hashes internally, and because models cannot generate strings, that encoding is
-unobservable. String-labeled models therefore still run on numerical and accelerator
-backends. Strings are the natural carrier for categorical labels (see
+string is exactly its code-point sequence. Engines are free to choose any internal
+representation for strings, and because models cannot generate or order strings, that
+representation is unobservable. String-labeled models therefore still run on numerical
+and accelerator backends. Strings are the natural carrier for categorical labels (see
 [finite sets](#sets) and [`ksuperpose`](06-measure-algebra.md#ksuperpose)).
 
 **Scalar value categories and sets.** FlatPPL distinguishes boolean, integer, real, complex, and string scalar values operationally. In particular, conditionals and logical operators require boolean values. However, the predefined value sets satisfy the canonical inclusions `booleans` $\subset$ `integers` $\subset$ `reals`, and there is a canonical embedding of `reals` into `complexes`. Arithmetic may use these canonical embeddings implicitly where specified by the language.
