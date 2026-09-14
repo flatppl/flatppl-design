@@ -27,13 +27,13 @@ phase = cis(3 * pi / 4)       # unit-modulus complex from angle
 When a real and a complex value meet in arithmetic, the real is promoted to complex with zero imaginary part.
 
 **String.** An opaque text label like `"electron"` or `"signal"`, written as a string
-literal. Strings are atomic: they admit equality but no order, arithmetic, indexing,
-concatenation, or any other generation, and no implicit Unicode normalization — a string
-is exactly its code-point sequence. Engines may encode strings as integers or hashes
-internally; since models cannot generate strings, this encoding is unobservable, so
-string-labeled models still run on numerical and accelerator backends. Strings are the
-natural carrier for categorical labels (see [finite sets](#sets) and
-[`ksuperpose`](06-measure-algebra.md#ksuperpose)).
+literal. Strings are atomic. They admit equality but no order, arithmetic, indexing,
+concatenation, or any other generation. There is no implicit Unicode normalization: a
+string is exactly its code-point sequence. Engines may encode strings as integers or
+hashes internally, and because models cannot generate strings, that encoding is
+unobservable. String-labeled models therefore still run on numerical and accelerator
+backends. Strings are the natural carrier for categorical labels (see
+[finite sets](#sets) and [`ksuperpose`](06-measure-algebra.md#ksuperpose)).
 
 **Scalar value categories and sets.** FlatPPL distinguishes boolean, integer, real, complex, and string scalar values operationally. In particular, conditionals and logical operators require boolean values. However, the predefined value sets satisfy the canonical inclusions `booleans` $\subset$ `integers` $\subset$ `reals`, and there is a canonical embedding of `reals` into `complexes`. Arithmetic may use these canonical embeddings implicitly where specified by the language.
 
@@ -232,14 +232,13 @@ assigns zero mass to sets that do not intersect the simplex. It is not the surfa
 (Hausdorff) measure of the embedded simplex, which is larger by the factor $\sqrt{n}$.
 
 **Finite set.** `finiteset(a, b, c, ...)` denotes the finite set of the given scalar
-values, which must be distinct and of one element type (duplicates are a static error).
-`setof(v)` builds the same set from a vector `v`, so the cardinality equals
-`lengthof(v)` and is statically known when `v`'s length is. Engines raise a runtime
-error if `v` has duplicate elements. Finite sets are discrete
-domains and supports: `elementof(finiteset("a", "b", "c"))` declares a string-labeled
-parameter, `Counting(support = setof(labels))` is the counting measure on those labels.
-A finite set is membership-only and unordered; ordering comes from the generating
-vector.
+values. The values must be distinct and of one element type, and duplicates are a static
+error. `setof(v)` builds the same set from a vector `v`. Its cardinality equals
+`lengthof(v)`, and is statically known when the length of `v` is. Engines raise a runtime
+error if `v` has duplicate elements. Finite sets are discrete domains and supports.
+`elementof(finiteset("a", "b", "c"))` declares a string-labeled parameter, and
+`Counting(support = setof(labels))` is the counting measure on those labels. A finite set
+carries membership only and has no order. Order comes from the generating vector.
 
 `relabel` applies to set products in the same way as to measures
 (see [interface adaptation](04-design.md#interface-adaptation)).
