@@ -746,9 +746,10 @@ or rebinning is applied, bins are either fully included or excluded.
 <a id="valuemap"></a>**`valuemap(from, to)`** builds the function mapping each element of
 `setof(from)` to the aligned element of `setof(to)`: `from[i]` $\mapsto$ `to[i]`. Both
 vectors must have equal length and be free of duplicates, so the map is a bijection and
-`inverseof(valuemap(from, to))` is `valuemap(to, from)`. Applying it to a value outside
-`setof(from)` is an error. Engines may realize it as a lookup table, hashmap, or branch
-tree. The typical use is converting between labels and codes — e.g. particle names to
+`inverseof(valuemap(from, to))` is `valuemap(to, from)`. Unequal lengths, duplicates in
+`from` or `to`, and application to a value outside `setof(from)` are static errors where
+statically decidable and runtime errors otherwise.
+The typical use is converting between labels and codes — e.g. particle names to
 PDG identifiers — at a model's I/O boundary, leaving the interior purely numerical for
 code generation.
 

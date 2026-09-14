@@ -272,10 +272,6 @@ all metadata — while authored membership stays structural.
   total-mass class of the output measure, uniform over all inputs
   (`%normalized` ⇔ a Markov kernel).
 - `(%function (%inputs <name> ...))` — user-defined functions.
-- `%noinverse` — the result of [`inverseof`](04-design.md#function-composition-and-annotation)
-  on a callable whose inverse is not statically known. It carries the original callable, so a
-  further `inverseof` recovers it; applying it, or any use other than a further `inverseof`,
-  is a static error.
 - `(%likelihood (%inputs <name> ...) (%obstype <type>))` — likelihood objects.
   `<type>` is the type of the observed data.
 - `%module` — a module reference, produced only by `load_module` or

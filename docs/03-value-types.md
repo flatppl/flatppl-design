@@ -235,7 +235,8 @@ assigns zero mass to sets that do not intersect the simplex. It is not the surfa
 **Finite set.** `finiteset(a, b, c, ...)` denotes the finite set of the given scalar
 values, which must be distinct and of one element type (duplicates are a static error).
 `setof(v)` builds the same set from a vector `v`, so the cardinality equals
-`lengthof(v)` and is statically known when `v`'s length is. Finite sets are discrete
+`lengthof(v)` and is statically known when `v`'s length is. Engines raise a runtime
+error if `v` has duplicate elements. Finite sets are discrete
 domains and supports: `elementof(finiteset("a", "b", "c"))` declares a string-labeled
 parameter, `Counting(support = setof(labels))` is the counting measure on those labels.
 A finite set is membership-only and unordered; ordering comes from the generating

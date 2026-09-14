@@ -708,17 +708,20 @@ computing densities of pushforward measures. `logvolume` may be a function or a 
 (`0` for volume-preserving maps). See [pushfwd](06-measure-algebra.md#transformation-and-projection)
 for examples.
 
-**`inverseof(f)`** denotes the inverse of `f`. It is always constructible and satisfies
-`inverseof(inverseof(f))` $\equiv$ `f` as a structural identity, but it does not assert
-that `f` is bijective. The result is *executable* — callable, broadcastable,
-composable — only when an inverse of `f` is statically known: a built-in
-[known bijection](06-measure-algebra.md#engine-contract-for-pushfwd-density-evaluation),
-a `bijection`-annotated function, a [`valuemap`](07-functions.md#finite-value-maps), or
-`inverseof` of one of these. Otherwise it is a non-executable inverse: it may be bound
-and passed to a further `inverseof`, but any other use — calling, broadcasting,
-composing — is a static error. This mirrors `pushfwd` density evaluation, which is
-constructible for any `f` but evaluable only when the inverse is known. FlatPIR types a
-non-executable inverse as [`%noinverse`](11-flatpir.md#type-categories).
+<a id="inverseof"></a>**`inverseof(f)`** denotes the inverse of `f`, and requires that
+inverse to be statically known: `f` must belong to the
+[known-bijection registry](06-measure-algebra.md#engine-contract-for-pushfwd-density-evaluation),
+and `inverseof` of any other `f` is a static error. The registry is closed under
+composition and under `inverseof`: `inverseof(fchain(f, g))` is
+`fchain(inverseof(g), inverseof(f))`, every
+[`valuemap`](07-functions.md#finite-value-maps) is a member, and so is every `inverseof`
+result, so that `inverseof(inverseof(f))` $\equiv$ `f`. The inverse has the image of `f`
+as its domain and the domain of `f` as its range. Some registry bijections are bijective
+only on a restricted domain: `log`/`log10` on `posreals`, `sqrt`/`pow` on `nonnegreals`,
+`log1p` on `interval(-1, inf)`, `logit`/`probit` on `interval(0, 1)`. For these the
+restricted domain is the domain of `f`, and `inverseof(f)` is a static error where the
+declared input domain of `f` (see [variates and measures](#sec:variate-measure)) is not
+contained in it. Applying the inverse outside its domain is a runtime error.
 
 ### Placeholders and holes
 
