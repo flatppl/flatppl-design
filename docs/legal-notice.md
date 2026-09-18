@@ -24,7 +24,7 @@ D-80539 Munich\
 Phone: [+49 89 2108-0](tel:+498921080)\
 WWW: [https://www.mpg.de](https://www.mpg.de/)
 
-## Register of Societies and Associations
+## Register of societies and associations
 
 The Max Planck Society is registered in the Official Register of Societies
 and Associations at Berlin-Charlottenburg Local Court under the register
@@ -55,14 +55,14 @@ Germany\
 Phone: [+49 89 32354-521](tel:+498932354521)\
 Email: [oschulz@mpp.mpg.de](mailto:oschulz@mpp.mpg.de)
 
-## Legal Structure
+## Legal structure
 
 The Max Planck Society is a non-profit research facility which is organized
 as a registered association. All of the institutes and facilities of the Max
 Planck Society are largely autonomous in terms of organization and research,
 but as a rule have no legal capacity of their own.
 
-## Liability for Contents of Online Information
+## Liability for contents of online information
 
 As the provider of contents in accordance with Section 7 Paragraph 1 of the
 Tele-Media Law, the Max Planck Society shall be responsible for any contents
@@ -81,7 +81,7 @@ modify, supplement, or delete any or all of the information offered on its
 Internet site, or to temporarily or permanently cease publication thereof
 without prior and separate notification.
 
-## Links to Internet Sites of Third Parties
+## Links to internet sites of third parties
 
 This Website includes links to other external websites. The respective
 provider shall be responsible for the contents of any linked external pages.
@@ -111,7 +111,7 @@ the Apache License 2.0. The FlatPPL software is available under the
 open-source licenses stated in the respective repositories of the
 [flatppl](https://github.com/flatppl) GitHub organisation.
 
-## Hosting
+## Data protection information
 
 This website is hosted on GitHub Pages, a service of GitHub, Inc. GitHub may
 collect personal data from visitors, such as IP addresses, to maintain the
