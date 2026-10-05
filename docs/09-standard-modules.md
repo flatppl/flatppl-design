@@ -393,6 +393,133 @@ the $D$-function for half-integer angular momenta with doubled-integer momenta:
 
 $$D = e^{-i(m_1 \alpha + m_2 \gamma)}\, d^{j}_{m_1 m_2}(\beta) = \mathrm{cis}\!\left(-\tfrac{2m_1\,\alpha + 2m_2\,\gamma}{2}\right) \cdot \texttt{wignerd\_doublearg}(2j, 2m_1, 2m_2, \cos\beta).$$
 
+### Module `pyhf_helpers`
+
+The `pyhf_helpers` module provides deterministic arithmetic for
+[pyhf](17-references.md#pyhf) HistFactory models. Loaded via:
+
+```flatppl
+pyhf = standard_module("pyhf_helpers", "0.1")
+```
+
+The FlatPPL definitions below specify the functions. An implementation may
+lower a call directly without expanding its definition, provided it preserves
+the same values and argument, shape, and dependency semantics.
+
+#### Interpolation functions
+
+| Function | Arguments | Description | Domains |
+|---|---|---|---|
+| [`normsys_factor`](#normsys_factor) | `lo`, `hi`, `alpha` | Multiplicative code4 interpolation | `posreals`, `posreals`, `reals` |
+| [`histosys_shift`](#histosys_shift) | `lo`, `nominal`, `hi`, `alpha` | Additive code4p interpolation | `reals`, `reals`, `reals`, `reals` |
+
+All arguments are finite scalars. Array evaluation uses explicit
+[broadcasting](04-design.md#sec:broadcasting).
+
+<a id="normsys_factor"></a>**`normsys_factor(lo, hi, alpha)`** — the
+[pyhf code4](https://pyhf.readthedocs.io/en/v0.7.6/_generated/pyhf.interpolators.code4.html)
+factor with unit nominal value and transition points at $\alpha = \pm1$.
+It equals `lo`, `1`, and `hi` at $\alpha = -1, 0, +1$, respectively.
+It is equivalent to `interp_poly6_exp(lo, 1.0, hi, alpha)` in
+`particle-physics`. The following definition uses only `base` operations:
+
+```flatppl
+_code4_coefficients(s0, a0, s1, a1, s2, a2) = [
+    1.0,
+    (15 * a0 - 7 * s1 + a2) / 8,
+    (24 * (s0 - 1) - 9 * a1 + s2) / 8,
+    (-5 * a0 + 5 * s1 - a2) / 4,
+    (-12 * (s0 - 1) + 7 * a1 - s2) / 4,
+    (3 * a0 - 3 * s1 + a2) / 8,
+    (8 * (s0 - 1) - 5 * a1 + s2) / 8
+]
+_code4_anchors(lo, hi, loglo, loghi) = _code4_coefficients(
+    (hi + lo) / 2, (hi - lo) / 2,
+    (hi * loghi - lo * loglo) / 2,
+    (hi * loghi + lo * loglo) / 2,
+    (hi * loghi^2 + lo * loglo^2) / 2,
+    (hi * loghi^2 - lo * loglo^2) / 2
+)
+_code4_value(c, x) =
+    c[1] + x * (c[2] + x * (c[3] + x * (c[4] + x * (c[5] + x * (c[6] + x * c[7])))))
+normsys_factor(lo, hi, alpha) = ifelse(
+    abs(alpha) < 1,
+    _code4_value(_code4_anchors(lo / 1.0, hi / 1.0, log(lo), log(hi)),
+                 min(max(alpha, -1.0), 1.0)),
+    exp(ifelse(alpha > 0, alpha * log(hi), -(alpha * log(lo))))
+)
+```
+
+The six coefficients match the exponential tails through second derivatives at
+both transition points. The polynomial argument is bounded because `ifelse`
+does not require short-circuit evaluation. This does not clip the result.
+
+Positive anchors do not ensure positivity between the anchors. No clipping
+is implicit.
+
+<a id="histosys_shift"></a>**`histosys_shift(lo, nominal, hi, alpha)`** — the
+[pyhf code4p](https://pyhf.readthedocs.io/en/v0.7.6/_generated/pyhf.interpolators.code4p.html)
+additive shift, not the shifted template. It equals `lo - nominal`, `0`, and
+`hi - nominal` at $\alpha = -1, 0, +1$, respectively.
+It is equivalent to `interp_poly6_lin(lo - nominal, 0.0, hi - nominal, alpha)`
+in `particle-physics`. A definition using only `base` operations is:
+
+```flatppl
+_code4p_polynomial(down, up, x) = x * (
+    (up + down) / 2 + x * (up - down) * (15 - 10 * x^2 + 3 * x^4) / 16
+)
+_code4p_shift(down, up, alpha) = ifelse(
+    abs(alpha) < 1,
+    _code4p_polynomial(down, up, min(max(alpha, -1.0), 1.0)),
+    alpha * ifelse(alpha > 0, up, down)
+)
+histosys_shift(lo, nominal, hi, alpha) = _code4p_shift(
+    0.0 - (lo - nominal), (hi - nominal) / 1.0, alpha
+)
+```
+
+Shifts from several modifiers add to the nominal once. They do not successively
+replace it. Shared nuisance inputs remain shared values under ordinary FlatPPL
+dependency semantics.
+
+#### Yield assembly
+
+| Function | Arguments | Description | Domains |
+|---|---|---|---|
+| [`sample_yields`](#sample_yields) | `nominal`, `shifts`, `factors` | Apply additive and multiplicative modifiers | real arrays of ranks 2, 3, 3 |
+| [`expected_counts`](#expected_counts) | `samples` | Sum sample yields per bin | real rank-2 array |
+
+<a id="sample_yields"></a>**`sample_yields(nominal, shifts, factors)`** —
+adds the modifier shifts to each nominal sample yield, then multiplies by the
+modifier factors. The input shapes are `[S, B]`, `[S, A, B]`, and `[S, M, B]`,
+respectively. Sample and bin extents must agree exactly. The result has shape
+`[S, B]`:
+
+```flatppl
+sample_yields(nominal, shifts, factors) =
+    (nominal .+ aggregate(sum, [.s, .b], shifts[.s, .a, .b])) .*
+    aggregate(prod, [.s, .b], factors[.s, .m, .b])
+```
+
+An empty additive-modifier axis contributes zero. An empty multiplicative-modifier
+axis contributes one. A zero factor is valid, including when other factors vanish.
+
+<a id="expected_counts"></a>**`expected_counts(samples)`** — sums the sample
+axis of a `[S, B]` array and returns a `[B]` vector:
+
+```flatppl
+expected_counts(samples) = aggregate(sum, [.b], samples[.s, .b])
+```
+
+An empty sample axis produces a zero vector. These model axes belong to each
+function's arguments. Explicit broadcasting over collections of such arrays
+adds outer axes and does not change the model axes.
+
+These functions perform value arithmetic only. They imply no clipping, priors,
+or auxiliary constraints. A caller that uses the result as a Poisson rate must
+satisfy the distribution's domain. The definitions do not prescribe a padded
+storage layout.
+
 ### Module `generalized-linear-models`
 
 The `generalized-linear-models` module contains efficient and stable implementations of log densities for common generalized linear models.
