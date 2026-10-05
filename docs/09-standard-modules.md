@@ -482,6 +482,44 @@ Shifts from several modifiers add to the nominal once. They do not successively
 replace it. Shared nuisance inputs remain shared values under ordinary FlatPPL
 dependency semantics.
 
+#### Yield assembly
+
+| Function | Arguments | Description | Domains |
+|---|---|---|---|
+| [`sample_yields`](#sample_yields) | `nominal`, `shifts`, `factors` | Apply additive and multiplicative modifiers | real arrays of ranks 2, 3, 3 |
+| [`expected_counts`](#expected_counts) | `samples` | Sum sample yields per bin | real rank-2 array |
+
+<a id="sample_yields"></a>**`sample_yields(nominal, shifts, factors)`** —
+adds the modifier shifts to each nominal sample yield, then multiplies by the
+modifier factors. The input shapes are `[S, B]`, `[S, A, B]`, and `[S, M, B]`,
+respectively. Sample and bin extents must agree exactly. The result has shape
+`[S, B]`:
+
+```flatppl
+sample_yields(nominal, shifts, factors) =
+    (nominal .+ aggregate(sum, [.s, .b], shifts[.s, .a, .b])) .*
+    aggregate(prod, [.s, .b], factors[.s, .m, .b])
+```
+
+An empty additive-modifier axis contributes zero. An empty multiplicative-modifier
+axis contributes one. A zero factor is valid, including when other factors vanish.
+
+<a id="expected_counts"></a>**`expected_counts(samples)`** — sums the sample
+axis of a `[S, B]` array and returns a `[B]` vector:
+
+```flatppl
+expected_counts(samples) = aggregate(sum, [.b], samples[.s, .b])
+```
+
+An empty sample axis produces a zero vector. These model axes belong to each
+function's arguments. Explicit broadcasting over collections of such arrays
+adds outer axes and does not change the model axes.
+
+These functions perform value arithmetic only. They imply no clipping, priors,
+or auxiliary constraints. A caller that uses the result as a Poisson rate must
+satisfy the distribution's domain. The definitions do not prescribe a padded
+storage layout.
+
 ### Module `generalized-linear-models`
 
 The `generalized-linear-models` module contains efficient and stable implementations of log densities for common generalized linear models.
