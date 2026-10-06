@@ -489,6 +489,9 @@ dependency semantics.
 | [`sample_yields`](#sample_yields) | `nominal`, `shifts`, `factors` | Apply additive and multiplicative modifiers | real arrays of ranks 2, 3, 3 |
 | [`expected_counts`](#expected_counts) | `samples` | Sum sample yields per bin | real rank-2 array |
 
+Boolean and integer entries are promoted to real before the yield arithmetic.
+Both functions return real-valued arrays.
+
 <a id="sample_yields"></a>**`sample_yields(nominal, shifts, factors)`** —
 adds the modifier shifts to each nominal sample yield, then multiplies by the
 modifier factors. The input shapes are `[S, B]`, `[S, A, B]`, and `[S, M, B]`,
@@ -497,8 +500,8 @@ respectively. Sample and bin extents must agree exactly. The result has shape
 
 ```flatppl
 sample_yields(nominal, shifts, factors) =
-    (nominal .+ aggregate(sum, [.s, .b], shifts[.s, .a, .b])) .*
-    aggregate(prod, [.s, .b], factors[.s, .m, .b])
+    (nominal .+ aggregate(sum, [.s, .b], shifts[.s, .a, .b] / 1.0)) .*
+    aggregate(prod, [.s, .b], factors[.s, .m, .b] / 1.0)
 ```
 
 An empty additive-modifier axis contributes zero. An empty multiplicative-modifier
@@ -508,7 +511,7 @@ axis contributes one. A zero factor is valid, including when other factors vanis
 axis of a `[S, B]` array and returns a `[B]` vector:
 
 ```flatppl
-expected_counts(samples) = aggregate(sum, [.b], samples[.s, .b])
+expected_counts(samples) = aggregate(sum, [.b], samples[.s, .b] / 1.0)
 ```
 
 An empty sample axis produces a zero vector. These model axes belong to each
