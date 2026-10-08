@@ -69,7 +69,7 @@ The Giry-style measure monad is defined by two operations:
 | Construct | Arguments | Description |
 |---|---|---|
 | [`Lebesgue`](#lebesgue) | `support` | canonical continuous reference measure on `support` |
-| [`Counting`](#counting) | `support` | counting measure on integers, restricted to `support`; discrete reference |
+| [`Counting`](#counting) | `support` | counting measure on the countable set `support`; discrete reference |
 | [`Dirac`](#dirac) | `value` | point-mass probability measure at `value` (monad unit) |
 
 FlatPPL provides three fundamental measures: the reference measures `Lebesgue` and
@@ -91,8 +91,9 @@ FlatPPL provides three fundamental measures: the reference measures `Lebesgue` a
   [sets](03-value-types.md#sets)).
   
   `iid(Lebesgue(reals), n)` is equivalent to `Lebesgue(cartpow(reals, n))`.
-- `Counting(support = S)`<a id="counting"></a> — the counting measure on $\mathbb{Z}$, restricted to support
-  `S`. Mass 1 at every integer in `S`. Reference measure for all discrete distributions.
+- `Counting(support = S)`<a id="counting"></a> — the counting measure on the countable
+  support set `S`. Mass 1 at every element of `S`. Reference measure for all discrete
+  distributions.
 - `Dirac(value = v)`<a id="dirac"></a> — point-mass probability measure at `v` for any variate type.
 
 The predefined constants `reals` (equivalent to `interval(-inf, inf)`) and `integers`
@@ -495,6 +496,7 @@ To evaluate a density at many points (e.g. a grid for numerical integration or p
 | [`pushfwd`](#pushfwd) | `f`, `M` | pushforward of `M` through `f`: $(f_* M)(Y) = M(f^{-1}(Y))$ |
 | [`locscale`](#locscale) | `m`, `shift`, `scale` | location-scale pushforward: `pushfwd(x -> scale * x + shift, m)` |
 | [`bijection`](#bijection) | `f`, `f_inv`, `logvolume` | annotate `f` with inverse and log-volume for density evaluation |
+| [`inverseof`](#inverseof-op) | `f` | the inverse of `f`, for statically known inverses only |
 
 - **`pushfwd(f, M)`**<a id="pushfwd"></a> — pushforward of measure $M$ through function $f$:
   
@@ -577,6 +579,10 @@ To evaluate a density at many points (e.g. a grid for numerical integration or p
   )
   ```
 
+- **`inverseof(f)`**<a id="inverseof-op"></a> — the inverse of `f`, defined only where that
+  inverse is statically known. See
+  [`inverseof`](04-design.md#inverseof) for the registry, closure, and domain rules.
+
 #### Engine contract for `pushfwd` density evaluation
 
 `densityof(pushfwd(f, M), y)` and `logdensityof(pushfwd(f, M), y)` require the engine to invert `f` and apply the volume element. For a bijection `f` with inverse `f_inv` and forward log-volume `logvolume`, the density is given by the change-of-variables formula
@@ -590,7 +596,7 @@ forward `logvolume` is zero on the source support: point masses are preserved.
 
 Engines must support density evaluation in the following three cases:
 
-1. **Known-bijection registry.** Every conforming engine must recognize a fixed set of built-in bijections by name — `exp`/`log`, `log10`, `log1p`/`expm1`, `logit`/`invlogit`, `probit`/`invprobit`, `atan`, `sinh`/`asinh`, `tanh`, affine maps composed from `add`/`sub`/`neg`/`mul`/`divide` (with positive scaling), `pow` with finite nonzero literal exponent (of which `sqrt` = `pow(_, 1/2)` is a case), and matrix-vector affine maps such as `mu + lower_cholesky(cov) * _` — together with every explicitly `bijection`-annotated user function. For these, density evaluation is analytic using the recorded inverse and forward log-volume. A domain-restricted forward — `log`/`log10` on `posreals`, `sqrt` (and `pow`) on `nonnegreals`, `log1p` on `interval(-1, inf)`, `logit`/`probit` on `interval(0, 1)` — additionally requires the base measure's support to lie within that domain; where it does not, density evaluation is refused rather than yielding a silently sub-probability measure.
+1. **Known-bijection registry.** Every conforming engine must recognize a fixed set of built-in bijections by name — `exp`/`log`, `log10`, `log1p`/`expm1`, `logit`/`invlogit`, `probit`/`invprobit`, `atan`, `sinh`/`asinh`, `tanh`, affine maps composed from `add`/`sub`/`neg`/`mul`/`divide` (with positive scaling), `pow` with finite nonzero literal exponent (of which `sqrt` = `pow(_, 1/2)` is a case), and matrix-vector affine maps such as `mu + lower_cholesky(cov) * _` — together with every explicitly `bijection`-annotated user function. For these, density evaluation is analytic using the recorded inverse and forward log-volume. A domain-restricted forward — `log`/`log10` on `posreals`, `sqrt` (and `pow`) on `nonnegreals`, `log1p` on `interval(-1, inf)`, `logit`/`probit` on `interval(0, 1)` — additionally requires the base measure's support to lie within that domain; where it does not, density evaluation is refused rather than yielding a silently sub-probability measure. The registry also contains every [`valuemap`](07-functions.md#valuemap), and it is closed under `fchain` composition and under `inverseof`. The same registry defines the statically known inverses available to [`inverseof`](04-design.md#inverseof), so `pushfwd` density evaluation and `inverseof` share one notion of a known inverse.
 
    `cis` and zero-exponent powers are outside this registry: `cis` is periodic on
    `reals`, and a zero-exponent power is constant wherever it is defined.

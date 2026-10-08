@@ -207,6 +207,7 @@ indices, or arrays of integer indices. Tuples use a single integer literal index
 | [`joinblocks`](#joinblocks) | `A` | inverse of `splitblocks` (remove one level of nesting) | array of equal-shaped arrays |
 | [`partition`](#partition) | `xs, spec` | split vector into sub-vectors | vector, positive integer or integer vector |
 | [`reverse`](#reverse) | `xs` | reverse element/row order | vectors, tables |
+| [`sort`](#sort) | `xs` | sort elements into ascending order, as a vector | vector or finite set over an ordered element type |
 | [`addaxes`](#addaxes) | `A, n_leading, n_trailing` | add singular axes before/after array axes | array, non-negative integer, non-negative integer |
 | [`blockdiagmat`](#blockdiagmat) | `mats` | block-diagonal matrix from a vector of matrices | vector of matrices |
 | [`bandedmat`](#bandedmat) | `v, rows` | banded matrix with `v` shifted along each row | vector, positive integer |
@@ -308,6 +309,12 @@ partition([1, 2, 3, 4, 5], [2, 3])  # [[1, 2], [3, 4, 5]]
 ```
 
 <a id="reverse"></a>**`reverse(xs)`** reverses the order of elements in a vector or rows in a table.
+
+<a id="sort"></a>**`sort(xs)`** returns the elements of `xs` in ascending order as a vector.
+`xs` may be a vector or a [finite set](03-value-types.md#sets). A vector is sorted
+stably. A finite set yields its elements as a canonical vector. The element type must be
+ordered: boolean, integer, or real. Complex and string values have no order and are
+rejected.
 
 <a id="addaxes"></a>**`addaxes(A, n_leading, n_trailing)`** reshapes array `A` by adding
 `n_leading` singular (size-one) axes before the axes of `A` and `n_trailing`
@@ -726,6 +733,28 @@ or rebinning is applied, bins are either fully included or excluded.
   ```flatppl
   restricted_counts = selectbins(edges, interval(2.0, 8.0), observed_counts)
   ```
+
+### Finite value maps
+
+| Function | Arguments | Description | Domains |
+|---|---|---|---|
+| [`valuemap`](#valuemap) | `from, to` | finite bijection mapping `from[i]` to `to[i]` | two equal-length vectors without duplicates |
+
+<a id="valuemap"></a>**`valuemap(from, to)`** builds the function that maps each element
+of `setof(from)` to the aligned element of `setof(to)`: `from[i]` $\mapsto$ `to[i]`. Both
+vectors must have equal length and no duplicates, so the map is a bijection and
+`inverseof(valuemap(from, to))` is `valuemap(to, from)`. Unequal lengths, duplicates in
+`from` or `to`, and application to a value outside `setof(from)` are static errors where
+they are statically decidable. They are runtime errors otherwise. The typical use is
+conversion between labels and codes at a model's I/O boundary, for example particle
+names to PDG identifiers. The model interior then stays purely numerical for code
+generation.
+
+```flatppl
+pdg = valuemap(["e-", "mu-", "gamma"], [11, 13, 22])
+code = pdg("mu-")               # 13
+name = inverseof(pdg)(22)       # "gamma"
+```
 
 ### Binning
 
