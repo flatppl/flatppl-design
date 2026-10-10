@@ -169,7 +169,11 @@ indices, or arrays of integer indices. Tuples use a single integer literal index
   ```flatppl
   get(r, ["a", "c"])    # record subset selection
   get(A, [1, 3, 4], 2)  # array subset selection
+  get(v, [2, 2, 5])     # repeated indices select the element once per listing
   ```
+
+  An index array may list an index more than once. The selection holds one
+  element per listed index, in the listed order.
 
   **Surface syntax lowering:** FlatPPL's indexing and field-access syntax lowers to `get`:
   `r.a` $\equiv$ `get(r, "a")`, `v[i]` $\equiv$ `get(v, i)`, `A[i, j]` $\equiv$ `get(A, i, j)`.
