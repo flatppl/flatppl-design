@@ -223,8 +223,7 @@ assigns zero mass to sets that do not intersect the simplex. It is not the surfa
 **Ordered vectors.** `ordered(n)` denotes the set of strictly increasing real $n$-vectors
 $\{x \in \mathbb{R}^n : x_1 < x_2 < \cdots < x_n\}$, an open full-dimensional subset of
 $\mathbb{R}^n$. `Lebesgue(support = ordered(n))` is the ordinary Lebesgue measure on
-$\mathbb{R}^n$ restricted to that set. For example, `elementof(ordered(3))` is a vector of
-three cut points in increasing order.
+$\mathbb{R}^n$ restricted to that set. 
 
 **Zero-sum vectors.** `zerosum(n)` denotes the real $n$-vectors with components summing to
 zero, $\{x \in \mathbb{R}^n : \sum_i x_i = 0\}$. `Lebesgue(support = zerosum(n))` is the
