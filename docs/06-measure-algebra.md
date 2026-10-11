@@ -79,8 +79,8 @@ FlatPPL provides three fundamental measures: the reference measures `Lebesgue` a
   the support set `S`, restricted to `S`. For full-dimensional subsets of
   Euclidean or product spaces this is the ordinary Lebesgue measure on the
   ambient space. For lower-dimensional embedded affine sets such as
-  `stdsimplex(n)`, it is the coordinate Lebesgue measure of the set's free
-  coordinates (see [standard simplex](03-value-types.md#sets)), not its
+  `stdsimplex(n)` and `zerosum(n)`, it is the coordinate Lebesgue measure of
+  the set's free coordinates (see [sets](03-value-types.md#sets)), not its
   surface area.
 
   `S` may be any FlatPPL set: one-dimensional
