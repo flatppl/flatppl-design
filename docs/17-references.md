@@ -27,11 +27,20 @@ GraphPPL.jl. <https://github.com/reactivebayes/GraphPPL.jl>
 <a id="hs3"></a>
 HS³ — HEP Statistics Serialization Standard. <https://hep-statistics-serialization-standard.github.io/> · GitHub: <https://github.com/hep-statistics-serialization-standard>
 
+<a id="mikhasenko2020"></a>
+Mikhasenko, M. et al. (JPAC Collaboration) (2020). Dalitz-plot decomposition for three-body decays. *Phys. Rev. D* 101, 034033. <https://doi.org/10.1103/PhysRevD.101.034033> · <https://arxiv.org/abs/1910.04566>
+
 <a id="narayanan2016"></a>
 Narayanan, P. et al. (2016). Probabilistic inference by program transformation in Hakaru. FLOPS. <https://github.com/hakaru-dev/hakaru>
 
 <a id="navas2024"></a>
 Navas, S. et al. (Particle Data Group) (2024). Review of Particle Physics. *Phys. Rev. D* 110, 030001. <https://doi.org/10.1103/PhysRevD.110.030001>
+
+<a id="platzer2013"></a>
+Plätzer, S. (2013). RAMBO on diet. <https://arxiv.org/abs/1308.2922>
+
+<a id="ramboondiet"></a>
+RamboOnDiet.jl — Julia implementation of the sequential RAMBO-on-diet construction. <https://github.com/mmikhasenko/RamboOnDiet.jl>
 
 <a id="pyhf"></a>
 pyhf — pure-Python HistFactory implementation. <https://github.com/scikit-hep/pyhf>

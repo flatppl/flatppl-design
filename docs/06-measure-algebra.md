@@ -33,16 +33,18 @@ The classical Giry monad ([Giry, 1982](17-references.md#giry1982)) operates on p
 
 **Density convention.** All density formulas in this section are with respect to a
 reference measure implied by the constituent distribution types: Lebesgue for continuous
-variates, counting measure for discrete variates. When a kernel $\kappa(\theta)$ is
-parameterized by $\theta$, the family is assumed dominated by a single
-$\theta$-independent reference measure.
+variates, counting measure for discrete variates. Standard modules may specify
+a different reference explicitly, as for the Lorentz-invariant
+[exclusive phase-space measure](09-standard-modules.md#phase-space-measure).
+When a kernel $\kappa(\theta)$ is parameterized by $\theta$, the family is
+assumed dominated by a single $\theta$-independent reference measure.
 
 **Reference measure for product measures.** When `joint(M1, M2, ...)` (or
 `iid(M, size)`, `jointchain(M, K1, ...)` etc.) combines components with
-individual reference measures $\rho_1, \rho_2, \ldots$ (each either `Lebesgue` or
-`Counting` on the corresponding component support), the reference measure of the
-product is the product $\rho_1 \otimes \rho_2 \otimes \cdots$ on the joint variate
-space. For components sharing no stochastic ancestor, the joint density w.r.t.
+individual reference measures $\rho_1, \rho_2, \ldots$ (including explicitly
+specified standard-module references on the corresponding component support),
+the reference measure of the product is $\rho_1 \otimes \rho_2 \otimes \cdots$
+on the joint variate space. For components sharing no stochastic ancestor, the joint density w.r.t.
 this product reference is the product of the component densities; a
 shared-ancestor `joint` keeps the same product reference, with density given by
 its equivalent record law (see [`joint`](#joint)). Mixed continuous-discrete
@@ -83,12 +85,15 @@ FlatPPL provides three fundamental measures: the reference measures `Lebesgue` a
   the set's free coordinates (see [sets](03-value-types.md#sets)), not its
   surface area.
 
-  `S` may be any FlatPPL set: one-dimensional
+  For supports with a specified Lebesgue convention, `S` may be: one-dimensional
   (e.g. `reals`, `interval(0, 1)`, `posreals`), a Cartesian power
   (e.g. `cartpow(reals, n)`), a
   record-structured product (e.g. `cartprod(a = reals, b = posreals)`), a
   lower-dimensional embedded set (e.g. `stdsimplex(n)`) and so on (see
-  [sets](03-value-types.md#sets)).
+  [sets](03-value-types.md#sets)). Standard-module sets may require a different
+  reference constructor: `Lebesgue(S)` is undefined for the full and aligned
+  [phase-space sets](09-standard-modules.md#sec:exclusive-phase-space), whose
+  physical reference measure is `PhaseSpace(S)`.
   
   `iid(Lebesgue(reals), n)` is equivalent to `Lebesgue(cartpow(reals, n))`.
 - `Counting(support = S)`<a id="counting"></a> — the counting measure on $\mathbb{Z}$, restricted to support

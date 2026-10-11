@@ -229,6 +229,13 @@ $\mathbb{R}^n$ restricted to that set.
 zero, $\{x \in \mathbb{R}^n : \sum_i x_i = 0\}$. `Lebesgue(support = zerosum(n))` is the
 coordinate Lebesgue measure of the $n{-}1$ free coordinates, as for `stdsimplex(n)`.
 
+Standard modules may define additional constrained sets. The
+[`particle-physics.phase_space`](09-standard-modules.md#phase-space) set describes
+on-shell four-momenta with fixed total momentum;
+[`aligned_phase_space`](09-standard-modules.md#aligned-phase-space) removes overall
+orientation. Their natural reference measures are supplied by
+`PhaseSpace(support = S)`, not by ambient Lebesgue measure.
+
 `relabel` applies to set products in the same way as to measures
 (see [interface adaptation](04-design.md#interface-adaptation)).
 
