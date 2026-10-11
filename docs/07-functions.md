@@ -794,7 +794,7 @@ For edges $e_1 < e_2 < \ldots < e_{n+1}$ and values $v_1, \ldots, v_n$, the func
 | Function | Arguments | Description | Domains |
 |---|---|---|---|
 | [`rnginit`](#rnginit) | `rngseed` | fresh RNG state from a seed byte vector or seed integer | byte vector (`integers` in `interval(0, 255)`) or integer in `interval(0, 2^64 - 1)` |
-| [`rand`](#rand) | `rstate, m` | draw a value from closed measure `m`; returns `(value, new_rstate)` | `rngstates`, closed measure |
+| [`rand`](#rand) | `m, rstate` | draw a value from closed measure `m`; returns `(value, new_rstate)` | closed measure, `rngstates` |
 | [`rngstate`](#rngstate) | `bytes` | (re-)construct an RNG state from a byte serialization | byte vector (`integers` in `interval(0, 255)`) |
 
 FlatPPL provides explicit, state-threaded random value generation. All randomness
@@ -816,8 +816,8 @@ For example:
 ```flatppl
 rngseed = [0xb2, 0x51, 0xa4, 0x93, 0x49, 0xd8, 0x68, 0x88]
 rstate = rnginit(rngseed)
-random_data, rstate2 = rand(rstate, iid(Normal(0, 1), 10))
-more_random_data, rstate3 = rand(rstate2, iid(Exponential(1), 5))
+random_data, rstate2 = rand(iid(Normal(0, 1), 10), rstate)
+more_random_data, rstate3 = rand(iid(Exponential(1), 5), rstate2)
 ```
 
 <a id="rnginit"></a>**`rnginit(rngseed)`** — initializes a fresh RNG state from a seed byte vector
@@ -832,7 +832,7 @@ or a seed integer. Returns a value in the set `rngstates`.
   denotes `rnginit([0, 0, 0, 0, 0, 0, 0, 0])`, and `rnginit(1)` denotes
   `rnginit([1, 0, 0, 0, 0, 0, 0, 0])`.
 
-<a id="rand"></a>**`rand(rstate, m)`** — generates a random value from a closed measure `m` using RNG
+<a id="rand"></a>**`rand(m, rstate)`** — generates a random value from a closed measure `m` using RNG
 state `rstate`. Returns a tuple `(value, new_rstate)` where `value` is the generated pseudo-random value (in the domain of `m`) and `new_rstate` is the updated RNG
 state that can be used for another `rand` call.
 

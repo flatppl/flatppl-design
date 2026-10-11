@@ -55,7 +55,7 @@ They are not part of the module's public interface and may be eliminated, inline
 renamed, or otherwise not preserved by tooling such as term-rewriting or dead-code
 elimination.
 
-The bare underscore `_` is itself a valid binding name. Each occurrence of `_` on the left-hand side (standalone or inside a decomposition, e.g. `value, _ = rand(rstate, m)`)
+The bare underscore `_` is itself a valid binding name. Each occurrence of `_` on the left-hand side (standalone or inside a decomposition, e.g. `value, _ = rand(m, rstate)`)
 lowers to a distinct auto-generated private name. So `_` may be used to discard
 values.
 

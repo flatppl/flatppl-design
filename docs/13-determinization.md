@@ -33,7 +33,7 @@ Each element of `outputs` is a deterministic result:
   [`densityof(M, point)` or `logdensityof(M, point)`](06-measure-algebra.md#likelihoods-and-posteriors),
   with an explicit `point`;
 - a **sampled value** — the value component of
-  [`rand(rstate, M)`](07-functions.md#rand), which returns `(value, new_rstate)`;
+  [`rand(M, rstate)`](07-functions.md#rand), which returns `(value, new_rstate)`;
   the RNG state is an input, so a fixed argument reproduces the value for a
   given engine and platform
   ([random value generation](07-functions.md#sec:random)), and the final RNG

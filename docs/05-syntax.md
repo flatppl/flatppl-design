@@ -139,7 +139,7 @@ a, b, c ~ MvNormal(mu = mean_vector, cov = cov_matrix)
 
 x, y = some_record
 l, m, n = some_tuple
-value, _ = rand(rstate, m)
+value, _ = rand(m, rstate)
 ```
 
 Decomposition is by position. For records, the field order determines which value
