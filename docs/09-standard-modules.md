@@ -244,7 +244,7 @@ same as the density of `Poisson` w.r.t. the counting measure, with a continuous
 extension in between (by replacing the Poisson factorial with the gamma function).
 `ContinuedPoisson` is popular in particle physics to obtain a well-defined
 "Poisson-like" log-density evaluation on non-integer data such as Asimov datasets.
-`rand(rstate, ContinuedPoisson(rate))` is not a well-defined operation in FlatPPL.
+`rand(ContinuedPoisson(rate), rstate)` is not a well-defined operation in FlatPPL.
 
 Domain/Support: `reals`/`nonnegreals`.
 
