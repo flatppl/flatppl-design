@@ -173,56 +173,20 @@ To evaluate a density at many points (e.g. a grid for numerical integration or p
 - **`totalmass(M)`**<a id="totalmass"></a> — returns the total mass $Z = \int dM(x)$ as a scalar value.
   Requires a closed measure (not a non-nullary kernel).
 
-- **`rebase(M, B)`**<a id="rebase"></a> — for measures `M` and `B` on the
-  same variate type and shape, returns the probability measure
-  $Q(A) = Z^{-1}\int_A p_M(x)\,dB(x)$, where
-  $p_M(x) = \mathrm{densityof}(M, x)$ and
-  $Z = \int p_M(x)\,dB(x)$ is finite and positive.
-  The arguments are positional. Non-nullary operands must have the same named
-  input interface and compatible input types. A closed operand ignores that
-  input. The result keeps the first non-nullary operand's input order and
-  applies this definition pointwise to their output measures.
-
-  The density function is the pointwise version specified for `M` by
-  `densityof`, not a Radon–Nikodym derivative of `M` with respect to `B`.
-  It must be defined `B`-almost everywhere. The reference measure of the result
-  is that of `B`; `B` need not be a Lebesgue measure. A density version that
-  differs on a null set of `M`'s reference may change the result when `B`
-  charges that set. Rewrites inside `rebase` must preserve this density
-  `B`-almost everywhere.
-
-  For closed measures, the equivalent expression is
+- **`rebase(M, B)`**<a id="rebase"></a> — normalizes the density of `M` as a
+  weight on `B`. For closed measures, this is equivalent to
   `normalize(logweighted(fn(logdensityof(M, _)), B))`.
-  The result is undefined if $p_M$ is not defined `B`-almost everywhere, or
-  $Z$ is zero, infinite, or undefined. An engine that cannot evaluate the
-  required density or normalizer must refuse the query rather than omit it.
+  Both operands must have the same variate type and shape. The result uses
+  `B`'s reference measure. It is undefined unless the pointwise density
+  $p_M(x) = \mathrm{densityof}(M, x)$ exists `B`-almost everywhere and
+  $0 < Z = \int p_M(x)\,dB(x) < \infty$. Rewrites must preserve $p_M$ there.
 
-  **Parameter-dependent normalization.** Normalization applies separately at
-  every parameter value, including values of captured draws. A normalizer
-  depending on an inferred parameter remains part of the density and its
-  derivatives. Reification preserves those dependencies.
-
-  **Normal laws on vector sets.** Let `M = iid(Normal(mu, sigma), n)`,
-  with finite `mu`, finite positive `sigma`, and positive integer `n`.
-  On `B = Lebesgue(ordered(n))`, $Z = 1/n!$ and the resulting law is that
-  of `n` sorted independent Normal draws. On
-  `B = Lebesgue(zerosum(n))`, using the
-  [coordinate measure](03-value-types.md#sets),
-  $Z = \exp(-n\mu^2/(2\sigma^2))/(\sqrt{2\pi n}\,\sigma)$.
-  Thus, for $x \in \mathrm{zerosum}(n)$,
-
-  $$
-  \log p_Q(x) =
-  \tfrac12\log n - (n-1)\bigl(\log\sigma+\tfrac12\log(2\pi)\bigr)
-  - \frac{\sum_i x_i^2}{2\sigma^2}.
-  $$
-
-  This law does not depend on `mu`. It is the law of independent
-  `Normal(0, sigma)` draws with their sample mean subtracted. For `n = 1`,
-  it is the point mass at the one-vector `[0]`. Engines must support these two Normal laws
-  without numerical integration when the size is fixed.
-
-  A hierarchical prior retains the scale as a draw and reifies the joint law:
+  Non-nullary operands must have the same named inputs and compatible input
+  types. Closed operands ignore the input. The result takes the first
+  non-nullary operand's input order and applies the definition pointwise.
+  Normalization uses the current inputs and captured draws. Reification and
+  differentiation retain its parameter dependencies, including inferred scales.
+  An engine unable to evaluate the density or normalizer must refuse the query.
 
   ```flatppl
   scale ~ Exponential(1)
