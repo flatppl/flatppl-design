@@ -54,7 +54,7 @@ on $\mathbb{R} \times \mathbb{Z}$, with joint density $\phi(c;\,0,1) \cdot
 **Normalization convention.** Normalization is always explicit in FlatPPL. Built-in
 distribution/measure constructors do not normalize their inputs. Measure-algebra
 operations preserve the mass specified by their definitions; only `normalize`
-and `rebase` request normalization.
+and `tilt` request normalization.
 
 ### The measure monad
 
@@ -163,7 +163,7 @@ To evaluate a density at many points (e.g. a grid for numerical integration or p
 |---|---|---|
 | [`normalize`](#normalize) | `M` | rescale finite-mass `M` to the probability measure $M / Z$ |
 | [`totalmass`](#totalmass) | `M` | total mass $Z = \int \mathrm{d}M$, as a scalar (closed measure only) |
-| [`rebase`](#rebase) | `M`, `B` | normalize the density of `M` as a weight on the explicit base measure `B` |
+| [`tilt`](#tilt) | `M`, `B` | normalize the density of `M` as a weight on the explicit base measure `B` |
 
 - **`normalize(M)`**<a id="normalize"></a> — given a measure $M$ with finite total mass
   $Z = \mathrm{totalmass}(M) > 0$, returns the probability measure $M / Z$.
@@ -173,7 +173,7 @@ To evaluate a density at many points (e.g. a grid for numerical integration or p
 - **`totalmass(M)`**<a id="totalmass"></a> — returns the total mass $Z = \int dM(x)$ as a scalar value.
   Requires a closed measure (not a non-nullary kernel).
 
-- **`rebase(M, B)`**<a id="rebase"></a> — normalizes the density of `M` as a
+- **`tilt(M, B)`**<a id="tilt"></a> — normalizes the density of `M` as a
   weight on `B`. For closed measures, this is equivalent to
   `normalize(logweighted(fn(logdensityof(M, _)), B))`.
   Both operands must have the same variate type and shape. The result uses
@@ -190,7 +190,7 @@ To evaluate a density at many points (e.g. a grid for numerical integration or p
 
   ```flatppl
   scale ~ Exponential(1)
-  effects ~ rebase(iid(Normal(0, scale), 3), Lebesgue(zerosum(3)))
+  effects ~ tilt(iid(Normal(0, scale), 3), Lebesgue(zerosum(3)))
   prior = lawof(record(scale = scale, effects = effects))
   ```
 
@@ -637,7 +637,7 @@ The density of a composed measure is determined by the measure-algebra definitio
   be added directly.
 - `ksuperpose` (weighted measure addition over the parameter family): $\log\mathrm{densityof}(\mathrm{ksuperpose}(\kappa, w)(\theta), x) = \mathrm{logsumexp}_i\left(\log w_i + \log\mathrm{densityof}(\kappa(\theta_i), x)\right)$, so a zero weight contributes $-\infty$ and drops out. All components come from one kernel and so share one reference measure — the mixture's.
 - `normalize` (from $M / Z$): $\log\mathrm{densityof}(\mathrm{normalize}(M), x) = \log\mathrm{densityof}(M, x) - \log Z$, with $Z = \mathrm{totalmass}(M)$ finite and nonzero.
-- `rebase`: $\log\mathrm{densityof}(\mathrm{rebase}(M, B), x) = \log\mathrm{densityof}(M, x) + \log\mathrm{densityof}(B, x) - \log Z$, where $Z = \int \mathrm{densityof}(M, x)\,dB(x)$ is finite and positive.
+- `tilt`: $\log\mathrm{densityof}(\mathrm{tilt}(M, B), x) = \log\mathrm{densityof}(M, x) + \log\mathrm{densityof}(B, x) - \log Z$, where $Z = \int \mathrm{densityof}(M, x)\,dB(x)$ is finite and positive.
 - `truncate` (from $\nu(A) = M(A \cap S)$): $\log\mathrm{densityof}(\mathrm{truncate}(M, S), x)$ is $\log\mathrm{densityof}(M, x)$ for $x \in S$ and $-\infty$ otherwise.
 - `joint` and `iid` (the variate is the `cat` of the component variates): for components sharing no stochastic ancestor, $\log\mathrm{densityof}(\mathrm{joint}(M_1, M_2), [x_1, x_2]) = \log\mathrm{densityof}(M_1, x_1) + \log\mathrm{densityof}(M_2, x_2)$; for `iid` always, $\log\mathrm{densityof}(\mathrm{iid}(M, n), x) = \sum_i \log\mathrm{densityof}(M, x_i)$. A `joint` with shared ancestry reduces as its [equivalent record law](#joint); a singular joint has no density and the query is refused.
 - `jointchain` (the product of the constituent conditional densities): $\log\mathrm{densityof}(\mathrm{jointchain}(M, K), [a, b]) = \log\mathrm{densityof}(M, a) + \log\mathrm{densityof}(K(a), b)$.
