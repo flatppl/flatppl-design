@@ -52,8 +52,9 @@ on $\mathbb{R} \times \mathbb{Z}$, with joint density $\phi(c;\,0,1) \cdot
 \mathrm{Pois}(k;\,3)$ at $(c, k)$.
 
 **Normalization convention.** Normalization is always explicit in FlatPPL. Built-in
-distribution/measure constructors do not normalize their inputs, and measure-algebra
-operations never rescale their inputs or outputs.
+distribution/measure constructors do not normalize their inputs. Measure-algebra
+operations preserve the mass specified by their definitions; only `normalize`
+and `rebase` request normalization.
 
 ### The measure monad
 
@@ -162,6 +163,7 @@ To evaluate a density at many points (e.g. a grid for numerical integration or p
 |---|---|---|
 | [`normalize`](#normalize) | `M` | rescale finite-mass `M` to the probability measure $M / Z$ |
 | [`totalmass`](#totalmass) | `M` | total mass $Z = \int \mathrm{d}M$, as a scalar (closed measure only) |
+| [`rebase`](#rebase) | `M`, `B` | normalize the density of `M` as a weight on the explicit base measure `B` |
 
 - **`normalize(M)`**<a id="normalize"></a> — given a measure $M$ with finite total mass
   $Z = \mathrm{totalmass}(M) > 0$, returns the probability measure $M / Z$.
@@ -170,6 +172,63 @@ To evaluate a density at many points (e.g. a grid for numerical integration or p
 
 - **`totalmass(M)`**<a id="totalmass"></a> — returns the total mass $Z = \int dM(x)$ as a scalar value.
   Requires a closed measure (not a non-nullary kernel).
+
+- **`rebase(M, B)`**<a id="rebase"></a> — for measures `M` and `B` on the
+  same variate type and shape, returns the probability measure
+  $Q(A) = Z^{-1}\int_A p_M(x)\,dB(x)$, where
+  $p_M(x) = \mathrm{densityof}(M, x)$ and
+  $Z = \int p_M(x)\,dB(x)$ is finite and positive.
+  The arguments are positional. Non-nullary operands must have the same named
+  input interface and compatible input types. A closed operand ignores that
+  input. The result keeps the first non-nullary operand's input order and
+  applies this definition pointwise to their output measures.
+
+  The density function is the pointwise version specified for `M` by
+  `densityof`, not a Radon–Nikodym derivative of `M` with respect to `B`.
+  It must be defined `B`-almost everywhere. The reference measure of the result
+  is that of `B`; `B` need not be a Lebesgue measure. A density version that
+  differs on a null set of `M`'s reference may change the result when `B`
+  charges that set. Rewrites inside `rebase` must preserve this density
+  `B`-almost everywhere.
+
+  For closed measures, the equivalent expression is
+  `normalize(logweighted(fn(logdensityof(M, _)), B))`.
+  The result is undefined if $p_M$ is not defined `B`-almost everywhere, or
+  $Z$ is zero, infinite, or undefined. An engine that cannot evaluate the
+  required density or normalizer must refuse the query rather than omit it.
+
+  **Parameter-dependent normalization.** Normalization applies separately at
+  every parameter value, including values of captured draws. A normalizer
+  depending on an inferred parameter remains part of the density and its
+  derivatives. Reification preserves those dependencies.
+
+  **Normal laws on vector sets.** Let `M = iid(Normal(mu, sigma), n)`,
+  with finite `mu`, finite positive `sigma`, and positive integer `n`.
+  On `B = Lebesgue(ordered(n))`, $Z = 1/n!$ and the resulting law is that
+  of `n` sorted independent Normal draws. On
+  `B = Lebesgue(zerosum(n))`, using the
+  [coordinate measure](03-value-types.md#sets),
+  $Z = \exp(-n\mu^2/(2\sigma^2))/(\sqrt{2\pi n}\,\sigma)$.
+  Thus, for $x \in \mathrm{zerosum}(n)$,
+
+  $$
+  \log p_Q(x) =
+  \tfrac12\log n - (n-1)\bigl(\log\sigma+\tfrac12\log(2\pi)\bigr)
+  - \frac{\sum_i x_i^2}{2\sigma^2}.
+  $$
+
+  This law does not depend on `mu`. It is the law of independent
+  `Normal(0, sigma)` draws with their sample mean subtracted. For `n = 1`,
+  it is the point mass at the one-vector `[0]`. Engines must support these two Normal laws
+  without numerical integration when the size is fixed.
+
+  A hierarchical prior retains the scale as a draw and reifies the joint law:
+
+  ```flatppl
+  scale ~ Exponential(1)
+  effects ~ rebase(iid(Normal(0, scale), 3), Lebesgue(zerosum(3)))
+  prior = lawof(record(scale = scale, effects = effects))
+  ```
 
 #### Additive superposition
 
@@ -614,6 +673,7 @@ The density of a composed measure is determined by the measure-algebra definitio
   be added directly.
 - `ksuperpose` (weighted measure addition over the parameter family): $\log\mathrm{densityof}(\mathrm{ksuperpose}(\kappa, w)(\theta), x) = \mathrm{logsumexp}_i\left(\log w_i + \log\mathrm{densityof}(\kappa(\theta_i), x)\right)$, so a zero weight contributes $-\infty$ and drops out. All components come from one kernel and so share one reference measure — the mixture's.
 - `normalize` (from $M / Z$): $\log\mathrm{densityof}(\mathrm{normalize}(M), x) = \log\mathrm{densityof}(M, x) - \log Z$, with $Z = \mathrm{totalmass}(M)$ finite and nonzero.
+- `rebase`: $\log\mathrm{densityof}(\mathrm{rebase}(M, B), x) = \log\mathrm{densityof}(M, x) + \log\mathrm{densityof}(B, x) - \log Z$, where $Z = \int \mathrm{densityof}(M, x)\,dB(x)$ is finite and positive.
 - `truncate` (from $\nu(A) = M(A \cap S)$): $\log\mathrm{densityof}(\mathrm{truncate}(M, S), x)$ is $\log\mathrm{densityof}(M, x)$ for $x \in S$ and $-\infty$ otherwise.
 - `joint` and `iid` (the variate is the `cat` of the component variates): for components sharing no stochastic ancestor, $\log\mathrm{densityof}(\mathrm{joint}(M_1, M_2), [x_1, x_2]) = \log\mathrm{densityof}(M_1, x_1) + \log\mathrm{densityof}(M_2, x_2)$; for `iid` always, $\log\mathrm{densityof}(\mathrm{iid}(M, n), x) = \sum_i \log\mathrm{densityof}(M, x_i)$. A `joint` with shared ancestry reduces as its [equivalent record law](#joint); a singular joint has no density and the query is refused.
 - `jointchain` (the product of the constituent conditional densities): $\log\mathrm{densityof}(\mathrm{jointchain}(M, K), [a, b]) = \log\mathrm{densityof}(M, a) + \log\mathrm{densityof}(K(a), b)$.
