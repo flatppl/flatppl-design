@@ -209,7 +209,7 @@ highlights, not exhaustive — see the linked sections for complete listings.
 | [Module operations](04-design.md#sec:modules) | `load_module`, `standard_module`, `flatppl_compat` |
 | [Constants](03-value-types.md#sec:valuetypes) | `true`, `false`, `inf`, `pi`, `im` |
 | [Predefined sets](03-value-types.md#sec:valuetypes) | `reals`, `posreals`, `nonnegreals`, `unitinterval`, `posintegers`, `nonnegintegers`, `integers`, `booleans`, `complexes`, `rngstates`, `anything` |
-| [Set constructors](03-value-types.md#sets) | `interval`, `cartprod`, `cartpow`, `stdsimplex` |
+| [Set constructors](03-value-types.md#sets) | `interval`, `cartprod`, `cartpow`, `stdsimplex`, `ordered`, `zerosum` |
 | [Selectors and operators](04-design.md#sec:calling-convention) | `all` (slicing), `in` (membership) |
 
 ### A tour of FlatPPL

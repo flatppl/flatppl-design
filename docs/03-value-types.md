@@ -220,6 +220,16 @@ $x_n = 1 - \sum_{i<n} x_i$ (dropping any other coordinate gives the same measure
 assigns zero mass to sets that do not intersect the simplex. It is not the surface
 (Hausdorff) measure of the embedded simplex, which is larger by the factor $\sqrt{n}$.
 
+**Ordered vectors.** `ordered(n)` denotes the set of strictly increasing real $n$-vectors
+$\{x \in \mathbb{R}^n : x_1 < x_2 < \cdots < x_n\}$, an open full-dimensional subset of
+$\mathbb{R}^n$. `Lebesgue(support = ordered(n))` is the ordinary Lebesgue measure on
+$\mathbb{R}^n$ restricted to that set. For example, `elementof(ordered(3))` is a vector of
+three cut points in increasing order.
+
+**Zero-sum vectors.** `zerosum(n)` denotes the real $n$-vectors with components summing to
+zero, $\{x \in \mathbb{R}^n : \sum_i x_i = 0\}$. `Lebesgue(support = zerosum(n))` is the
+coordinate Lebesgue measure of the $n{-}1$ free coordinates, as for `stdsimplex(n)`.
+
 `relabel` applies to set products in the same way as to measures
 (see [interface adaptation](04-design.md#interface-adaptation)).
 
