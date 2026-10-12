@@ -141,15 +141,16 @@ FlatPPL has five kinds of first-class objects.
 **Abstract values** denote real numbers, integers, booleans, complex numbers,
 fixed-size arrays, and records. They may be deterministic (literal constants,
 results of ordinary functions, data, external inputs) or stochastic (variates introduced by
-`draw(...)`). In generative mode, each abstract value evaluates to a single concrete value;
-for stochastic abstract values, that concrete value is generated randomly once.
+`draw(...)`). In generative mode, deterministic values evaluate directly;
+stochastic values are sampled once if their sources admit sampling.
 
 **Kernels, measures and distributions.** Transition kernels are mappings from an input space to measures.
 FlatPPL does not distinguish between a kernel with an empty interface and a measure: in FlatPPL, such a kernel *is* a measure (see [variates and measures](04-design.md#sec:variate-measure)).
 Normalized measures (kernels) are probability measures (Markov kernels), also called probability distributions.
-Variates can only be drawn from probability measures.
+`draw` admits probability measures and explicit
+[improper flat priors](04-design.md#sec:improper-draws).
 Otherwise, FlatPPL treats measures and kernels uniformly in measure algebra (see [measure algebra](06-measure-algebra.md#sec:measure-algebra)).
-Variates can be reified as probability measures via `lawof(...)`, and as Markov kernels via `kernelof(...)` (see [reification to measures](04-design.md#sec:lawof) and [kernels and `kernelof`](04-design.md#sec:kernelof)).
+Variates can be reified as measures via `lawof(...)`, and as transition kernels via `kernelof(...)` (see [reification to measures](04-design.md#sec:lawof) and [kernels and `kernelof`](04-design.md#sec:kernelof)).
 
 **Likelihood objects** represent the density of a model
 evaluated at observed data, as a function of the model's input parameters. The observed data
