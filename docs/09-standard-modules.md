@@ -747,6 +747,36 @@ poly = standard_module("polynomials", "0.1")
 
 <a id="chebyshev-poly"></a>**`chebyshev(n, x)`** — evaluates the Chebyshev polynomial of the first kind of degree `n` at `x`, where `n` must be a non-negative integer. 
 
+### Module `splines`
+
+The `splines` standard module provides spline basis and penalty functions.
+
+Loaded via:
+
+```flatppl
+sp = standard_module("splines", "0.1")
+```
+
+#### Functions
+
+| Function | Arguments | Description | Domains |
+|---|---|---|---|
+| [`thinplate_basis`](#thinplate-basis) | `x`, `centers` | One-dimensional thin-plate spline basis | real, nonempty real vector |
+| [`thinplate_penalty`](#thinplate-penalty) | `centers` | Thin-plate roughness matrix | nonempty real vector |
+
+<a id="thinplate-basis"></a>**`thinplate_basis(x, centers)`** — returns
+$[K(x,c_1),\ldots,K(x,c_n),1,x]$, where $K(u,v)=|u-v|^3/12$ and
+$c_1,\ldots,c_n$ are the entries of `centers`. This is the one-dimensional
+thin-plate basis with second-derivative penalty.
+
+<a id="thinplate-penalty"></a>**`thinplate_penalty(centers)`** — returns the
+$(n+2)\times(n+2)$ symmetric matrix whose first $n\times n$ block is
+$K(c_i,c_j)$ and whose remaining entries are zero. For coefficients
+$a_1,\ldots,a_n,b_0,b_1$ satisfying $\sum_i a_i=\sum_i a_i c_i=0$, its quadratic
+form equals the integral over the reals of the squared second derivative
+of the corresponding spline. The raw matrix need not be positive
+semidefinite outside this constrained subspace.
+
 ### Module `distances`
 
 The `distances` standard module provides routines for computing pointwise and pairwise distances. 
