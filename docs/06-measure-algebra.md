@@ -310,10 +310,10 @@ To evaluate a density at many points (e.g. a grid for numerical integration or p
   variate is a record. At each input point the result is the `joint` of the
   component output measures, governed by the sharing rules above; the fanned
   input is a value, not a stochastic node, and so induces no dependence by
-  itself. The result's total-mass class is the product of the components'
-  classes, as in the measure case; when components sharing a stochastic node
-  include more than one non-normalized member, no class stronger than unknown
-  is statically justified. A fan-out of Markov kernels is a Markov kernel.
+  itself. When all unbound stochastic ancestors have normalized sources, mass
+  classes multiply as in the measure case, and a fan-out of Markov kernels is
+  Markov. When components sharing a stochastic node include more than one
+  non-normalized member, no class stronger than unknown is statically justified.
 
   **Equivalent record law.** `joint(a = lawof(a), b = lawof(b))` is equivalent
   to `lawof(record(a = a, b = b))`; the positional form is the corresponding
@@ -334,7 +334,7 @@ To evaluate a density at many points (e.g. a grid for numerical integration or p
   measure when it is not absolutely continuous w.r.t. that measure. This occurs,
   for example, when the same scalar draw with a Lebesgue density appears twice.
   Deterministic dependence between discrete variates does not imply the absence
-  of a density w.r.t. product counting measure. Sampling remains well-defined.
+  of a density w.r.t. product counting measure. Sampling remains well-defined for normalized laws.
   When no density exists, a density query is a static error where statically
   detectable, and is otherwise refused by the engine.
 

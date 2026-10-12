@@ -523,25 +523,39 @@ or auxiliary constraints. A caller that uses the result as a Poisson rate must
 satisfy the distribution's domain. The definitions do not prescribe a padded
 storage layout.
 
-### Module `generalized-linear-models`
+### Module `regression`
 
-The `generalized-linear-models` module contains efficient and stable implementations of log densities for common generalized linear models.
+The `regression` module provides regression priors and stable log densities for
+common generalized linear models.
 
 Loaded via:
 
 ```flatppl
-glm = standard_module("generalized-linear-models", "0.1")
+reg = standard_module("regression", "0.1")
 ```
 
 #### Distributions
 
 | Distribution | Parameters | Domain | Support |
 |---|---|---|---|
+| [`Flat`](#flat) | — | `reals` | `reals` |
 | [`BernoulliLogitGLM`](#bernoullilogitglm) | `x`, `alpha`, `beta` | `integers` | `booleans` |
 | [`BinomialLogitGLM`](#binomiallogitglm) | `x`, `n`, `alpha`, `beta` | `integers` | `interval(0, n)` |
 | [`CategoricalLogitGLM`](#categoricallogitglm) | `x`, `alpha`, `beta` | `integers` | `interval(1, n)` |
 | [`NormalGLM`](#normalglm) | `x`, `alpha`, `beta`, `sigma` | `reals` | `reals` |
 | [`PoissonLogGLM`](#poissonlogglm) | `x`, `alpha`, `beta` | `integers` | `nonnegintegers` |
+
+<a id="flat"></a>**`Flat()`** — an improper flat prior on the real line.
+
+Domain/Support: `reals`/`reals`.
+
+Density w.r.t. `Lebesgue(reals)`:
+
+$$p(x) = 1, \qquad \log p(x) = 0, \qquad x \in \mathbb{R}.$$
+
+It equals `Lebesgue(reals)` as a measure, with infinite total mass. The
+[`draw` contract](04-design.md#sec:improper-draws) permits prior declarations and
+reification; `rand` refuses `Flat()` and improper reified priors.
 
 <a id="bernoullilogitglm"></a>**`BernoulliLogitGLM(x, alpha, beta)`** — An efficient implementation of the log density for a generalized linear model in $k$ parameters with a Bernoulli distribution and a logistic link (logistic regression).
 
