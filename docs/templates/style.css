@@ -852,7 +852,8 @@ section.footnotes ol {
     display: inline-block;
     max-width: 100%;
     overflow-x: auto;
-    padding: 0.2em 0;
+    /* KaTeX's vlist strut extends 2px past its negative right margin. */
+    padding: 0.2em 2px 0.2em 0;
     vertical-align: middle;
 }
 
