@@ -393,13 +393,13 @@ the $D$-function for half-integer angular momenta with doubled-integer momenta:
 
 $$D = e^{-i(m_1 \alpha + m_2 \gamma)}\, d^{j}_{m_1 m_2}(\beta) = \mathrm{cis}\!\left(-\tfrac{2m_1\,\alpha + 2m_2\,\gamma}{2}\right) \cdot \texttt{wignerd\_doublearg}(2j, 2m_1, 2m_2, \cos\beta).$$
 
-### Module `pyhf_helpers`
+### Module `pyhf-helpers`
 
-The `pyhf_helpers` module provides deterministic arithmetic for
+The `pyhf-helpers` module provides deterministic arithmetic for
 [pyhf](17-references.md#pyhf) HistFactory models. Loaded via:
 
 ```flatppl
-pyhf = standard_module("pyhf_helpers", "0.1")
+pyhf = standard_module("pyhf-helpers", "0.1")
 ```
 
 The FlatPPL definitions below specify the functions. An implementation may
