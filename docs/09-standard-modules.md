@@ -538,24 +538,29 @@ reg = standard_module("regression", "0.1")
 
 | Distribution | Parameters | Domain | Support |
 |---|---|---|---|
-| [`Flat`](#flat) | — | `reals` | `reals` |
+| [`Flat`](#flat) | `support = reals` | as for `Lebesgue(support)` | `support` |
 | [`BernoulliLogitGLM`](#bernoullilogitglm) | `x`, `alpha`, `beta` | `integers` | `booleans` |
 | [`BinomialLogitGLM`](#binomiallogitglm) | `x`, `n`, `alpha`, `beta` | `integers` | `interval(0, n)` |
 | [`CategoricalLogitGLM`](#categoricallogitglm) | `x`, `alpha`, `beta` | `integers` | `interval(1, n)` |
 | [`NormalGLM`](#normalglm) | `x`, `alpha`, `beta`, `sigma` | `reals` | `reals` |
 | [`PoissonLogGLM`](#poissonlogglm) | `x`, `alpha`, `beta` | `integers` | `nonnegintegers` |
 
-<a id="flat"></a>**`Flat()`** — an improper flat prior on the real line.
+<a id="flat"></a>**`Flat(support = reals)`** — a flat prior on a continuous support set.
 
-Domain/Support: `reals`/`reals`.
+Domain/Support: as for `Lebesgue(support)`/`support`.
 
-Density w.r.t. `Lebesgue(reals)`:
+`support` follows the continuous set and coordinate-measure conventions of
+[`Lebesgue`](06-measure-algebra.md#lebesgue), including products and constrained
+sets; `Flat()` uses `reals`. Density is one on the finite-valued part of
+`support` and zero outside; log density is respectively zero and $-\infty$.
 
-$$p(x) = 1, \qquad \log p(x) = 0, \qquad x \in \mathbb{R}.$$
-
-It equals `Lebesgue(reals)` as a measure, with infinite total mass. The
+It equals `Lebesgue(support)` as a measure, with the same total mass; no
+normalization is applied, including for parameter-dependent bounds. For example,
+`Flat(posreals)` has infinite mass and `Flat(interval(0, bound))` has mass
+`bound` for positive finite `bound`. The
 [`draw` contract](04-design.md#sec:improper-draws) permits prior declarations and
-reification; `rand` refuses `Flat()` and improper reified priors.
+reification; `rand` refuses `Flat` and priors reified from its draws, even when
+their total mass is one.
 
 <a id="bernoullilogitglm"></a>**`BernoulliLogitGLM(x, alpha, beta)`** — An efficient implementation of the log density for a generalized linear model in $k$ parameters with a Bernoulli distribution and a logistic link (logistic regression).
 
