@@ -179,10 +179,10 @@ returns a record.
 FlatPPL has a limited notion of sets, used to specify input domains, supports, truncation
 regions, and analysis regions. The predefined sets are:
 
-- `reals` — $\mathbb{R}$, the real numbers ($\pm\infty$ admitted).
-- `posreals` — $(0, +\infty]$, the positive reals including $+\infty$.
-- `nonnegreals` — $[0, +\infty]$, the non-negative reals including $+\infty$.
-- `unitinterval` — $[0, 1]$, the unit interval.
+- `reals`<a id="reals"></a> — $\mathbb{R}$, the real numbers ($\pm\infty$ admitted).
+- `posreals`<a id="posreals"></a> — $(0, +\infty]$, the positive reals including $+\infty$.
+- `nonnegreals`<a id="nonnegreals"></a> — $[0, +\infty]$, the non-negative reals including $+\infty$.
+- `unitinterval`<a id="unitinterval"></a> — $[0, 1]$, the unit interval.
 - `posintegers` — $\{1, 2, 3, \ldots\}$, the positive integers.
 - `nonnegintegers` — $\{0, 1, 2, \ldots\}$, the non-negative integers.
 - `integers` — $\mathbb{Z}$, the set of all integers.
@@ -196,15 +196,15 @@ regions, and analysis regions. The predefined sets are:
 
 Additional sets may be constructed using the following language constructs:
 
-**Interval.** `interval(lo, hi)` denotes the closed interval $[lo, hi]$.
+**Interval.** `interval(lo, hi)`<a id="interval"></a> denotes the closed interval $[lo, hi]$.
 
-**Cartesian product.** `cartprod(S1, S2, ...)` produces a Cartesian product of sets `S1`, `S2`, etc., mirroring `joint(M1, M2, ...)` for measures. Each member is the `cat` of one element per component set (so vector components concatenate). The resulting
+**Cartesian product.** `cartprod(S1, S2, ...)`<a id="cartprod"></a> produces a Cartesian product of sets `S1`, `S2`, etc., mirroring `joint(M1, M2, ...)` for measures. Each member is the `cat` of one element per component set (so vector components concatenate). The resulting
 set is a set of arrays, not a set of tuples. The element type is the common type of the component element types. For example, `cartprod(reals, posreals)` is the set of 2-element arrays `[a, b]` with `a` in $\mathbb{R}$ and `b` in $(0, +\infty]$, and `cartprod(reals, integers)` is the set of real 2-vectors `[a, b]` with `a` in $\mathbb{R}$ and `b` in $\mathbb{Z}$ — real-valued since `integers` $\subset$ `reals`, with the second element restricted to integers.
 
 The keyword form `cartprod(a = S1, b = S2, ...)` produces a set of records with
 field `a` in `S1`, field `b` in `S2`, etc., mirroring `joint(a = M1, b = M2, ...)`.
 
-**Cartesian power.** `cartpow(S, size)` produces the Cartesian power of `S`
+**Cartesian power.** `cartpow(S, size)`<a id="cartpow"></a> produces the Cartesian power of `S`
 with shape `size`, mirroring `iid(M, size)` for measures. `size` is a
 positive integer (1-D) or a vector of positive integers (multi-axis). For example,
 `cartpow(reals, 3)` represents $\mathbb{R}^3$ and `cartpow(reals, [3, 3])`
@@ -212,7 +212,7 @@ the set of $3 \times 3$ real matrices. When `S` is a record set, the power is
 the set of tables with those columns: `cartpow(cartprod(a = reals, b = posreals), n)`
 is the set of `n`-row tables.
 
-**Standard simplex.** `stdsimplex(n)` denotes the standard $(n{-}1)$-dimensional probability
+**Standard simplex.** `stdsimplex(n)`<a id="stdsimplex"></a> denotes the standard $(n{-}1)$-dimensional probability
 simplex $\Delta_{n-1} = \{x \in \mathbb{R}^n : x_i \geq 0,\; \sum_i x_i = 1\}$.
 `Lebesgue(support = stdsimplex(n))` is the $(n{-}1)$-dimensional coordinate Lebesgue
 measure on the simplex: the image of $dx_1 \cdots dx_{n-1}$ under the chart that appends
@@ -220,12 +220,12 @@ $x_n = 1 - \sum_{i<n} x_i$ (dropping any other coordinate gives the same measure
 assigns zero mass to sets that do not intersect the simplex. It is not the surface
 (Hausdorff) measure of the embedded simplex, which is larger by the factor $\sqrt{n}$.
 
-**Ordered vectors.** `ordered(n)` denotes the set of strictly increasing real $n$-vectors
+**Ordered vectors.** `ordered(n)`<a id="ordered"></a> denotes the set of strictly increasing real $n$-vectors
 $\{x \in \mathbb{R}^n : x_1 < x_2 < \cdots < x_n\}$, an open full-dimensional subset of
 $\mathbb{R}^n$. `Lebesgue(support = ordered(n))` is the ordinary Lebesgue measure on
 $\mathbb{R}^n$ restricted to that set. 
 
-**Zero-sum vectors.** `zerosum(n)` denotes the real $n$-vectors with components summing to
+**Zero-sum vectors.** `zerosum(n)`<a id="zerosum"></a> denotes the real $n$-vectors with components summing to
 zero, $\{x \in \mathbb{R}^n : \sum_i x_i = 0\}$. `Lebesgue(support = zerosum(n))` is the
 coordinate Lebesgue measure of the $n{-}1$ free coordinates, as for `stdsimplex(n)`.
 
@@ -240,6 +240,45 @@ coordinate Lebesgue measure of the $n{-}1$ free coordinates, as for `stdsimplex(
   of the values that `x` can take (since the exact set is often not tractable).
 
 Note: `valueset` is a low-level language construct used when lowering `functionof` or `kernelof` with boundary inputs. User-level code should typically use `elementof(...)` and specify sets explicitly.
+
+#### <a id="sec:standard-charts"></a>Standard unconstraining charts
+
+Standard charts map $u \in \mathbb{R}^d$ to finite relative-interior values $x = T(u)$.
+Their provision is optional. Inference methods may use other charts.
+The forward log-volume $L(u)$ uses [coordinate Lebesgue measure](06-measure-algebra.md#lebesgue)
+and the [bijection convention](06-measure-algebra.md#bijection), giving the unconstrained
+log-density $\log p(T(u)) + L(u)$. Write $\sigma(u) = 1/(1 + e^{-u})$ and
+$\operatorname{logit}(p) = \log(p/(1-p))$.
+
+| Set | $d$ | Constrain $T(u)$ | Unconstrain $T^{-1}(x)$ | $L(u)$ |
+|---|---|---|---|---|
+| [`reals`](#reals), [`interval(-inf, inf)`](#interval) | $1$ | $u$ | $x$ | $0$ |
+| [`posreals`](#posreals), [`nonnegreals`](#nonnegreals) | $1$ | $e^u$ | $\log x$ | $u$ |
+| [`interval(a, inf)`](#interval), finite $a$ | $1$ | $a + e^u$ | $\log(x-a)$ | $u$ |
+| [`interval(-inf, b)`](#interval), finite $b$ | $1$ | $b - e^u$ | $\log(b-x)$ | $u$ |
+| [`interval(a, b)`](#interval), finite $a < b$ | $1$ | $a + (b-a)\sigma(u)$ | $\operatorname{logit}((x-a)/(b-a))$ | $\log(b-a) + \log\sigma(u) + \log\sigma(-u)$ |
+| [`ordered(n)`](#ordered), $n \geq 1$ | $n$ | $x_1 = u_1$, $x_i = x_{i-1} + e^{u_i}$ for $i \geq 2$ | $u_1 = x_1$, $u_i = \log(x_i-x_{i-1})$ for $i \geq 2$ | $\sum_{i=2}^n u_i$ |
+| [`zerosum(n)`](#zerosum), $n \geq 2$ | $n-1$ | $(u_1, \ldots, u_{n-1}, -\sum_{i=1}^{n-1}u_i)$ | $(x_1, \ldots, x_{n-1})$ | $0$ |
+
+[`unitinterval`](#unitinterval) uses the chart for [`interval(0, 1)`](#interval).
+
+For [`stdsimplex(n)`](#stdsimplex), $n \geq 2$, the standard chart is centered stick-breaking
+with $d = n-1$. For $1 \leq i < n$, let
+$v_i = \sigma(u_i - \log(n-i))$ and $r_i = \prod_{j<i}(1-v_j)$. Then
+
+$$
+x_i = r_i v_i, \qquad x_n = \prod_{j=1}^{n-1}(1-v_j), \qquad
+u_i = \log\!\left(\frac{x_i}{\sum_{j=i+1}^n x_j}\right) + \log(n-i),
+$$
+$$
+L(u) = \sum_{i=1}^{n-1}\bigl[\log v_i + (n-i)\log(1-v_i)\bigr].
+$$
+
+[Cartesian powers](#cartpow) and [products](#cartprod) apply the component charts independently,
+preserving the array or record structure. Free dimensions and log-volumes add.
+No standard chart is specified for other sets. Boundary values and infinities
+have no finite unconstrained image. Clipping is an implementation policy, not
+part of these charts.
 
 ### Beyond values
 
