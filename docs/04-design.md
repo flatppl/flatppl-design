@@ -500,11 +500,9 @@ The function argument names do not have to differ from the boundary node names:
 h = functionof(e, a = a, d = d)     # h: {a, d: Real} → Real
 ```
 
-Each boundary `name = name` may be shortened to `name`, so
-`functionof(e, a, d)` is equivalent to the form above. Bare names and explicit
-keyword bindings may be mixed, preserving their written order. The same rule
-applies to `kernelof`. Boundary lists are not grouped into tuples or records:
-`functionof(e, (a, d))` and `functionof(e, (a = a, d = d))` are invalid.
+In `functionof` and `kernelof`, a bare boundary `a` means `a = a`.
+Bare names and keyword bindings may mix in written order. Grouped boundary
+lists such as `(a, b)` or `(a = a, b = b)` are invalid.
 
 The resulting function `h` now has arguments named `a` and `d`, but these are local
 to the function and decoupled from the original nodes `a` and `d`.

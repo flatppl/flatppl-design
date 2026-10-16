@@ -175,10 +175,6 @@ special operations with their own syntax rules — they are not ordinary functio
 Their semantics are defined in [language design](04-design.md#sec:design).
 `load_module(...)` is documented in [multi-file models](04-design.md#sec:modules).
 
-After the first argument of `functionof` or `kernelof`, a bare name `a` is
-shorthand for the boundary binding `a = a`. This does not extend the calling
-convention of ordinary functions.
-
 ### <a id="broadcasting-syntax"></a>Broadcasting syntax
 
 FlatPPL provides dot-prefixed shorthand for
@@ -439,10 +435,8 @@ leading positional expressions followed by one or more keyword arguments). Seman
 only the special operations `functionof`, `kernelof`, `broadcast`, and `load_module`
 accept this shape; other callables must use `PositionalArgs` or `KeywordArgs` only.
 `load_module` takes exactly one leading positional argument; `broadcast` accepts
-multiple positional arguments before the keyword arguments. `functionof` and
-`kernelof` take one distinguished expression followed only by boundary arguments
-(`ReificationArgs`): bare names or keyword bindings, in any mixture. No other
-callable accepts `ReificationArgs` beyond its ordinary argument forms.
+multiple. Only `functionof` and `kernelof` accept the additional `ReificationArgs`
+form: one expression followed by bare names or keyword bindings.
 
 **Note on reserved words.** The keywords `in`, `true`, `false`, `all`,
 and `only` are recognized before `Name` and cannot be used as bindings.
@@ -474,17 +468,11 @@ single-element form `(x,)` is not in the grammar — single-element tuples are n
 supported (consistent with the design rule that tuples have at least two
 components).
 
-**Note on records.** `(a = x, b = y)` lowers to `record(a = x, b = y)`, preserving
-field order. A single field `(a = x)` is a record too, not an assignment expression.
-The empty form `()` is not a record.
-
 **Note on parser disambiguation.** The grammar is intended to be parsed with
 bounded lookahead. `CallArgs` is technically ambiguous in pure EBNF (an
 `Expression` can begin with a `Name`, and so can a `KeywordArg`), but a one-token
 lookahead after the leading `Name` (checking for `=`) suffices to choose between
-`PositionalArgs`/`MixedArgs` and `KeywordArgs`. In `ReificationArgs`, the same
-lookahead distinguishes bare names from keyword bindings. After `(`, a leading
-`Name` followed by `=` identifies a parenthesized record literal. After a `.`, a one-token
+`PositionalArgs`/`MixedArgs` and `KeywordArgs`. After a `.`, a one-token
 lookahead distinguishes `DotCall` (`.` followed by `(`) from `FieldAccess`
 (`.` followed by a `Name`). Dot-prefixed operators (`.+`, `.^`, `.==`, …) are
 single tokens, recognized by maximal munch. Maximal munch also resolves the
