@@ -117,6 +117,13 @@ for alignment with parameter spaces and for deterministic serialization.
 Fields are accessed by name, not by position — `get(r, i)` is not supported to avoid
 ambiguity with row indexing on tables.
 
+The parenthesised form `(name1 = val1, name2 = val2, ...)` is equivalent and lowers to
+the built-in `record(...)` (`base.record`, so a module binding named `record` does not
+change its meaning). Inside the parentheses, `=` labels a field and creates no binding.
+A single field is written `(name1 = val1)`. All entries are labelled: `(a, b)` is a
+[tuple](#sec:tuples), and there is no empty form. This is the named-tuple syntax of
+Julia, except that a single field needs no trailing comma.
+
 ### Presets
 
 Presets are global fixed records and sets that hint suitable parameter/input

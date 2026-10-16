@@ -324,6 +324,7 @@ positional argument:
   the reified callable (see [below](#reified-callables)).
 - `record`, `table`, `cartprod`, `joint`, `jointchain` take variadic kwargs that label
   components of the output. FlatPIR uses `(%field ...)` entries (see [below](#structural-named-entries)).
+  The surface record literal `(a = x, ...)` lowers to the same `record` form.
 - `load_module` takes optional substitution kwargs for load-time binding of the
   loaded module's free inputs. FlatPIR uses `(%assign ...)` entries for these
   substitutions (see [Module structure](#module-structure)).

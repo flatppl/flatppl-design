@@ -81,7 +81,7 @@ FlatPPL has a very lean syntax:
   `f` to a lambda (see [named functions](#named-functions)).
 - **Literals**: numbers (`3.14`, `42`, `0xF7`, `0x3e`, `1_000_000`, `1.45e7`), strings
   (`"foo"`), booleans (`true`, `false`), arrays (`[1, 2, 3]`), records
-  (`record(a = 1, b = 2)`), tuples (`(a, b)`).
+  (`(a = 1, b = 2)`, also written `record(a = 1, b = 2)`), tuples (`(a, b)`).
 - **Infix arithmetic, exponentiation, and comparisons**: `+`, `-`, `*`, `/`, `^`,
   unary `-`, and the comparisons `<`, `>`, `==`, `!=`, `<=`, `>=`, and `in`
   (set membership). Comparisons may be chained: `a < b <= c` lowers to
@@ -363,7 +363,7 @@ Literal         ::= Number | String | Boolean | ArrayLiteral | RecordLiteral | T
 Boolean         ::= "true" | "false"
 Number          ::= IntegerLit | RealLit
 ArrayLiteral    ::= "[" Expression ("," Expression)* ","? "]"
-RecordLiteral   ::= "record" "(" KeywordArg ("," KeywordArg)* ","? ")"
+RecordLiteral   ::= "(" KeywordArgs ","? ")"
 TupleLiteral    ::= "(" Expression "," Expression ("," Expression)* ","? ")"
 
 (* Lexical *)
@@ -461,25 +461,29 @@ anywhere else it is a static error. Unlike `ArrayLiteral`, `AxisList` may be
 empty: `aggregate(sum, [], expr)` denotes
 [full reduction to a scalar](04-design.md#sec:aggregate).
 
-**Note on tuples.** `(x)` is a parenthesised expression. `(x, y)` is a tuple. The
+**Note on tuples and records.** `(x)` is a parenthesised expression. `(x, y)` is a tuple. The
 single-element form `(x,)` is not in the grammar — single-element tuples are not
 supported (consistent with the design rule that tuples have at least two
-components). A trailing comma is admitted in every literal and call argument
-list.
+components). `(a = x, b = y)` is a record literal, equivalent to `base.record(a = x, b = y)`
+whatever `record` is bound to, and `(a = x)` is a one-field record. A tuple or record
+literal that mixes labelled and unlabelled entries is a parse error, and `()` is not a
+literal. A trailing comma is admitted in every literal and call argument list.
 
 **Note on parser disambiguation.** The grammar is intended to be parsed with
-bounded lookahead. `CallArgs` is technically ambiguous in pure EBNF (an
+bounded lookahead. The alternatives of `CallArgs` share a first token (an
 `Expression` can begin with a `Name`, and so can a `KeywordArg`), but a one-token
 lookahead after the leading `Name` (checking for `=`) suffices to choose between
-`PositionalArgs`/`MixedArgs` and `KeywordArgs`. After a `.`, a one-token
-lookahead distinguishes `DotCall` (`.` followed by `(`) from `FieldAccess`
+`PositionalArgs`/`MixedArgs` and `KeywordArgs`. The same lookahead after an opening
+`(` in `Primary` position separates a `RecordLiteral` (a `Name` followed by `=`; `==`
+is a single token) from a parenthesised expression or `TupleLiteral`. After a `.`, a
+one-token lookahead distinguishes `DotCall` (`.` followed by `(`) from `FieldAccess`
 (`.` followed by a `Name`). Dot-prefixed operators (`.+`, `.^`, `.==`, …) are
 single tokens, recognized by maximal munch. Maximal munch also resolves the
 trailing-dot real literal against a dotted operator: in `1./x` the `1.` is the
 real literal `1.0` (so this is `1.0 / x`), as in Julia. A dotted operator on an
 integer-literal operand needs whitespace or an explicit fractional part —
 `1 ./ x` or `1.0 ./ x`. After a closing `)`, a one-token lookahead for `->`
-distinguishes a `Lambda` from a parenthesised expression or tuple literal;
+distinguishes a `Lambda` from a parenthesised expression, tuple literal, or record literal;
 a parenthesised lambda is well-formed only if the parenthesised content
 was a list of two or more bare `Name`s. A bare `Name` immediately
 followed by `->` is a single-argument `Lambda`. At statement level, a `Name`

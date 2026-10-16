@@ -233,6 +233,7 @@ v = [1.0, 2.0, 3.0]
 nested = [[1, 2], [3, 4]]
 M = rowstack([[1, 2, 3], [4, 5, 6]])
 r = record(mu=3.0, sigma=1.0)
+s = (mu = 3.0, sigma = 1.0)
 
 # Indexing, field access, slicing
 array_entry = A[i]
