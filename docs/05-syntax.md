@@ -351,7 +351,7 @@ ContinuationOp  ::= AddOp | MulOp | CompOp | "^" | ".^"
                        unless that operator is unary. *)
 
 (* Calls *)
-Call            ::= "(" CallArgs? ")"
+Call            ::= "(" CallArgs ")"
 CallArgs        ::= PositionalArgs | KeywordArgs | MixedArgs
 PositionalArgs  ::= Expression ("," Expression)*
 KeywordArgs     ::= KeywordArg ("," KeywordArg)*

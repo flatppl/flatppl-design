@@ -15,7 +15,8 @@ Ordinary **callables** have named inputs and a single output; that output may be
 tuple bundling multiple components (see [Tuples](#sec:tuples)). Special operations
 are callables that handle inputs in a different way and typically provide higher-level
 semantics. The output of any callable depends deterministically on its inputs and calls
-may not have any side effects.
+may not have any side effects. No callables may have nullary inputs, as this would
+make them equivalent to known values.
 
 Numerical precision (e.g., 32-bit vs. 64-bit floating point) is not specified by
 FlatPPL; the choice is left to implementations and their users.
@@ -93,8 +94,7 @@ Adding new shadowable built-ins to FlatPPL is therefore a non-breaking change.
 
 ### <a id="sec:calling-convention"></a>Calling conventions
 
-Nullary ordinary calls (`f()`) are allowed only for standard-module constructors
-explicitly documented with a nullary form.
+Nullary calls (`f()`) are not allowed.
 
 All ordinary callables — built-in or user defined value functions, constructors or
 transition kernels —  accept arguments in two or three forms (denoted here in the
@@ -204,7 +204,7 @@ FlatPPL supports both via different syntax — arithmetic on variates,
 A binding of the form `c = f(a, b)` introduces a **deterministic node** in the computational DAG.
 A binding of the form `x ~ Normal(mu = c, sigma = s)`, equivalent to
 `x = draw(Normal(mu = c, sigma = s))`, introduces a **stochastic node**.
-In generative mode, a stochastic node yields a sampled value if its source admits sampling; in scoring mode,
+In generative mode, a stochastic node yields a sampled value; in scoring mode,
 it contributes a density term that is either evaluated (if observed) or marginalized out
 (if latent).
 
@@ -272,8 +272,7 @@ entire record's ancestors, even though its value is just one field. Engines may
 sharpen this by flattening projections with statically known selectors (`r.field`,
 `t[i]` with integer literal index, or the corresponding `get(...)` and decomposition
 forms) before phase analysis or the ancestor trace, which recovers the selected
-component's phase directly, provided removed stochastic factors integrate to one
-conditional on retained ancestors (see [reification](#sec:lawof)).
+component's phase directly.
 
 Both fixed and parameterized bindings are deterministic, but their values have
 different life cycles: A FlatPPL module can be thought of as having an initialized
@@ -304,7 +303,7 @@ node `y` into the graph. `functionof(y)` goes in the opposite direction:
 it reifies the ancestor subgraph of `y` as a first-class function — the
 backward program slice of `y` ([Weiser, 1981](17-references.md#weiser1981)).
 
-For normalized sources, a probability measure represents a reified stochastic DAG, either
+Conversely, a probability measure represents a reified stochastic DAG, either
 implicit (built-in) or explicit. `x ~ m` (equivalent to `x = draw(m)`)
 introduces a stochastic node `x` by drawing a variate from a normalized
 measure (i.e. a probability measure) `m`. In the other direction,
@@ -314,17 +313,10 @@ two directions is stated under [reification to measures](#sec:lawof) below.
 
 `draw` differs fundamentally from [`rand`](07-functions.md#sec:random): `rand` produces
 a concrete random value, while `draw` introduces a stochastic node that represents the
-model coordinate. Applying `rand` to a measure reified from a DAG that
+existence of a random value. Applying `rand` to a measure reified from a DAG that
 contains `draw` nodes resolves those draws to concrete random values; evaluating a
 density on the same measure instead takes those stochastic nodes as inputs to the
 density (unless they are marginalized out in the stochastic graph).
-
-**<a id="sec:improper-draws"></a>Flat prior sources.** `draw` also admits
-[`regression.Flat(support)`](09-standard-modules.md#flat), finite `iid`, `joint` and
-`jointchain` compositions of admitted sources (pointwise for conditional factors),
-and measures reified from admitted draws. Admission follows construction, not
-mass class; other unnormalized sources remain invalid. `Flat` sources admit
-scoring, not random sampling.
 
 <a id="sec:functionof-measure"></a>**Reifying measure-valued expressions to kernels.**
 If `functionof` is applied to a measure node, it generates a transition kernel — a
@@ -336,15 +328,16 @@ parameterized phase the two coincide.
 
 So `functionof` reifies a value or measure node in the computational graph to a
 value function or transition kernel. While `lawof` reifies a value node in the
-computational graph to its induced measure, and a measure node to the law of
+computational graph to a probability measure, and a measure node to the law of
 a draw from it (see [below](#sec:lawof)).
 
 `kernelof` (see below) combines `lawof` and `functionof`.
 
 #### <a id="sec:lawof"></a>Reification to measures
 
-`lawof(x)` reifies the ancestor sub-DAG of `x` as its **induced measure**.
-It is a probability measure when its draw sources are normalized.
+`lawof(x)` reifies the ancestor sub-DAG of `x` as the **probability measure** that
+is the total law of x — the probability measure that `x`, considered as a random
+variable, is distributed according to.
 
 **Identity law.** `lawof(draw(m))` is equivalent to `m` for `m` of fixed or
 parameterized phase; for stochastic-phase `m` it is the marginal law of a draw
@@ -357,29 +350,23 @@ outright when `m` has none.
 
 `lawof` also accepts a measure argument: `lawof(m)` is `lawof(draw(m))`, the law
 of a draw from `m`. Each draw from `m` is a fresh coordinate, while the `draw`
-nodes among `m`'s ancestors remain the same nodes of the trace. An admitted
+nodes among `m`'s ancestors remain the same nodes of the trace. A probability
 measure of fixed or parameterized phase is its own law, so `lawof(m)` is
 equivalent to `m` and `lawof` is idempotent. For
-stochastic-phase `m`, `lawof(m)` is the marginal law of a
+stochastic-phase `m` — a random measure — `lawof(m)` is the marginal law of a
 draw from it: the mixture $\nu(B) = \int \kappa(z, B)\, dP(z)$ of the kernel
 $\kappa$ carrying `m`'s `draw` ancestors to `m`, over their joint law $P$ — the
 same integral as [`kchain`](06-measure-algebra.md#kchain). `lawof(m)` requires
 `m`'s `%mass` to be `%normalized` (see
-[total-mass classes](11-flatpir.md#total-mass-classes)), unless `m` is an
-[flat prior source](#sec:improper-draws). Other settled classes
-— `%null`, `%finite`, `%locallyfinite`, or `%unknown` — are static errors.
-`%deferred` is an inference state,
-not a total-mass class, and triggers no error; absent such a flat prior source,
-an engine that admits a `%deferred`-mass argument assumes normalization rather
-than proving it, and must leave the result's `%mass` `%deferred`.
-`lawof` never normalizes its argument;
+[total-mass classes](11-flatpir.md#total-mass-classes)); any other settled class
+— `%null`, `%finite`, `%locallyfinite`, or `%unknown` — is a static error, since
+an unnormalized measure is not its own law. `%deferred` is an inference state,
+not a total-mass class, and triggers no error; an engine that admits a
+`%deferred`-mass argument assumes normalization rather than proving it, and must
+leave the result's `%mass` `%deferred`. `lawof` never normalizes its argument;
 `normalize(m)` states that intent. On a non-nullary kernel, `lawof` lifts
 pointwise, as the [uniform kernel extension](06-measure-algebra.md#sec:measure-algebra)
 does for measure-algebra operations.
-
-Unreturned coordinates are integrated against their full source measures;
-deterministic maps, including constant maps, preserve total mass. Engines must
-evaluate the required integrals or refuse the query.
 
 **Trace of the reified law.** A reified measure or kernel carries its traced
 sub-DAG as part of its value; a stochastic node shared between the traces of
@@ -558,7 +545,7 @@ step, which is a different model.
 
 #### <a id="sec:kernelof"></a>Kernels and `kernelof`
 
-`kernelof(x, kwargs...)` reifies (typically stochastic) value nodes to transition
+`kernelof(x, kwargs...)` reifies (typically stochastic) value nodes to Markov
 kernels. `x` must not be a measure. `kernelof(x, kwargs...)` is equivalent to
 `functionof(lawof(x), kwargs...)` interpreted within the reified subgraph
 delimited by `kwargs` — the boundary substitution applies before the inner
