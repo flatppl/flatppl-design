@@ -12,7 +12,7 @@ The FlatPPL language consists of **objects** (**measures**, **likelihood objects
 operations) that operate on objects.
 
 Ordinary **callables** have named inputs and a single output; that output may be a
-tuple bundling multiple components (see [Tuples](#sec:tuples)). Special operations
+tuple bundling multiple components (see [Tuples](03-value-types.md#sec:tuples)). Special operations
 are callables that handle inputs in a different way and typically provide higher-level
 semantics. The output of any callable depends deterministically on its inputs and calls
 may not have any side effects. No callables may have nullary inputs, as this would
@@ -161,31 +161,6 @@ inputs positionally: a keyword spelling such as `normalize(M = mu)` is a static 
 Where this specification refers to a distinguished input by a name, as in
 `aggregate(f_reduction, output_axes, expr)`, the name identifies the input in prose
 only. A call binds the input by position, never by keyword argument.
-
-### <a id="sec:tuples"></a>Tuples
-
-Some operations produce a single output that naturally groups several distinct
-components — e.g. a kernel and its base measure together, or an updated RNG state
-alongside a generated value. **Tuples** package such outputs as an ordered,
-fixed-length bundle of FlatPPL objects.
-
-The surface form `(a, b, c)` lowers to `tuple(a, b, c)`. Tuples must contain at
-least two components, so `()`, `(x,)` are not allowed.
-Tuple elements are accessed via `t[i]`, lowering to `get(t, i)`, with a positive
-integer literal index (starting at 1). Decomposition as in `a, b, c = (...)` is positional.
-
-**Tuples are objects, not values.** They have no `valueset`, are not drawn from
-measures, and are not part of the measure algebra. Specifically:
-
-- A tuple may not appear inside an array, record, or table, but may appear inside another tuple (tuples nest).
-- `elementof(...)` and `external(...)` may not produce tuples.
-- Measures, kernels, and likelihoods never use tuples as their domain.
-- `==`/`equal` does not compare tuples.
-- Tuples do not auto-splat like records and tables do.
-
-**Tuples otherwise flow like other objects.** They may be bound to names, passed
-to callables that accept them, returned from user-defined functions, and decomposed
-or projected.
 
 ### <a id="sec:variate-measure"></a>Variates and measures
 
