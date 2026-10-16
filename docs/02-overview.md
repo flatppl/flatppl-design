@@ -81,7 +81,7 @@ falling exponential background, with a log-normal resolution
 systematic. Returns a likelihood object `L` parameterized by the expected
 signal and background counts.
 %%%
-flatppl_compat = "0.3"
+flatppl_compat = "0.1"
 
 # Inputs: expected signal and background event counts
 % Expected number of signal events.

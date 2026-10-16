@@ -1366,7 +1366,7 @@ a binding is invalid code.
 
 Hierarchical Normal model after Rubin (1981).
 %%%
-flatppl_compat = "0.3"
+flatppl_compat = "0.1"
 ```
 
 **Comments are not documentation.** Plain comments (`#`, `###`) are

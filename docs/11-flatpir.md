@@ -76,7 +76,7 @@ FlatPIR versioning is tied to FlatPPL versioning, so like in FlatPPL, the langua
 version compatibility of a module is optional and is encoded via the value of the binding `flatppl_compat`:
 
 ```lisp
-(%bind flatppl_compat "0.6")
+(%bind flatppl_compat "0.1")
 ```
 
 A parameterized load is an ordinary binding whose right-hand side calls
