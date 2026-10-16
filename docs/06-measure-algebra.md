@@ -939,11 +939,10 @@ structural disintegration. If both are viable, complement disintegration
 should be preferred as it only requires homogenous instead of inhomogenous
 weighting of a measure.
 
-The keyword-form is allowed as well due to
-[auto-splatting](04-design.md#sec:calling-convention):
+With a record literal, the restriction point can be given inline:
 
 ```flatppl
-nu = restrict(mu, a = ..., b = ...)
+nu = restrict(mu, (a = ..., b = ...))
 ```
 
 *Posterior construction.* `restrict` is a useful tool to construct Bayesian
@@ -954,7 +953,7 @@ prior = joint(mu = Normal(0, 1), sigma = Exponential(1))
 model_kernel = (mu, sigma) -> joint(obs = iid(Normal(mu, sigma), 5))
 obs = [0.9, 0.7, -1.2, 0.3, -0.5]
 joint_model = jointchain(prior, model_kernel)
-posterior = restrict(joint_model, obs = obs)
+posterior = restrict(joint_model, (obs = obs))
 ```
 
 *Prior parameter pinning.* `restrict` can also be used to pin parameters
@@ -962,7 +961,7 @@ of Bayesian priors to fixed values:
 
 ```flatppl
 prior = joint(mu = Normal(0, 1), sigma = Exponential(1))
-restricted_prior = restrict(prior, sigma = 0.8)
+restricted_prior = restrict(prior, (sigma = 0.8))
 ```
 
 Note that the prior must be amenable to structural disintegration with

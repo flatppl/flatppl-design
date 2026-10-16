@@ -1,7 +1,8 @@
 ## <a id="sec:valuetypes"></a>Value types and data model
 
 FlatPPL has a small, fixed set of value types. This section defines what kinds of values
-exist in the language, their invariants, and how they interact. Operations on values
+exist in the language, their invariants, and how they interact. It also defines tuples,
+which bundle objects but are not values themselves. Operations on values
 are documented in [built-in functions](07-functions.md#sec:functions).
 
 ### Scalar types
@@ -81,6 +82,31 @@ using `rowstack` or `colstack` (see [array operations](07-functions.md#array-and
 FlatPPL supports standard linear algebra operations (addition, multiplication) on
 scalars, vectors, and matrices.
 
+### <a id="sec:tuples"></a>Tuples
+
+Some operations produce a single output that naturally groups several distinct
+components — e.g. a kernel and its base measure together, or an updated RNG state
+alongside a generated value. **Tuples** package such outputs as an ordered,
+fixed-length bundle of FlatPPL objects.
+
+The surface form `(a, b, c)` lowers to the built-in `tuple(a, b, c)`. Tuples must contain at
+least two components, so `()`, `(x,)` are not allowed.
+Tuple elements are accessed via `t[i]`, lowering to `get(t, i)`, with a positive
+integer literal index (starting at 1). Decomposition as in `a, b, c = (...)` is positional.
+
+**Tuples are objects, not values.** They have no `valueset`, are not drawn from
+measures, and are not part of the measure algebra. Specifically:
+
+- A tuple may not appear inside an array, record, or table, but may appear inside another tuple (tuples nest).
+- `elementof(...)` and `external(...)` may not produce tuples.
+- Measures, kernels, and likelihoods never use tuples as their domain.
+- `==`/`equal` does not compare tuples.
+- Tuples do not [auto-splat](04-design.md#sec:calling-convention) like records and tables do.
+
+**Tuples otherwise flow like other objects.** They may be bound to names, passed
+to callables that accept them, returned from user-defined functions, and decomposed
+or projected.
+
 ### Records
 
 Records comprise ordered named fields, written as `record(name1=val1, name2=val2, ...)`. Field
@@ -90,6 +116,13 @@ values may be scalars, arrays, or records. Field access uses dot syntax:
 for alignment with parameter spaces and for deterministic serialization.
 Fields are accessed by name, not by position — `get(r, i)` is not supported to avoid
 ambiguity with row indexing on tables.
+
+The parenthesised form `(name1 = val1, name2 = val2, ...)` is equivalent and lowers to
+the built-in `record(...)` (`base.record`, so a module binding named `record` does not
+change its meaning). Inside the parentheses, `=` labels a field and creates no binding.
+A single field is written `(name1 = val1)`. All entries are labelled: `(a, b)` is a
+[tuple](#sec:tuples), and there is no empty form. This is the named-tuple syntax of
+Julia, except that a single field needs no trailing comma.
 
 ### Presets
 
@@ -282,7 +315,7 @@ part of these charts.
 
 ### Beyond values
 
-Measures, likelihood objects, functions, and tuples are also first-class objects in
+Measures, likelihood objects, functions, and [tuples](#sec:tuples) are also first-class objects in
 FlatPPL — they can be bound to names, passed to combinators, and referenced by other
 bindings. However, they are not value types: they may not appear inside arrays, records,
 or tables. Modules are namespace references rather than computational objects; they may

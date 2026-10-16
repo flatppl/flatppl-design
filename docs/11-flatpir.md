@@ -76,7 +76,7 @@ FlatPIR versioning is tied to FlatPPL versioning, so like in FlatPPL, the langua
 version compatibility of a module is optional and is encoded via the value of the binding `flatppl_compat`:
 
 ```lisp
-(%bind flatppl_compat "0.6")
+(%bind flatppl_compat "0.1")
 ```
 
 A parameterized load is an ordinary binding whose right-hand side calls
@@ -321,9 +321,11 @@ carries semantic meaning. Some of these forms also have a single leading
 positional argument:
 
 - `functionof` and `kernelof` take variadic kwargs that define the inputs of
-  the reified callable (see [below](#reified-callables)).
+  the reified callable (see [below](#reified-callables)). The bare-name boundary
+  shorthand expands to these kwargs before lowering.
 - `record`, `table`, `cartprod`, `joint`, `jointchain` take variadic kwargs that label
   components of the output. FlatPIR uses `(%field ...)` entries (see [below](#structural-named-entries)).
+  The surface record literal `(a = x, ...)` lowers to the same `record` form.
 - `load_module` takes optional substitution kwargs for load-time binding of the
   loaded module's free inputs. FlatPIR uses `(%assign ...)` entries for these
   substitutions (see [Module structure](#module-structure)).
@@ -453,7 +455,9 @@ For example:
 
 - **`%specinputs`** — the reification carried an explicit boundary
   specification. The entries, in order, are preserved; converting FlatPIR to
-  FlatPPL restores them as boundary keyword arguments.
+  FlatPPL restores them as boundary keyword arguments. A bare-name boundary list
+  (see [reification boundaries](04-design.md#sec:functionof)) lowers to the same
+  entries.
 - **`%autoinputs`** — the reification carried no boundary specification. The
   list is `%deferred` until inference fills it (see
   [reification](04-design.md#sec:functionof)); a filled list is inference

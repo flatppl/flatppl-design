@@ -50,12 +50,12 @@ combined likelihood `L` is a likelihood object on the parameter space
 ```flatppl
 # Observation likelihood: boundary input keeps raw_eff_syst as a parameter
 L_obs = likelihoodof(
-    kernelof(events, mu_sig = mu_sig, raw_eff_syst = raw_eff_syst),
+    kernelof(events, mu_sig, raw_eff_syst),
     [3.1, 5.7, 2.4, 8.9, 4.2])
 
 # Constraint: auxiliary measurement model for the nuisance parameter
 aux_eff ~ Normal(mu = raw_eff_syst, sigma = 1.0)
-L_constr = likelihoodof(kernelof(aux_eff, raw_eff_syst = raw_eff_syst), 0.0)
+L_constr = likelihoodof(kernelof(aux_eff, raw_eff_syst), 0.0)
 
 # Combined likelihood
 L = joint_likelihood(L_obs, L_constr)
@@ -76,7 +76,7 @@ sideband = interval(0.0, 3.0)
 sideband_data = filter(fn(_ in sideband), [3.1, 5.7, 2.4, 8.9, 4.2])
 sideband_model = functionof(
     PoissonProcess(intensity = truncate(rate, sideband)),
-    mu_sig = mu_sig, raw_eff_syst = raw_eff_syst)
+    mu_sig, raw_eff_syst)
 L_obs_sideband = likelihoodof(sideband_model, sideband_data)
 L_sideband = joint_likelihood(L_obs_sideband, L_constr)
 ```
@@ -119,17 +119,17 @@ a, b, c ~ MvNormal(mu = some_mean, cov = some_cov)
 mvmodel_expanded = lawof(record(a = a, b = b, c = c))
 
 # Pushforward for variable transformation
-log_normal = pushfwd(functionof(exp(x), x = x), Normal(mu = 0, sigma = 1))
+log_normal = pushfwd(functionof(exp(x), x), Normal(mu = 0, sigma = 1))
 
 # Deterministic function and broadcast
 transformed = 2 * a + 1
-f = functionof(transformed, a = a)
+f = functionof(transformed, a)
 A = [1.0, 2.0, 3.0, 4.0]
 result = broadcast(f, a = A)           # [3.0, 5.0, 7.0, 9.0]
 
 # Stochastic broadcast
 noisy ~ Normal(mu = a, sigma = 0.1)
-K = kernelof(noisy, a = a)
+K = kernelof(noisy, a)
 noisy_array ~ broadcast(K, a = A)  # independent Normal draws at each element
 
 # Truncated distribution (model physics)

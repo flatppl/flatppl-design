@@ -81,7 +81,7 @@ falling exponential background, with a log-normal resolution
 systematic. Returns a likelihood object `L` parameterized by the expected
 signal and background counts.
 %%%
-flatppl_compat = "0.3"
+flatppl_compat = "0.1"
 
 # Inputs: expected signal and background event counts
 % Expected number of signal events.
@@ -164,7 +164,7 @@ See [calling conventions and anonymous functions](04-design.md#sec:calling-conve
 Values can be reified as functions via `functionof(...)`.
 
 **Tuples** are ordered bundles of objects. Tuples may contain any
-objects, including other tuples (see [Tuples](04-design.md#sec:tuples)).
+objects, including other tuples (see [Tuples](03-value-types.md#sec:tuples)).
 
 Measures, likelihood objects, functions, and tuples are first-class in the sense
 that they can be bound to names, passed to operations and referenced by other bindings.
@@ -233,6 +233,7 @@ v = [1.0, 2.0, 3.0]
 nested = [[1, 2], [3, 4]]
 M = rowstack([[1, 2, 3], [4, 5, 6]])
 r = record(mu=3.0, sigma=1.0)
+s = (mu = 3.0, sigma = 1.0)
 
 # Indexing, field access, slicing
 array_entry = A[i]
@@ -443,7 +444,7 @@ L = likelihoodof(kernelof(events), observed_data)
 R = interval(2.0, 8.0)
 model_R = functionof(
     PoissonProcess(intensity = truncate(intensity, R)),
-    n_sig = n_sig, n_bkg = n_bkg, raw_syst = raw_syst)
+    n_sig, n_bkg, raw_syst)
 L_sub = likelihoodof(model_R, filter(fn(_ in R), observed_data))
 L_total = joint_likelihood(L1, L2)
 
