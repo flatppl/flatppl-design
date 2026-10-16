@@ -83,8 +83,9 @@ scalars, vectors, and matrices.
 
 ### Records
 
-Records comprise ordered named fields, written as `record(name1=val1, name2=val2, ...)`. Field
-values may be scalars, arrays, or records. Field access uses dot syntax:
+Records comprise ordered named fields, written as `record(name1=val1, name2=val2, ...)`.
+The form `(name1=val1, name2=val2, ...)` is equivalent, including a single-field
+record `(name=val)`. Field values may be scalars, arrays, or records. Field access uses dot syntax:
 `r.name1` (lowers to `get(r, "name1")`); nested fields chain, e.g. `r.a.b`. Field order is part of the record's identity:
 `record(a=1, b=2)` and `record(b=2, a=1)` are distinct values. This is significant
 for alignment with parameter spaces and for deterministic serialization.
