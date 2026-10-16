@@ -1,12 +1,12 @@
 [workspace]
 channels = ["conda-forge"]
-platforms = ["linux-64", "osx-64", "osx-arm64", "win-64"]
+platforms = ["linux-64", "linux-aarch64", "osx-64", "osx-arm64", "win-64"]
 
 [dependencies]
-# Pandoc 3.12 breaks custom keyword lists: jgm/pandoc#11921.
-pandoc = ">=3.9,<3.12"
+# Pandoc 3.12 broke custom keyword lists, fixed in 3.12.1: jgm/pandoc#11921.
+pandoc = ">=3.12.1,<4"
 typst = ">=0.14,<1"
-nodejs = ">=24,<25"
+nodejs = ">=26,<27"
 
 [tasks]
 _mkdir = "mkdir -p build"
@@ -30,7 +30,7 @@ _katex = { cmd = "node docs/templates/vendor-katex.js", depends-on = [
     "_mkdir",
 ] }
 _fuse = { cmd = "node docs/templates/vendor-fuse.js", depends-on = ["_mkdir"] }
-_pandoc-html = { cmd = "pandoc docs/0[0-9]-*.md docs/1[0-9]-*.md -o build/index.html --standalone --template=build/template.html --metadata-file=build/site-metadata.json --toc --toc-depth=2 --number-sections --shift-heading-level-by=-1 --syntax-definition=build/flatppl.xml --syntax-highlighting=tango --css=style.css --katex=./katex/ -B docs/templates/header.html --lua-filter=docs/templates/strip-file-refs.lua --lua-filter=docs/templates/html-anchors.lua --metadata lang=en", depends-on = [
+_pandoc-html = { cmd = "pandoc docs/0[0-9]-*.md docs/1[0-9]-*.md -o build/index.html --standalone --template=build/template.html --metadata-file=build/site-metadata.json --toc --toc-depth=2 --number-sections --shift-heading-level-by=-1 --syntax-definition=build/flatppl.xml --syntax-highlighting=tango --css=style.css --math-method=katex:./katex/ -B docs/templates/header.html --lua-filter=docs/templates/strip-file-refs.lua --lua-filter=docs/templates/html-anchors.lua --metadata lang=en", depends-on = [
     "_site-metadata",
     "_copy-assets",
     "_katex",
