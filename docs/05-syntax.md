@@ -326,7 +326,7 @@ Postfix         ::= Primary (FieldAccess | DotCall | Indexing | Call)*
 Primary         ::= Literal | Name | Axis | AxisList | "(" Expression ")"
 
 FieldAccess     ::= "." Name
-DotCall         ::= "." "(" CallArgs ")"
+DotCall         ::= "." "(" CallArgs ","? ")"
 Indexing        ::= "[" IndexExpr ("," IndexExpr)* "]"
 IndexExpr       ::= Expression | ":" | "!"
 Axis            ::= "." AxisName VarianceMarker?
@@ -351,7 +351,7 @@ ContinuationOp  ::= AddOp | MulOp | CompOp | "^" | ".^"
                        unless that operator is unary. *)
 
 (* Calls *)
-Call            ::= "(" CallArgs ")"
+Call            ::= "(" CallArgs ","? ")"
 CallArgs        ::= PositionalArgs | KeywordArgs | MixedArgs
 PositionalArgs  ::= Expression ("," Expression)*
 KeywordArgs     ::= KeywordArg ("," KeywordArg)*
@@ -464,7 +464,8 @@ empty: `aggregate(sum, [], expr)` denotes
 **Note on tuples.** `(x)` is a parenthesised expression. `(x, y)` is a tuple. The
 single-element form `(x,)` is not in the grammar — single-element tuples are not
 supported (consistent with the design rule that tuples have at least two
-components).
+components). A trailing comma is admitted in every literal and call argument
+list.
 
 **Note on parser disambiguation.** The grammar is intended to be parsed with
 bounded lookahead. `CallArgs` is technically ambiguous in pure EBNF (an
