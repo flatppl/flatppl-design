@@ -94,7 +94,7 @@ Adding new shadowable built-ins to FlatPPL is therefore a non-breaking change.
 ### <a id="sec:calling-convention"></a>Calling conventions
 
 Nullary ordinary calls (`f()`) are allowed only for standard-module constructors
-explicitly documented with a nullary form.
+explicitly documented with no arguments.
 
 All ordinary callables — built-in or user defined value functions, constructors or
 transition kernels —  accept arguments in two or three forms (denoted here in the
@@ -319,12 +319,12 @@ contains `draw` nodes resolves those draws to concrete random values; evaluating
 density on the same measure instead takes those stochastic nodes as inputs to the
 density (unless they are marginalized out in the stochastic graph).
 
-**<a id="sec:improper-draws"></a>Flat prior sources.** `draw` also admits
-[`regression.Flat(support)`](09-standard-modules.md#flat), finite `iid`, `joint` and
+**<a id="sec:improper-draws"></a>Improper prior sources.** `draw` also admits
+[`regression.Flat()`](09-standard-modules.md#flat), finite `iid`, `joint` and
 `jointchain` compositions of admitted sources (pointwise for conditional factors),
 and measures reified from admitted draws. Admission follows construction, not
-mass class; other unnormalized sources remain invalid. `Flat` sources admit
-scoring, not random sampling.
+mass class; other unnormalized sources remain invalid. An improper source
+admits scoring, not random sampling.
 
 <a id="sec:functionof-measure"></a>**Reifying measure-valued expressions to kernels.**
 If `functionof` is applied to a measure node, it generates a transition kernel — a
@@ -366,10 +366,10 @@ $\kappa$ carrying `m`'s `draw` ancestors to `m`, over their joint law $P$ — th
 same integral as [`kchain`](06-measure-algebra.md#kchain). `lawof(m)` requires
 `m`'s `%mass` to be `%normalized` (see
 [total-mass classes](11-flatpir.md#total-mass-classes)), unless `m` is an
-[flat prior source](#sec:improper-draws). Other settled classes
+[improper prior source](#sec:improper-draws). Other settled classes
 — `%null`, `%finite`, `%locallyfinite`, or `%unknown` — are static errors.
 `%deferred` is an inference state,
-not a total-mass class, and triggers no error; absent such a flat prior source,
+not a total-mass class, and triggers no error; absent such an improper source,
 an engine that admits a `%deferred`-mass argument assumes normalization rather
 than proving it, and must leave the result's `%mass` `%deferred`.
 `lawof` never normalizes its argument;
