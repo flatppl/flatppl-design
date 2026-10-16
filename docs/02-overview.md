@@ -444,7 +444,7 @@ L = likelihoodof(kernelof(events), observed_data)
 R = interval(2.0, 8.0)
 model_R = functionof(
     PoissonProcess(intensity = truncate(intensity, R)),
-    n_sig = n_sig, n_bkg = n_bkg, raw_syst = raw_syst)
+    n_sig, n_bkg, raw_syst)
 L_sub = likelihoodof(model_R, filter(fn(_ in R), observed_data))
 L_total = joint_likelihood(L1, L2)
 

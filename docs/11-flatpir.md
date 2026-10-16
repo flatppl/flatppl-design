@@ -321,7 +321,8 @@ carries semantic meaning. Some of these forms also have a single leading
 positional argument:
 
 - `functionof` and `kernelof` take variadic kwargs that define the inputs of
-  the reified callable (see [below](#reified-callables)).
+  the reified callable (see [below](#reified-callables)). The bare-name boundary
+  shorthand expands to these kwargs before lowering.
 - `record`, `table`, `cartprod`, `joint`, `jointchain` take variadic kwargs that label
   components of the output. FlatPIR uses `(%field ...)` entries (see [below](#structural-named-entries)).
   The surface record literal `(a = x, ...)` lowers to the same `record` form.
@@ -454,7 +455,9 @@ For example:
 
 - **`%specinputs`** — the reification carried an explicit boundary
   specification. The entries, in order, are preserved; converting FlatPIR to
-  FlatPPL restores them as boundary keyword arguments.
+  FlatPPL restores them as boundary keyword arguments. A bare-name boundary list
+  (see [reification boundaries](04-design.md#sec:functionof)) lowers to the same
+  entries.
 - **`%autoinputs`** — the reification carried no boundary specification. The
   list is `%deferred` until inference fills it (see
   [reification](04-design.md#sec:functionof)); a filled list is inference

@@ -135,7 +135,8 @@ of which may or may not be significant. The total number of inputs is never zero
 - `tuple`: Unnamed variadic inputs with significant order (minimum two).
 - `record` and `table`: Named variadic inputs with significant order.
 - `functionof` and `kernelof`: One distinguished input, plus optional variadic
-  named inputs with significant order.
+  boundary inputs with significant order, given either all as keyword arguments
+  or all as bare binding names (see [reification boundaries](#sec:functionof)).
 - `lawof`, `fixed`: One distinguished input.
 - `broadcast`: One distinguished input for the function to be broadcast, plus
   named or unnamed inputs that match the inputs of that function.
@@ -465,6 +466,23 @@ h = functionof(e, a = a, d = d)     # h: {a, d: Real} → Real
 The resulting function `h` now has arguments named `a` and `d`, but these are local
 to the function and decoupled from the original nodes `a` and `d`.
 
+When every argument keeps the name of its boundary node, the boundary nodes may be
+listed as bare names instead:
+
+```flatppl
+h = functionof(e, a, d)
+```
+
+Each bare entry must be a binding name of the current module. It names the boundary
+node and the argument alike. Boundary inputs are given either all as bare names or
+all as keyword arguments. Mixing the two forms in one call is a static error.
+Placeholders are not module bindings and so keep their keyword form (`x = _x_`). A
+record or tuple expression in this position is a single node, not a boundary list:
+`functionof(e, (a = a, b = b))` and `functionof(e, (a, b))` are static errors. Such a
+node becomes a boundary input only under a name, as in `r` or `p = r`. The shorthand
+is a surface rewrite with no separate [FlatPIR](11-flatpir.md#reified-callables) form
+and applies to `kernelof` as well.
+
 **Identity law.** `functionof(f(a, b), ..., a = a, b = b, ...)` is equivalent to `f`.
 
 **Lambda notation.** A lambda function is a shorthand notation for `functionof`
@@ -521,7 +539,8 @@ step, which is a different model.
 #### <a id="sec:kernelof"></a>Kernels and `kernelof`
 
 `kernelof(x, kwargs...)` reifies (typically stochastic) value nodes to Markov
-kernels. `x` must not be a measure. `kernelof(x, kwargs...)` is equivalent to
+kernels. `kwargs...` is a boundary specification in either form (see
+[above](#sec:functionof)). `x` must not be a measure. `kernelof(x, kwargs...)` is equivalent to
 `functionof(lawof(x), kwargs...)` interpreted within the reified subgraph
 delimited by `kwargs` — the boundary substitution applies before the inner
 `lawof` is interpreted, so an enclosing `kernelof` boundary scopes what the
@@ -545,7 +564,7 @@ obs ~ iid(Normal(mu = a, sigma = b), 10)
 joint_model = lawof(record(theta1 = theta1, theta2 = theta2, obs = obs))
 prior_predictive = lawof(record(obs = obs))
 prior = lawof(record(theta1 = theta1, theta2 = theta2))
-forward_kernel = kernelof(record(obs = obs), theta1 = theta1, theta2 = theta2)
+forward_kernel = kernelof(record(obs = obs), theta1, theta2)
 ```
 
 Here we define
@@ -605,7 +624,7 @@ theta ~ iid(Normal(mu, tau), J)
 y ~ Normal.(theta, std_errs_data)
 
 prior = lawof(record(mu = mu, tau = tau, theta = theta))
-forward_kernel = kernelof(record(y = y), mu = mu, tau = tau, theta = theta)
+forward_kernel = kernelof(record(y = y), mu, tau, theta)
 joint_model = jointchain(prior, forward_kernel)
 ```
 
@@ -804,13 +823,13 @@ Deterministic broadcast with a named function:
 
 ```flatppl
 b = 2 * a + 1
-f = functionof(b, a = a)
+f = functionof(b, a)
 C = broadcast(f, a = A)
 ```
 
 ```flatppl
 b = 2 * a + 1
-f = functionof(b, a = a)
+f = functionof(b, a)
 C = f.(a = A)
 ```
 

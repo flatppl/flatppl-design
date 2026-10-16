@@ -434,7 +434,9 @@ only the special operations `functionof`, `kernelof`, `broadcast`, `load_module`
 `checked` accept this shape; other callables must use `PositionalArgs` or `KeywordArgs`
 only. Among these, `functionof`, `kernelof`, `load_module`, and `checked` take exactly
 one leading positional argument; only `broadcast` accepts multiple positional arguments
-before the keyword arguments.
+before the keyword arguments. `functionof` and `kernelof` also accept `PositionalArgs`
+of two or more entries, where every entry after the first is a bare `Name` designating
+a boundary node (see [reification boundaries](04-design.md#sec:functionof)).
 
 **Note on reserved words.** The keywords `in`, `true`, `false`, `all`,
 and `only` are recognized before `Name` and cannot be used as bindings.
