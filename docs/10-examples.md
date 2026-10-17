@@ -135,8 +135,8 @@ noisy_array ~ broadcast(K, a = A)  # independent Normal draws at each element
 # Truncated distribution (model physics)
 positive_sigma ~ normalize(truncate(Normal(mu = 1.0, sigma = 0.5), interval(0, inf)))
 
-# Density-defined distribution (Bernstein polynomial). The callback form takes
-# fixed inputs only: a `fn` hole cannot capture fitted ancestors.
+# Density-defined distribution (Bernstein polynomial). The callback uses fixed
+# coefficients: `fn` cannot capture parameterized ancestors.
 bern = fn(bernstein(coefficients = [0.2, 0.5, 0.8, 0.4], x = _))
 smooth_bkg = normalize(weighted(bern, Lebesgue(support = interval(0.0, 10.0))))
 
