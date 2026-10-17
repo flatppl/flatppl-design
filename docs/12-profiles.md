@@ -350,7 +350,7 @@ auxiliary measures are reified into kernels with `functionof` before binding the
 
 The "deterministic effect" column shows what the modifier transforms: `expected`
 is a sample's per-bin expected counts (sample-level modifiers), `nom` is a sample's
-nominal histogram (replaced wholesale by `histosys`), and `total_nom` is the
+nominal histogram, and `total_nom` is the
 channel's total per-bin nominal across samples (`staterror` only).
 
 | FlatPPL deterministic effect | FlatPPL auxiliary measurement | HS³ `histfactory_dist` modifier | Notes |
@@ -358,13 +358,16 @@ channel's total per-bin nominal across samples (`staterror` only).
 | `broadcast(mul, expected, factor)` | none (free) | `normfactor` | `factor = elementof(reals)` |
 | `broadcast(mul, expected, lumi)` | `Normal(mu = lumi, sigma = sigma_lumi)` (observed at `lumi_nom`) | `normfactor` (named `Lumi`) | `lumi = elementof(posreals)`; HS³/ROOT models luminosity as a constrained `normfactor` named `Lumi`, not a distinct modifier type — pyhf instead has a dedicated `lumi` modifier |
 | `broadcast(mul, expected, hepphys.interp_*(lo, 1.0, hi, alpha))` | `Normal(mu = alpha, sigma = 1.0)` (observed at `0`) | `normsys` | default `hepphys.interp_poly6_exp` |
-| `hepphys.interp_*(tmpl_dn, nom, tmpl_up, alpha)` | `Normal(mu = alpha, sigma = 1.0)` (observed at `0`) | `histosys` | default `hepphys.interp_poly6_lin`; replaces nominal directly |
+| `hepphys.interp_*(tmpl_dn, nom, tmpl_up, alpha)` | `Normal(mu = alpha, sigma = 1.0)` (observed at `0`) | `histosys` | default `hepphys.interp_poly6_lin`; shifted template for one modifier |
 | `broadcast(mul, expected, gamma)` | none (free per-bin) | `shapefactor` | `gamma = elementof(cartpow(posreals, n_bins))` |
 | `broadcast(mul, expected, gamma)` | `broadcast(ContinuedPoisson, broadcast(mul, gamma, tau))` (observed at `tau`) | `shapesys` | `tau = broadcast(pow, broadcast(divide, nom, sigma), 2)`; non-integer `tau` requires `ContinuedPoisson` |
 | `broadcast(mul, total_nom, gamma)` | `broadcast(Normal, gamma, delta)` (observed at `1.0` per bin) | `staterror` | `delta` from quadrature sum across samples; this is the `Gauss` constraint — see the `Poisson` form in the note below |
 
 **Notes.** Modifiers with the same name share a single nuisance parameter; the
 translator must verify compatible auxiliary-measurement types.
+
+For multiple `histosys` modifiers, add each interpolated template's change from
+the nominal, then add the nominal once (see [`sample_yields`](09-standard-modules.md#sample_yields)).
 
 `staterror` carries an HS³ `constraint_type` (`Gauss` or `Poisson`). A translator must
 honour the field when it is present; when it is omitted the default follows the source
