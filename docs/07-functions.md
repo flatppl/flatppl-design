@@ -453,6 +453,8 @@ order.
 | `probit` | `p` | $\Phi^{-1}(p)$, standard-normal quantile | `interval(0, 1)` |
 | `invprobit` | `x` | $\Phi(x)$, standard-normal CDF | `reals` |
 
+For `min` and `max`, see [NaN inputs](#nan-inputs).
+
 For complex arguments, `log` and `sqrt` use the principal branch ($\arg(z) \in (-\pi, \pi]$).
 `pow` (see [operator-equivalent functions](#operator-equivalent-functions) below) extends via $z^w = e^{w \log z}$ (principal branch); either or both arguments may be complex.
 `logit` and `probit` evaluate to `-inf` at $p = 0$ and `inf` at $p = 1$.
@@ -632,7 +634,7 @@ $-\infty$, `minimum` is $+\infty$, and `lengthof` is $0$: the identity of each
 reduction. `mean`, `var`, `std`, `median`, and `quantile` have no such identity, and
 engines raise a runtime error on an empty input.
 
-**NaN inputs.** A NaN propagates through the order operations `max`, `min`, `maximum`,
+<a id="nan-inputs"></a>**NaN inputs.** A NaN propagates through the order operations `max`, `min`, `maximum`,
 `minimum`, `cummax`, `cummin`, `linfnorm`, `median`, and `quantile`.
 
 For multi-axis array contraction using these reductions, see
@@ -650,7 +652,7 @@ For multi-axis array contraction using these reductions, see
 Cumulative operations are scans: they preserve the shape of their input
 rather than reducing it, and they are not eligible reductions for
 [multi-axis aggregation](04-design.md#sec:aggregate). Over an empty input each
-returns the empty vector.
+returns the empty vector. For `cummax` and `cummin`, see [NaN inputs](#nan-inputs).
 
 ### Norms and normalization
 
@@ -664,6 +666,8 @@ returns the empty vector.
 | `logsumexp` | `v` | $\log \sum_i e^{v_i}$ | real vectors |
 | `softmax` | `v` | $(e^{v_i} / \sum_j e^{v_j})_i$ | real vectors |
 | `logsoftmax` | `v` | $(v_i - \log \sum_j e^{v_j})_i$ | real vectors |
+
+For `linfnorm`, see [NaN inputs](#nan-inputs).
 
 **Empty inputs.** Over an empty input `l1norm`, `l2norm`, and `linfnorm` are $0$,
 `logsumexp` is $-\infty$, and `softmax`, `logsoftmax`, `l1unit`, and `l2unit` are the
