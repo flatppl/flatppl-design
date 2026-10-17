@@ -360,7 +360,7 @@ channel's total per-bin nominal across samples (`staterror` only).
 | `broadcast(mul, expected, hepphys.interp_*(lo, 1.0, hi, alpha))` | `Normal(mu = alpha, sigma = 1.0)` (observed at `0`) | `normsys` | default `hepphys.interp_poly6_exp` |
 | `hepphys.interp_*(tmpl_dn, nom, tmpl_up, alpha)` | `Normal(mu = alpha, sigma = 1.0)` (observed at `0`) | `histosys` | default `hepphys.interp_poly6_lin`; replaces nominal directly |
 | `broadcast(mul, expected, gamma)` | none (free per-bin) | `shapefactor` | `gamma = elementof(cartpow(posreals, n_bins))` |
-| `broadcast(mul, expected, gamma)` | `broadcast(ContinuedPoisson, broadcast(mul, gamma, tau))` (observed at `tau`) | `shapesys` | `tau = broadcast(pow, broadcast(divide, nom, sigma), 2)`; non-integer `tau` requires `ContinuedPoisson` |
+| `broadcast(mul, expected, gamma)` | `broadcast(hepphys.ContinuedPoisson, broadcast(mul, gamma, tau))` (observed at `tau`) | `shapesys` | `tau = broadcast(pow, broadcast(divide, nom, sigma), 2)`; non-integer `tau` requires `hepphys.ContinuedPoisson` |
 | `broadcast(mul, total_nom, gamma)` | `broadcast(Normal, gamma, delta)` (observed at `1.0` per bin) | `staterror` | `delta` from quadrature sum across samples; this is the `Gauss` constraint — see the `Poisson` form in the note below |
 
 **Notes.** Modifiers with the same name share a single nuisance parameter; the
@@ -372,7 +372,7 @@ tool — pyhf omits it and means `Gauss`, ROOT HS³ means `Poisson` — so a ROO
 importer defaults to the `Poisson` form. The `Gauss` form is the row above
 (`broadcast(Normal, gamma, delta)` observed at `1.0`). The `Poisson` form mirrors
 `shapesys`:
-`broadcast(ContinuedPoisson, broadcast(mul, gamma, tau))` observed at `tau`, with
+`broadcast(hepphys.ContinuedPoisson, broadcast(mul, gamma, tau))` observed at `tau`, with
 `tau = broadcast(pow, broadcast(divide, total_nom, delta_abs), 2)` (the per-bin
 effective count, `delta_abs` the absolute quadrature-sum uncertainty).
 
@@ -566,7 +566,7 @@ binned model maps to one `poisson` contribution per bin.
 | `logsumexp`, `softmax` | `log_sum_exp`, `softmax` | |
 | `transpose`, `adjoint` | `'` (postfix transpose) | Stan transpose is real-only |
 | `det`, `inv`, `trace` | `determinant`, `inverse`, `trace` | |
-| `logabsdet` | `log_determinant` | Stan returns $\log\det$, not $\log\lvert\det\rvert$; differ for negative determinant |
+| `logabsdet` | `log_determinant` | |
 | `lower_cholesky` | `cholesky_decompose` | |
 | `qr` | `qr_thin_Q`, `qr_thin_R` | FlatPPL returns one `record(Q, R)`; Stan splits into two calls |
 | `diagmat`, `diag` | `diag_matrix`, `diagonal` | `diagonal` extracts the main diagonal only (no `k` offset) |

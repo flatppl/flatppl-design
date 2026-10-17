@@ -706,7 +706,7 @@ empty input `lany` is `false` and `lall` is `true`, the identities of `lor` and
 
 | Function | Arguments | Description | Domains |
 |---|---|---|---|
-| [`in`](#in) | `x, S` | `true` if `x ∈ S`, else `false` (operator syntax `x in S`) | scalar matching element type of `S`, set |
+| [`in`](#in) | `x, S` | `true` if `x in S`, else `false` | value matching element type of `S`, set |
 | [`filter`](#filter) | `pred, data` | keep only elements/rows for which `pred` returns `true` | function, array or table |
 | [`selectbins`](#selectbins) | `edges, region, counts` | select whole-bin counts whose intervals intersect `region` | vector, set, vector |
 
