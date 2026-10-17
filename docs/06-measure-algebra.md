@@ -20,8 +20,9 @@ marginalization, and kernel composition operations are well-defined throughout.
 Reference measures, against which densities are taken, are $\sigma$-finite, so the
 Radon-Nikodym theorem applies whenever a measure is absolutely continuous with respect
 to its reference measure (so densities exist). $\sigma$-finiteness is not a blanket
-property of FlatPPL measures: operations that need it, such as
-[`disintegrate`](#disintegrate) and [`restrict`](#restrict), require it of their input.
+property of FlatPPL measures. [`disintegrate`](#disintegrate), also used to define
+[`restrict`](#restrict), requires a $\sigma$-finite marginal
+on the conditioning coordinates (see [structural disintegration](#structural-disintegration)).
 In the rest of this document, "measure" means "s-finite measure."
 
 A **transition kernel** (or **kernel**) from $X$ to $Y$ is a measurable function
@@ -310,9 +311,9 @@ To evaluate a density at many points (e.g. a grid for numerical integration or p
   variate is a record. At each input point the result is the `joint` of the
   component output measures, governed by the sharing rules above; the fanned
   input is a value, not a stochastic node, and so induces no dependence by
-  itself. The result's total-mass class is the product of the components'
-  classes, as in the measure case; when components sharing a stochastic node
-  include more than one non-normalized member, no class stronger than unknown
+  itself. The result's [total-mass class](11-flatpir.md#total-mass-classes) is the
+  product of the components' classes, as in the measure case; when components
+  sharing a stochastic node include more than one non-normalized member, no class stronger than unknown
   is statically justified. A fan-out of Markov kernels is a Markov kernel.
 
   **Equivalent record law.** `joint(a = lawof(a), b = lawof(b))` is equivalent
