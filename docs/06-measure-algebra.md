@@ -20,8 +20,9 @@ marginalization, and kernel composition operations are well-defined throughout.
 Reference measures, against which densities are taken, are $\sigma$-finite, so the
 Radon-Nikodym theorem applies whenever a measure is absolutely continuous with respect
 to its reference measure (so densities exist). $\sigma$-finiteness is not a blanket
-property of FlatPPL measures: operations that need it, such as
-[`disintegrate`](#disintegrate) and [`restrict`](#restrict), require it of their input.
+property of FlatPPL measures. [`disintegrate`](#disintegrate), also used to define
+[`restrict`](#restrict), requires a $\sigma$-finite marginal
+on the conditioning coordinates (see [structural disintegration](#structural-disintegration)).
 In the rest of this document, "measure" means "s-finite measure."
 
 A **transition kernel** (or **kernel**) from $X$ to $Y$ is a measurable function
