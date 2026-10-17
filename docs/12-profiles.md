@@ -131,6 +131,15 @@ are the uncaptured variadic runs). Rewriting then adds four forms:
   (no shared stochastic ancestor), decided from inferred phase and ancestry, not by
   pattern match.
 
+### <a id="sec:flatpdl"></a>FlatPDL
+
+FlatPDL is the deterministic profile for measure elimination, defined in
+[`flatpdl.flatprof`](https://github.com/flatppl/flatppl-design/blob/main/profiles/flatpdl.flatprof). It excludes measure-valued
+operations and retains primitive density and sampling calls with explicit RNG
+state. [Determinization](13-determinization.md#sec:determinization) produces a
+deterministic DAG; FlatPDL conformance additionally requires that DAG to match
+the profile grammar.
+
 ### Target system profiles
 
 Other stochastic systems will typically not support the whole semantics and
