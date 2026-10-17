@@ -93,7 +93,8 @@ posterior = bayesupdate(L, prior)
 
 **Additional patterns.** The following snippets illustrate further language features in the
 context of the same analysis style — variate naming, variable transformations, broadcast,
-truncation, density-defined distributions, module loading, and hypothesis testing:
+truncation, density-defined distributions, module loading, and hypothesis testing.
+They are independent of the main example above:
 
 ```flatppl
 # Inputs used in the snippets below
