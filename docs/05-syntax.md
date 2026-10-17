@@ -214,7 +214,7 @@ value usable wherever a [`functionof`](04-design.md#sec:functionof) result is.
 
 ```flatppl
 f(x, y) = x^2 * y^2                          # equivalent to f = (x, y) -> x^2 * y^2
-g(x, y, z) = record(p = x + y, q = y * z)    # record/array/tuple body → multi-output
+g(x, y, z) = record(p = x + y, q = y * z)    # one record-valued result
 h(x, y) = [x / y, x * log(y)]
 ```
 
