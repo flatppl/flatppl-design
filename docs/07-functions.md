@@ -825,7 +825,7 @@ more_random_data, rstate3 = rand(iid(Exponential(1), 5), rstate2)
 <a id="rnginit"></a>**`rnginit(rngseed)`** — initializes a fresh RNG state from a seed byte vector
 or a seed integer. Returns a value in the set `rngstates`.
 
-  `rngseed` must be a seed vector of bytes (integers in $\{0, \ldots, 255\}$).
+  A byte-vector seed must contain integers in $\{0, \ldots, 255\}$.
   Any non-empty vector is accepted; a seed length of 32 bytes provides sufficient entropy
   for virtually all modern RNG algorithms.
 
