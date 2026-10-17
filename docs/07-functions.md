@@ -770,7 +770,7 @@ Data points outside all bins are ignored.
 | Function | Arguments | Description | Domains |
 |---|---|---|---|
 | [`polynomial`](#polynomial) | `coefficients, x` | power-series polynomial $\sum_{i=0}^{n-1} c_{i+1} x^i$ | vector, real or complex |
-| [`bernstein`](#bernstein) | `coefficients, x` | Bernstein basis polynomial of degree $n - 1$ on $[0, 1]$ | vector, `unitinterval` |
+| [`bernstein`](#bernstein) | `coefficients, x` | Bernstein basis polynomial of degree `lengthof(coefficients) - 1` on $[0, 1]$ | vector, `unitinterval` |
 | [`stepwise`](#stepwise) | `edges, values, x` | piecewise-constant step function | vector, vector, real |
 
 <a id="polynomial"></a>**`polynomial(coefficients, x)`** — power-series polynomial evaluated at `x`:
