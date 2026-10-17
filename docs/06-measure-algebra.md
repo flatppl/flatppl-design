@@ -311,9 +311,9 @@ To evaluate a density at many points (e.g. a grid for numerical integration or p
   variate is a record. At each input point the result is the `joint` of the
   component output measures, governed by the sharing rules above; the fanned
   input is a value, not a stochastic node, and so induces no dependence by
-  itself. The result's total-mass class is the product of the components'
-  classes, as in the measure case; when components sharing a stochastic node
-  include more than one non-normalized member, no class stronger than unknown
+  itself. The result's [total-mass class](11-flatpir.md#total-mass-classes) is the
+  product of the components' classes, as in the measure case; when components
+  sharing a stochastic node include more than one non-normalized member, no class stronger than unknown
   is statically justified. A fan-out of Markov kernels is a Markov kernel.
 
   **Equivalent record law.** `joint(a = lawof(a), b = lawof(b))` is equivalent
