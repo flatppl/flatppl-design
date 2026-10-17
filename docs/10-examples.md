@@ -126,7 +126,7 @@ log_normal = pushfwd(functionof(exp(x), x), Normal(mu = 0, sigma = 1))
 transformed = 2 * a + 1
 f = functionof(transformed, a)
 A = [1.0, 2.0, 3.0, 4.0]
-result = broadcast(f, a = A)           # [3.0, 5.0, 7.0, 9.0]
+result = broadcast(f, a = A)  # [3.0, 5.0, 7.0, 9.0]
 
 # Stochastic broadcast
 noisy ~ Normal(mu = a, sigma = 0.1)
