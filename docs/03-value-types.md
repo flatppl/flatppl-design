@@ -211,7 +211,7 @@ returns a record.
 FlatPPL has a limited notion of sets, used to specify input domains, supports, truncation
 regions, and analysis regions. The predefined sets are:
 
-- `reals`<a id="reals"></a> — $\mathbb{R}$, the real numbers ($\pm\infty$ admitted).
+- `reals`<a id="reals"></a> — $\overline{\mathbb{R}}$, the extended real numbers ($\pm\infty$ admitted).
 - `posreals`<a id="posreals"></a> — $(0, +\infty]$, the positive reals including $+\infty$.
 - `nonnegreals`<a id="nonnegreals"></a> — $[0, +\infty]$, the non-negative reals including $+\infty$.
 - `unitinterval`<a id="unitinterval"></a> — $[0, 1]$, the unit interval.
