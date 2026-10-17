@@ -735,7 +735,7 @@ The `splines` standard module provides spline basis and penalty functions.
 Loaded via:
 
 ```flatppl
-sp = standard_module("splines", "0.1")
+spl = standard_module("splines", "0.1")
 ```
 
 #### Functions
