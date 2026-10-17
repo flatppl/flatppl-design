@@ -739,7 +739,8 @@ neg = fn(0 - _)
 poly = fn(polynomial(coefficients = cs, x = _))
 ```
 
-The trivial case `fn(_)` is the identity function, equivalent to the built-in `identity`.
+The trivial case `fn(_)` returns its bound input unchanged, as `identity` does.
+Their [argument-binding rules](#sec:calling-convention) differ.
 
 Multiple holes — left-to-right positional order:
 
