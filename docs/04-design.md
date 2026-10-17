@@ -939,7 +939,9 @@ collects record results row-wise into a table, with the record's fields as colum
 multiple axes are a static error.
 
 **`broadcasted(f)`** returns a callable that is equivalent to applying `broadcast` to
-`f` — that is, `broadcasted(f)(args...)` is equivalent to `broadcast(f, args...)`.
+`f` after argument binding. It retains `f`'s input names and any declared input
+order, and applies the ordinary [calling conventions](#sec:calling-convention),
+including record and table auto-splatting, before broadcasting the bound arguments.
 
 ### Reductions
 
