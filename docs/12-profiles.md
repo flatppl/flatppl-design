@@ -572,7 +572,7 @@ binned model maps to one `poisson` contribution per bin.
 | `logsumexp`, `softmax` | `log_sum_exp`, `softmax` | |
 | `transpose`, `adjoint` | `'` (postfix transpose) | Stan transpose is real-only |
 | `det`, `inv`, `trace` | `determinant`, `inverse`, `trace` | |
-| `logabsdet` | `log_determinant` | Stan returns $\log\det$, not $\log\lvert\det\rvert$; differ for negative determinant |
+| `logabsdet` | `log_determinant` | |
 | `lower_cholesky` | `cholesky_decompose` | |
 | `qr` | `qr_thin_Q`, `qr_thin_R` | FlatPPL returns one `record(Q, R)`; Stan splits into two calls |
 | `diagmat`, `diag` | `diag_matrix`, `diagonal` | `diagonal` extracts the main diagonal only (no `k` offset) |
