@@ -41,6 +41,8 @@ cases but are not yet specified.
 
 ### Naming convention
 
+Ellipses in the schematic forms below denote omitted terms.
+
 FlatPIR structural keywords are prefixed with `%` (e.g. `%module`, `%bind`, `%ref`,
 `%meta`). FlatPPL built-in names (`Normal`, `add`, `record`, `vector`, `real`,
 `integer`, ...) and user-defined names appear bare. The `%` prefix is invalid in
@@ -201,7 +203,7 @@ module references — have no value set and carry `%unknown` (distinct from
 using `%dynamic` for a load- or runtime-fixed dimension as `%array` does.
 Producers include distribution supports (the §08 Domain/Support column),
 `elementof`/`truncate` set arguments, and normalization functions
-(`softmax(v) ∈ stdsimplex(n)`); consumers include the
+(`softmax(v)` lies in `stdsimplex(n)`); consumers include the
 [total-mass rules](#total-mass-classes) and domain-contract checks.
 
 A `%meta` wrapper never nests directly: its `<expr>` is not itself a `(%meta …)`.
