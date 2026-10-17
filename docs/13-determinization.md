@@ -36,7 +36,7 @@ Each element of `outputs` is a deterministic result:
   [`rand(M, rstate)`](07-functions.md#rand), which returns `(value, new_rstate)`;
   the RNG state is an input, so a fixed argument reproduces the value for a
   given engine and platform
-  ([random value generation](07-functions.md#sec:random)), and the final RNG
+  ([random value generation](07-functions.md#sec:random)), and the returned RNG
   state may also be an output;
 - any other **deterministic expression** over the inputs.
 

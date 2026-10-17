@@ -109,7 +109,7 @@ canonical syntax):
   the callable's argument names is a static error. Auto-splatting is shallow and occurs only
   when a record or table is the call's sole argument (whatever its field count, a single field
   included); a record given alongside other arguments, or bound to a parameter by keyword, is an
-  ordinary value and is not splatted. A sole positional record or table therefore always splats:
+  ordinary value and is not splatted. Apart from the unary exemption below, a sole positional record or table splats:
   whether its field or column names match the callable's argument names decides only whether the
   call is valid, never whether the splat occurs. A callable with exactly one input whose
   documented domain admits records or tables is exempt and receives a sole positional record or
@@ -158,7 +158,7 @@ of which may or may not be significant. The total number of inputs is never zero
 
 A distinguished input has no name and so cannot be passed by keyword. The
 [measure combinators](06-measure-algebra.md#sec:measure-algebra) likewise take their
-inputs positionally: a keyword spelling such as `normalize(M = mu)` is a static error.
+fixed operands positionally: a keyword spelling such as `normalize(M = mu)` is a static error.
 Where this specification refers to a distinguished input by a name, as in
 `aggregate(f_reduction, output_axes, expr)`, the name identifies the input in prose
 only. A call binds the input by position, never by keyword argument.
@@ -767,7 +767,8 @@ neg = fn(0 - _)
 poly = fn(polynomial(coefficients = cs, x = _))
 ```
 
-The trivial case `fn(_)` is the identity function, equivalent to the built-in `identity`.
+The trivial case `fn(_)` returns its bound input unchanged, as `identity` does.
+Their [argument-binding rules](#sec:calling-convention) differ.
 
 Multiple holes — left-to-right positional order:
 
