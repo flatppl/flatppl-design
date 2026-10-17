@@ -74,7 +74,13 @@ deterministic real scalar arithmetic could read:
 (&profile
   ((?| elementof external)
    (?| reals integers booleans posreals nonnegreals unitinterval))
-  (functionof ?_ ?_*)
+  (functionof ?_ (?| %specinputs %autoinputs) (??+))
+  (%call
+    (%meta ((%function (%inputs ??+)) ?? ??)
+      (?| (%ref self ??)
+          (functionof ?_ (?| %specinputs %autoinputs) (??+))))
+    ?_*)
+  (%kwarg ?? ?_)
   (neg ?_)
   ((?| add sub mul divide pow) ?_ ?_)
   ((?| lt le gt ge equal unequal) ?_ ?_)
@@ -85,6 +91,12 @@ deterministic real scalar arithmetic could read:
   ((?| abs sqrt exp log log10 sin cos tan floor ceil round) ?_)
   ((?| min max) ?_ ?_))
 ```
+
+Inference checks reification input lists and their references. The call pattern
+covers local function references and inline reifications, with closed argument
+values, including keyword values.
+Each local callee must resolve, after alias resolution, to a `functionof` binding
+admitted by the profile.
 
 A value type exists only where the profile admits a producer for it, so excluding the
 producers excludes the type: with no array/complex source (`elementof` over `complexes`
