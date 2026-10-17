@@ -190,11 +190,11 @@ independently.
 The **value-set slot** records a sound statically inferred set containing the
 node's possible values, written in the [§03 value-set
 vocabulary](03-value-types.md#sec:valuetypes) (set constants, `interval`, `stdsimplex`,
-`ordered`, `zerosum`, `cartpow`); for a measure-valued node it is the measure's support. The set must be
+`ordered`, `zerosum`, `cartpow`, `cartprod`); for a measure-valued node it is the measure's support. The set must be
 a subset of the type's natural extent (e.g. `reals` for `(%scalar real)`),
 defaulting to that extent when nothing tighter is known. It is ideally tight, but
 the vocabulary is not intersection-closed, so there may be no unique tightest
-set — any sound superset is valid. Non-value nodes — callables, likelihoods, and
+set — any sound superset is valid. Non-value nodes — callables, likelihoods, tuples, and
 module references — have no value set and carry `%unknown` (distinct from
 `%deferred`). A value-set expression's shape parameters (the `n` in
 `stdsimplex(n)` or `cartpow(S, n)`) must agree with the node's structural shape,
