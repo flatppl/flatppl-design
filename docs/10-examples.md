@@ -1,5 +1,10 @@
 ## <a id="sec:example"></a>Worked examples
 
+For models defined directly on a particle phase-space domain, see the
+[three-body tensor-amplitude example](09-standard-modules.md#phase-space-three-body)
+and [four-body pair-resonance example](09-standard-modules.md#phase-space-four-body)
+in the `particle-physics` module.
+
 ### High Energy Physics (HEP)
 
 This example walks through a realistic HEP model step by step.

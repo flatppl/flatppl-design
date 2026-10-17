@@ -26,7 +26,8 @@
   ;     (elementof) and %fixed (external / load_data) ---
   ((?| elementof external)
    (?| reals posreals nonnegreals integers nonnegintegers booleans unitinterval
-       (cartpow ?_ ?_) (stdsimplex ?_) (interval ?_ ?_)))
+       (cartpow ?_ ?_) (stdsimplex ?_) (interval ?_ ?_)
+       (%call (%ref hepphys (?| phase_space aligned_phase_space)) ?_*)))
   (load_data ?_*)
 
   ; --- the six measure-kernel evaluation primitives (§07 sec:measure-eval-prims):
@@ -113,4 +114,6 @@
   (%call (%ref hepphys (?| interp_pwlin interp_pwexp interp_poly2_lin interp_poly6_lin
                            interp_poly6_exp resonance_breitwigner kallen
                            breakup_momentum blatt_weisskopf
+                           phase_space aligned_phase_space align_phase_space
+                           u2phasespace phase_space_weight
                            wignerd wignerD wignerd_doublearg wignerD_doublearg)) ?_*))

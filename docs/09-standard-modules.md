@@ -356,6 +356,423 @@ Arguments:
 In [`resonance_breitwigner`](#resonancebreitwigner), $F_\ell$ enters the mass-dependent
 width through the ratio $F_\ell(p(\sigma)) / F_\ell(p_0)$.
 
+#### <a id="sec:exclusive-phase-space"></a>Exclusive phase space
+
+An exclusive phase-space model assigns a weight, such as a squared decay
+amplitude, to a complete ordered list of outgoing four-momenta. The domain
+fixes the kinematics; the measure supplies the Lorentz-invariant volume element;
+`weighted` and `normalize` supply the model using the existing measure algebra.
+No spin or amplitude information belongs in the domain.
+
+These constructors follow FlatPPL's existing distinction between [sets](03-value-types.md#sets)
+and [measures](06-measure-algebra.md#sec:measure-algebra): `elementof(S)` needs a
+set, whereas `weighted(f, M)` needs a measure. These are separate objects, but
+users specify the kinematics only once:
+
+```flatppl
+hep = standard_module("particle-physics", "0.1")
+S = hep.phase_space(masses = [0.13957039, 0.13957039, 0.13957039], total = 1.86965)
+p = elementof(S)
+Phi = hep.PhaseSpace(support = S)
+pure_phase_space = normalize(Phi)
+```
+
+`phase_space` constructs the set, just as `stdsimplex` does; `PhaseSpace` constructs
+its physical measure, just as `Lebesgue(support = S)` constructs a reference
+measure. In particular, `PhaseSpace` is not a synonym for a normalized
+probability distribution. A model needing only the measure can write
+`hep.PhaseSpace(hep.phase_space(masses, total))`. There is no `PhaseSpace(n)`
+shorthand: multiplicity alone does not fix masses or the available energy.
+
+| Construct | Arguments | Result |
+|---|---|---|
+| [`phase_space`](#phase-space) | `masses`, `total` | Set of ordered, on-shell momentum configurations |
+| [`aligned_phase_space`](#aligned-phase-space) | `masses`, `total` | Set of momentum configurations with overall orientation removed |
+| [`align_phase_space`](#align-phase-space) | `p`, `support` | Canonical alignment of physical momenta in the parent rest frame |
+| [`PhaseSpace`](#phase-space-measure) | `support` | Unnormalized Lorentz-invariant measure on a phase-space set |
+| [`u2phasespace`](#u2phasespace) | `u`, `support` | Deterministic cube-to-momenta map |
+| [`phase_space_weight`](#phase-space-weight) | `u`, `support` | Volume element of that map relative to unit-cube Lebesgue measure |
+
+<a id="phase-space"></a>**`phase_space(masses, total)`** — constructs the Borel set
+
+$$
+S(P; m_1,\ldots,m_n) = \{(p_1,\ldots,p_n):
+ p_i^2=m_i^2,\ p_i^0\geq0,\ \textstyle\sum_i p_i=P\}.
+$$
+
+`masses` is a fixed-length vector of $n\geq2$ finite nonnegative masses.
+`total` is either a finite positive invariant mass $M$, meaning
+$P=(M,0,0,0)$, or a finite future-directed timelike four-vector $P$.
+Valid kinematics require $\sqrt{P^2}>\sum_i m_i$; threshold and subthreshold
+inputs are errors, rather than degenerate probability distributions.
+All components use one consistent energy unit, with $c=1$.
+
+A four-vector is an ordinary length-four array `[E, px, py, pz]`, using the
+metric $\operatorname{diag}(1,-1,-1,-1)$ and right-handed spatial axes. A point
+is a length-$n$ **vector of four-vectors**, not a flattened vector or a matrix:
+`p[i]` is daughter $i$ and `p[i][1]` is its energy. The set is a constrained
+subset of `cartpow(cartpow(reals, 4), n)` with intrinsic dimension $3n-4$.
+Masses and momenta have the same daughter ordering. The support includes
+kinematic boundaries; the coordinate map below is specified on the interior.
+
+Identical particles remain labeled. No permutation quotient or factorial is
+implicit. This full domain retains overall orientation, including for spinless parents.
+A reduction to invariant masses or helicity angles is a pushforward of the
+model, not a change to this domain's definition.
+
+<a id="aligned-phase-space"></a>**`aligned_phase_space(masses, total)`** —
+constructs the space of ordered momentum configurations modulo overall spatial
+rotations, represented by a canonical aligned configuration in the parent rest
+frame. It accepts the same kinematics as `phase_space`, but requires $n\geq3$.
+If `total` is a four-vector, only its invariant mass $M=\sqrt{P^2}$ determines
+the aligned domain: aligned output momenta always sum to $(M,0,0,0)$.
+The generic intrinsic dimension is $3n-7$: two for three bodies, five for four.
+This dimension statement excludes degenerate strata; two-body configurations
+are outside this constructor's domain.
+
+The output remains a vector of $n$ four-vectors with the original daughter
+labels. In a nondegenerate configuration, daughter 1 points along $-z$ and
+daughter 2 lies in the $xz$ plane with positive $x$. For three bodies all spatial
+momenta then lie in that plane; for four or more bodies the other daughters
+retain their out-of-plane components. Only proper rotations are identified;
+reflection-related configurations are not identified in general.
+
+<a id="align-phase-space"></a>**`align_phase_space(p, support)`** — maps a full
+physical configuration to the aligned domain `support`, which must be returned
+by `aligned_phase_space`. The input must have the corresponding daughter masses,
+a future-directed timelike total, and the same total invariant mass. Its lab
+frame is unrestricted. First boost the total momentum to rest with the
+rotation-free Lorentz boost, then apply this deterministic alignment:
+
+- Choose the first daughter with nonzero spatial momentum $\boldsymbol v$ in
+  daughter order, and set $\boldsymbol e_z=-\boldsymbol v/|\boldsymbol v|$.
+- Choose the first daughter whose spatial momentum has a nonzero projection
+  perpendicular to $\boldsymbol e_z$. Normalize that projection to obtain
+  $\boldsymbol e_x$, and set $\boldsymbol e_y=\boldsymbol e_z\times\boldsymbol e_x$.
+- Express every spatial momentum in this right-handed basis, retaining its
+  energy. If every momentum is collinear, set both transverse components to
+  zero and retain the projection on $\boldsymbol e_z$; the unused transverse
+  axes cannot affect the output.
+
+These rules also specify the exceptional cases where daughter 1 is at rest or
+daughters 1 and 2 are collinear. Above threshold there is at least one nonzero
+spatial momentum. The aligned set is the image of this map; applying alignment
+to an already aligned point leaves it unchanged. Numerical tolerances for testing
+kinematic constraints follow the engine's precision policy and do not change
+these exact mathematical definitions.
+
+**Measure on the aligned domain.** For `Sbar = aligned_phase_space(masses, total)`,
+`PhaseSpace(Sbar)` is the pushforward of full phase space under alignment:
+
+$$
+\overline\Phi_n=A_*\Phi_n,\qquad
+\int f(q)\,d\overline\Phi_n(q)=\int f(A(p))\,d\Phi_n(p).
+$$
+
+It retains the full integrated orientation factor and therefore has the same
+total mass and energy dimension as the full measure. It is not the restriction
+of full phase space to the aligned slice, which has zero full-phase-space
+measure. `PhaseSpace` uses the corresponding full or aligned reference measure
+according to its support; a second measure constructor is unnecessary.
+
+For a rotation-invariant intensity $I$, weighting commutes with alignment:
+$A_*(I\Phi_n)=I\overline\Phi_n$, where the right-hand $I$ is evaluated on aligned
+momenta. This applies to the scalar-parent, scalar-daughter example below.
+With orientation-dependent dynamics or detector efficiency, evaluating the
+weight at just the aligned representative does not perform the required
+orientation integral; retain full phase space or supply the correctly averaged
+weight. The separation of overall orientation from internal three-body dynamics
+is discussed in [Mikhasenko et al. (2020)](17-references.md#mikhasenko2020).
+
+<a id="phase-space-measure"></a>**`PhaseSpace(support)`** — for a set returned by
+`phase_space`, supplies the finite positive measure
+
+$$
+d\Phi_n(P;p_1,\ldots,p_n)=
+\delta^{(4)}\!\left(P-\sum_i p_i\right)
+\prod_{i=1}^{n}\frac{d^3\boldsymbol p_i}{2E_i}.
+$$
+
+For aligned support it supplies the pushforward defined above.
+
+This uses the convention of [Plätzer (2013)](17-references.md#platzer2013),
+with no factors of $2\pi$. To obtain the convention with
+$(2\pi)^4\delta^{(4)}\prod_i d^3\boldsymbol p_i/((2\pi)^3 2E_i)$, multiply
+by $(2\pi)^{4-3n}$. Flux factors, identical-particle factorials, and spin sums
+or averages are model weights and are not included. The measure has energy
+dimension $2n-4$.
+
+The reference measure for densities on this domain is $\Phi_n$ itself:
+`densityof(Phi, p)` is one on `S` and zero outside it. Thus, for a nonnegative
+integrable weight $I$ with positive integral,
+
+$$
+\mathrm{densityof}(\mathrm{normalize}(\mathrm{weighted}(I,\Phi_n)),p)
+=\frac{I(p)}{\int_S I(q)\,d\Phi_n(q)}\quad(p\in S).
+$$
+
+This is not a density against ambient $4n$-dimensional Lebesgue measure, nor
+against Euclidean surface area. `Lebesgue(S)` is undefined for full and aligned
+phase-space sets; use their explicitly specified physical reference measures.
+Reweighting, normalization, and truncation retain the phase-space reference.
+Products use the product of their constituent reference measures.
+
+`totalmass(Phi)` is the phase-space volume. For massless daughters it is
+
+$$
+\Phi_n(S)=\left(\frac{\pi}{2}\right)^{n-1}
+\frac{(P^2)^{n-2}}{(n-1)!\,(n-2)!}.
+$$
+
+For massive daughters numerical integration may be required. `draw(normalize(Phi))`
+is a probability draw from physical phase space. `draw(Phi)` is invalid because
+`Phi` is not declared normalized. Engines may use weighted proposals internally,
+but must not return an uncorrected proposal as such a draw. Sampling a general
+amplitude-weighted model remains subject to the existing engine capability rules.
+
+For likelihoods, daughter masses and total momentum are fixed across the
+parameter family; amplitude parameters may vary. Changing the kinematics changes
+the manifold and does not automatically give a family dominated by one fixed
+reference measure. Such a likelihood needs an explicit common observation space
+and measure; per-parameter phase-space densities alone do not establish it.
+
+<a id="u2phasespace"></a>**`u2phasespace(u, support)`** — returns $T_S(u)\in S$
+for a vector with all components strictly between zero and one. Its length
+is $3n-4$ for `phase_space` and $3n-7$ for `aligned_phase_space`.
+It is deterministic and consumes no RNG state. Inputs on the cube boundary or
+outside it are errors; excluding the boundary does not
+change any integration identity. An engine drawing cube coordinates must use
+interior values.
+
+The canonical map is the sequential RAMBO-on-diet construction. With
+$M=\sqrt{P^2}$, $\tau_i=\sum_{j=i}^n m_j$, and $K_1=M-\tau_1$, the first
+$n-2$ coordinates determine, for $i=2,\ldots,n-1$,
+
+$$
+u_{i-1}=(a_i+1)x_i^{a_i}-a_i x_i^{a_i+1},\qquad
+ a_i=n-i,\qquad K_i=K_{i-1}\sqrt{x_i},\qquad M_i=K_i+\tau_i.
+$$
+
+Each equation has a unique root $0<x_i<1$; an implementation may use a
+safeguarded numerical root solver. Set $M_1=M$, $M_n=m_n$, and $K_n=0$.
+The remaining coordinates are successive angular pairs for decays
+$Q_i\to p_i+Q_{i+1}$, $i=1,\ldots,n-1$:
+
+$$
+\cos\theta_i=2u_{n-2+2i-1}-1,\qquad
+\phi_i=2\pi u_{n-2+2i}.
+$$
+
+In the parent rest frame daughter $i$ has momentum magnitude
+`breakup_momentum(M_i, m_i, M_{i+1})` and direction
+$(\sin\theta_i\cos\phi_i,\sin\theta_i\sin\phi_i,\cos\theta_i)$;
+the child cluster has the opposite spatial momentum. Starting from $Q_1=P$,
+apply the rotation-free boost determined by each current cluster to both
+children, then continue with that boosted child cluster. Finally $p_n=Q_n$.
+This fixes ordering and frame conventions independently of solver tolerances.
+
+**Aligned map.** For aligned support, use the same $n-2$ mass coordinates and
+run the chain in the parent rest frame. Fix the first decay direction to $-z$;
+for the second decay set $\phi_2=0$ and take
+$\cos\theta_2=2u_{n-1}-1$. For decay steps $i=3,\ldots,n-1$ take
+$\cos\theta_i=2u_{n+2i-6}-1$ and $\phi_i=2\pi u_{n+2i-5}$.
+Thus there are $(n-2)+1+2(n-3)=3n-7$ input coordinates. No final arbitrary
+rotation is applied. The omitted first solid angle and second azimuth have
+already been integrated into the aligned measure; they are not missing factors
+in its weight.
+
+<a id="phase-space-weight"></a>**`phase_space_weight(u, support)`** — returns
+$w_S(u)$, the nonnegative volume element of this same map, defined by
+
+$$
+\int_S f(p)\,d\Phi_n(p)
+=\int_{(0,1)^{3n-4}} f(T_S(u))\,w_S(u)\,du.
+$$
+
+For aligned support, replace $\Phi_n$ by $\overline\Phi_n$ and the cube
+dimension by $3n-7$ in this identity. The same weight formula applies to both
+maps, since it depends only on the shared mass coordinates and already contains
+the integrated angular factors.
+
+It includes the absolute phase-space normalization. In the notation above,
+with $\rho(A;b,c)=\mathrm{breakup\_momentum}(A,b,c)/(4A)$,
+
+$$
+w_S(u)=\Phi_n^{(0)}(K_1^2)
+\prod_{i=2}^{n-1}\frac{M_i}{K_i}
+\prod_{i=2}^{n}\frac{\rho(M_{i-1};m_{i-1},M_i)}
+                         {\rho(K_{i-1};0,K_i)}.
+$$
+
+Here $\Phi_n^{(0)}(s)$ is the massless volume formula above, evaluated at the
+**available kinetic mass squared** $K_1^2$. Empty products are one.
+This weight is constant for massless daughters and generally varies for massive
+ones. Consequently, the pushforward of uniform cube coordinates is a proposal
+probability measure, not generally `normalize(Phi)`. The physical measure is the
+pushforward of the **weighted** cube measure. This map must not be advertised as
+`builtin_fromuniform` for normalized massive phase space.
+
+The Julia package [RamboOnDiet.jl](17-references.md#ramboondiet) is an implementation
+reference for the construction, not the normative definition of its normalization.
+An implementation should check conservation, mass shells, the two-body volume
+$\pi q/M$, massless volumes, and massive three-body integration against an
+independent Dalitz-coordinate calculation. Near-threshold scaling and boosted
+configurations are particularly useful checks.
+
+##### <a id="phase-space-three-body"></a>Three-body example: a tensor amplitude for $D^-\to\pi^+\pi^-\pi^-$
+
+This example expresses a coherent scalar, vector, and tensor isobar model directly
+on the physical domain. It uses illustrative fixed pole parameters and couplings,
+constant widths, and no barrier factors or resolution. The two opposite-sign
+pairings are summed at amplitude level before `abs2`. Each snippet in this example
+continues the preceding one.
+
+```flatppl
+hep = standard_module("particle-physics", "0.1")
+mpi = 0.13957039
+mD = 1.86965
+S3 = hep.aligned_phase_space([mpi, mpi, mpi], mD)
+Phi3 = hep.PhaseSpace(S3)
+event3 = elementof(S3)
+
+# Daughter order: pi+, pi-, pi-. The amplitude consumes physical four-vectors.
+p1_event = event3[1]
+p2_event = event3[2]
+p3_event = event3[3]
+g = rowstack([[1.0, 0.0, 0.0, 0.0], [0.0, -1.0, 0.0, 0.0],
+              [0.0, 0.0, -1.0, 0.0], [0.0, 0.0, 0.0, -1.0]])
+
+# Reusable covariant spin factors for one ordered isobar and its spectator.
+p1 = elementof(cartpow(reals, 4))
+p2 = elementof(cartpow(reals, 4))
+p3 = elementof(cartpow(reals, 4))
+r = p1 + p2
+d = p1 - p2
+P = p1 + p2 + p3
+b = P + p3
+g: s[] := r[.mu^] * r[.mu_]
+rr[.mu, .nu] := r[.mu] * r[.nu]
+h = g - rr ./ s
+Z0 = 1.0
+g: Z1[] := d[.mu_] * h[.mu^, .nu^] * b[.nu_]
+g: dhd[] := d[.mu_] * h[.mu^, .nu^] * d[.nu_]
+g: bhb[] := b[.mu_] * h[.mu^, .nu^] * b[.nu_]
+Z2 = Z1^2 - dhd * bhb / 3
+angular_tensors = functionof(record(Z0 = Z0, Z1 = Z1, Z2 = Z2),
+                             p1 = p1, p2 = p2, p3 = p3)
+
+z12 = angular_tensors(p1_event, p2_event, p3_event)
+z13 = angular_tensors(p1_event, p3_event, p2_event)
+r12 = p1_event + p2_event
+r13 = p1_event + p3_event
+g: s12[] := r12[.mu^] * r12[.mu_]
+g: s13[] := r13[.mu^] * r13[.mu_]
+
+# Pole convention and couplings of the illustrative amplitude fixture.
+bw(s, mR, width) = ((s - mR^2 + mR * width * im) /
+                    ((s - mR^2)^2 + (mR * width)^2))
+a_scalar = 1.0 * cis(0.0)
+a_vector = 0.8 * cis(0.7)
+a_tensor = 0.5 * cis(-1.2)
+intensity3 = abs2(
+    a_scalar * (bw(s12, 0.98, 0.07) * z12.Z0 + bw(s13, 0.98, 0.07) * z13.Z0) +
+    a_vector * (bw(s12, 0.775, 0.149) * z12.Z1 + bw(s13, 0.775, 0.149) * z13.Z1) +
+    a_tensor * (bw(s12, 1.275, 0.185) * z12.Z2 + bw(s13, 1.275, 0.185) * z13.Z2)
+)
+intensity3_fn = functionof(intensity3, event = event3)
+amplitude_measure3 = weighted(intensity3_fn, Phi3)
+model3 = normalize(amplitude_measure3)
+sample3 ~ model3
+
+# Two cube coordinates produce three aligned four-vectors.
+probe3 = hep.u2phasespace([0.3, 0.3], S3)
+probe_intensity3 = intensity3_fn(probe3)
+probe_swapped3 = hep.align_phase_space([probe3[1], probe3[3], probe3[2]], S3)
+bose_residual3 = probe_intensity3 - intensity3_fn(probe_swapped3)
+```
+
+The amplitude's tensor contractions are unchanged when evaluated on momenta
+in the aligned parent rest frame instead of the same-sign-pair rest frame. The residual
+should vanish up to numerical roundoff. The permuted event is realigned to
+respect the callback's aligned input domain; the covariant intensity is unchanged
+by that rotation. For an absolute identical-particle rate,
+use `weighted(0.5, amplitude_measure3)`; this constant cancels under `normalize`.
+The displayed intensity callback has one event argument because all its pole
+parameters and couplings are fixed. Replacing them with `elementof` inputs also
+exposes them through `functionof`; it does not implicitly create a closure usable
+as a one-argument weight (see [reification](04-design.md#sec:functionof)).
+Explicit reification boundaries must cover all inputs. The general questions of
+parameterized intensity callbacks and numerical normalization are tracked in
+[issue #192](https://github.com/flatppl/flatppl-design/issues/192); this section
+introduces neither a new event-binding form nor a phase-space-specific normalizer.
+`normalize` states the probability measure mathematically, without prescribing an
+integration algorithm or requiring integration when the model is declared.
+
+For comparison with a square-coordinate model, let $m=\sqrt{s_{23}}$ and
+$c=\cos\theta$ in the same-sign-pair rest frame, with daughter 1 along $-z$.
+Let $k_1=\sqrt{\lambda(m_D^2,m^2,m_\pi^2)}/(2m)$ and
+$k=\sqrt{\lambda(m^2,m_\pi^2,m_\pi^2)}/(2m)$. After integrating overall
+orientation, the reference measure in these coordinates is
+
+$$
+d\Phi_3=\frac{\pi^2}{m_D^2}\,m\,k_1\,k\,dm\,dc,
+\qquad 2m_\pi<m<m_D-m_\pi,\quad -1<c<1.
+$$
+
+Thus the square-coordinate weight `m*k1*k*intensity` gives the same normalized
+shape as `model3`; its unnormalized integral differs by the fixed factor
+$\pi^2/m_D^2$. The aligned model above needs no manually supplied coordinate
+Jacobian. Projections to Dalitz invariants use `pushfwd`: for a full model this
+also integrates out orientation; for the aligned three-body model it changes
+coordinates. In both cases densities must use the target reference measure and
+obey the existing pushforward capability rules.
+
+##### <a id="phase-space-four-body"></a>Four-body example: two pair-mass resonances
+
+This independent example models a labeled $K^+\pi^-K^-\pi^+$ final state from a
+spinless parent of illustrative mass 2.5 GeV. It uses scalar pair-mass factors
+to illustrate model composition, rather than the spin structure of a particular
+physical decay. The full phase space has eight coordinates; its aligned counterpart has five.
+
+```flatppl
+hep = standard_module("particle-physics", "0.1")
+S4 = hep.phase_space([0.493677, 0.13957039, 0.493677, 0.13957039], 2.5)
+Phi4 = hep.PhaseSpace(S4)
+event4 = elementof(S4)
+q12 = event4[1] + event4[2]
+q34 = event4[3] + event4[4]
+mass2(q) = q[1]^2 - q[2]^2 - q[3]^2 - q[4]^2
+s12 = mass2(q12)
+s34 = mass2(q34)
+bw(s, mR, width) = ((s - mR^2 + mR * width * im) /
+                    ((s - mR^2)^2 + (mR * width)^2))
+intensity4 = abs2(bw(s12, 0.895, 0.047) * bw(s34, 0.895, 0.047))
+intensity4_fn = functionof(intensity4, event = event4)
+amplitude_measure4 = weighted(intensity4_fn, Phi4)
+model4 = normalize(amplitude_measure4)
+sample4 ~ model4
+
+pair_masses4 = functionof([s12, s34], event = event4)
+pair_model4 = pushfwd(pair_masses4, model4)
+probe4 = hep.u2phasespace([0.2, 0.6, 0.3, 0.7, 0.4, 0.8, 0.25, 0.65], S4)
+probe_pair_masses4 = pair_masses4(probe4)
+
+# The corresponding orientation-independent model on aligned phase space.
+S4_aligned = hep.aligned_phase_space([0.493677, 0.13957039, 0.493677, 0.13957039], 2.5)
+event4_aligned = elementof(S4_aligned)
+intensity4_aligned = functionof(intensity4_fn(event4_aligned), event = event4_aligned)
+model4_aligned = normalize(weighted(intensity4_aligned, hep.PhaseSpace(S4_aligned)))
+probe4_aligned = hep.u2phasespace([0.2, 0.6, 0.3, 0.7, 0.4], S4_aligned)
+```
+
+The two pair masses are correlated by the shared four-body domain even though
+the illustrative amplitude factorizes. Replacing the intensity with a covariant
+four-body tensor amplitude leaves the domain, reference measure, and model
+construction unchanged. `pair_model4` is the marginal probability measure on the
+two squared masses, not the product of two independent resonance distributions.
+Its density may require numerical marginalization; the projection alone does not
+promise an analytic density evaluator.
+
 #### Wigner rotation functions
 
 The Wigner $d$- and $D$-functions are elements of the $(2j+1)$-dimensional irreducible
