@@ -42,6 +42,7 @@ and kernels.
 **Public bindings.** Names that do not begin with an underscore are public: they
 form the interface of a FlatPPL module. They must match the regular expression
 `^[A-Za-z][A-Za-z0-9_]*$`.
+See also the [cross-module access rules](#stochastic-boundary).
 
 A binding whose value is a module reference (from `load_module` or `standard_module`,
 see [Module composition](#sec:modules)) is never part of the public interface,
@@ -1260,7 +1261,7 @@ The phase of this input determines what it can be bound to on the right-hand sid
 Value sets must be compatible in both cases, so the computational structure of the
 loaded module is not modified.
 
-**Stochastic boundary.** Only bindings of `fixed` or `parameterized` phase in the
+<a id="stochastic-boundary"></a>**Stochastic boundary.** Only bindings of `fixed` or `parameterized` phase in the
 loaded module are accessible from the loading module (`module.name`). Bindings of
 `stochastic` phase — direct draws or values with `draw` ancestors that have not
 been reified via `lawof`/`kernelof` — are invisible to the loading module. This
