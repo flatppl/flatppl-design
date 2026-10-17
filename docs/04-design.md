@@ -938,7 +938,7 @@ multiple axes are a static error.
 **`broadcasted(f)`** returns a callable that is equivalent to applying `broadcast` to
 `f` — that is, `broadcasted(f)(args...)` is equivalent to `broadcast(f, args...)`.
 
-### Reductions
+### <a id="reductions"></a>Folds and scans
 
 **`reduce(f, xs)`** is a fold over `xs` using the binary associative function
 `f`, called positionally as `f(acc, next)`. For a vector
