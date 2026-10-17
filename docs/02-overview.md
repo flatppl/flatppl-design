@@ -440,7 +440,9 @@ starting_values = record(mu_sig = 1.0, raw_syst = fixed(0.0), n_bkg = 50.0)
 
 #### Analysis: likelihoods and posteriors
 
-Likelihood construction, combination, and posterior construction:
+Likelihood construction, combination, and posterior construction. Here `L`
+marginalizes `raw_syst`, while `L_sub` conditions on it and restricts the
+intensity and data to `R`:
 
 ```flatppl
 L = likelihoodof(kernelof(events), observed_data)
