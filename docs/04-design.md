@@ -109,7 +109,7 @@ canonical syntax):
   the callable's argument names is a static error. Auto-splatting is shallow and occurs only
   when a record or table is the call's sole argument (whatever its field count, a single field
   included); a record given alongside other arguments, or bound to a parameter by keyword, is an
-  ordinary value and is not splatted. A sole positional record or table therefore always splats:
+  ordinary value and is not splatted. Apart from the unary exemption below, a sole positional record or table splats:
   whether its field or column names match the callable's argument names decides only whether the
   call is valid, never whether the splat occurs. A callable with exactly one input whose
   documented domain admits records or tables is exempt and receives a sole positional record or
@@ -767,7 +767,8 @@ neg = fn(0 - _)
 poly = fn(polynomial(coefficients = cs, x = _))
 ```
 
-The trivial case `fn(_)` is the identity function, equivalent to the built-in `identity`.
+The trivial case `fn(_)` returns its bound input unchanged, as `identity` does.
+Their [argument-binding rules](#sec:calling-convention) differ.
 
 Multiple holes — left-to-right positional order:
 
