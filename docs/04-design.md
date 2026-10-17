@@ -73,6 +73,9 @@ variables inside `functionof` and `kernelof` (see
 [placeholders and holes](#placeholders-and-holes)). They must not be used for
 module-level bindings.
 
+The top-level names `inputs` and `outputs` are reserved for the
+[determinization signature](13-determinization.md#sec:determinization-signature).
+
 **Name resolution.** FlatPPL has two predefined modules: `self` refers to the
 current module, and `base` is a predefined module containing FlatPPL's built-ins.
 `self.foo` always refers to a current-module binding; `base.foo` always refers to
