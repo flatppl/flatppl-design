@@ -131,6 +131,15 @@ are the uncaptured variadic runs). Rewriting then adds four forms:
   (no shared stochastic ancestor), decided from inferred phase and ancestry, not by
   pattern match.
 
+### <a id="sec:flatpdl"></a>FlatPDL
+
+FlatPDL is the deterministic profile for measure elimination, defined in
+[`flatpdl.flatprof`](https://github.com/flatppl/flatppl-design/blob/main/profiles/flatpdl.flatprof). It excludes measure-valued
+operations and retains primitive density and sampling calls with explicit RNG
+state. [Determinization](13-determinization.md#sec:determinization) produces a
+deterministic DAG; FlatPDL conformance additionally requires that DAG to match
+the profile grammar.
+
 ### Target system profiles
 
 Other stochastic systems will typically not support the whole semantics and
@@ -292,11 +301,11 @@ on the factors' variates:
 - **Disjoint variates** — `joint(M1, M2, ...)` (the row above). *Default.*
 - **Shared variate** — when every factor is a pdf over the *same* observable,
   `RooProdPdf` is the pointwise product of densities, not a product over a higher-
-  dimensional space. It lowers to the normalized pointwise density product
-  `normalize(logweighted(x -> logdensityof(M2, x) + ... + logdensityof(Mₙ, x), M1))`:
-  reweight the first factor's measure by the sum of the remaining factors'
-  log-densities. This is flat in the factor count (one `add`-fold of `n − 1`
-  log-densities, base = `M1`) and yields the probability measure ∝ ∏ᵢ gᵢ.
+  dimensional space. It lowers to the normalized pointwise density product,
+  yielding the probability measure ∝ ∏ᵢ gᵢ. For two factors,
+  [`tilt(M2, M1)`](06-measure-algebra.md#tilt) retains fitted parameter dependencies.
+  For fixed factors, the general form is
+  `normalize(logweighted(x -> logdensityof(M2, x) + ... + logdensityof(Mₙ, x), M1))`.
 - **Conditional** — `RooProdPdf` with `RooFit::Conditional(...)` → `jointchain(M, K)`
   (the row above).
 - **Partially-overlapping variates** are outside the profile.
