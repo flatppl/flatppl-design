@@ -41,7 +41,7 @@ events ~ PoissonProcess(intensity = rate)
 
 **Data and likelihood.** We define observed data and construct the likelihood. Since the
 event space is scalar, the `PoissonProcess` produces an array variate and the observed data
-is a plain array. The observation model uses `kernelof` with a boundary input to keep
+is a plain array. The observation model uses `kernelof` with explicit boundary inputs to keep
 `raw_eff_syst` as a kernel parameter (rather than marginalizing it out). A separate
 constraint term represents the auxiliary measurement that pins the nuisance parameter. The
 combined likelihood `L` is a likelihood object on the parameter space
