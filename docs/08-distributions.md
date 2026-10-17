@@ -169,7 +169,7 @@ $$\lambda \, e^{-\lambda x} \quad \text{for } x \geq 0$$
 
 <a id="gamma"></a>**`Gamma(shape, rate)`** — The [gamma distribution](https://en.wikipedia.org/wiki/Gamma_distribution).
 
-Domain/Support: `reals`/`posreals`.
+Domain/Support: `reals`/`nonnegreals`.
 
 Parameters:
 
