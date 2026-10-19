@@ -143,8 +143,6 @@ of which may or may not be significant. The total number of inputs is never zero
 - `aggregate`, `metricsum`, `markovchain`, `kscan`: Three distinguished inputs.
 - `ksuperpose`: Two distinguished inputs (the kernel and the weight vector); the
   resulting kernel is applied separately to the parameter family.
-- `checked`: Named parameters `value` and `condition`, per [§07](07-functions.md#checked);
-  the canonical calling form is keyword-based.
 
 A distinguished input has no name and so cannot be passed by keyword. The
 [measure combinators](06-measure-algebra.md#sec:measure-algebra) likewise take their
