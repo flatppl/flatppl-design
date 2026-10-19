@@ -740,7 +740,7 @@ poly = fn(polynomial(coefficients = cs, x = _))
 ```
 
 The trivial case `fn(_)` returns its bound input unchanged, as `identity` does.
-Their [argument-binding rules](#sec:calling-convention) differ.
+Its input is named `arg1`, whereas `identity`'s input is named `x`.
 
 Multiple holes — left-to-right positional order:
 
