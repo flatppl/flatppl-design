@@ -79,12 +79,16 @@
   (&equiv (kernelof ?out %specinputs ?inputs) (functionof (lawof ?out) %specinputs ?inputs))
   (&equiv (kernelof ?out %autoinputs ?inputs) (functionof (lawof ?out) %autoinputs ?inputs))
 
-  ; η-laws — reifying an application recovers the callable (§04 identity laws). The
-  ; reified boundary re-exposes each call argument in order: the SAME run-variable ?a..
-  ; appears among the call args and among the boundary refs, pairing them element-wise
-  ; (the zip — header). ?n.. are the boundary names (the public interface, wildcarded).
-  (&equiv (functionof (%call ?f (?* ?a)) %specinputs (?* (?n ?a))) ?f)
-  (&equiv (kernelof (draw (%call ?K (?* ?a))) %specinputs (?* (?n ?a))) ?K)
+  ; η-laws — reifying an application recovers the callable (§04 identity laws), for a
+  ; callable without optional inputs (checked by the engine). The ?n run pairs the
+  ; boundary names with the callable's %inputs, the ?a run pairs the boundary refs with
+  ; the call args (the zip — header).
+  (&equiv (functionof (%call (%meta ((%function (%inputs (?* ?n))) ?? ??) ?f) (?* ?a))
+                      %specinputs ((?* (?n ?a))))
+          ?f)
+  (&equiv (kernelof (draw (%call (%meta ((%kernel (%inputs (?* ?n)) ??) ?? ??) ?K) (?* ?a)))
+                    %specinputs ((?* (?n ?a))))
+          ?K)
 
   ; ============================================================================
   ; Stochastic ↔ measure conversion (§06 "Equivalence with stochastic nodes").

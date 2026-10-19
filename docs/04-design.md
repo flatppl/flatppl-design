@@ -104,21 +104,11 @@ canonical syntax):
   to inputs by name, the order of the arguments is not relevant.
 
 - **Auto-splatting** (of records and table columns): `f(record(a = x, b = y, ...))` and
-  `f(table(a = x, b = y, ...))` are equivalent to `f(a = x, b = y, ...)`. The order of
-  fields or columns is not relevant. A call with field or column names that do not match
-  the callable's argument names is a static error. Auto-splatting is shallow and occurs only
-  when a record or table is the call's sole argument (whatever its field count, a single field
-  included); a record given alongside other arguments, or bound to a parameter by keyword, is an
-  ordinary value and is not splatted. A sole positional record or table therefore always splats:
-  whether its field or column names match the callable's argument names decides only whether the
-  call is valid, never whether the splat occurs. A callable with exactly one input whose
-  documented domain admits records or tables is exempt and receives a sole positional record or
-  table whole, so `sum(t)` reduces over the table rather than splatting. User-defined callables
-  are never exempt. Passing a record or table as one ordinary argument requires the keyword
-  spelling, as in `f(pars = record(...))`. Auto-splatting is a rule of the ordinary calling
-  convention; no special operation splats a sole record or table argument. `table(r)` and
-  `record(t)` perform the record–table conversions of [tables](03-value-types.md#tables)
-  directly, as dedicated conversions rather than as an instance of auto-splatting.
+  `f(table(a = x, b = y, ...))` are equivalent to `f(a = x, b = y, ...)`, unless `f` can be
+  called with a single positional argument. The order of fields or columns is not relevant.
+  A call with field or column names that do not match the callable's argument names is a
+  static error. Auto-splatting is shallow and applies only to a call's sole positional
+  argument.
 
 - **Positional arguments**: `f(x, y, ...)`. Positional arguments are accepted only if
   the callable has ordered inputs, so that the arguments can be mapped to the inputs in order.
@@ -483,7 +473,8 @@ node becomes a boundary input only under a name, as in `r` or `p = r`. The short
 is a surface rewrite with no separate [FlatPIR](11-flatpir.md#reified-callables) form
 and applies to `kernelof` as well.
 
-**Identity law.** `functionof(f(a, b), ..., a = a, b = b, ...)` is equivalent to `f`.
+**Identity law.** `functionof(f(a, b, ...), a = a, b = b, ...)` and
+`functionof(f(a, b, ...), a, b, ...)` are equivalent to `f` if `f` has no optional inputs.
 
 **Lambda notation.** A lambda function is a shorthand notation for `functionof`
 with placeholders. A single-argument lambda is written `arg -> expr`; two or
@@ -546,8 +537,9 @@ delimited by `kwargs` — the boundary substitution applies before the inner
 `lawof` is interpreted, so an enclosing `kernelof` boundary scopes what the
 inner `lawof` marginalizes over.
 
-**Identity law.** `kernelof(draw(K(a, b, ...)), a = a, b = b, ...)` is
-equivalent to `K`. Equal output laws do not make kernels interchangeable as
+**Identity law.** `kernelof(draw(K(a, b, ...)), a = a, b = b, ...)` and
+`kernelof(draw(K(a, b, ...)), a, b, ...)` are equivalent to `K` if `K` has no optional
+inputs. Equal output laws do not make kernels interchangeable as
 [`joint`](06-measure-algebra.md#joint) components: a `joint` of two reifications
 of one draw is the diagonal joint at every input, while a `joint` of two
 constructor kernels contributes a fresh coordinate per occurrence.
