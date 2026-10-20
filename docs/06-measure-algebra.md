@@ -130,8 +130,8 @@ To evaluate a density at many points (e.g. a grid for numerical integration or p
 
 | Construct | Arguments | Description |
 |---|---|---|
-| [`weighted`](#weighted) | `weight`, `base` | reweight `base`: $\mathrm{d}\nu = \text{weight} \cdot \mathrm{d}M$ |
-| [`logweighted`](#logweighted) | `logweight`, `base` | reweight `base` in log-space: $\mathrm{d}\nu = e^{\text{logweight}} \cdot \mathrm{d}M$ |
+| [`weighted`](#weighted) | `weight`, `base`, optional `p` | reweight `base`: $\mathrm{d}\nu = \text{weight} \cdot \mathrm{d}M$ |
+| [`logweighted`](#logweighted) | `logweight`, `base`, optional `p` | reweight `base` in log-space: $\mathrm{d}\nu = e^{\text{logweight}} \cdot \mathrm{d}M$ |
 | [`bayesupdate`](#bayesupdate) | `L`, `prior` | unnormalized posterior: `prior` reweighted by likelihood `L` (see [posterior construction](#posterior-construction)) |
 
 - **`weighted(weight, base)`**<a id="weighted"></a> — produces the measure $\nu(A) = \int_A f(x)\, dM(x)$, with
@@ -140,12 +140,16 @@ To evaluate a density at many points (e.g. a grid for numerical integration or p
   `normalize(weighted(f, Lebesgue(support = S)))` produces a probability distribution
   whose density w.r.t. Lebesgue on $S$ is proportional to $f$.
 
-  **Weight arity.** A one-parameter weight receives the variate whole. If the
-  variate is a $k$-element array with $k \geq 2$, a weight of exactly $k$ scalar
-  parameters instead receives one component per parameter, in order; any other
-  arity is an error. Only `weighted` and `logweighted` admit the $k$-parameter
-  form; every other function-taking construct, including `pushfwd`, passes the
-  whole variate.
+  A callable weight must be fixed and cannot capture draws, per the
+  [reification rules](04-design.md#sec:functionof).
+
+  **Weight arity.** In the two-argument forms of `weighted` and `logweighted`,
+  a one-parameter weight receives the variate whole. If the variate is a
+  $k$-element array with $k \geq 2$, a weight of exactly $k$ scalar parameters
+  instead receives one component per parameter, in order; any other arity is
+  an error. Only these two-argument forms admit the $k$-parameter weight;
+  every other function-taking construct, including `pushfwd`, passes the whole
+  variate.
 
   ```flatppl
   # equivalent over Lebesgue(support = cartprod(interval(0, 1), interval(0, 1)))
@@ -153,13 +157,22 @@ To evaluate a density at many points (e.g. a grid for numerical integration or p
   w_variate(v) = v[1] * v[2]
   ```
 
+  The form `weighted(f, M, p)` requires a fixed callable with exactly two inputs
+  and calls `f(x, p)`, passing the whole variate `x` and the parameter value `p`
+  unchanged. It defines $\nu(A) = \int_A f(x, p)\,dM(x)$ for non-negative
+  $f(x, p)$. The value `p` may be stochastic; the resulting measure's phase
+  follows `M` and `p`. Its density is conditional on the supplied `p`, which
+  is neither marginalized nor added to the variate.
+
 - **`logweighted(logweight, base)`**<a id="logweighted"></a> — like `weighted`, but the weight
  or weighting function is given in
   log-space: $d\nu = \exp(g) \cdot dM$.
+  The form `logweighted(f, M, p)` has the same callable and parameter contract,
+  with $d\nu(x) = \exp(f(x, p))\,dM(x)$.
 
 - **`bayesupdate(L, prior)`**<a id="bayesupdate"></a> — reweights a prior measure by a likelihood object,
   producing the unnormalized posterior: $d\nu(\theta) = L(\theta) \cdot d\pi(\theta)$.
-  Lowers to `logweighted(fn(logdensityof(L, _)), prior)`. See
+  Lowers to `logweighted((x, p) -> logdensityof(p, x), prior, L)`. See
   [posterior construction](#posterior-construction) for details.
 
 #### Normalization and mass
@@ -180,7 +193,7 @@ To evaluate a density at many points (e.g. a grid for numerical integration or p
 
 - **`tilt(M, B)`**<a id="tilt"></a> — normalizes the density of `M` as a
   weight on `B`. For closed measures, this is equivalent to
-  `normalize(logweighted(fn(logdensityof(M, _)), B))`.
+  `normalize(logweighted((x, p) -> logdensityof(p, x), B, M))`.
   Both operands must have the same variate type and shape. The result uses
   `B`'s reference measure. It is undefined unless the pointwise density
   $p_M(x) = \mathrm{densityof}(M, x)$ exists `B`-almost everywhere and
@@ -189,7 +202,7 @@ To evaluate a density at many points (e.g. a grid for numerical integration or p
   Non-nullary operands must have the same named inputs and compatible input
   types. Closed operands ignore the input. The result takes the first
   non-nullary operand's input order and applies the definition pointwise.
-  Normalization uses the current inputs and captured draws. Reification and
+  Normalization uses the current parameter values. Reification and
   differentiation retain its parameter dependencies, including inferred scales.
   An engine unable to evaluate the density or normalizer must refuse the query.
 
@@ -336,8 +349,8 @@ To evaluate a density at many points (e.g. a grid for numerical integration or p
 |---|---|---|
 | [`kchain`](#kchain) | `M, K1, K2, ...` | accumulated-feed composition; marginalizes intermediate variates, keeps the last |
 | [`jointchain`](#jointchain) | `M, K1, K2, ...` | kernel-conditioned joint; concatenates all variates (no marginalization) |
-| [`markovchain`](#markovchain) | `kernel`, `init`, `n` | measure over a length-`n` time-homogeneous Markov trajectory |
-| [`kscan`](#kscan) | `kernel`, `init`, `xs` | Kleisli scan; `markovchain` with per-step exogenous inputs `xs` |
+| [`markovchain`](#markovchain) | `kernel`, `init`, `n`, optional `p` | measure over a length-`n` time-homogeneous Markov trajectory |
+| [`kscan`](#kscan) | `kernel`, `init`, `xs`, optional `p` | Kleisli scan; `markovchain` with per-step exogenous inputs `xs` |
 
 - **`kchain(M, K1, K2, ...)`**<a id="kchain"></a> — accumulated-feed kernel composition.
   Keeps only the last kernel's variates, marginalizing out all intermediate variates.
@@ -439,6 +452,11 @@ To evaluate a density at many points (e.g. a grid for numerical integration or p
   If `init` and `traj[i]` are records, then the trajectories are tables, not
   arrays.
 
+  The form `markovchain(kernel, init, n, p)` calls `kernel(state, p)` at each
+  step. The parameter value `p` is unchanged across steps and is not part of
+  the trajectory. It may depend on stochastic nodes; the trajectory measure
+  is conditional on its supplied value.
+
   Example — Brownian motion (100 steps of $\Delta t = 0.01$, starting at zero):
 
   ```flatppl
@@ -456,6 +474,9 @@ To evaluate a density at many points (e.g. a grid for numerical integration or p
   $\text{traj}_i \sim \kappa(\text{traj}_{i-1}, \text{xs}_i)$ with
   $\text{traj}_0 = \text{init}$. Trajectories have length `lengthof(xs)`. As
   with `markovchain`, `init` is a value in the state space and not part of the trajectory.
+
+  The form `kscan(kernel, init, xs, p)` calls `kernel(state, xs[i], p)`.
+  The parameter value `p` is held constant across steps as in `markovchain`.
 
   Example — Brownian motion with variable timesteps:
 
@@ -599,6 +620,8 @@ Density evaluation follows the cases above and the
 The density of a composed measure is determined by the measure-algebra definitions above. For a point $x$ in the variate space, `logdensityof` reduces structurally to the densities of its operands, terminating at the per-kernel primitive `builtin_logdensityof`:
 
 - `weighted` / `logweighted` (from $\mathrm{d}\nu = \text{weight}\cdot\mathrm{d}M$): $\log\mathrm{densityof}(\mathrm{weighted}(w, M), x) = \log w(x) + \log\mathrm{densityof}(M, x)$, and $\log\mathrm{densityof}(\mathrm{logweighted}(\ell,\allowbreak M), x) = \ell(x) + \log\mathrm{densityof}(M, x)$, where $w$ and $\ell$ are a constant or a function of the variate (see [`weighted`](#weighted) for the arity rule).
+  With the optional `p`, replace $w(x)$ by $w(x, p)$ and $\ell(x)$ by
+  $\ell(x, p)$ respectively; the base density and its reference measure are unchanged.
 - `superpose` (measure addition): $\log\mathrm{densityof}(\mathrm{superpose}(M_1,\allowbreak \dots, M_k), x) = \mathrm{logsumexp}_k\, \log\mathrm{densityof}(M_k, x)$.
   This sum requires all constituent densities to be expressed w.r.t. the same
   reference measure. Density values taken w.r.t. different references cannot
@@ -610,6 +633,9 @@ The density of a composed measure is determined by the measure-algebra definitio
 - `joint` and `iid` (independent products): $\log\mathrm{densityof}(\mathrm{joint}(M_1,\allowbreak M_2), [x_1, x_2]) = \log\mathrm{densityof}(M_1, x_1) + \log\mathrm{densityof}(M_2, x_2)$, and $\log\mathrm{densityof}(\mathrm{iid}(M, n), x) = \sum_i \log\mathrm{densityof}(M, x_i)$.
 - `jointchain` (the product of the constituent conditional densities): $\log\mathrm{densityof}(\mathrm{jointchain}(M,\allowbreak K), [a, b]) = \log\mathrm{densityof}(M, a) + \log\mathrm{densityof}(K(a), b)$.
 - `markovchain` and `kscan` (the product of the step conditional densities, the initial value contributing no factor): $\log\mathrm{densityof}(\mathrm{markovchain}(\kappa,\allowbreak \text{init}, n), \text{traj}) = \sum_{i=1}^{n} \log\mathrm{densityof}(\kappa(\text{traj}_{i-1}), \text{traj}_i)$ with $\text{traj}_0 = \text{init}$, and likewise for $\mathrm{kscan}(\kappa, \text{init}, \text{xs})$ over $i = 1, \dots, \mathrm{lengthof}(\text{xs})$ with the step kernel $\kappa(\text{traj}_{i-1}, \text{xs}_i)$.
+
+When `markovchain` or `kscan` receives `p`, each step kernel in its density
+reduction receives `p` as its final argument.
 
 `kchain` marginalizes the intermediate variate, so its density is the marginal integral $\int \mathrm{densityof}(K(a), x)\,\mathrm{d}M(a)$. This is generally intractable; an engine evaluates it in closed form, or by enumeration of a discrete latent, and otherwise reports a static error.
 
@@ -754,7 +780,7 @@ pstr = bayesupdate(L, prior)
 is equivalent to
 
 ```flatppl
-pstr = logweighted(fn(logdensityof(L, _)), prior)
+pstr = logweighted((x, p) -> logdensityof(p, x), prior, L)
 ```
 
 The evidence `Z` can be expressed as
@@ -883,7 +909,7 @@ and equivalent, in a non-Bayesian formulation, to
 ```flatppl
 x = record(a = ..., b = ...)
 kernel, marginal = disintegrate(["a", "b", ...], mu)
-nu = logweighted(fn(logdensityof(kernel(_), x)), marginal)
+nu = logweighted((z, p) -> logdensityof(p, z), marginal, likelihoodof(kernel, x))
 ```
 
 **Complement disintegration.** Alternatively, disintegrate `mu` along

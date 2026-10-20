@@ -127,7 +127,7 @@ All built-in ordinary callables have a defined input order and accept both posit
 keyword arguments.
 
 Special operations have zero to three *distinguished inputs*: unnamed, ordered inputs
-of fixed arity. They may have additional variadic named or unnamed inputs, the order
+of fixed arity. They may have additional optional or variadic named or unnamed inputs, the order
 of which may or may not be significant. The total number of inputs is never zero:
 
 - `elementof`, `external`, `draw`: One distinguished input.
@@ -150,7 +150,11 @@ of which may or may not be significant. The total number of inputs is never zero
 - `load_module`: One distinguished input plus optional variadic named inputs with
   no significant order.
 - `standard_module`: Two distinguished inputs.
-- `aggregate`, `metricsum`, `markovchain`, `kscan`: Three distinguished inputs.
+- `weighted`, `logweighted`: Two distinguished inputs, plus an optional third
+  positional parameter input.
+- `aggregate`, `metricsum`: Three distinguished inputs.
+- `markovchain`, `kscan`: Three distinguished inputs, plus an optional fourth
+  positional input for parameters held constant across steps.
 - `ksuperpose`: Two distinguished inputs (the kernel and the weight vector); the
   resulting kernel is applied separately to the parameter family.
 - `checked`: Named parameters `value` and `condition`, per [§07](07-functions.md#checked);
@@ -271,9 +275,8 @@ vice versa.
 
 ![](diagrams/reification.svg)
 
-A function represents a reified DAG that is deterministic given its inputs and
-any [captured draws](#sec:captured-draws), either implicit (built-in) or
-explicitly constructed.
+A function represents a reified deterministic DAG, either implicit (built-in)
+or explicitly constructed.
 Ordinary function application `y = f(a, b, ...)` introduces a deterministic
 node `y` into the graph. `functionof(y)` goes in the opposite direction:
 it reifies the ancestor subgraph of `y` as a first-class function — the
@@ -298,9 +301,9 @@ density (unless they are marginalized out in the stochastic graph).
 If `functionof` is applied to a measure node, it generates a transition kernel — a
 measure-generating callable in FlatPPL — instead of a function. If the measure
 is normalized, the resulting kernel is a Markov kernel. For stochastic-phase `m`,
-`functionof(m, ...)` reifies the conditional kernel and `functionof(lawof(m), ...)`
-the marginal (see [reification to measures](#sec:lawof)); for fixed or
-parameterized phase the two coincide.
+`functionof(m, ...)` must expose its free stochastic ancestors as boundary inputs.
+`functionof(lawof(m), ...)` instead reifies the marginal (see
+[reification to measures](#sec:lawof)).
 
 So `functionof` reifies a value or measure node in the computational graph to a
 value function or transition kernel. While `lawof` reifies a value node in the
@@ -362,9 +365,8 @@ measure, but sampling remains well-defined.
 of the argument of `lawof` will typically include stochastic nodes, the
 resulting measure is itself deterministic (of parameterized or fixed phase):
 `lawof` absorbs stochasticity into the reified law rather than propagating it
-outward. So a `functionof` whose stochastic ancestors are all reified to
-measures is itself deterministic, while one over a captured `draw` is not (see
-below).
+outward. Thus `functionof` can reify subgraphs containing stochastic nodes
+when their stochasticity is absorbed by `lawof` (see below).
 
 #### <a id="sec:functionof"></a>Reification to functions and kernels
 
@@ -382,10 +384,14 @@ Boundary inputs themselves may be of parametric or stochastic phase, but not
 fixed phase. `functionof` effectively substitutes each boundary node `a` with
 an input node `elementof(valueset(a))` under the given name.
 
-FlatPPL has no closures over fixed or parameterized ancestors: a fixed ancestor
-is resolved to its value rather than retained as a binding, and a parameterized
-ancestor of the reified sub-graph is traced back to an input. A `draw` ancestor
-is neither: see [captured draws](#sec:captured-draws) below.
+FlatPPL has no closures: a reified callable captures no enclosing environment,
+and a fixed ancestor is resolved to its value rather than retained as a binding.
+
+After boundary substitution, every path from a `draw` to the reified output
+must pass through a `lawof` that absorbs its stochasticity. A free captured
+draw is a static error, including in lambdas and nested reifications.
+`lawof` operates within the reified subgraph, including marginalization.
+The resulting callable value is fixed; its formal inputs do not affect its phase.
 
 Consider a simple deterministic computation:
 
@@ -409,7 +415,7 @@ C = broadcast(f, a = A, b = B)      # apply f elementwise over arrays A, B
 
 `functionof(e)` captures the entire computation leading to `e` — the sub-DAG
 that contains `e` and all its ancestors — as a reusable function object.
-Here the sub-DAG contains no `draw` node, so `f` is of parameterized phase.
+The function value `f` is fixed, while its application depends on its inputs.
 
 The argument names of the resulting function are the names of the leaf nodes of the
 reified sub-DAG; the input nodes of the function are decoupled from these leaf nodes.
@@ -509,41 +515,6 @@ under the [placeholder scoping rule](#placeholders-and-holes).
 
 For example, `x -> 2 * x + 1` is equivalent to `functionof(2 * _x_ + 1, x = _x_)`, and `(x, y) -> x * y + 1` is equivalent to
 `functionof(_x_ * _y_ + 1, x = _x_, y = _y_)`.
-
-**<a id="sec:captured-draws"></a>Captured draws.** Referential transparency is a
-core property of FlatPPL: a name refers to a node of the graph, and a reference
-from inside a reified sub-graph refers to that same node. So the sub-graph
-reified by `functionof`, and hence by any lambda, may contain `draw` nodes of
-the enclosing graph. Such a captured draw remains a shared ancestor of the
-reification and of the enclosing graph, with a single realisation. The reified
-callable is conditional on that realisation: it is neither resampled per call
-nor marginalized, so any number of calls uses the one realisation. The maths is
-conditioning rather than marginalization (a measure-valued reification is the
-conditional kernel given the realisation of the shared parameter), and the
-enclosing graph carries that parameter's own law.
-
-The phase of a reification follows the reified sub-graph by the same ancestor
-rule as any other binding (see [phases](#phases)): it is stochastic when the
-sub-graph holds a captured `draw` whose phase no `lawof` node absorbs. A `lawof`
-node in the reified sub-graph absorbs the stochastic phase of its own ancestors
-and marginalizes them, and operates only within that sub-graph.
-
-A step kernel that shares a drawn scale with the enclosing graph:
-
-```flatppl
-drift  = 0.4    # known per-step drift
-x_init = 0.0    # known initial state
-n      = 120    # trajectory length
-sigma_step ~ normalize(truncate(Cauchy(0, 1), interval(0, inf)))
-step_kernel = prev -> Normal(prev + drift, sigma_step)
-x ~ markovchain(step_kernel, x_init, n)
-```
-
-`step_kernel` is unary: `prev` is its only input, `drift` is fixed and resolved
-to its value, and `sigma_step` is captured. Every step of the chain uses the one
-realisation of `sigma_step`, so `x` is a trajectory conditional on that scale.
-Wrapping the body in `lawof` instead would marginalize `sigma_step` at each
-step, which is a different model.
 
 #### <a id="sec:kernelof"></a>Kernels and `kernelof`
 
@@ -1229,8 +1200,7 @@ other modules written in FlatPPL though, to make models composable:
 `source` may be a file path or a URL (see [Remote file caching](#sec:url-cache)).
 
 Each `load_module` call instantiates the loaded module independently: two
-calls share no nodes, even with identical `source` and substitutions, so
-reified callables from different calls have disjoint stochastic ancestors.
+calls share no nodes, even with identical `source` and substitutions.
 To share one instance, bind the module reference once and reuse the name.
 
 In the canonical syntax, bound names in the loaded module are accessed via dot syntax:
