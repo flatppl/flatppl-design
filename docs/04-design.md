@@ -317,16 +317,12 @@ variable, is distributed according to.
 
 **Identity law.** `lawof(draw(m))` is equivalent to `m` for `m` of fixed or
 parameterized phase; for stochastic-phase `m` it is the marginal law of a draw
-from `m`. Equal laws do not make values interchangeable as
-[`joint`](06-measure-algebra.md#joint) components: a `joint` of two reified laws
-of the same draw is the diagonal joint. Otherwise `joint(m, m)`
-contributes a fresh coordinate per occurrence, so the two draws are independent
-given `m`'s stochastic ancestors — which remain shared — and independent
-outright when `m` has none.
+from `m`.
 
 `lawof` also accepts a measure argument: `lawof(m)` is `lawof(draw(m))`, the law
-of a draw from `m`. Each draw from `m` is a fresh coordinate, while the `draw`
-nodes among `m`'s ancestors remain the same nodes of the trace. A probability
+of a draw from `m`. Each draw from `m` is a fresh coordinate. Free stochastic
+constructor parameters retain their current values; randomness already absorbed
+by `lawof` is internal to the measure. A probability
 measure of fixed or parameterized phase is its own law, so `lawof(m)` is
 equivalent to `m` and `lawof` is idempotent. For
 stochastic-phase `m` — a random measure — `lawof(m)` is the marginal law of a
@@ -344,10 +340,23 @@ leave the result's `%mass` `%deferred`. `lawof` never normalizes its argument;
 pointwise, as the [uniform kernel extension](06-measure-algebra.md#sec:measure-algebra)
 does for measure-algebra operations.
 
-**Trace of the reified law.** A reified measure or kernel carries its traced
-sub-DAG as part of its value; a stochastic node shared between the traces of
-several [`joint`](06-measure-algebra.md#joint) components enters the composed
-trace once.
+**Law values.** A reified law does not retain draw identity across measure
+operations. For example:
+
+```flatppl
+x ~ Normal(0, 1)
+y ~ Normal(0, 1)
+A = joint(lawof(x), lawof(x))
+B = joint(lawof(x), lawof(y))
+C = lawof([x, y])
+D = lawof([x, x])
+```
+
+`A`, `B`, and `C` are the same product of two standard Normal laws.
+`D` is the diagonal law, since `lawof` preserves dependence within its argument.
+The named form `lawof((a = x, b = y))` gives the joint law over a record.
+The diagonal law has no density with respect to two-dimensional Lebesgue
+measure, but sampling remains well-defined.
 
 **Phase of the reified law.** Although the ancestor subgraph
 of the argument of `lawof` will typically include stochastic nodes, the
@@ -547,10 +556,7 @@ delimited by `kwargs` — the boundary substitution applies before the inner
 inner `lawof` marginalizes over.
 
 **Identity law.** `kernelof(draw(K(a, b, ...)), a = a, b = b, ...)` is
-equivalent to `K`. Equal output laws do not make kernels interchangeable as
-[`joint`](06-measure-algebra.md#joint) components: a `joint` of two reifications
-of one draw is the diagonal joint at every input, while a `joint` of two
-constructor kernels contributes a fresh coordinate per occurrence.
+equivalent to `K`.
 
 Consider this Bayesian example:
 

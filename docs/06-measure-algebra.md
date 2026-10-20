@@ -37,15 +37,20 @@ variates, counting measure for discrete variates. When a kernel $\kappa(\theta)$
 parameterized by $\theta$, the family is assumed dominated by a single
 $\theta$-independent reference measure.
 
+**Singular laws.** A law has no density with respect to a reference measure
+unless it is absolutely continuous with respect to that measure. Deterministic
+dependence between discrete variates does not prevent a density with respect to
+product counting measure. When no density exists, a density query is a static
+error where detectable, and otherwise refused by the engine. Sampling remains
+well-defined.
+
 **Reference measure for product measures.** When `joint(M1, M2, ...)` (or
 `iid(M, size)`, `jointchain(M, K1, ...)` etc.) combines components with
 individual reference measures $\rho_1, \rho_2, \ldots$ (each either `Lebesgue` or
 `Counting` on the corresponding component support), the reference measure of the
 product is the product $\rho_1 \otimes \rho_2 \otimes \cdots$ on the joint variate
-space. For components sharing no stochastic ancestor, the joint density w.r.t.
-this product reference is the product of the component densities; a
-shared-ancestor `joint` keeps the same product reference, with density given by
-its equivalent record law (see [`joint`](#joint)). Mixed continuous-discrete
+space. The density of `joint` w.r.t. this product reference is the product
+of the component densities. Mixed continuous-discrete
 joints are handled uniformly under this rule: e.g. `joint(c = Normal(mu = 0, sigma = 1), k = Poisson(rate = 3))` has
 reference measure $\mathrm{Lebesgue}(\mathbb{R}) \otimes \mathrm{Counting}(\mathbb{Z})$
 on $\mathbb{R} \times \mathbb{Z}$, with joint density $\phi(c;\,0,1) \cdot
@@ -248,20 +253,14 @@ To evaluate a density at many points (e.g. a grid for numerical integration or p
   mix = normalize(ksuperpose(Normal, weights)(mu = means, sigma = sigmas))
   ```
 
-#### Joint composition
+#### Independent composition
 
 | Construct | Arguments | Description |
 |---|---|---|
-| [`joint`](#joint) | `M1, M2, ...` | joint law of the components; shared stochastic ancestors retained; keyword form names variates |
+| [`joint`](#joint) | `M1, M2, ...` | independent product measure; keyword form names variates |
 | [`iid`](#iid) | `M`, `size` | product $M^{\otimes N}$ over arrays of shape `size`, $N = \mathrm{prod}(\text{size})$ |
 
-- **`joint(M1, M2, ...)`**<a id="joint"></a> — the joint law of its components.
-  A component contributes a fresh coordinate; a stochastic node shared
-  between component traces (through a reified component —
-  [`lawof`](04-design.md#sec:lawof), [`kernelof`](04-design.md#sec:kernelof) —
-  or a stochastic constructor parameter) remains a single node of the
-  composed trace. Components that share no stochastic node are independent,
-  and their `joint` is the product measure:
+- **`joint(M1, M2, ...)`**<a id="joint"></a> — independent product measure:
   $(M_1 \otimes M_2)(A \times B) = M_1(A) \cdot M_2(B)$.
 
   The output variate is formed by combining the component variates via `cat`
@@ -297,56 +296,25 @@ To evaluate a density at many points (e.g. a grid for numerical integration or p
   The result's inputs are the union of the component kernels' inputs by name; a
   component receives the inputs it declares and is unaffected by the others, as in
   [reification with interdependent boundary nodes](04-design.md#sec:kernelof).
-  Components that share a stochastic node must agree on that node's ancestry:
-  every ancestor of the shared node that any component binds as a boundary
-  input must be bound by every sharing component, under the same input name. A
-  `joint` in which a sharing component binds such an ancestor under a different
-  name, or does not bind it at all — in particular a measure component, which
-  binds nothing — is a static error. Measure components are permitted and are
-  the nullary case: they ignore the input. A measure component may be
-  parameterized and may share stochastic nodes with kernel components; only a
-  shared node with a boundary-bound ancestor is excluded, by the naming clause
-  above. The keyword form applies unchanged, producing a kernel whose output
-  variate is a record. At each input point the result is the `joint` of the
-  component output measures, governed by the sharing rules above; the fanned
-  input is a value, not a stochastic node, and so induces no dependence by
-  itself. The result's total-mass class is the product of the components'
-  classes, as in the measure case; when components sharing a stochastic node
-  include more than one non-normalized member, no class stronger than unknown
-  is statically justified. A fan-out of Markov kernels is a Markov kernel.
+  Measure components ignore the input. Each component's boundary substitutions
+  apply only within that component. The keyword form applies unchanged,
+  producing a kernel over records. At each input point, the output measure is
+  the product of the component output measures. The total-mass class is the
+  product of the component classes. A fan-out of Markov kernels is a Markov kernel.
 
-  **Equivalent record law.** `joint(a = lawof(a), b = lawof(b))` is equivalent
-  to `lawof(record(a = a, b = b))`; the positional form is the corresponding
-  `cat` law (see [reification to measures](04-design.md#sec:lawof)).
-
-  ```flatppl
-  z ~ Normal(mu = m, sigma = s)
-  a ~ Normal(mu = z, sigma = s_a)
-  b ~ Normal(mu = z, sigma = s_b)
-  ```
-
-  For these draws, `joint(a = lawof(a), b = lawof(b))` has cross-covariance
-  $\mathrm{Var}(z) = s^2$; a `joint` of two constructor measures with the same
-  marginals has cross-covariance $0$ only when their parameters reach no shared
-  stochastic node.
-
-  **Singular joints.** A joint law has no density w.r.t. its product reference
-  measure when it is not absolutely continuous w.r.t. that measure. This occurs,
-  for example, when the same scalar draw with a Lebesgue density appears twice.
-  Deterministic dependence between discrete variates does not imply the absence
-  of a density w.r.t. product counting measure. Sampling remains well-defined.
-  When no density exists, a density query is a static error where statically
-  detectable, and is otherwise refused by the engine.
+  For stochastic measure expressions, this product is conditional on their
+  current parameter values. For example, `joint(Normal(z, 1), Normal(z, 1))`
+  shares the free parameter `z`. In contrast,
+  `joint(lawof(Normal(z, 1)), lawof(Normal(z, 1)))` independently draws from
+  each marginal law. Dependence already absorbed by `lawof` remains internal
+  to that law.
 
 - **`iid(M, size)`**<a id="iid"></a> — the product measure $M^{\otimes N}$ over arrays of
   shape `size`, where `N = prod(size)`. `size` is a positive integer (1-D length) or
   a vector of positive integers (multi-axis shape). When `M` is a reified law,
   each of the $N$ copies carries its own copy of the reified sub-DAG,
-  stochastic ancestors included; `iid` never shares nodes between copies. A
-  stochastic node may not be both a constructor parameter of `M` and an
-  ancestor captured in `M`'s reified sub-DAG, since one node cannot be both
-  shared across all copies and fresh in each; such an `iid` is a static
-  error. A `size` derived from data rather than written in source may resolve to
+  stochastic ancestors included. Free constructor parameters keep their current
+  values across copies, as for `joint`. A `size` derived from data rather than written in source may resolve to
   0, giving the empty product measure, whose log-density is $0$: the empty sum
   in the [density rule for composed measures](#density-of-composed-measures).
 
@@ -619,7 +587,7 @@ Engines must support density evaluation in the following three cases:
    `reals`, and a zero-exponent power is constant wherever it is defined.
    Unannotated uses follow the default density-evaluation rule in case 3 below.
 
-2. **Structural projection.** The non-bijective projection pattern `pushfwd(fn(get(_, [...])), M)` denotes a marginalization. Engines must support projections onto whole factors of independent `joint` or `iid` products when the required factor densities and total masses are supported. Omitted factors contribute their total masses. Engines must also support `jointchain` prefix projections when the omitted transitions are normalized and the retained prefix density is supported. Other `jointchain` projections and `joint` projections with shared ancestry follow the [density rules for composed measures](#density-of-composed-measures), including their marginalization and refusal rules. Constructor structure alone does not guarantee a closed form. For projections of measures without explicit product structure, engines may either compute the marginal numerically or report a static error.
+2. **Structural projection.** The non-bijective projection pattern `pushfwd(fn(get(_, [...])), M)` denotes a marginalization. Engines must support projections onto whole factors of `joint` or `iid` products when the required factor densities and total masses are supported. Omitted factors contribute their total masses. Engines must also support `jointchain` prefix projections when the omitted transitions are normalized and the retained prefix density is supported. Other `jointchain` projections follow the [density rules for composed measures](#density-of-composed-measures), including their marginalization and refusal rules. Constructor structure alone does not guarantee a closed form. For projections of measures without explicit product structure, engines may either compute the marginal numerically or report a static error.
 
 3. **Arbitrary unannotated `f`.** For a user function that is neither in the known-bijection registry nor a structural projection, `densityof`/`logdensityof` of the pushforward is a **static error** by default. Users must explicitly wrap such functions with `bijection(f, f_inv, logvolume)` to make density evaluation well-defined. Engines may optionally provide opt-in fallbacks (term-rewriting-based symbolic inversion, autodiff Jacobian for square maps), but no engine is required to do so.
 
@@ -639,7 +607,7 @@ The density of a composed measure is determined by the measure-algebra definitio
 - `normalize` (from $M / Z$): $\log\mathrm{densityof}(\mathrm{normalize}(M), x) = \log\mathrm{densityof}(M, x) - \log Z$, with $Z = \mathrm{totalmass}(M)$ finite and nonzero.
 - `tilt`: $\log\mathrm{densityof}(\mathrm{tilt}(M, B), x) = \log\mathrm{densityof}(M, x) + \log\mathrm{densityof}(B, x) - \log Z$, where $Z = \int \mathrm{densityof}(M, x)\,dB(x)$ is finite and positive.
 - `truncate` (from $\nu(A) = M(A \cap S)$): $\log\mathrm{densityof}(\mathrm{truncate}(M, S), x)$ is $\log\mathrm{densityof}(M, x)$ for $x \in S$ and $-\infty$ otherwise.
-- `joint` and `iid` (the variate is the `cat` of the component variates): for components sharing no stochastic ancestor, $\log\mathrm{densityof}(\mathrm{joint}(M_1,\allowbreak M_2), [x_1, x_2]) = \log\mathrm{densityof}(M_1, x_1) + \log\mathrm{densityof}(M_2, x_2)$; for `iid` always, $\log\mathrm{densityof}(\mathrm{iid}(M, n), x) = \sum_i \log\mathrm{densityof}(M, x_i)$. A `joint` with shared ancestry reduces as its [equivalent record law](#joint); a singular joint has no density and the query is refused.
+- `joint` and `iid` (independent products): $\log\mathrm{densityof}(\mathrm{joint}(M_1,\allowbreak M_2), [x_1, x_2]) = \log\mathrm{densityof}(M_1, x_1) + \log\mathrm{densityof}(M_2, x_2)$, and $\log\mathrm{densityof}(\mathrm{iid}(M, n), x) = \sum_i \log\mathrm{densityof}(M, x_i)$.
 - `jointchain` (the product of the constituent conditional densities): $\log\mathrm{densityof}(\mathrm{jointchain}(M,\allowbreak K), [a, b]) = \log\mathrm{densityof}(M, a) + \log\mathrm{densityof}(K(a), b)$.
 - `markovchain` and `kscan` (the product of the step conditional densities, the initial value contributing no factor): $\log\mathrm{densityof}(\mathrm{markovchain}(\kappa,\allowbreak \text{init}, n), \text{traj}) = \sum_{i=1}^{n} \log\mathrm{densityof}(\kappa(\text{traj}_{i-1}), \text{traj}_i)$ with $\text{traj}_0 = \text{init}$, and likewise for $\mathrm{kscan}(\kappa, \text{init}, \text{xs})$ over $i = 1, \dots, \mathrm{lengthof}(\text{xs})$ with the step kernel $\kappa(\text{traj}_{i-1}, \text{xs}_i)$.
 
