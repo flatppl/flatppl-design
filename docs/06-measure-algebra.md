@@ -286,8 +286,9 @@ To evaluate a density at many points (e.g. a grid for numerical integration or p
 
   For kernels, `joint(K1, K2, ...)` results in a kernel that fans a single
   input out to all component kernels, so each of them receives the same input.
-  The result's inputs are the union of the component kernels' inputs by name; a
-  component receives the inputs it declares and is unaffected by the others, as in
+  The result's inputs are the union of the component kernels' inputs by name, so the
+  result only supports keyword arguments. A component receives the inputs it declares
+  and is unaffected by the others, as in
   [reification with interdependent boundary nodes](04-design.md#sec:kernelof).
   Measure components ignore the input. The keyword form applies unchanged,
   producing a kernel over records.
@@ -397,16 +398,9 @@ To evaluate a density at many points (e.g. a grid for numerical integration or p
   kchain(M, a -> joint(Dirac(value = a), K(a)))
   ```
 
-  Like [`fchain`](04-design.md#function-composition-and-annotation),
-  `kchain` and `jointchain` combine well with auto-splatting: a
-  record-shaped variate from step $i$ splats into step $i+1$'s keyword
-  inputs by field name. A non-record variate — for example the `cat`'d
-  variate of a positional `joint` — carries no field names, so it feeds a
-  kernel only when the kernel has a single input, to which the whole value
-  is bound; feeding one to a kernel with two or more inputs is a static
-  error, as a single value cannot be split across inputs by name. Use the
-  named form (`joint(name1 = M1, ...)`) or `relabel` to name the
-  components, producing a record variate whose fields splat by name.
+  Like [`fchain`](04-design.md#function-composition-and-annotation), `kchain` and
+  `jointchain` apply the ordinary calling convention at each step. A record-shaped
+  variate supplies inputs by name only when auto-splatting applies.
 
 - **`markovchain(kernel, init, n)`**<a id="markovchain"></a> — measure over length-`n` trajectories
   of a time-homogeneous Markov chain.
@@ -814,7 +808,9 @@ posterior = bayesupdate(L, prior)
 <a id="disintegrate"></a>**`disintegrate(selector, joint_measure)`** returns a tuple `(kernel, base_measure)`,
 where `kernel` is the conditional kernel for the selected variates and `base_measure`
 is the marginal base measure — the measure obtained by marginalizing the selected
-variates out of the joint.
+variates out of the joint. For a record-shaped complement, `kernel` takes its fields
+as keyword-only inputs. For a positional complement, it takes one ordered input,
+`complement`, containing the whole complement.
 
 Selectors work like in `get`: `"b"` selects the bare value, `["b"]` selects a
 `record(b = ...)`.

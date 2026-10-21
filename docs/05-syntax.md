@@ -430,9 +430,9 @@ rate = mu_sig * signal_yield +      # trailing operator continues the line
 
 **Note on `MixedArgs`.** Syntactically, any `Call` may use `MixedArgs` (one or more
 leading positional expressions followed by one or more keyword arguments). Semantically,
-only the special operations `functionof`, `kernelof`, `broadcast`, `load_module`, and
-`checked` accept this shape; other callables must use `PositionalArgs` or `KeywordArgs`
-only. Among these, `functionof`, `kernelof`, `load_module`, and `checked` take exactly
+only the special operations `functionof`, `kernelof`, `broadcast`, and `load_module`
+accept this shape; other callables must use `PositionalArgs` or `KeywordArgs`
+only. Among these, `functionof`, `kernelof`, and `load_module` take exactly
 one leading positional argument; only `broadcast` accepts multiple positional arguments
 before the keyword arguments. `functionof` and `kernelof` also accept `PositionalArgs`
 of two or more entries, where every entry after the first is a bare `Name` designating

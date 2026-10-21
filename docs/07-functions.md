@@ -523,8 +523,7 @@ n = checked(value = n_raw, condition = equal(n_raw, lengthof(data)))
 # n is n_raw with the dimension check attached; use n downstream.
 ```
 
-The canonical calling form uses keyword arguments; `checked(value_expr, condition = ...)`
-is also accepted. Because `checked` threads the value through to downstream use, the
+Because `checked` threads the value through to downstream use, the
 check is topologically tied to that use and cannot be eliminated by term-rewriting
 passes — ensuring the invariant is always validated.
 

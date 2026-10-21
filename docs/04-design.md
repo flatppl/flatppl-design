@@ -104,21 +104,13 @@ canonical syntax):
   to inputs by name, the order of the arguments is not relevant.
 
 - **Auto-splatting** (of records and table columns): `f(record(a = x, b = y, ...))` and
-  `f(table(a = x, b = y, ...))` are equivalent to `f(a = x, b = y, ...)`. The order of
-  fields or columns is not relevant. A call with field or column names that do not match
-  the callable's argument names is a static error. Auto-splatting is shallow and occurs only
-  when a record or table is the call's sole argument (whatever its field count, a single field
-  included); a record given alongside other arguments, or bound to a parameter by keyword, is an
-  ordinary value and is not splatted. A sole positional record or table therefore always splats:
-  whether its field or column names match the callable's argument names decides only whether the
-  call is valid, never whether the splat occurs. A callable with exactly one input whose
-  documented domain admits records or tables is exempt and receives a sole positional record or
-  table whole, so `sum(t)` reduces over the table rather than splatting. User-defined callables
-  are never exempt. Passing a record or table as one ordinary argument requires the keyword
-  spelling, as in `f(pars = record(...))`. Auto-splatting is a rule of the ordinary calling
-  convention; no special operation splats a sole record or table argument. `table(r)` and
-  `record(t)` perform the record–table conversions of [tables](03-value-types.md#tables)
-  directly, as dedicated conversions rather than as an instance of auto-splatting.
+  `f(table(a = x, b = y, ...))` are equivalent to `f(a = x, b = y, ...)`, unless `f` can be
+  called with a single positional argument, in which case it receives the record or table whole.
+  This choice depends on the callable's input interface, before checking the argument's domain.
+  The order of fields or columns is not relevant.
+  When auto-splatting applies, field or column names that do not match the callable's
+  argument names are a static error. Auto-splatting is shallow and applies only to a call's sole positional
+  argument.
 
 - **Positional arguments**: `f(x, y, ...)`. Positional arguments are accepted only if
   the callable has ordered inputs, so that the arguments can be mapped to the inputs in order.
@@ -155,8 +147,6 @@ of which may or may not be significant. The total number of inputs is never zero
 - `markovchain`, `kscan`: Three distinguished inputs.
 - `ksuperpose`: Two distinguished inputs (the kernel and the weight vector); the
   resulting kernel is applied separately to the parameter family.
-- `checked`: Named parameters `value` and `condition`, per [§07](07-functions.md#checked);
-  the canonical calling form is keyword-based.
 
 A distinguished input has no name and so cannot be passed by keyword. The
 [measure combinators](06-measure-algebra.md#sec:measure-algebra) likewise take their
@@ -330,7 +320,7 @@ probability measure.
 parameterized phase; for stochastic-phase `m` it is the marginal law of a draw
 from `m`.
 
-For example:
+`lawof` preserves dependence within its argument:
 
 ```flatppl
 x ~ Normal(0, 1)
@@ -341,8 +331,8 @@ C = lawof([x, y])
 D = lawof([x, x])
 ```
 
-`A`, `B`, and `C` are the same product of two standard Normal laws.
-`D` is the diagonal law, since `lawof` preserves dependence within its argument.
+`A`, `B`, and `C` are the same product of two standard Normal laws, and `D` is
+the diagonal law.
 The named form `lawof((a = x, b = y))` gives the joint law over a record.
 
 **Phase of the reified law.** Although the ancestor subgraph
@@ -479,7 +469,11 @@ node becomes a boundary input only under a name, as in `r` or `p = r`. The short
 is a surface rewrite with no separate [FlatPIR](11-flatpir.md#reified-callables) form
 and applies to `kernelof` as well.
 
-**Identity law.** `functionof(f(a, b), ..., a = a, b = b, ...)` is equivalent to `f`.
+**Identity law.** `functionof(f(a, b, ...), a = a, b = b, ...)` and
+`functionof(f(a, b, ...), a, b, ...)` are equivalent to fixed `f` when all its inputs
+are required and non-variadic, and the reification preserves their names, order,
+positional eligibility, and domains. The inner application must bind each boundary
+node to its corresponding input.
 
 **Lambda notation.** A lambda function is a shorthand notation for `functionof`
 with placeholders. A single-argument lambda is written `arg -> expr`; two or
@@ -507,8 +501,9 @@ delimited by `kwargs` — the boundary substitution applies before the inner
 `lawof` is interpreted, so an enclosing `kernelof` boundary scopes what the
 inner `lawof` marginalizes over.
 
-**Identity law.** For a fixed kernel `K`,
-`kernelof(draw(K(a, b, ...)), a = a, b = b, ...)` is equivalent to `K`.
+**Identity law.** `kernelof(draw(K(a, b, ...)), a = a, b = b, ...)` and
+`kernelof(draw(K(a, b, ...)), a, b, ...)` are equivalent to fixed `K` under the
+same input-interface conditions as the [`functionof` identity law](#sec:functionof).
 
 Consider this Bayesian example:
 
@@ -648,8 +643,8 @@ result; for measures it is equivalent to `pushfwd(fn(relabel(_, names)), M)`; fo
 **`fchain(f1, f2, f3, ...)`** composes deterministic functions left-associatively:
 `fchain(f1, f2, f3)(x)` equals `f3(f2(f1(x)))`.
 
-`fchain` combines well with auto-splatting: if `f1` returns a record and `f2` accepts
-keyword arguments matching the record fields, the two functions compose directly.
+If auto-splatting applies, a record returned by `f1` supplies the matching named
+inputs of `f2`. Otherwise, `f2` receives the record whole.
 `fchain` is the deterministic analogue of
 [`kchain`](06-measure-algebra.md#dependent-composition).
 
