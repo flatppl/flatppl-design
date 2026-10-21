@@ -314,7 +314,7 @@ probability measure.
 parameterized phase; for stochastic-phase `m` it is the marginal law of a draw
 from `m`.
 
-For example:
+`lawof` preserves dependence within its argument:
 
 ```flatppl
 x ~ Normal(0, 1)
@@ -325,8 +325,8 @@ C = lawof([x, y])
 D = lawof([x, x])
 ```
 
-`A`, `B`, and `C` are the same product of two standard Normal laws.
-`D` is the diagonal law, since `lawof` preserves dependence within its argument.
+`A`, `B`, and `C` are the same product of two standard Normal laws, and `D` is
+the diagonal law.
 The named form `lawof((a = x, b = y))` gives the joint law over a record.
 
 **Phase of the reified law.** Although the ancestor subgraph
