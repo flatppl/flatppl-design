@@ -49,8 +49,8 @@ well-defined.
 individual reference measures $\rho_1, \rho_2, \ldots$ (each either `Lebesgue` or
 `Counting` on the corresponding component support), the reference measure of the
 product is the product $\rho_1 \otimes \rho_2 \otimes \cdots$ on the joint variate
-space. The density of `joint` w.r.t. this product reference is the product
-of the component densities. Mixed continuous-discrete
+space, and the joint density w.r.t. this product reference is the product of the
+component densities. Mixed continuous-discrete
 joints are handled uniformly under this rule: e.g. `joint(c = Normal(mu = 0, sigma = 1), k = Poisson(rate = 3))` has
 reference measure $\mathrm{Lebesgue}(\mathbb{R}) \otimes \mathrm{Counting}(\mathbb{Z})$
 on $\mathbb{R} \times \mathbb{Z}$, with joint density $\phi(c;\,0,1) \cdot
@@ -309,25 +309,13 @@ To evaluate a density at many points (e.g. a grid for numerical integration or p
   The result's inputs are the union of the component kernels' inputs by name; a
   component receives the inputs it declares and is unaffected by the others, as in
   [reification with interdependent boundary nodes](04-design.md#sec:kernelof).
-  Measure components ignore the input. Each component's boundary substitutions
-  apply only within that component. The keyword form applies unchanged,
-  producing a kernel over records. At each input point, the output measure is
-  the product of the component output measures. The total-mass class is the
-  product of the component classes. A fan-out of Markov kernels is a Markov kernel.
-
-  For stochastic measure expressions, this product is conditional on their
-  current parameter values. For example, `joint(Normal(z, 1), Normal(z, 1))`
-  shares the free parameter `z`. In contrast,
-  `joint(lawof(Normal(z, 1)), lawof(Normal(z, 1)))` independently draws from
-  each marginal law. Dependence already absorbed by `lawof` remains internal
-  to that law.
+  Measure components ignore the input. The keyword form applies unchanged,
+  producing a kernel over records.
 
 - **`iid(M, size)`**<a id="iid"></a> — the product measure $M^{\otimes N}$ over arrays of
   shape `size`, where `N = prod(size)`. `size` is a positive integer (1-D length) or
-  a vector of positive integers (multi-axis shape). When `M` is a reified law,
-  each of the $N$ copies carries its own copy of the reified sub-DAG,
-  stochastic ancestors included. Free constructor parameters keep their current
-  values across copies, as for `joint`. A `size` derived from data rather than written in source may resolve to
+  a vector of positive integers (multi-axis shape). A `size` derived from data
+  rather than written in source may resolve to
   0, giving the empty product measure, whose log-density is $0$: the empty sum
   in the [density rule for composed measures](#density-of-composed-measures).
 
