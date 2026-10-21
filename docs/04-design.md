@@ -86,11 +86,9 @@ An unqualified name (no `self.` or `base.` prefix) resolves as follows:
 
 Unresolvable names are static errors.
 
-Built-in names are shadowable except for the numeric constants `im`, `pi`, and
-`inf`, which cannot be bound or used as lambda or function-definition argument
-names. The reserved modules `self` and `base` and the
-[reserved words](05-syntax.md#formal-grammar) also cannot be bound.
-Adding new shadowable built-ins to FlatPPL is therefore a non-breaking change.
+This makes built-in names shadowable: a module may bind any name except for
+`self` and `base`. Adding new built-ins to FlatPPL is therefore a non-breaking
+change.
 
 ### <a id="sec:calling-convention"></a>Calling conventions
 
@@ -103,14 +101,8 @@ canonical syntax):
 - **Keyword arguments** (named arguments): `f(a = x, b = y, ...)`. Arguments are bound
   to inputs by name, the order of the arguments is not relevant.
 
-- **Auto-splatting** (of records and table columns): `f(record(a = x, b = y, ...))` and
-  `f(table(a = x, b = y, ...))` are equivalent to `f(a = x, b = y, ...)`, unless `f` can be
-  called with a single positional argument, in which case it receives the record or table whole.
-  This choice depends on the callable's input interface, before checking the argument's domain.
-  The order of fields or columns is not relevant.
-  When auto-splatting applies, field or column names that do not match the callable's
-  argument names are a static error. Auto-splatting is shallow and applies only to a call's sole positional
-  argument.
+- **Auto-splatting** (of records and table columns): a record or table that is a call's only argument stands for keyword arguments, so `f(record(a = x, b = y, ...))` and `f(table(a = x, b = y, ...))` are equivalent to `f(a = x, b = y, ...)`. If one positional argument suffices to call `f`, it receives the record or table whole instead. The choice depends on the callable's input interface, before checking the argument's domain. The order of fields or columns is not relevant, and field or column names that do not match the callable's argument names are a static error. Auto-splatting is shallow.
+
 
 - **Positional arguments**: `f(x, y, ...)`. Positional arguments are accepted only if
   the callable has ordered inputs, so that the arguments can be mapped to the inputs in order.
@@ -278,8 +270,8 @@ vice versa.
 
 ![](diagrams/reification.svg)
 
-A function represents a reified deterministic DAG, either implicit (built-in)
-or explicitly constructed.
+A function represents a deterministic DAG, that may be either implicit
+(built-in) or explicitly constructed via reification.
 Ordinary function application `y = f(a, b, ...)` introduces a deterministic
 node `y` into the graph. `functionof(y)` goes in the opposite direction:
 it reifies the ancestor subgraph of `y` as a first-class function — the
@@ -313,14 +305,15 @@ probability measure.
 
 #### <a id="sec:lawof"></a>Reification to measures
 
-`lawof(x)` reifies the ancestor sub-DAG of the value node `x` as its
-**probability measure** — the law of `x` as a random variable.
+`lawof(x)` reifies the ancestor sub-DAG of `x` as the **probability measure** that
+is the total law of x — the probability measure that `x`, considered as a random
+variable, is distributed according to.
 
-**Identity law.** `lawof(draw(m))` is equivalent to `m` for `m` of fixed or
-parameterized phase; for stochastic-phase `m` it is the marginal law of a draw
-from `m`.
+**Identity law.** `lawof(draw(m))` is equivalent to `m` for any probability measure
+`m` with fixed or parametric phase. If `m` itself has stochastic-phase, then
+`lawof(draw(m))` is the marginal (in terms of stochastic ancestors) law of the draw.
 
-`lawof` preserves dependence within its argument:
+So in
 
 ```flatppl
 x ~ Normal(0, 1)
@@ -358,12 +351,13 @@ Boundary inputs themselves may be of parametric or stochastic phase, but not
 fixed phase. `functionof` effectively substitutes each boundary node `a` with
 an input node `elementof(valueset(a))` under the given name.
 
-After boundary substitution, every path from a `draw` to the reified output
+Referential transparency is a core property of FlatPPL. This requires that,
+after boundary substitution, every path from a `draw` to the reified output
 must pass through a `lawof` that absorbs its stochasticity. `lawof` nodes in the
 subgraph only operate within that subgraph, including marginalization. With
-boundary specifications, the boundary inputs must be the only `elementof`
-leaves of the subgraph. A reified callable closes over fixed ancestors only
-and is itself fixed.
+boundary specifications, the boundary inputs must be the only leaves with
+parametric phase in the subgraph. A reified callable closes only over fixed-phase
+ancestors and has fixed phase itself.
 
 Consider a simple deterministic computation:
 
@@ -390,9 +384,8 @@ that contains `e` and all its ancestors — as a reusable function object.
 
 The argument names of the resulting function are the names of the leaf nodes of the
 reified sub-DAG; the input nodes of the function are decoupled from these leaf nodes.
-Fixed ancestor nodes are closed over and not exposed as inputs. As
-the graph nodes are not ordered, the function only supports keyword arguments,
-not positional arguments.
+Fixed ancestor nodes are closed over and not exposed as inputs. As the graph nodes
+are not ordered, the function only supports keyword arguments, not positional arguments.
 
 The output type of the reified function matches the type of the argument of `functionof`:
 
@@ -432,8 +425,8 @@ arguments, with positional order determined by the order in which boundary
 inputs are specified. Without a boundary specification, inputs are traced
 back to the parameterized-phase ancestor leaves of the reified expression
 (i.e. `elementof` nodes). Fixed-phase ancestors (e.g. `external` and
-`load_data`) are closed over instead. The reified function then only
-supports keyword arguments, as no argument order can be inferred. A specified boundary
+`load_data`) are closed over instead. The reified function then only supports
+keyword arguments, as no argument order can be inferred. A specified boundary
 node `a` can be thought of as being substituted with a new node, generated via
 `elementof(valueset(a))`, in the reified graph. Substitution applies to all
 boundary nodes before the ancestor trace runs, so a boundary node whose only
@@ -459,21 +452,23 @@ listed as bare names instead:
 h = functionof(e, a, d)
 ```
 
-Each bare entry must be a binding name of the current module. It names the boundary
-node and the argument alike. Boundary inputs are given either all as bare names or
-all as keyword arguments. Mixing the two forms in one call is a static error.
-Placeholders are not module bindings and so keep their keyword form (`x = _x_`). A
-record or tuple expression in this position is a single node, not a boundary list:
-`functionof(e, (a = a, b = b))` and `functionof(e, (a, b))` are static errors. Such a
-node becomes a boundary input only under a name, as in `r` or `p = r`. The shorthand
-is a surface rewrite with no separate [FlatPIR](11-flatpir.md#reified-callables) form
-and applies to `kernelof` as well.
+is a surface-form shorthand for
+
+```flatppl
+h = functionof(e = e, a = a, d = d)
+```
+
+This shorthand applies to `kernelof` as well.
+
+Boundary inputs may be given either all as bare names or all as keyword arguments,
+mixing the two forms is a static error. A placeholder boundary like `x = _x_` does not
+refer to a module binding `_x_`, and function reification with placholders must always
+use keyword form.
 
 **Identity law.** `functionof(f(a, b, ...), a = a, b = b, ...)` and
 `functionof(f(a, b, ...), a, b, ...)` are equivalent to fixed `f` when all its inputs
 are required and non-variadic, and the reification preserves their names, order,
-positional eligibility, and domains. The inner application must bind each boundary
-node to its corresponding input.
+positional eligibility, and domains.
 
 **Lambda notation.** A lambda function is a shorthand notation for `functionof`
 with placeholders. A single-argument lambda is written `arg -> expr`; two or
@@ -1181,10 +1176,6 @@ other modules written in FlatPPL though, to make models composable:
 
 `source` may be a file path or a URL (see [Remote file caching](#sec:url-cache)).
 
-Each `load_module` call instantiates the loaded module independently: two
-calls share no nodes, even with identical `source` and substitutions.
-To share one instance, bind the module reference once and reuse the name.
-
 In the canonical syntax, bound names in the loaded module are accessed via dot syntax:
 
 ```flatppl
@@ -1248,6 +1239,9 @@ Within a bundle (directory or ZIP), file paths in `load_module` and `load_data`
 must be relative and, after resolving symbolic links, remain within the canonical
 bundle root. ZIP entries with absolute names or `..` segments are rejected before
 extraction or resolution.
+
+Referential transparency applies to `load_module` calls with the same source and
+substitutions.
 
 ### FlatPPL version compatibility
 
