@@ -836,8 +836,8 @@ posterior = bayesupdate(L, prior)
 where `kernel` is the conditional kernel for the selected variates and `base_measure`
 is the marginal base measure — the measure obtained by marginalizing the selected
 variates out of the joint. For a record-shaped complement, `kernel` takes its fields
-as keyword-only inputs. For a positional complement, it takes one ordered input
-containing the whole complement.
+as keyword-only inputs. For a positional complement, it takes one ordered input,
+`complement`, containing the whole complement.
 
 Selectors work like in `get`: `"b"` selects the bare value, `["b"]` selects a
 `record(b = ...)`.
