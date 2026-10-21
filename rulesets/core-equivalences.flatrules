@@ -61,7 +61,7 @@
 ; Some pushforward equivalences below use a lambda in the pushforward; they are shown
 ; in comment form because their `fn` bodies reify to the full (functionof … %specinputs
 ; …) and have no compact inline rule form. Coefficients inside those lambdas must be
-; fixed; dynamic coefficients require a structural lowering that preserves explicit inputs.
+; fixed.
 ; The (?* …) ellipsis/zip and (?indep …)
 ; predicate (used by the η and stochastic↔measure rules below) are defined in §12. The
 ; dependent-chain and measure→stochastic conversions are engine structural passes, not
@@ -89,7 +89,8 @@
   ; appears among the call args and among the boundary refs, pairing them element-wise
   ; (the zip — header). ?n.. are the boundary names (the public interface, wildcarded).
   (&equiv (functionof (%call ?f (?* ?a)) %specinputs (?* (?n ?a))) ?f)
-  (&equiv (kernelof (draw (%call ?K (?* ?a))) %specinputs (?* (?n ?a))) ?K)
+  (&equiv (kernelof (draw (%call (%meta (?? %fixed ??) ?K) (?* ?a)))
+                   %specinputs (?* (?n ?a))) ?K)
 
   ; ============================================================================
   ; Stochastic ↔ measure conversion (§06 "Equivalence with stochastic nodes").

@@ -258,8 +258,8 @@ FlatPPL preset domains, see [Presets](03-value-types.md#presets).
 | `superpose(M1, M2, ...)` | — | `RooAddPdf` (extended) |
 | `normalize(weighted(w, M))` | — | `RooEffProd` |
 | `normalize(logweighted(w, M))` | — | `RooEffProd` with `exp(w)` via `RooFormulaVar` |
-| `normalize(truncate(weighted(w, Lebesgue(reals)), S))` | `density_function_dist` | `RooGenericPdf` |
-| `normalize(truncate(logweighted(w, Lebesgue(reals)), S))` | `log_density_function_dist` | `RooGenericPdf` with `exp(w)` expression |
+| `normalize(truncate(weighted(w, Lebesgue(reals), p), S))` | `density_function_dist` | `RooGenericPdf` |
+| `normalize(truncate(logweighted(w, Lebesgue(reals), p), S))` | `log_density_function_dist` | `RooGenericPdf` with `exp(w)` expression |
 | `pushfwd(f, M)` | — | `RooFormulaVar` composition |
 | `bayesupdate(L, prior)` | `analyses` entry with `prior` | `BayesianCalculator` / `MCMCCalculator` |
 
@@ -267,21 +267,22 @@ In the `density_function_dist` / `log_density_function_dist` rows (and HS³
 `generic_dist`), the weight `w` is the HS³ expression translated to a FlatPPL
 expression — arithmetic and comparison operators, the elementary functions of
 [Functions and deterministic operations](07-functions.md#sec:functions), and `ifelse` for the
-ternary — supplied **inline** as the `weighted`/`logweighted` weight argument. This
-inline use is permitted under the [profile restriction](#sec:hs3roofit) above; it
-introduces no named `functionof` binding.
+ternary — in an inline function `w(x, p)`. The observable is `x`; the remaining
+parameters are supplied explicitly through `p`. This inline function is permitted
+under the [profile restriction](#sec:hs3roofit) above.
 
 The region `S` is the observable's declared `product_domain` interval; the density is
 normalized over it,
 
-$$p(x) = \frac{w(x)}{\int_S w\,\mathrm{d}x}, \qquad x \in S,$$
+$$\rho(x) = \frac{w(x, p)}{\int_S w(t, p)\,\mathrm{d}t}, \qquad x \in S,$$
 
 matching `RooGenericPdf`, which normalizes over the observable's range. Normalizing over
 $\mathbb{R}$ diverges when $w$ is not integrable; with no declared domain the lowering
 falls back to `Lebesgue(reals)`.
 
-A `generic_function` lowers to a lambda over the observable when its expression
-references it, and to the bare scalar expression otherwise.
+A `generic_function` lowers to a lambda with explicit inputs for the observable
+and parameters when its expression references the observable, and to the bare
+scalar expression otherwise.
 
 The `product_dist` (`RooProdPdf`) row covers the **independent** case, where the
 factors are pdfs over *distinct* observables; it lowers to `joint(M1, M2, ...)`,
@@ -292,11 +293,16 @@ on the factors' variates:
 - **Disjoint variates** — `joint(M1, M2, ...)` (the row above). *Default.*
 - **Shared variate** — when every factor is a pdf over the *same* observable,
   `RooProdPdf` is the pointwise product of densities, not a product over a higher-
-  dimensional space. It lowers to the normalized pointwise density product
-  `normalize(logweighted(x -> logdensityof(M2, x) + ... + logdensityof(Mₙ, x), M1))`:
-  reweight the first factor's measure by the sum of the remaining factors'
-  log-densities. This is flat in the factor count (one `add`-fold of `n − 1`
-  log-densities, base = `M1`) and yields the probability measure ∝ ∏ᵢ gᵢ.
+  dimensional space. It reweights the first factor by the sum of the remaining
+  factors' log-densities, with those measures passed as explicit parameters. For
+  three factors:
+
+  ```flatppl
+  normalize(logweighted((x, p) -> logdensityof(p[1], x) + logdensityof(p[2], x), M1, (M2, M3)))
+  ```
+
+  For `n` factors this uses one `add`-fold of `n − 1` log-densities and yields
+  the probability measure ∝ ∏ᵢ gᵢ.
 - **Conditional** — `RooProdPdf` with `RooFit::Conditional(...)` → `jointchain(M, K)`
   (the row above).
 - **Partially-overlapping variates** are outside the profile.

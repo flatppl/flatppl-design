@@ -150,11 +150,9 @@ of which may or may not be significant. The total number of inputs is never zero
 - `load_module`: One distinguished input plus optional variadic named inputs with
   no significant order.
 - `standard_module`: Two distinguished inputs.
-- `weighted`, `logweighted`: Two distinguished inputs, plus an optional third
-  positional parameter input.
+- `weighted`, `logweighted`: Two distinguished inputs.
 - `aggregate`, `metricsum`: Three distinguished inputs.
-- `markovchain`, `kscan`: Three distinguished inputs, plus an optional fourth
-  positional input for parameters held constant across steps.
+- `markovchain`, `kscan`: Three distinguished inputs.
 - `ksuperpose`: Two distinguished inputs (the kernel and the weight vector); the
   resulting kernel is applied separately to the parameter family.
 - `checked`: Named parameters `value` and `condition`, per [§07](07-functions.md#checked);
@@ -166,6 +164,21 @@ inputs positionally: a keyword spelling such as `normalize(M = mu)` is a static 
 Where this specification refers to a distinguished input by a name, as in
 `aggregate(f_reduction, output_axes, expr)`, the name identifies the input in prose
 only. A call binds the input by position, never by keyword argument.
+
+#### <a id="sec:callback-parameters"></a>Explicit callback parameters
+
+The operations below accept an optional final parameter object `p`. When present,
+it is passed whole as the callback's final argument. Without `p`, that argument
+is omitted.
+
+| Operation | Callback application |
+|---|---|
+| `weighted(f, M, p)`, `logweighted(f, M, p)`, `pushfwd(f, M, p)` | `f(x, p)` for the whole variate `x` |
+| `filter(pred, data, p)` | `pred(x, p)` for each element or row `x` |
+| `reduce(f, xs, p)` | `f(acc, next, p)` |
+| `scan(f, init, xs, p)` | `f(acc, next, p)` |
+| `markovchain(kernel, init, n, p)` | `kernel(state, p)` |
+| `kscan(kernel, init, xs, p)` | `kernel(state, xs[i], p)` |
 
 ### <a id="sec:variate-measure"></a>Variates and measures
 
@@ -227,7 +240,7 @@ y = 2 * x
 ```
 
 The distinction between `external` and `elementof` determines phase classification
-(see below), the ancestors `functionof` resolves to values
+(see below), closure behavior in `functionof`
 (see [application and reification](#application-and-reification)), and cross-module
 binding rules for `load_module` (see [Multi-file models](#sec:modules)).
 
@@ -264,7 +277,7 @@ initialized module, given different inputs. Note that this is a mental model,
 applications are not required to use an explicit initialization state to implement
 these semantics.
 
-Phase governs which ancestors are resolved to values at reification
+Phase governs closure behavior
 (see [application and reification](#application-and-reification)) and load-time
 binding rules (see [Multi-file models](#sec:modules)).
 
@@ -336,8 +349,8 @@ The named form `lawof((a = x, b = y))` gives the joint law over a record.
 of the argument of `lawof` will typically include stochastic nodes, the
 resulting measure is itself deterministic (of parameterized or fixed phase):
 `lawof` absorbs stochasticity into the reified law rather than propagating it
-outward. Thus `functionof` can reify subgraphs containing stochastic nodes
-when their stochasticity is absorbed by `lawof` (see below).
+outward. Thus `functionof` can reify subgraphs that include stochastic nodes as
+long as they are reified to measures (see below).
 
 #### <a id="sec:functionof"></a>Reification to functions and kernels
 
@@ -345,8 +358,8 @@ When called with a single argument (without boundary specifications, see below),
 `functionof` traces the ancestor subgraph of its argument back to all leaves of
 parametric phase — that is, all `elementof` leaves. These leaf nodes become the
 inputs of the reified callable (a function or a kernel). Fixed ancestors
-(including `external(...)` and `load_data(...)` nodes) are resolved to their
-values and do not become inputs.
+(including `external(...)` and `load_data(...)` nodes) are closed over and do
+not become inputs.
 
 `functionof` can be called with additional keyword arguments to designate and
 label boundary nodes, stopping the graph trace there — so these nodes become,
@@ -355,14 +368,12 @@ Boundary inputs themselves may be of parametric or stochastic phase, but not
 fixed phase. `functionof` effectively substitutes each boundary node `a` with
 an input node `elementof(valueset(a))` under the given name.
 
-FlatPPL has no closures: a reified callable captures no enclosing environment,
-and a fixed ancestor is resolved to its value rather than retained as a binding.
-
 After boundary substitution, every path from a `draw` to the reified output
-must pass through a `lawof` that absorbs its stochasticity. A free captured
-draw is a static error, including in lambdas and nested reifications.
-`lawof` operates within the reified subgraph, including marginalization.
-The resulting callable value is fixed; its formal inputs do not affect its phase.
+must pass through a `lawof` that absorbs its stochasticity. `lawof` nodes in the
+subgraph only operate within that subgraph, including marginalization. With
+boundary specifications, the boundary inputs must be the only `elementof`
+leaves of the subgraph. A reified callable closes over fixed ancestors only
+and is itself fixed.
 
 Consider a simple deterministic computation:
 
@@ -386,11 +397,10 @@ C = broadcast(f, a = A, b = B)      # apply f elementwise over arrays A, B
 
 `functionof(e)` captures the entire computation leading to `e` — the sub-DAG
 that contains `e` and all its ancestors — as a reusable function object.
-The function value `f` is fixed, while its application depends on its inputs.
 
 The argument names of the resulting function are the names of the leaf nodes of the
 reified sub-DAG; the input nodes of the function are decoupled from these leaf nodes.
-Fixed ancestor nodes are resolved to their values and not exposed as inputs. As
+Fixed ancestor nodes are closed over and not exposed as inputs. As
 the graph nodes are not ordered, the function only supports keyword arguments,
 not positional arguments.
 
@@ -432,7 +442,7 @@ arguments, with positional order determined by the order in which boundary
 inputs are specified. Without a boundary specification, inputs are traced
 back to the parameterized-phase ancestor leaves of the reified expression
 (i.e. `elementof` nodes). Fixed-phase ancestors (e.g. `external` and
-`load_data`) are resolved to their values instead. The reified function then only
+`load_data`) are closed over instead. The reified function then only
 supports keyword arguments, as no argument order can be inferred. A specified boundary
 node `a` can be thought of as being substituted with a new node, generated via
 `elementof(valueset(a))`, in the reified graph. Substitution applies to all
@@ -497,8 +507,8 @@ delimited by `kwargs` — the boundary substitution applies before the inner
 `lawof` is interpreted, so an enclosing `kernelof` boundary scopes what the
 inner `lawof` marginalizes over.
 
-**Identity law.** `kernelof(draw(K(a, b, ...)), a = a, b = b, ...)` is
-equivalent to `K`.
+**Identity law.** For a fixed kernel `K`,
+`kernelof(draw(K(a, b, ...)), a = a, b = b, ...)` is equivalent to `K`.
 
 Consider this Bayesian example:
 
@@ -585,7 +595,7 @@ current module only: a parameterized value reached through a loaded-module
 reference cannot become an input — neither by the automatic trace nor as an
 explicit boundary node — so such a reification is a static error. A loaded
 module's callables and fixed values may be used in the reified DAG (applied,
-or referenced and resolved to their values); only taking a cross-module
+or closed over); only taking a cross-module
 parameterized value as an input is disallowed.
 
 Note that `lawof` reifies a measure, which has no input list, so it is
@@ -899,6 +909,9 @@ required to be associative, implementations may evaluate in parallel.
 Unlike `broadcast`, `reduce` accepts only a deterministic function `f`,
 not a kernel.
 
+With [explicit parameters](#sec:callback-parameters), `reduce(f, xs, p)` calls
+`f(acc, next, p)`, which must be associative for each `p`.
+
 **`scan(f, init, xs)`** is a left scan over `xs` using the binary function `f`
 with explicit initial accumulator `init`. `f` is called positionally as
 `f(acc, next)`: the running accumulator (of the type of `init`) and the next
@@ -907,6 +920,9 @@ value of the same type as `init`. Output entry `i` is
 `f(...f(f(init, x1), x2)..., xi)`, i.e. the accumulator after consuming
 `xs[i]`; the result has the same length (or row count) as `xs` and does not
 include `init` itself. `f` must be a deterministic function, not a kernel.
+
+The form `scan(f, init, xs, p)` uses the same
+[explicit parameter rule](#sec:callback-parameters).
 
 ### <a id="sec:aggregate"></a>Multi-axis aggregation
 

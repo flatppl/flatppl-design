@@ -707,13 +707,15 @@ empty input `lany` is `false` and `lall` is `true`, the identities of `lor` and
 | Function | Arguments | Description | Domains |
 |---|---|---|---|
 | [`in`](#in) | `x, S` | `true` if `x ∈ S`, else `false` (operator syntax `x in S`) | scalar matching element type of `S`, set |
-| [`filter`](#filter) | `pred, data` | keep only elements/rows for which `pred` returns `true` | function, array or table |
+| [`filter`](#filter) | `pred, data`, optional `p` | keep only elements/rows for which `pred` returns `true` | function, array or table, object |
 | [`selectbins`](#selectbins) | `edges, region, counts` | select whole-bin counts whose intervals intersect `region` | vector, set, vector |
 
 <a id="in"></a>**`x in S`** — returns `true` if `x` lies in set `S`, else `false`. The type of `x` must match the element type of set `S`.
 
 <a id="filter"></a>**`filter(pred, data)`** — filters an array or table by a boolean predicate, returning
 a shorter array or table containing only elements/rows for which `pred` returns `true`.
+The form `filter(pred, data, p)` uses the
+[explicit callback parameter rule](04-design.md#sec:callback-parameters).
 
   ```flatppl
   data_in_range = filter(fn(_ in interval(2.0, 8.0)), data)
