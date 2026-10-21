@@ -292,6 +292,9 @@ be one of:
   (e.g. `Lebesgue(reals)` or `Counting(integers)`).
 - `%unknown` — unknown total mass.
 
+The total mass of `joint` is the product of the component masses, pointwise for
+kernels.
+
 ### Expressions
 
 Expressions in FlatPIR come in structurally distinct shapes for built-in
