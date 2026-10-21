@@ -135,19 +135,6 @@ To evaluate a density at many points (e.g. a grid for numerical integration or p
   `normalize(weighted(f, Lebesgue(support = S)))` produces a probability distribution
   whose density w.r.t. Lebesgue on $S$ is proportional to $f$.
 
-  **Weight arity.** A one-parameter weight receives the variate whole. If the
-  variate is a $k$-element array with $k \geq 2$, a weight of exactly $k$ scalar
-  parameters instead receives one component per parameter, in order; any other
-  arity is an error. Only `weighted` and `logweighted` admit the $k$-parameter
-  form; every other function-taking construct, including `pushfwd`, passes the
-  whole variate.
-
-  ```flatppl
-  # equivalent over Lebesgue(support = cartprod(interval(0, 1), interval(0, 1)))
-  w_components(x, y) = x * y
-  w_variate(v) = v[1] * v[2]
-  ```
-
 - **`logweighted(logweight, base)`**<a id="logweighted"></a> — like `weighted`, but the weight
  or weighting function is given in
   log-space: $d\nu = \exp(g) \cdot dM$.
@@ -294,8 +281,9 @@ To evaluate a density at many points (e.g. a grid for numerical integration or p
 
   For kernels, `joint(K1, K2, ...)` results in a kernel that fans a single
   input out to all component kernels, so each of them receives the same input.
-  The result's inputs are the union of the component kernels' inputs by name; a
-  component receives the inputs it declares and is unaffected by the others, as in
+  The result's inputs are the union of the component kernels' inputs by name, so the
+  result only supports keyword arguments. A component receives the inputs it declares
+  and is unaffected by the others, as in
   [reification with interdependent boundary nodes](04-design.md#sec:kernelof).
   Components that share a stochastic node must agree on that node's ancestry:
   every ancestor of the shared node that any component binds as a boundary
@@ -448,16 +436,9 @@ To evaluate a density at many points (e.g. a grid for numerical integration or p
   kchain(M, a -> joint(Dirac(value = a), K(a)))
   ```
 
-  Like [`fchain`](04-design.md#function-composition-and-annotation),
-  `kchain` and `jointchain` combine well with auto-splatting: a
-  record-shaped variate from step $i$ splats into step $i+1$'s keyword
-  inputs by field name. A non-record variate — for example the `cat`'d
-  variate of a positional `joint` — carries no field names, so it feeds a
-  kernel only when the kernel has a single input, to which the whole value
-  is bound; feeding one to a kernel with two or more inputs is a static
-  error, as a single value cannot be split across inputs by name. Use the
-  named form (`joint(name1 = M1, ...)`) or `relabel` to name the
-  components, producing a record variate whose fields splat by name.
+  Like [`fchain`](04-design.md#function-composition-and-annotation), `kchain` and
+  `jointchain` apply the ordinary calling convention at each step. A record-shaped
+  variate supplies inputs by name only when auto-splatting applies.
 
 - **`markovchain(kernel, init, n)`**<a id="markovchain"></a> — measure over length-`n` trajectories
   of a time-homogeneous Markov chain.
@@ -630,7 +611,7 @@ Density evaluation follows the cases above and the
 
 The density of a composed measure is determined by the measure-algebra definitions above. For a point $x$ in the variate space, `logdensityof` reduces structurally to the densities of its operands, terminating at the per-kernel primitive `builtin_logdensityof`:
 
-- `weighted` / `logweighted` (from $\mathrm{d}\nu = \text{weight}\cdot\mathrm{d}M$): $\log\mathrm{densityof}(\mathrm{weighted}(w, M), x) = \log w(x) + \log\mathrm{densityof}(M, x)$, and $\log\mathrm{densityof}(\mathrm{logweighted}(\ell,\allowbreak M), x) = \ell(x) + \log\mathrm{densityof}(M, x)$, where $w$ and $\ell$ are a constant or a function of the variate (see [`weighted`](#weighted) for the arity rule).
+- `weighted` / `logweighted` (from $\mathrm{d}\nu = \text{weight}\cdot\mathrm{d}M$): $\log\mathrm{densityof}(\mathrm{weighted}(w, M), x) = \log w(x) + \log\mathrm{densityof}(M, x)$, and $\log\mathrm{densityof}(\mathrm{logweighted}(\ell,\allowbreak M), x) = \ell(x) + \log\mathrm{densityof}(M, x)$, where $w$ and $\ell$ are a constant or a function of the variate.
 - `superpose` (measure addition): $\log\mathrm{densityof}(\mathrm{superpose}(M_1,\allowbreak \dots, M_k), x) = \mathrm{logsumexp}_k\, \log\mathrm{densityof}(M_k, x)$.
   This sum requires all constituent densities to be expressed w.r.t. the same
   reference measure. Density values taken w.r.t. different references cannot
@@ -854,7 +835,9 @@ posterior = bayesupdate(L, prior)
 <a id="disintegrate"></a>**`disintegrate(selector, joint_measure)`** returns a tuple `(kernel, base_measure)`,
 where `kernel` is the conditional kernel for the selected variates and `base_measure`
 is the marginal base measure — the measure obtained by marginalizing the selected
-variates out of the joint.
+variates out of the joint. For a record-shaped complement, `kernel` takes its fields
+as keyword-only inputs. For a positional complement, it takes one ordered input,
+`complement`, containing the whole complement.
 
 Selectors work like in `get`: `"b"` selects the bare value, `["b"]` selects a
 `record(b = ...)`.
