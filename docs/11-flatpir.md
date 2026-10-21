@@ -292,8 +292,8 @@ be one of:
   (e.g. `Lebesgue(reals)` or `Counting(integers)`).
 - `%unknown` — unknown total mass.
 
-The total mass of `joint` is the product of the component masses, pointwise for
-kernels.
+The total mass of `joint` and `iid` is the product of the component masses,
+pointwise for kernels.
 
 ### Expressions
 
