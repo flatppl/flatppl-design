@@ -119,7 +119,7 @@ All built-in ordinary callables have a defined input order and accept both posit
 keyword arguments.
 
 Special operations have zero to three *distinguished inputs*: unnamed, ordered inputs
-of fixed arity. They may have additional optional or variadic named or unnamed inputs, the order
+of fixed arity. They may have additional variadic named or unnamed inputs, the order
 of which may or may not be significant. The total number of inputs is never zero:
 
 - `elementof`, `external`, `draw`: One distinguished input.
