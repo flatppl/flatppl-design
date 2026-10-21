@@ -639,6 +639,11 @@ result; for measures it is equivalent to `pushfwd(fn(relabel(_, names)), M)`; fo
 
 If auto-splatting applies, a record returned by `f1` supplies the matching named
 inputs of `f2`. Otherwise, `f2` receives the record whole.
+
+The composed function passes [additional arguments](#sec:callback-parameters)
+unchanged to every step: `fchain(f1, f2, f3)(x, ...)` equals
+`f3(f2(f1(x, ...), ...), ...)`. Each step then receives the previous result whole
+as its first argument.
 `fchain` is the deterministic analogue of
 [`kchain`](06-measure-algebra.md#dependent-composition).
 

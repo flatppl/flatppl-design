@@ -403,6 +403,12 @@ To evaluate a density at many points (e.g. a grid for numerical integration or p
   `jointchain` apply the ordinary calling convention at each step. A record-shaped
   variate supplies inputs by name only when auto-splatting applies.
 
+  When the first argument is a kernel, applying the chain passes
+  [additional arguments](04-design.md#sec:callback-parameters) unchanged to every
+  component, as with `fchain`. In `kchain(K1, K2, K3)(x, ...)`, the components are
+  called as `K1(x, ...)`, `K2(a, ...)` and `K3([a, b], ...)`. Each receives its fed
+  value whole as its first argument.
+
 - **`markovchain(kernel, init, n)`**<a id="markovchain"></a> — measure over length-`n` trajectories
   of a time-homogeneous Markov chain.
   

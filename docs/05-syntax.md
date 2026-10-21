@@ -191,6 +191,8 @@ sequence elements or rows, including repeated singleton inputs.
 | `scan(f, init, ...)` | `f(acc, ...)` |
 | `markovchain(kernel, init, n, ...)` | `kernel(state, ...)` |
 | `kscan(kernel, init, ...)` | `kernel(state, ...)` |
+| `fchain(f1, f2, ...)(x, ...)` | `f1(x, ...)`, then `f(y, ...)` for each later step and previous result `y` |
+| `kchain(K1, K2, ...)(x, ...)`, `jointchain(K1, K2, ...)(x, ...)` | `K1(x, ...)`, then `K(y, ...)` for each later kernel and fed value `y` |
 
 For `step(state, drift, scale) = Normal(state + drift, scale)`, these forms are equivalent:
 
