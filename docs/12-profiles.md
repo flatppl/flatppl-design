@@ -285,7 +285,7 @@ references it, and to the bare scalar expression otherwise.
 
 The `product_dist` (`RooProdPdf`) row covers the **independent** case, where the
 factors are pdfs over *distinct* observables; it lowers to `joint(M1, M2, ...)`,
-a product measure (constructor components share no stochastic ancestor).
+a product measure.
 RooProdPdf is overloaded, so the lowering depends
 on the factors' variates:
 

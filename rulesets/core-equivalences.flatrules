@@ -71,8 +71,11 @@
   ; The FlatPPL probabilistic reification calculus.
   ; ============================================================================
 
-  ; β-law (value ↔ measure): lawof absorbs draw.
-  (&equiv (lawof (draw ?m)) ?m)
+  ; lawof absorbs draw only when the normalized measure has no free draws.
+  ; For a stochastic measure, lawof also marginalizes its random parameters.
+  (&equiv (lawof (draw (%meta ((%measure (%domain ??) (%mass %normalized))
+                              (?| %fixed %parameterized) ??) ?m)))
+          ?m)
 
   ; Definition of kernelof as functionof-of-lawof (§04). The reified input list is
   ; carried whole as ?inputs — no variadics needed.
@@ -91,8 +94,11 @@
   ; INDEPENDENT draws is the joint of their laws (§06 joint). ?n../?m.. bind element-wise
   ; (field name, its measure) and are reused in the joint RHS (the zip). (?indep …) is a
   ; host-evaluated side condition — the ?m.. draws share no stochastic ancestor (a
-  ; dependency-graph predicate, not a pattern; see header).
-  (&equiv (lawof (record (?* (%field ?n (draw ?m)))))
+  ; dependency-graph predicate, not a pattern; see header). Each measure must have
+  ; no free stochastic parameter, or its law still needs marginalization.
+  (&equiv (lawof (record (?* (%field ?n (draw
+            (%meta ((%measure (%domain ??) (%mass %normalized))
+                    (?| %fixed %parameterized) ??) ?m))))))
           (joint (?* (%field ?n ?m)))
           (?indep (?* ?m)))
 

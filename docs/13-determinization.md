@@ -75,9 +75,7 @@ implementation-defined convention; that fallback carries no normative force.
   `logweighted` the log-weight; `superpose` is a `logsumexp`; `normalize`
   subtracts `log(totalmass(M))`, which must be finite and nonzero; `truncate`
   gates on the truncation set (`-inf` outside); `joint`/`iid`/`jointchain` sum
-  the component/conditional densities (for `joint`, when components share no
-  stochastic ancestor; a shared-ancestor `joint` reduces as its
-  [equivalent record law](06-measure-algebra.md#joint)); `pushfwd` follows the
+  the component/conditional densities; `pushfwd` follows the
   [engine contract](06-measure-algebra.md#engine-contract-for-pushfwd-density-evaluation)
   for bijections and structural projections; a structural projection of a
   measure without explicit product structure has no closed-form marginal and
