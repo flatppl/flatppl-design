@@ -101,7 +101,6 @@ measures, and are not part of the measure algebra. Specifically:
 - `elementof(...)` and `external(...)` may not produce tuples.
 - Measures, kernels, and likelihoods never use tuples as their domain.
 - `==`/`equal` does not compare tuples.
-- Tuples do not [auto-splat](04-design.md#sec:calling-convention) like records and tables do.
 
 **Tuples otherwise flow like other objects.** They may be bound to names, passed
 to callables that accept them, returned from user-defined functions, and decomposed
