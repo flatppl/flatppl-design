@@ -124,14 +124,14 @@ require non-nullary kernels in all but the first argument
 closed measures (i.e. nullary kernels) as inputs. `densityof(M, x)` and
 `logdensityof(M, x)` evaluate the density of a measure at a point with respect to an implicit reference measure.
 
-To evaluate a density at many points (e.g. a grid for numerical integration or plotting), [broadcast](04-design.md#sec:broadcasting) the operation rather than calling it per point: `broadcast(fn(logdensityof(M, _)), grid)` (equivalently `fn(logdensityof(M, _)).(grid)`) returns one log-density per grid element. The point argument stays scalar.
+To evaluate a density at many points (e.g. a grid for numerical integration or plotting), [broadcast](04-design.md#sec:broadcasting) the operation rather than calling it per point: `broadcast(logdensityof, M, grid)` (equivalently `logdensityof.(M, grid)`) returns one log-density per grid element. The point argument stays scalar.
 
 #### Density reweighting
 
 | Construct | Arguments | Description |
 |---|---|---|
-| [`weighted`](#weighted) | `weight`, `base` | reweight `base`: $\mathrm{d}\nu = \text{weight} \cdot \mathrm{d}M$ |
-| [`logweighted`](#logweighted) | `logweight`, `base` | reweight `base` in log-space: $\mathrm{d}\nu = e^{\text{logweight}} \cdot \mathrm{d}M$ |
+| [`weighted`](#weighted) | `weight`, `base`, optional `p` | reweight `base`: $\mathrm{d}\nu = \text{weight} \cdot \mathrm{d}M$ |
+| [`logweighted`](#logweighted) | `logweight`, `base`, optional `p` | reweight `base` in log-space: $\mathrm{d}\nu = e^{\text{logweight}} \cdot \mathrm{d}M$ |
 | [`bayesupdate`](#bayesupdate) | `L`, `prior` | unnormalized posterior: `prior` reweighted by likelihood `L` (see [posterior construction](#posterior-construction)) |
 
 - **`weighted(weight, base)`**<a id="weighted"></a> — produces the measure $\nu(A) = \int_A f(x)\, dM(x)$, with
@@ -140,13 +140,19 @@ To evaluate a density at many points (e.g. a grid for numerical integration or p
   `normalize(weighted(f, Lebesgue(support = S)))` produces a probability distribution
   whose density w.r.t. Lebesgue on $S$ is proportional to $f$.
 
+  The form `weighted(f, M, p)` uses the
+  [explicit callback parameter rule](04-design.md#sec:callback-parameters),
+  giving $\nu(A) = \int_A f(x, p)\,dM(x)$ for non-negative $f(x, p)$.
+
 - **`logweighted(logweight, base)`**<a id="logweighted"></a> — like `weighted`, but the weight
  or weighting function is given in
   log-space: $d\nu = \exp(g) \cdot dM$.
+  The form `logweighted(f, M, p)` uses the same parameter rule,
+  with $d\nu(x) = \exp(f(x, p))\,dM(x)$.
 
 - **`bayesupdate(L, prior)`**<a id="bayesupdate"></a> — reweights a prior measure by a likelihood object,
   producing the unnormalized posterior: $d\nu(\theta) = L(\theta) \cdot d\pi(\theta)$.
-  Lowers to `logweighted(fn(logdensityof(L, _)), prior)`. See
+  Lowers to `logweighted((x, p) -> logdensityof(p, x), prior, L)`. See
   [posterior construction](#posterior-construction) for details.
 
 #### Normalization and mass
@@ -167,7 +173,7 @@ To evaluate a density at many points (e.g. a grid for numerical integration or p
 
 - **`tilt(M, B)`**<a id="tilt"></a> — normalizes the density of `M` as a
   weight on `B`. For closed measures, this is equivalent to
-  `normalize(logweighted(fn(logdensityof(M, _)), B))`.
+  `normalize(logweighted((x, p) -> logdensityof(p, x), B, M))`.
   Both operands must have the same variate type and shape. The result uses
   `B`'s reference measure. It is undefined unless the pointwise density
   $p_M(x) = \mathrm{densityof}(M, x)$ exists `B`-almost everywhere and
@@ -176,8 +182,8 @@ To evaluate a density at many points (e.g. a grid for numerical integration or p
   Non-nullary operands must have the same named inputs and compatible input
   types. Closed operands ignore the input. The result takes the first
   non-nullary operand's input order and applies the definition pointwise.
-  Normalization uses the current inputs and captured draws. Reification and
-  differentiation retain its parameter dependencies, including inferred scales.
+  Reification and differentiation retain its parameter dependencies, including
+  inferred scales.
   An engine unable to evaluate the density or normalizer must refuse the query.
 
   ```flatppl
@@ -312,8 +318,8 @@ To evaluate a density at many points (e.g. a grid for numerical integration or p
 |---|---|---|
 | [`kchain`](#kchain) | `M, K1, K2, ...` | accumulated-feed composition; marginalizes intermediate variates, keeps the last |
 | [`jointchain`](#jointchain) | `M, K1, K2, ...` | kernel-conditioned joint; concatenates all variates (no marginalization) |
-| [`markovchain`](#markovchain) | `kernel`, `init`, `n` | measure over a length-`n` time-homogeneous Markov trajectory |
-| [`kscan`](#kscan) | `kernel`, `init`, `xs` | Kleisli scan; `markovchain` with per-step exogenous inputs `xs` |
+| [`markovchain`](#markovchain) | `kernel`, `init`, `n`, optional `p` | measure over a length-`n` time-homogeneous Markov trajectory |
+| [`kscan`](#kscan) | `kernel`, `init`, `xs`, optional `p` | Kleisli scan; `markovchain` with per-step exogenous inputs `xs` |
 
 - **`kchain(M, K1, K2, ...)`**<a id="kchain"></a> — accumulated-feed kernel composition.
   Keeps only the last kernel's variates, marginalizing out all intermediate variates.
@@ -386,7 +392,7 @@ To evaluate a density at many points (e.g. a grid for numerical integration or p
   jointchain(M, K)
   ```
 
-  is equivalent to
+  is equivalent, for fixed `K`, to
 
   ```flatppl
   kchain(M, a -> joint(Dirac(value = a), K(a)))
@@ -408,6 +414,9 @@ To evaluate a density at many points (e.g. a grid for numerical integration or p
   If `init` and `traj[i]` are records, then the trajectories are tables, not
   arrays.
 
+  The form `markovchain(kernel, init, n, p)` uses the
+  [explicit callback parameter rule](04-design.md#sec:callback-parameters).
+
   Example — Brownian motion (100 steps of $\Delta t = 0.01$, starting at zero):
 
   ```flatppl
@@ -425,6 +434,9 @@ To evaluate a density at many points (e.g. a grid for numerical integration or p
   $\text{traj}_i \sim \kappa(\text{traj}_{i-1}, \text{xs}_i)$ with
   $\text{traj}_0 = \text{init}$. Trajectories have length `lengthof(xs)`. As
   with `markovchain`, `init` is a value in the state space and not part of the trajectory.
+
+  The form `kscan(kernel, init, xs, p)` uses the same
+  [explicit parameter rule](04-design.md#sec:callback-parameters).
 
   Example — Brownian motion with variable timesteps:
 
@@ -452,8 +464,8 @@ To evaluate a density at many points (e.g. a grid for numerical integration or p
 
 | Construct | Arguments | Description |
 |---|---|---|
-| [`pushfwd`](#pushfwd) | `f`, `M` | pushforward of `M` through `f`: $(f_* M)(Y) = M(f^{-1}(Y))$ |
-| [`locscale`](#locscale) | `m`, `shift`, `scale` | location-scale pushforward: `pushfwd(x -> scale * x + shift, m)` |
+| [`pushfwd`](#pushfwd) | `f`, `M`, optional `p` | pushforward of `M` through `f`: $(f_* M)(Y) = M(f^{-1}(Y))$ |
+| [`locscale`](#locscale) | `m`, `shift`, `scale` | affine pushforward under $x \mapsto \mathrm{scale}\,x + \mathrm{shift}$ |
 | [`bijection`](#bijection) | `f`, `f_inv`, `logvolume` | annotate `f` with inverse and log-volume for density evaluation |
 
 - **`pushfwd(f, M)`**<a id="pushfwd"></a> — pushforward of measure $M$ through function $f$:
@@ -461,6 +473,11 @@ To evaluate a density at many points (e.g. a grid for numerical integration or p
   $$(f_* M)(Y) = M(f^{-1}(Y))$$
 
   For kernels, `pushfwd` acts on their output measures.
+
+  The form `pushfwd(f, M, p)` uses the
+  [explicit callback parameter rule](04-design.md#sec:callback-parameters).
+  For an annotated [bijection](#bijection), its inverse and log-volume
+  functions also receive `p` as their final argument.
 
   For example, a log-normal probability measure can be constructed as
 
@@ -486,13 +503,13 @@ To evaluate a density at many points (e.g. a grid for numerical integration or p
   ```
 
 - **`locscale(m, shift, scale)`**<a id="locscale"></a> — affine (location-scale)
-  pushforward, shorthand for `pushfwd(x -> scale * x + shift, m)`. For
+  pushforward under $x \mapsto \mathrm{scale}\,x + \mathrm{shift}$. For
   example, `locscale(Normal(0, 1), mu, sigma)` is equivalent to
   `Normal(mu, sigma)`, and `locscale(StudentT(nu), mu, sigma)` is the
   location-scale Student-t. When `m` is vector-valued, `scale` may be a
   matrix: `locscale(MvNormal(zeros(n), eye(n)), mu, lower_cholesky(cov))` is
   equivalent to `MvNormal(mu, cov)` — the affine map
-  `x -> lower_cholesky(cov) * x + mu`. `shift` and `scale` must be
+  $x \mapsto Lx + \mu$, where $L$ is `lower_cholesky(cov)`. `shift` and `scale` must be
   value-compatible with the variate of `m`; for general matrix-vector affine
   maps use `pushfwd` directly.
 
@@ -723,7 +740,7 @@ pstr = bayesupdate(L, prior)
 is equivalent to
 
 ```flatppl
-pstr = logweighted(fn(logdensityof(L, _)), prior)
+pstr = logweighted((x, p) -> logdensityof(p, x), prior, L)
 ```
 
 The evidence `Z` can be expressed as
@@ -854,7 +871,7 @@ and equivalent, in a non-Bayesian formulation, to
 ```flatppl
 x = record(a = ..., b = ...)
 kernel, marginal = disintegrate(["a", "b", ...], mu)
-nu = logweighted(fn(logdensityof(kernel(_), x)), marginal)
+nu = logweighted((z, p) -> logdensityof(p[1](z), p[2]), marginal, (kernel, x))
 ```
 
 **Complement disintegration.** Alternatively, disintegrate `mu` along

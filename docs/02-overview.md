@@ -392,6 +392,9 @@ The `fn(...)` form wraps a hole expression — an expression containing `_` — 
 
 ```flatppl
 # Single hole — one-argument function
+a0 = 1.0
+a1 = 0.5
+a2 = 0.1
 poly = fn(polynomial(coefficients = [a0, a1, a2], x = _))
 squared = fn(_ ^ 2)
 

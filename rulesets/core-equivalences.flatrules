@@ -60,7 +60,9 @@
 ;
 ; Some pushforward equivalences below use a lambda in the pushforward; they are shown
 ; in comment form because their `fn` bodies reify to the full (functionof … %specinputs
-; …) and have no compact inline rule form. The (?* …) ellipsis/zip and (?indep …)
+; …) and have no compact inline rule form. Coefficients inside those lambdas must be
+; fixed.
+; The (?* …) ellipsis/zip and (?indep …)
 ; predicate (used by the stochastic↔measure rules below) are defined in §12. The
 ; dependent-chain and measure→stochastic conversions are engine structural passes, not
 ; rules here (noted below).
@@ -172,8 +174,12 @@
   ; --- lambda-bearing pushforwards (shown commented; fn bodies reify to functionof) ---
   ; locscale is an affine pushforward:
   ;   (&equiv (locscale ?m ?shift ?scale) (pushfwd (fn (add (mul ?scale _) ?shift)) ?m))
-  ; bayesupdate lowers to logweighted:
-  ;   (&equiv (bayesupdate ?L ?prior) (logweighted (fn (logdensityof ?L _)) ?prior))
+  ; bayesupdate passes its likelihood as an explicit weight parameter:
+  ;   (&equiv (bayesupdate ?L ?prior)
+  ;     (logweighted
+  ;       (functionof (logdensityof (%ref %local _p_) (%ref %local _x_))
+  ;         %specinputs ((x (%ref %local _x_)) (p (%ref %local _p_))))
+  ;       ?prior ?L))
 
   ; ============================================================================
   ; Normalization and total mass

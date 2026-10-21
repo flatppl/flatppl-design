@@ -97,7 +97,7 @@ Density w.r.t. `Lebesgue(reals)`:
 
 $$\frac{\beta}{2\alpha\,\Gamma(1/\beta)} \exp\!\left(-\left(\frac{|x - \mu|}{\alpha}\right)^\beta\right) \quad \text{for } x \in \mathbb{R}$$
 
-<a id="cauchy"></a>**`Cauchy(location, scale)`** — The [Cauchy (Lorentzian) distribution](https://en.wikipedia.org/wiki/Cauchy_distribution). Equivalent to `pushfwd(fn(location + scale * _), StudentT(1))` (location-scale form). Also known as the non-relativistic Breit-Wigner distribution; the Breit-Wigner parameterization uses the full width at half maximum $\Gamma = 2 \cdot \mathrm{scale}$, i.e. `Cauchy(location, width / 2)`.
+<a id="cauchy"></a>**`Cauchy(location, scale)`** — The [Cauchy (Lorentzian) distribution](https://en.wikipedia.org/wiki/Cauchy_distribution). Equivalent to `locscale(StudentT(1), location, scale)` (location-scale form). Also known as the non-relativistic Breit-Wigner distribution; the Breit-Wigner parameterization uses the full width at half maximum $\Gamma = 2 \cdot \mathrm{scale}$, i.e. `Cauchy(location, width / 2)`.
 
 Domain/Support: `reals`/`reals`.
 
@@ -122,7 +122,7 @@ Density w.r.t. `Lebesgue(reals)`:
 
 $$\frac{\Gamma\!\left(\frac{\nu+1}{2}\right)}{\sqrt{\nu\pi}\;\Gamma\!\left(\frac{\nu}{2}\right)} \left(1 + \frac{x^2}{\nu}\right)^{-(\nu+1)/2} \quad \text{for } x \in \mathbb{R}$$
 
-The location-scale form is obtained via `pushfwd(fn(mu + sigma * _), StudentT(nu))`.
+The location-scale form is obtained via `locscale(StudentT(nu), mu, sigma)`.
 
 `StudentT(1)` is equivalent to `Cauchy(0, 1)`, and `StudentT(inf)` is equivalent
 to `Normal(0, 1)` (the limiting distribution as $\nu \to \infty$).
@@ -439,7 +439,7 @@ Density w.r.t. `iid(Lebesgue(reals), n)`:
 
 $$\frac{1}{(2\pi)^{n/2} |\Sigma|^{1/2}} \exp\!\left(-\frac{1}{2}(\mathbf{x}-\boldsymbol{\mu})^\top \Sigma^{-1} (\mathbf{x}-\boldsymbol{\mu})\right) \quad \text{for } \mathbf{x} \in \mathbb{R}^n$$
 
-`MvNormal(mu, cov)` is equivalent to `pushfwd(fn(mu + lower_cholesky(cov) * _), iid(Normal(0, 1), n))`.
+`MvNormal(mu, cov)` is equivalent to `locscale(iid(Normal(0, 1), n), mu, lower_cholesky(cov))`.
 
 [Canonical transport](07-functions.md#sec:measure-eval-prims) of `MvNormal`:
 `builtin_fromnormal` is `mu + lower_cholesky(cov) * z`; `builtin_tonormal` is its inverse, the
