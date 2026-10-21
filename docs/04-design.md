@@ -232,13 +232,13 @@ FlatPPL classifies every binding into one of three phases by ancestor analysis:
 
 - **fixed** — no `elementof(...)` ancestor and no `draw(...)` ancestor, but may have
   `load_data(...)` ancestors.
-- **parameterized** — at least one `elementof(...)` ancestor, no `draw(...)` ancestor.
+- **parametric** — at least one `elementof(...)` ancestor, no `draw(...)` ancestor.
 - **stochastic** — at least one `draw(...)` ancestor.
 
 External inputs and loaded data (length and content) are fixed; `elementof` inputs are
-parameterized; `draw` nodes are stochastic. Phase propagates through the DAG: a
+parametric; `draw` nodes are stochastic. Phase propagates through the DAG: a
 binding's phase is the dominant of its ancestors' phases
-(stochastic > parameterized > fixed).
+(stochastic > parametric > fixed).
 
 Records, arrays, tables, and tuples may bundle components of differing phases; under
 the ancestor rule the container carries the joined phase, and projections inherit
@@ -249,11 +249,11 @@ sharpen this by flattening projections with statically known selectors (`r.field
 forms) before phase analysis or the ancestor trace, which recovers the selected
 component's phase directly.
 
-Both fixed and parameterized bindings are deterministic, but their values have
+Both fixed and parametric bindings are deterministic, but their values have
 different life cycles: A FlatPPL module can be thought of as having an initialized
 state, where external inputs have been set and data and referenced modules have been
 loaded. Fixed values are the values that are given or deterministically computable
-at this point and so do not change after module initialization. Parameterized values
+at this point and so do not change after module initialization. Parametric values
 differ between evaluations of the same subgraph (e.g. of a likelihood) of the
 initialized module, given different inputs. Note that this is a mental model,
 applications are not required to use an explicit initialization state to implement
@@ -330,7 +330,7 @@ The named form `lawof((a = x, b = y))` gives the joint law over a record.
 
 **Phase of the reified law.** Although the ancestor subgraph
 of the argument of `lawof` will typically include stochastic nodes, the
-resulting measure is itself deterministic (of parameterized or fixed phase):
+resulting measure is itself deterministic (of parametric or fixed phase):
 `lawof` absorbs stochasticity into the reified law rather than propagating it
 outward. Thus `functionof` can reify subgraphs that include stochastic nodes as
 long as they are reified to measures (see below).
@@ -423,7 +423,7 @@ name. With explicit boundary specification, the
 reified function supports positional arguments in addition to keyword
 arguments, with positional order determined by the order in which boundary
 inputs are specified. Without a boundary specification, inputs are traced
-back to the parameterized-phase ancestor leaves of the reified expression
+back to the parametric-phase ancestor leaves of the reified expression
 (i.e. `elementof` nodes). Fixed-phase ancestors (e.g. `external` and
 `load_data`) are closed over instead. The reified function then only supports
 keyword arguments, as no argument order can be inferred. A specified boundary
@@ -581,12 +581,12 @@ After substitution, `mu`, `tau`, `theta` are independent inputs of
 the output of `forward_kernel` does not depend on `mu` or `tau`.
 
 **Reification and module scope.** `functionof` and `kernelof` reify within the
-current module only: a parameterized value reached through a loaded-module
+current module only: a parametric value reached through a loaded-module
 reference cannot become an input — neither by the automatic trace nor as an
 explicit boundary node — so such a reification is a static error. A loaded
 module's callables and fixed values may be used in the reified DAG (applied,
 or closed over); only taking a cross-module
-parameterized value as an input is disallowed.
+parametric value as an input is disallowed.
 
 Note that `lawof` reifies a measure, which has no input list, so it is
 unrestricted — a measure may reference cross-module values, keeping the identity
@@ -1202,14 +1202,14 @@ The phase of this input determines what it can be bound to on the right-hand sid
 
 - `external` inputs of the loaded module may only be bound to **fixed** values in the
   loading module.
-- `elementof` inputs of the loaded module may only be bound to **parameterized** values
+- `elementof` inputs of the loaded module may only be bound to **parametric** values
   in the loading module.
 - No other kinds of nodes in the loaded module may be bound to nodes in the loading module.
 
 Value sets must be compatible in both cases, so the computational structure of the
 loaded module is not modified.
 
-**Stochastic boundary.** Only bindings of `fixed` or `parameterized` phase in the
+**Stochastic boundary.** Only bindings of `fixed` or `parametric` phase in the
 loaded module are accessible from the loading module (`module.name`). Bindings of
 `stochastic` phase — direct draws or values with `draw` ancestors that have not
 been reified via `lawof`/`kernelof` — are invisible to the loading module. This
