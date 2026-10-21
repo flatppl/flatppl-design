@@ -175,6 +175,38 @@ special operations with their own syntax rules — they are not ordinary functio
 Their semantics are defined in [language design](04-design.md#sec:design).
 `load_module(...)` is documented in [multi-file models](04-design.md#sec:modules).
 
+### <a id="additional-arguments"></a>Additional arguments
+
+The following forms accept [additional arguments](04-design.md#sec:callback-parameters).
+Here `...` denotes zero or more positional or keyword arguments.
+For `scan` and `kscan`, at least one sequence input is required.
+For `filter`, `scan`, and `kscan`, `...` on the right denotes the corresponding
+sequence elements or rows, including repeated singleton inputs.
+
+| Operation | Called as |
+|---|---|
+| `weighted(f, M, ...)`, `logweighted(f, M, ...)`, `pushfwd(f, M, ...)` | `f(x, ...)` for the whole variate `x` |
+| `filter(pred, data, ...)` | `pred(data[i], ...)` for each element or row `i` |
+| `reduce(f, xs, ...)` | `f(a, b, ...)` for two elements or partial results |
+| `scan(f, init, ...)` | `f(acc, ...)` |
+| `markovchain(kernel, init, n, ...)` | `kernel(state, ...)` |
+| `kscan(kernel, init, ...)` | `kernel(state, ...)` |
+
+For `step(state, drift, scale) = Normal(state + drift, scale)`, these forms are equivalent:
+
+```flatppl
+A = markovchain(step, 0, 100, drift, scale)
+B = markovchain(step, 0, 100, drift = drift, scale = scale)
+C = markovchain(step, 0, 100, (drift = drift, scale = scale))
+```
+
+Sequence inputs can likewise be named:
+
+```flatppl
+values = scan(f, init, x = xs, y = ys, z = zs)
+trajectories = kscan(kernel, init, x = xs, y = ys, z = zs)
+```
+
 ### <a id="broadcasting-syntax"></a>Broadcasting syntax
 
 FlatPPL provides dot-prefixed shorthand for

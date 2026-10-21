@@ -130,8 +130,8 @@ To evaluate a density at many points (e.g. a grid for numerical integration or p
 
 | Construct | Arguments | Description |
 |---|---|---|
-| [`weighted`](#weighted) | `weight`, `base`, optional `p` | reweight `base`: $\mathrm{d}\nu = \text{weight} \cdot \mathrm{d}M$ |
-| [`logweighted`](#logweighted) | `logweight`, `base`, optional `p` | reweight `base` in log-space: $\mathrm{d}\nu = e^{\text{logweight}} \cdot \mathrm{d}M$ |
+| [`weighted`](#weighted) | `weight`, `base`, `...` | reweight `base`: $\mathrm{d}\nu = \text{weight} \cdot \mathrm{d}M$ |
+| [`logweighted`](#logweighted) | `logweight`, `base`, `...` | reweight `base` in log-space: $\mathrm{d}\nu = e^{\text{logweight}} \cdot \mathrm{d}M$ |
 | [`bayesupdate`](#bayesupdate) | `L`, `prior` | unnormalized posterior: `prior` reweighted by likelihood `L` (see [posterior construction](#posterior-construction)) |
 
 - **`weighted(weight, base)`**<a id="weighted"></a> — produces the measure $\nu(A) = \int_A f(x)\, dM(x)$, with
@@ -140,15 +140,16 @@ To evaluate a density at many points (e.g. a grid for numerical integration or p
   `normalize(weighted(f, Lebesgue(support = S)))` produces a probability distribution
   whose density w.r.t. Lebesgue on $S$ is proportional to $f$.
 
-  The form `weighted(f, M, p)` uses the
-  [explicit callback parameter rule](04-design.md#sec:callback-parameters),
-  giving $\nu(A) = \int_A f(x, p)\,dM(x)$ for non-negative $f(x, p)$.
+  The form `weighted(f, M, ...)` calls `f(x, ...)` on the whole variate `x` under the
+  [additional argument rule](04-design.md#sec:callback-parameters),
+  giving $\nu(A) = \int_A f(x, \ldots)\,dM(x)$ for non-negative $f(x, \ldots)$.
 
 - **`logweighted(logweight, base)`**<a id="logweighted"></a> — like `weighted`, but the weight
  or weighting function is given in
   log-space: $d\nu = \exp(g) \cdot dM$.
-  The form `logweighted(f, M, p)` uses the same parameter rule,
-  with $d\nu(x) = \exp(f(x, p))\,dM(x)$.
+  The form `logweighted(f, M, ...)` calls `f(x, ...)` on the whole variate `x` under the
+  [additional argument rule](04-design.md#sec:callback-parameters),
+  with $d\nu(x) = \exp(f(x, \ldots))\,dM(x)$.
 
 - **`bayesupdate(L, prior)`**<a id="bayesupdate"></a> — reweights a prior measure by a likelihood object,
   producing the unnormalized posterior: $d\nu(\theta) = L(\theta) \cdot d\pi(\theta)$.
@@ -318,8 +319,8 @@ To evaluate a density at many points (e.g. a grid for numerical integration or p
 |---|---|---|
 | [`kchain`](#kchain) | `M, K1, K2, ...` | accumulated-feed composition; marginalizes intermediate variates, keeps the last |
 | [`jointchain`](#jointchain) | `M, K1, K2, ...` | kernel-conditioned joint; concatenates all variates (no marginalization) |
-| [`markovchain`](#markovchain) | `kernel`, `init`, `n`, optional `p` | measure over a length-`n` time-homogeneous Markov trajectory |
-| [`kscan`](#kscan) | `kernel`, `init`, `xs`, optional `p` | Kleisli scan; `markovchain` with per-step exogenous inputs `xs` |
+| [`markovchain`](#markovchain) | `kernel`, `init`, `n`, `...` | measure over a length-`n` time-homogeneous Markov trajectory |
+| [`kscan`](#kscan) | `kernel`, `init`, `...` | Kleisli scan; `markovchain` with per-step exogenous inputs |
 
 - **`kchain(M, K1, K2, ...)`**<a id="kchain"></a> — accumulated-feed kernel composition.
   Keeps only the last kernel's variates, marginalizing out all intermediate variates.
@@ -414,8 +415,8 @@ To evaluate a density at many points (e.g. a grid for numerical integration or p
   If `init` and `traj[i]` are records, then the trajectories are tables, not
   arrays.
 
-  The form `markovchain(kernel, init, n, p)` uses the
-  [explicit callback parameter rule](04-design.md#sec:callback-parameters).
+  The form `markovchain(kernel, init, n, ...)` calls `kernel(state, ...)` at each step under the
+  [additional argument rule](04-design.md#sec:callback-parameters).
 
   Example — Brownian motion (100 steps of $\Delta t = 0.01$, starting at zero):
 
@@ -426,17 +427,21 @@ To evaluate a density at many points (e.g. a grid for numerical integration or p
   traj ~ markovchain(f_step, 0.0, 100)
   ```
 
-- **`kscan(kernel, init, xs)`**<a id="kscan"></a> — Kleisli scan that generalizes `markovchain`
+- **`kscan(kernel, init, ...)`**<a id="kscan"></a> — Kleisli scan that generalizes `markovchain`
   with exogenous inputs threaded through each step, also a stochastic
   version of [`scan`](04-design.md#reductions).
   
-  `kernel` is a Markov kernel `(state, x) -> measure_over_state`; step $i$ is
-  $\text{traj}_i \sim \kappa(\text{traj}_{i-1}, \text{xs}_i)$ with
-  $\text{traj}_0 = \text{init}$. Trajectories have length `lengthof(xs)`. As
-  with `markovchain`, `init` is a value in the state space and not part of the trajectory.
+  `kernel` takes the state first, followed by inputs bound from one or more
+  sequences, and returns a measure over states. At step `i`, `kernel(state, ...)`
+  receives the corresponding elements or rows. All arguments after `init` bind
+  sequence inputs, positionally or by name, under `scan`'s
+  [input traversal](04-design.md#sec:scan-inputs), including singleton expansion.
+  The trajectory length is the resulting number of steps. The initial state
+  `init` is not part of the trajectory.
 
-  The form `kscan(kernel, init, xs, p)` uses the same
-  [explicit parameter rule](04-design.md#sec:callback-parameters).
+  For one sequence `xs`, `kscan(kernel, init, xs)` gives
+  $\text{traj}_i \sim \kappa(\text{traj}_{i-1}, \text{xs}_i)$ with
+  $\text{traj}_0 = \text{init}$, for `lengthof(xs)` steps.
 
   Example — Brownian motion with variable timesteps:
 
@@ -464,7 +469,7 @@ To evaluate a density at many points (e.g. a grid for numerical integration or p
 
 | Construct | Arguments | Description |
 |---|---|---|
-| [`pushfwd`](#pushfwd) | `f`, `M`, optional `p` | pushforward of `M` through `f`: $(f_* M)(Y) = M(f^{-1}(Y))$ |
+| [`pushfwd`](#pushfwd) | `f`, `M`, `...` | pushforward of `M` through `f`: $(f_* M)(Y) = M(f^{-1}(Y))$ |
 | [`locscale`](#locscale) | `m`, `shift`, `scale` | affine pushforward under $x \mapsto \mathrm{scale}\,x + \mathrm{shift}$ |
 | [`bijection`](#bijection) | `f`, `f_inv`, `logvolume` | annotate `f` with inverse and log-volume for density evaluation |
 
@@ -474,10 +479,10 @@ To evaluate a density at many points (e.g. a grid for numerical integration or p
 
   For kernels, `pushfwd` acts on their output measures.
 
-  The form `pushfwd(f, M, p)` uses the
-  [explicit callback parameter rule](04-design.md#sec:callback-parameters).
+  The form `pushfwd(f, M, ...)` calls `f(x, ...)` on the whole variate `x` under the
+  [additional argument rule](04-design.md#sec:callback-parameters).
   For an annotated [bijection](#bijection), its inverse and log-volume
-  functions also receive `p` as their final argument.
+  functions bind the same additional arguments under that rule.
 
   For example, a log-normal probability measure can be constructed as
 
