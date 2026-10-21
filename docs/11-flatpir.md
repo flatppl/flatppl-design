@@ -247,8 +247,8 @@ all metadata — while authored membership stays structural.
   marker is ill-formed.
 - `%any` — used where no concrete-type constraint is applicable, e.g. for the input
   of `fn(sum(_))`. Counterpart of the value-level set `anything`.
-- `(%scalar real)`, `(%scalar integer)`, `(%scalar boolean)`, `(%scalar complex)` — the
-  four scalar value types.
+- `(%scalar real)`, `(%scalar integer)`, `(%scalar boolean)`, `(%scalar complex)`,
+  `(%scalar string)` — the five scalar value types.
 - `(%array <ndims> <shape> <element-type>)` — arrays. `<ndims>` is the number of
   dimensions (axes), a positive integer literal (not `%dynamic`). Each entry in
   `<shape>` is a positive integer dimension size, or the placeholder `%dynamic` for
