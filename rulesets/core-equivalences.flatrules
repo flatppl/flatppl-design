@@ -61,7 +61,7 @@
 ; Some pushforward equivalences below use a lambda in the pushforward; they are shown
 ; in comment form because their `fn` bodies reify to the full (functionof … %specinputs
 ; …) and have no compact inline rule form. The (?* …) ellipsis/zip and (?indep …)
-; predicate (used by the η and stochastic↔measure rules below) are defined in §12. The
+; predicate (used by the stochastic↔measure rules below) are defined in §12. The
 ; dependent-chain and measure→stochastic conversions are engine structural passes, not
 ; rules here (noted below).
 
@@ -79,16 +79,9 @@
   (&equiv (kernelof ?out %specinputs ?inputs) (functionof (lawof ?out) %specinputs ?inputs))
   (&equiv (kernelof ?out %autoinputs ?inputs) (functionof (lawof ?out) %autoinputs ?inputs))
 
-  ; η-laws — reifying an application recovers the callable (§04 identity laws), for a
-  ; callable without optional inputs (checked by the engine). The ?n run pairs the
-  ; boundary names with the callable's %inputs, the ?a run pairs the boundary refs with
-  ; the call args (the zip — header).
-  (&equiv (functionof (%call (%meta ((%function (%inputs (?* ?n))) ?? ??) ?f) (?* ?a))
-                      %specinputs ((?* (?n ?a))))
-          ?f)
-  (&equiv (kernelof (draw (%call (%meta ((%kernel (%inputs (?* ?n)) ??) ?? ??) ?K) (?* ?a)))
-                    %specinputs ((?* (?n ?a))))
-          ?K)
+  ; The η-laws in §04 require preservation of the complete input interface and
+  ; argument binding. Matching %inputs names alone cannot prove these conditions,
+  ; so these identities are not executable rules here.
 
   ; ============================================================================
   ; Stochastic ↔ measure conversion (§06 "Equivalence with stochastic nodes").

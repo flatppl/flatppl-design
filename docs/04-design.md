@@ -105,9 +105,11 @@ canonical syntax):
 
 - **Auto-splatting** (of records and table columns): `f(record(a = x, b = y, ...))` and
   `f(table(a = x, b = y, ...))` are equivalent to `f(a = x, b = y, ...)`, unless `f` can be
-  called with a single positional argument. The order of fields or columns is not relevant.
-  A call with field or column names that do not match the callable's argument names is a
-  static error. Auto-splatting is shallow and applies only to a call's sole positional
+  called with a single positional argument, in which case it receives the record or table whole.
+  This choice depends on the callable's input interface, before checking the argument's domain.
+  The order of fields or columns is not relevant.
+  When auto-splatting applies, field or column names that do not match the callable's
+  argument names are a static error. Auto-splatting is shallow and applies only to a call's sole positional
   argument.
 
 - **Positional arguments**: `f(x, y, ...)`. Positional arguments are accepted only if
@@ -472,7 +474,10 @@ is a surface rewrite with no separate [FlatPIR](11-flatpir.md#reified-callables)
 and applies to `kernelof` as well.
 
 **Identity law.** `functionof(f(a, b, ...), a = a, b = b, ...)` and
-`functionof(f(a, b, ...), a, b, ...)` are equivalent to `f` if `f` has no optional inputs.
+`functionof(f(a, b, ...), a, b, ...)` are equivalent to fixed `f` when all its inputs
+are required and non-variadic, and the reification preserves their names, order,
+positional eligibility, and domains. The inner application must bind each boundary
+node to its corresponding input.
 
 **Lambda notation.** A lambda function is a shorthand notation for `functionof`
 with placeholders. A single-argument lambda is written `arg -> expr`; two or
@@ -536,11 +541,8 @@ delimited by `kwargs` — the boundary substitution applies before the inner
 inner `lawof` marginalizes over.
 
 **Identity law.** `kernelof(draw(K(a, b, ...)), a = a, b = b, ...)` and
-`kernelof(draw(K(a, b, ...)), a, b, ...)` are equivalent to `K` if `K` has no optional
-inputs. Equal output laws do not make kernels interchangeable as
-[`joint`](06-measure-algebra.md#joint) components: a `joint` of two reifications
-of one draw is the diagonal joint at every input, while a `joint` of two
-constructor kernels contributes a fresh coordinate per occurrence.
+`kernelof(draw(K(a, b, ...)), a, b, ...)` are equivalent to fixed `K` under the
+same input-interface conditions as the [`functionof` identity law](#sec:functionof).
 
 Consider this Bayesian example:
 
@@ -680,8 +682,8 @@ result; for measures it is equivalent to `pushfwd(fn(relabel(_, names)), M)`; fo
 **`fchain(f1, f2, f3, ...)`** composes deterministic functions left-associatively:
 `fchain(f1, f2, f3)(x)` equals `f3(f2(f1(x)))`.
 
-`fchain` combines well with auto-splatting: if `f1` returns a record and `f2` accepts
-keyword arguments matching the record fields, the two functions compose directly.
+If auto-splatting applies, a record returned by `f1` supplies the matching named
+inputs of `f2`. Otherwise, `f2` receives the record whole.
 `fchain` is the deterministic analogue of
 [`kchain`](06-measure-algebra.md#dependent-composition).
 

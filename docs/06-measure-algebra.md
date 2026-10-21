@@ -436,9 +436,9 @@ To evaluate a density at many points (e.g. a grid for numerical integration or p
   kchain(M, a -> joint(Dirac(value = a), K(a)))
   ```
 
-  Like [`fchain`](04-design.md#function-composition-and-annotation),
-  `kchain` and `jointchain` combine well with auto-splatting: the fields of a
-  record-shaped variate from step $i$ can supply the inputs of step $i+1$ by name.
+  Like [`fchain`](04-design.md#function-composition-and-annotation), `kchain` and
+  `jointchain` apply the ordinary calling convention at each step. A record-shaped
+  variate supplies inputs by name only when auto-splatting applies.
 
 - **`markovchain(kernel, init, n)`**<a id="markovchain"></a> — measure over length-`n` trajectories
   of a time-homogeneous Markov chain.
@@ -835,7 +835,9 @@ posterior = bayesupdate(L, prior)
 <a id="disintegrate"></a>**`disintegrate(selector, joint_measure)`** returns a tuple `(kernel, base_measure)`,
 where `kernel` is the conditional kernel for the selected variates and `base_measure`
 is the marginal base measure — the measure obtained by marginalizing the selected
-variates out of the joint. `kernel` only supports keyword arguments.
+variates out of the joint. For a record-shaped complement, `kernel` takes its fields
+as keyword-only inputs. For a positional complement, it takes one ordered input
+containing the whole complement.
 
 Selectors work like in `get`: `"b"` selects the bare value, `["b"]` selects a
 `record(b = ...)`.
