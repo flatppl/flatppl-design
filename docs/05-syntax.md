@@ -439,9 +439,7 @@ of two or more entries, where every entry after the first is a bare `Name` desig
 a boundary node (see [reification boundaries](04-design.md#sec:functionof)).
 
 **Note on reserved words.** The keywords `in`, `true`, `false`, `all`,
-and `only` are recognized before `Name` and cannot be used as bindings.
-The numeric constants `im`, `pi`, and `inf` cannot be bound or used as lambda
-or function-definition argument names; they always retain their predefined meanings. The
+and `only` are recognized before `Name` and cannot be used as bindings. The
 top-level binding names `inputs` and `outputs` are reserved for the
 [determinization signature](13-determinization.md#sec:determinization-signature).
 
