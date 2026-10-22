@@ -48,7 +48,7 @@ mapping:
 
 | Phase | Construct | Listed in `inputs` | Not listed in `inputs` |
 |---|---|---|---|
-| parameterized | `elementof` | function argument | ill-formed if an output reaches it; otherwise eliminated |
+| parametric | `elementof` | function argument | ill-formed if an output reaches it; otherwise eliminated |
 | fixed | `external` | function argument | baked constant, or refused per engine |
 | fixed | `load_data` | function argument (shape from its `valueset`, contents at runtime) | baked constant, or refused per engine |
 | fixed | derived (e.g. `rnginit(seed)`) | function argument, replacing the computed value | evaluated and baked, or refused per engine |
