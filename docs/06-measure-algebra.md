@@ -412,7 +412,7 @@ To evaluate a density at many points (e.g. a grid for numerical integration or p
 - **`markovchain(kernel, init, n)`**<a id="markovchain"></a> — measure over length-`n` trajectories
   of a time-homogeneous Markov chain.
   
-  `kernel` is a Markov kernel `(state) -> measure_over_state`; `init` is a
+  `kernel` is a Markov kernel over the state space, called as `kernel(state)`; `init` is a
   value in the state space; `n` is a positive integer. Step $i$ is
   $\text{traj}_i \sim \kappa(\text{traj}_{i-1})$ with
   $\text{traj}_0 = \text{init}$. The initial value is not part of the

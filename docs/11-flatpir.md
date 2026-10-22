@@ -469,8 +469,10 @@ For example:
 **<a id="flatpir-normalization"></a>Normalization.** Bare FlatPIR preserves the surface calling convention for round-trip
 fidelity. Optional normalization passes can convert keyword arguments to positional
 where the argument order is known (built-ins, explicitly-ordered user callables) and
-sort remaining keyword arguments into canonical order. Normalized FlatPIR is easier for
-term-rewriting systems to pattern-match and deduplicate.
+sort remaining keyword arguments into canonical order. Auto-splatting is resolved before
+normalization: a splatted record or table becomes keyword arguments and a splatted tuple
+positional arguments, each a projection of the original argument. Normalized FlatPIR is
+easier for term-rewriting systems to pattern-match and deduplicate.
 
 ### Cross-module type inference
 
