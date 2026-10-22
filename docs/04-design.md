@@ -120,7 +120,7 @@ canonical syntax):
   A function `g(a)` accepts a lone positional argument, so `g(record(a = x))`,
   `g(table(a = x))` and `g((x, y))` always pass the record, table or tuple to `g`
   whole: auto-splatting only takes the interface of `g` into account, not the
-  types of its inputs, and would be ambigous for such a callable.
+  types of its inputs, and would be ambiguous for such a callable.
 
 - **Positional arguments**: `f(x, y, ...)`. Positional arguments are accepted only if
   the callable has ordered inputs, so that the arguments can be mapped to the inputs in order.
@@ -325,7 +325,7 @@ probability measure.
 #### <a id="sec:lawof"></a>Reification to measures
 
 `lawof(x)` reifies the ancestor sub-DAG of `x` as the **probability measure** that
-is the total law of x — the probability measure that `x`, considered as a random
+is the law of `x` — the probability measure that `x`, considered as a random
 variable, is distributed according to.
 
 **Identity law.** `lawof(draw(m))` is equivalent to `m` for any probability measure
@@ -483,12 +483,16 @@ In boundary-list order, a module binding `a` expands to `a = a`, and a placehold
 `_x_` expands to `x = _x_`. Derived names must be legal argument names and distinct.
 
 Boundary inputs are given either all as bare names or all as keyword arguments;
-mixing the two forms is a static error.
+mixing the two forms is a static error. A record or tuple expression in this position
+is a single node, not a boundary list: `functionof(e, (a = a, b = b))` and
+`functionof(e, (a, b))` are static errors. The shorthand is a surface rewrite with no
+separate [FlatPIR](11-flatpir.md#reified-callables) form.
 
 **Identity law.** `functionof(f(a, b, ...), a = a, b = b, ...)` and
 `functionof(f(a, b, ...), a, b, ...)` are equivalent to fixed `f` when all its inputs
 are required and non-variadic, and the reification preserves their names, order,
-positional eligibility, and domains.
+positional eligibility, and domains. The inner application must bind each boundary
+node to its corresponding input.
 
 **Lambda notation.** A lambda function is a shorthand notation for `functionof`
 with placeholders. A single-argument lambda is written `arg -> expr`; two or
