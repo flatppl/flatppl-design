@@ -364,7 +364,10 @@ To evaluate a density at many points (e.g. a grid for numerical integration or p
   producing a measure over a space of records. Its variate is that of
   `jointchain(relabel(M, ["name1"]), relabel(K1, ["name2"]), ...)`. Each later kernel
   receives the record of the preceding named variates, bound to its inputs by name for any
-  number of inputs, so `jointchain(a = M, b = K)` calls `K(a = a)`.
+  number of inputs, so `jointchain(a = M, b = K)` calls `K(a = a)`. Each input must name a
+  preceding variate, and a kernel may leave earlier variates unused: in
+  `jointchain(a = M, b = K1, c = K2)`, a kernel `K2` with the single input `b` is called as
+  `K2(b = b)`.
 
   Mathematically, we define the joint chain of a measure $\mu(A)$ and a transition kernel $\kappa$ as
 
