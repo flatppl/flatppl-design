@@ -616,6 +616,9 @@ The density of a composed measure is determined by the measure-algebra definitio
 kernel's input parameters. The result is a semantic object, not a plain function — this
 prevents accidental confusion between density and log-density values. Likelihood values
 are extracted explicitly via `densityof(L, theta)` and `logdensityof(L, theta)`.
+The parameter point `theta` is a record with one field per input of `K`, bound to those
+inputs by name for any number of inputs, so a kernel with the single input `mu` is
+evaluated at `record(mu = 1.0)`, not at `1.0`.
 
 Mathematically, `densityof(likelihoodof(K, obs), theta)` corresponds to
 $\mathrm{pdf}(\kappa(\theta), x)$, where $\kappa$ is the kernel and $x$ the observed data.
