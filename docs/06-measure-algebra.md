@@ -279,11 +279,12 @@ To evaluate a density at many points (e.g. a grid for numerical integration or p
   rj = joint(name1 = M1, name2 = M2)
   ```
 
-  is equivalent to `joint(relabel(M1, ["name1"]), relabel(M2, ["name2"]))`.
-
-  In this keyword form, a record-valued component becomes a nested record under its
-  name — the name adds a level, it does not merge the inner fields (unlike the
-  positional `cat` form above).
+  is equivalent to
+  `joint(pushfwd(fn(record(name1 = _)), M1), pushfwd(fn(record(name2 = _)), M2))`.
+  Each name therefore holds its component's variate whole, whether scalar, array or
+  record, so `joint(obs = iid(Normal(0, 1), 3))` is a measure over records
+  `record(obs = v)` with a vector `v`, and a record-valued component becomes a nested
+  record under its name.
 
   For kernels, `joint(K1, K2, ...)` results in a kernel that fans a single
   input out to all component kernels, so each of them receives the same input.
@@ -363,7 +364,11 @@ To evaluate a density at many points (e.g. a grid for numerical integration or p
 
   **Keyword form.** `jointchain(name1 = M, name2 = K1, ...)` names the component variates,
   producing a measure over a space of records. It is equivalent to
-  `jointchain(relabel(M, ["name1"]), relabel(K1, ["name2"]), ...)`.
+  `jointchain(pushfwd(fn(record(name1 = _)), M), pushfwd(fn(record(name2 = _)), K1), ...)`,
+  so each name holds its component's variate whole, as in the keyword form of
+  [`joint`](#joint), and each later kernel receives the record of the preceding named
+  variates by the ordinary calling convention: `jointchain(a = M, b = K)` calls
+  `K(record(a = a))`.
 
   Mathematically, we define the joint chain of a measure $\mu(A)$ and a transition kernel $\kappa$ as
 
@@ -615,6 +620,9 @@ The density of a composed measure is determined by the measure-algebra definitio
 kernel's input parameters. The result is a semantic object, not a plain function — this
 prevents accidental confusion between density and log-density values. Likelihood values
 are extracted explicitly via `densityof(L, theta)` and `logdensityof(L, theta)`.
+The parameter point `theta` is a record with one field per input of `K`, bound to those
+inputs by name for any number of inputs, so a kernel with the single input `mu` is
+evaluated at `record(mu = 1.0)`, not at `1.0`.
 
 Mathematically, `densityof(likelihoodof(K, obs), theta)` corresponds to
 $\mathrm{pdf}(\kappa(\theta), x)$, where $\kappa$ is the kernel and $x$ the observed data.

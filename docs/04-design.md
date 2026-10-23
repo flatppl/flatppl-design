@@ -908,7 +908,8 @@ collects record results row-wise into a table, with the record's fields as colum
 multiple axes are a static error.
 
 **`broadcasted(f)`** returns a callable that is equivalent to applying `broadcast` to
-`f` — that is, `broadcasted(f)(args...)` is equivalent to `broadcast(f, args...)`.
+`f`: `broadcasted(f)(args...)` is equivalent to `broadcast(f, args...)`, its arguments
+being operands of `broadcast` rather than arguments of `f`.
 
 ### <a id="reductions"></a>Folds and scans
 
