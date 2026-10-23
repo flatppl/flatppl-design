@@ -487,9 +487,8 @@ a parenthesised lambda is well-formed only if the parenthesised content
 was a list of two or more bare `Name`s. A bare `Name` immediately
 followed by `->` is a single-argument `Lambda`. At statement level, a `Name`
 followed by `(` begins a `FunctionDefinition` (no other statement form starts
-`Name "("`), disambiguated by checking that the closing `)` is followed by `=`.
-A `.Name` token is
-`FieldAccess` when it follows a `Postfix`-able expression, and `Axis`
+`Name "("`), validated by checking that the closing `)` is followed by `=`.
+A `.Name` token is `FieldAccess` when it follows a `Postfix`-able expression, and `Axis`
 otherwise (at the start of a `Primary`). Inside `[...]`, a `!` token
 followed immediately by `,` or `]` is the `only` axis keyword;
 otherwise it is the unary logical-not operator starting an Expression. In

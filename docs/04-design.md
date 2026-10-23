@@ -910,7 +910,7 @@ multiple axes are a static error.
 **`broadcasted(f)`** returns a callable that is equivalent to applying `broadcast` to
 `f` — that is, `broadcasted(f)(args...)` is equivalent to `broadcast(f, args...)`.
 
-### Reductions
+### <a id="reductions"></a>Folds and scans
 
 **`reduce(f, xs)`** is a fold over `xs` using the binary associative function
 `f`, called positionally as `f(acc, next)`. For a vector
@@ -1233,7 +1233,7 @@ The phase of this input determines what it can be bound to on the right-hand sid
 Value sets must be compatible in both cases, so the computational structure of the
 loaded module is not modified.
 
-**Stochastic boundary.** Only bindings of `fixed` or `parametric` phase in the
+<a id="stochastic-boundary"></a>**Stochastic boundary.** Only bindings of `fixed` or `parametric` phase in the
 loaded module are accessible from the loading module (`module.name`). Bindings of
 `stochastic` phase — direct draws or values with `draw` ancestors that have not
 been reified via `lawof`/`kernelof` — are invisible to the loading module. This

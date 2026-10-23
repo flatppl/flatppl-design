@@ -188,7 +188,7 @@ to such records via `record(t)`.
 **Indexing.** Tables support both column and row access:
 
 - Column access by field name: `t.colname`, equivalent to `get(t, "colname")`, returns the column
-  with that name as a vector.
+  with that name as a vector or table.
 - Row access by integer index: `t[i]`, equivalent to `get(t, i)`, returns the `i`-th row as a record (`i` starts at 1).
 
 `lengthof(t)` returns the number of table rows.

@@ -3,6 +3,9 @@
 This section provides reference documentation for all deterministic functions and
 value-level operations in FlatPPL. For measure-level operations, see [measure algebra and analysis](06-measure-algebra.md#sec:measure-algebra). For distribution constructors, see [built-in distributions](08-distributions.md#sec:distributions).
 
+**NaN inputs.** A NaN propagates through the order operations `max`, `min`, `maximum`,
+`minimum`, `cummax`, `cummin`, `linfnorm`, `median`, and `quantile`.
+
 ### Identities
 
 | Function | Arguments | Description | Domains |
@@ -629,9 +632,6 @@ operation.
 $-\infty$, `minimum` is $+\infty$, and `lengthof` is $0$: the identity of each
 reduction. `mean`, `var`, `std`, `median`, and `quantile` have no such identity, and
 engines raise a runtime error on an empty input.
-
-**NaN inputs.** A NaN propagates through the order operations `max`, `min`, `maximum`,
-`minimum`, `cummax`, `cummin`, `linfnorm`, `median`, and `quantile`.
 
 For multi-axis array contraction using these reductions, see
 [multi-axis aggregation](04-design.md#sec:aggregate).
