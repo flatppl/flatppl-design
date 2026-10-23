@@ -890,11 +890,16 @@ C = broadcast(f, A, addaxes(b, 0, 1))
 
 behaves like Julia-style broadcasting.
 
-*Non-collection inputs:* Scalar values, records, tuples, functions, kernels, measures
+*Non-collection inputs:* Scalar values, records, functions, kernels, measures
 and likelihood objects are allowed as broadcasting inputs, they are simply not
 iterated over but held constant while collection arguments are iterated over.
-If there are no collection arguments, `broadcast` behaves like a single
+If there are no collection or tuple arguments, `broadcast` behaves like a single
 function or kernel call.
+
+*Tuple inputs:* `broadcast` of a function iterates over tuple components and
+returns a tuple, so `broadcast(f, (a, b), c)` equals `(f(a, c), f(b, c))`.
+All tuple inputs must have the same length. Combining a tuple input with an
+array or table input, or broadcasting a kernel over a tuple, is a static error.
 
 *Tuple-returning callables:* if `f` returns a tuple, `broadcast(f, ...)` returns a
 tuple of arrays (componentwise), not an array of tuples.
