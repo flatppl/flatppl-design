@@ -716,10 +716,9 @@ retaining elements or rows for which `pred` returns `true`, in their original or
 For element or row `i`, it calls `pred(data[i], ...)` with the corresponding
 elements or rows from additional inputs. These bind positionally or by name under the
 [additional argument rule](04-design.md#sec:callback-parameters), before traversal.
-Each additional input is a one-dimensional array or table with length one or
-the number of elements or rows in `data`. Length-one inputs repeat, so `[p]`
-supplies the same scalar or array `p` to every predicate call. A one-row table
-supplies the same record. Other lengths are an error. `data` itself is
+Array and table inputs have length one or the number of elements or rows in
+`data`, and scalars and records are held constant, as for
+[`scan`](04-design.md#sec:scan-inputs). `data` itself is
 not expanded, and empty data produces an empty result.
 
   ```flatppl

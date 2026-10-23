@@ -154,7 +154,7 @@ of which may or may not be significant. The total number of inputs is never zero
   no significant order.
 - `standard_module`: Two distinguished inputs.
 - `weighted`, `logweighted`: Two distinguished inputs, plus variadic inputs.
-- `scan`, `kscan`: Two distinguished inputs, plus one or more variadic sequence inputs.
+- `scan`, `kscan`: Two distinguished inputs, plus one or more variadic inputs.
 - `aggregate`, `metricsum`: Three distinguished inputs.
 - `markovchain`: Three distinguished inputs, plus variadic inputs.
 - `ksuperpose`: Two distinguished inputs (the kernel and the weight vector); the
@@ -929,9 +929,10 @@ remain unchanged in every call. For each choice of these arguments, the binary
 operation on `a` and `b` must be associative.
 
 **`scan(f, init, ...)`** is a left scan with initial accumulator `init`.
-The function `f` takes the accumulator first, followed by inputs bound from
-one or more sequences. At step `i`, `f(acc, ...)` receives the corresponding
-elements or rows and returns the new accumulator, of the same type as `init`.
+The function `f` takes the accumulator first, followed by the remaining inputs.
+At step `i`, `f(acc, ...)` receives the corresponding elements or rows of array
+and table inputs, and constant inputs unchanged. It returns the new accumulator,
+of the same type as `init`.
 The result contains the accumulator after every step, excluding `init`, or
 is empty when there are no steps. `f` must be deterministic.
 
@@ -940,20 +941,22 @@ Output entry `i` is `f(...f(f(init, x1), x2)..., xi)`.
 
 <a id="sec:scan-inputs"></a>For `scan` and `kscan`, input traversal
 follows [argument binding](#sec:callback-parameters). All arguments after the
-function or kernel and `init` bind sequence inputs, positionally or by name.
-The running accumulator or state supplies the first input. The sequences
-are one-dimensional arrays or tables, traversed together by element or row.
-Their lengths must agree, except that length-one inputs repeat to match the
-others, as in [broadcasting](#sec:broadcasting). An empty input combined with
-length-one inputs yields zero steps. Other unequal lengths are an error.
-A singleton `[p]` supplies the same scalar or array `p` at every step.
-A one-row table supplies the same record at every step.
+function or kernel and `init` bind the remaining inputs, positionally or by name.
+The running accumulator or state supplies the first input. As in
+[broadcasting](#sec:broadcasting), one-dimensional arrays and tables are
+traversed together by element or row, and scalars, records and other
+non-collection arguments are held constant at every step. At least one argument
+must be an array or table. Tuple and higher-dimensional array arguments are a
+static error. Lengths must agree, except that length-one inputs repeat to match
+the others. An empty input combined with length-one inputs yields zero steps.
+Other unequal lengths are an error. A singleton `[A]` supplies the same array
+`A` at every step.
 
 ```flatppl
 step(acc, x, w) = acc + x * w
 running = scan(step, 0, [10, 20], [2, 3])     # [20, 80]
 total = reduce(add, [10, 20] .* [2, 3])      # 80
-constant_weight = scan(step, 0, [10, 20], [2]) # [20, 60]
+constant_weight = scan(step, 0, [10, 20], 2)   # [20, 60]
 ```
 
 ### <a id="sec:aggregate"></a>Multi-axis aggregation

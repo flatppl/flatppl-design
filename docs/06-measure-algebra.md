@@ -437,11 +437,11 @@ To evaluate a density at many points (e.g. a grid for numerical integration or p
   with exogenous inputs threaded through each step, also a stochastic
   version of [`scan`](04-design.md#reductions).
   
-  `kernel` takes the state first, followed by inputs bound from one or more
-  sequences, and returns a measure over states. At step `i`, `kernel(state, ...)`
-  receives the corresponding elements or rows. All arguments after `init` bind
-  sequence inputs, positionally or by name, under `scan`'s
-  [input traversal](04-design.md#sec:scan-inputs), including singleton expansion.
+  `kernel` takes the state first, followed by the remaining inputs, and returns
+  a measure over states. All arguments after `init` bind positionally or by name
+  under `scan`'s [input traversal](04-design.md#sec:scan-inputs): at step `i`,
+  `kernel(state, ...)` receives the corresponding elements or rows of array and
+  table inputs, and constant inputs unchanged.
   The trajectory length is the resulting number of steps. The initial state
   `init` is not part of the trajectory.
 

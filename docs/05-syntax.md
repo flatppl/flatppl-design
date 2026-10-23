@@ -179,9 +179,10 @@ Their semantics are defined in [language design](04-design.md#sec:design).
 
 The following forms accept [additional arguments](04-design.md#sec:callback-parameters).
 Here `...` denotes zero or more positional or keyword arguments.
-For `scan` and `kscan`, at least one sequence input is required.
+For `scan` and `kscan`, at least one array or table input is required.
 For `filter`, `scan`, and `kscan`, `...` on the right denotes the corresponding
-sequence elements or rows, including repeated singleton inputs.
+elements or rows of array and table inputs, including repeated singleton inputs,
+and constant inputs unchanged.
 
 | Operation | Called as |
 |---|---|
