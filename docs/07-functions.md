@@ -719,7 +719,7 @@ elements or rows from additional inputs. These bind positionally or by name unde
 Each additional input is a one-dimensional array or table with length one or
 the number of elements or rows in `data`. Length-one inputs repeat, so `[p]`
 supplies the same scalar or array `p` to every predicate call. A one-row table
-supplies the same record. Other lengths are a static error. `data` itself is
+supplies the same record. Other lengths are an error. `data` itself is
 not expanded, and empty data produces an empty result.
 
   ```flatppl

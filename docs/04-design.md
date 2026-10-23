@@ -945,7 +945,7 @@ The running accumulator or state supplies the first input. The sequences
 are one-dimensional arrays or tables, traversed together by element or row.
 Their lengths must agree, except that length-one inputs repeat to match the
 others, as in [broadcasting](#sec:broadcasting). An empty input combined with
-length-one inputs yields zero steps. Other unequal lengths are a static error.
+length-one inputs yields zero steps. Other unequal lengths are an error.
 A singleton `[p]` supplies the same scalar or array `p` at every step.
 A one-row table supplies the same record at every step.
 
