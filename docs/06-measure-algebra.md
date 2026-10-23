@@ -278,11 +278,12 @@ To evaluate a density at many points (e.g. a grid for numerical integration or p
   rj = joint(name1 = M1, name2 = M2)
   ```
 
-  Each name holds its component's variate as it is, whether scalar, array or record, so
-  `joint(obs = iid(Normal(0, 1), 3))` is a measure over records `record(obs = v)` with a
-  vector `v`. A record-valued component becomes a nested record under its name — the
-  name adds a level, it does not merge the inner fields (unlike the positional `cat`
-  form above).
+  is equivalent to
+  `joint(pushfwd(fn(record(name1 = _)), M1), pushfwd(fn(record(name2 = _)), M2))`.
+  Each name therefore holds its component's variate whole, whether scalar, array or
+  record, so `joint(obs = iid(Normal(0, 1), 3))` is a measure over records
+  `record(obs = v)` with a vector `v`, and a record-valued component becomes a nested
+  record under its name.
 
   For kernels, `joint(K1, K2, ...)` results in a kernel that fans a single
   input out to all component kernels, so each of them receives the same input.
@@ -361,10 +362,12 @@ To evaluate a density at many points (e.g. a grid for numerical integration or p
   the output variate is the `cat` of the variates of all the components, as with `joint`.
 
   **Keyword form.** `jointchain(name1 = M, name2 = K1, ...)` names the component variates,
-  producing a measure over a space of records. Each name holds its component's variate as
-  it is, as in the keyword form of [`joint`](#joint). Each later kernel receives the record
-  of the preceding named variates by the ordinary calling convention, so
-  `jointchain(a = M, b = K)` calls `K(record(a = a))`.
+  producing a measure over a space of records. It is equivalent to
+  `jointchain(pushfwd(fn(record(name1 = _)), M), pushfwd(fn(record(name2 = _)), K1), ...)`,
+  so each name holds its component's variate whole, as in the keyword form of
+  [`joint`](#joint), and each later kernel receives the record of the preceding named
+  variates by the ordinary calling convention: `jointchain(a = M, b = K)` calls
+  `K(record(a = a))`.
 
   Mathematically, we define the joint chain of a measure $\mu(A)$ and a transition kernel $\kappa$ as
 
