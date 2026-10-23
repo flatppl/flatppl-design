@@ -347,8 +347,7 @@ ContinuationOp  ::= AddOp | MulOp | CompOp | "^" | ".^"
                     (* Every infix binary operator, the lambda arrow, and the
                        binding operators. Only a TRAILING occurrence continues a
                        line (see "Statement separation"); a line beginning with
-                       an operator starts a new statement, and is a parse error
-                       unless that operator is unary. *)
+                       an operator starts a new statement and is a parse error. *)
 
 (* Calls *)
 Call            ::= "(" CallArgs ","? ")"

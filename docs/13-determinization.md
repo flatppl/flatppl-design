@@ -78,8 +78,8 @@ implementation-defined convention; that fallback carries no normative force.
   the component/conditional densities; `pushfwd` follows the
   [engine contract](06-measure-algebra.md#engine-contract-for-pushfwd-density-evaluation)
   for bijections and structural projections; a structural projection of a
-  measure without explicit product structure has no closed-form marginal and
-  is refused. `draw` nodes take their values from the explicit `point`,
+  measure without explicit product structure is refused. `draw` nodes take
+  their values from the explicit `point`,
   unless marginalized out
   ([variates and measures](04-design.md#sec:variate-measure)).
 - A **sampled output** resolves its measure's `draw` nodes through `rand`.

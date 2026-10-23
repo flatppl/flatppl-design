@@ -169,7 +169,7 @@ $$\lambda \, e^{-\lambda x} \quad \text{for } x \geq 0$$
 
 <a id="gamma"></a>**`Gamma(shape, rate)`** — The [gamma distribution](https://en.wikipedia.org/wiki/Gamma_distribution).
 
-Domain/Support: `reals`/`posreals`.
+Domain/Support: `reals`/`nonnegreals`.
 
 Parameters:
 
@@ -458,7 +458,7 @@ The dimension $n$ is the row/column count of `scale`; it must be a fixed-phase p
 
 Density w.r.t. Lebesgue on the space of $n \times n$ positive definite matrices:
 
-$$\frac{|\mathbf{X}|^{(\nu-n-1)/2} \exp\!\left(-\tfrac{1}{2}\operatorname{tr}(\mathbf{V}^{-1}\mathbf{X})\right)}{2^{\nu n/2} |\mathbf{V}|^{\nu/2} \Gamma_n(\nu/2)} \quad \text{for } \mathbf{X} \in \mathbf{S}_{+}^{n}$$
+$$\frac{|\mathbf{X}|^{(\nu-n-1)/2} \exp\!\left(-\tfrac{1}{2}\operatorname{tr}(\mathbf{V}^{-1}\mathbf{X})\right)}{2^{\nu n/2} |\mathbf{V}|^{\nu/2} \Gamma_n(\nu/2)} \quad \text{for } \mathbf{X} \in \mathbf{S}_{++}^{n}$$
 
 where $\mathbf{V}$ is the scale matrix and $\Gamma_n$ is the multivariate gamma function.
 
