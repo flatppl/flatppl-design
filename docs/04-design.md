@@ -73,9 +73,6 @@ variables inside `functionof` and `kernelof` (see
 [placeholders and holes](#placeholders-and-holes)). They must not be used for
 module-level bindings.
 
-The top-level names `inputs` and `outputs` are reserved for the
-[determinization signature](13-determinization.md#sec:determinization-signature).
-
 **Name resolution.** FlatPPL has two predefined modules: `self` refers to the
 current module, and `base` is a predefined module containing FlatPPL's built-ins.
 `self.foo` always refers to a current-module binding; `base.foo` always refers to
@@ -911,10 +908,8 @@ collects record results row-wise into a table, with the record's fields as colum
 multiple axes are a static error.
 
 **`broadcasted(f)`** returns a callable that is equivalent to applying `broadcast` to
-`f` after argument binding. It retains `f`'s input names, optional inputs, and any
-declared input order. The ordinary [calling conventions](#sec:calling-convention)
-bind arguments, including any applicable record or table auto-splatting, before
-broadcasting the bound arguments.
+`f`: `broadcasted(f)(args...)` is equivalent to `broadcast(f, args...)`, its arguments
+being operands of `broadcast` rather than arguments of `f`.
 
 ### Reductions
 
