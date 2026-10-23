@@ -162,8 +162,7 @@ of which may or may not be significant. The total number of inputs is never zero
 
 A distinguished input has no name and so cannot be passed by keyword. The
 [measure combinators](06-measure-algebra.md#sec:measure-algebra) likewise take their
-leading inputs positionally: a keyword spelling such as `normalize(M = mu)` is
-a static error.
+non-variadic inputs positionally: a keyword spelling such as `normalize(M = mu)` is a static error.
 Where this specification refers to a distinguished input by a name, as in
 `aggregate(f_reduction, output_axes, expr)`, the name identifies the input in prose
 only. A call binds the input by position, never by keyword argument.
@@ -743,7 +742,7 @@ neg = fn(0 - _)
 poly = fn(polynomial(coefficients = cs, x = _))
 ```
 
-The trivial case `fn(_)` is the identity function, equivalent to the built-in `identity`.
+The trivial case `fn(_)` returns its argument unchanged.
 
 Multiple holes — left-to-right positional order:
 
@@ -944,9 +943,9 @@ follows [argument binding](#sec:callback-parameters). All arguments after the
 function or kernel and `init` bind the remaining inputs, positionally or by name.
 The running accumulator or state supplies the first input. As in
 [broadcasting](#sec:broadcasting), one-dimensional arrays and tables are
-traversed together by element or row, and scalars, records and other
-non-collection arguments are held constant at every step. At least one argument
-must be an array or table. Tuple and higher-dimensional array arguments are a
+traversed together by element or row, and scalars and other non-collection
+arguments are held constant at every step. At least one argument must be an
+array or table. Record, tuple and higher-dimensional array arguments are a
 static error. Lengths must agree, except that length-one inputs repeat to match
 the others. An empty input combined with length-one inputs yields zero steps.
 Other unequal lengths are an error. A singleton `[A]` supplies the same array

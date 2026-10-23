@@ -41,7 +41,7 @@ events ~ PoissonProcess(intensity = rate)
 
 **Data and likelihood.** We define observed data and construct the likelihood. Since the
 event space is scalar, the `PoissonProcess` produces an array variate and the observed data
-is a plain array. The observation model uses `kernelof` with a boundary input to keep
+is a plain array. The observation model uses `kernelof` with explicit boundary inputs to keep
 `raw_eff_syst` as a kernel parameter (rather than marginalizing it out). A separate
 constraint term represents the auxiliary measurement that pins the nuisance parameter. The
 combined likelihood `L` is a likelihood object on the parameter space
@@ -135,9 +135,9 @@ noisy_array ~ broadcast(K, a = A)  # independent Normal draws at each element
 # Truncated distribution (model physics)
 positive_sigma ~ normalize(truncate(Normal(mu = 1.0, sigma = 0.5), interval(0, inf)))
 
-# Density-defined distribution (Bernstein polynomial). The callback form takes
-# fixed inputs only: a `fn` hole cannot capture fitted ancestors.
-bern = fn(bernstein(coefficients = [0.2, 0.5, 0.8, 0.4], x = _))
+# Density-defined distribution (Bernstein polynomial). The callback uses fixed
+# coefficients: `fn` cannot capture parametric ancestors.
+bern = fn(bernstein(coefficients = [0.2, 0.5, 0.8, 0.4], x = _ / 10.0))
 smooth_bkg = normalize(weighted(bern, Lebesgue(support = interval(0.0, 10.0))))
 
 # Same cubic Bernstein density with fitted coefficients, as a Beta mixture.

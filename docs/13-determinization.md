@@ -36,7 +36,7 @@ Each element of `outputs` is a deterministic result:
   [`rand(M, rstate)`](07-functions.md#rand), which returns `(value, new_rstate)`;
   the RNG state is an input, so a fixed argument reproduces the value for a
   given engine and platform
-  ([random value generation](07-functions.md#sec:random)), and the final RNG
+  ([random value generation](07-functions.md#sec:random)), and the returned RNG
   state may also be an output;
 - any other **deterministic expression** over the inputs.
 
@@ -78,8 +78,8 @@ implementation-defined convention; that fallback carries no normative force.
   the component/conditional densities; `pushfwd` follows the
   [engine contract](06-measure-algebra.md#engine-contract-for-pushfwd-density-evaluation)
   for bijections and structural projections; a structural projection of a
-  measure without explicit product structure has no closed-form marginal and
-  is refused. `draw` nodes take their values from the explicit `point`,
+  measure without explicit product structure is refused. `draw` nodes take
+  their values from the explicit `point`,
   unless marginalized out
   ([variates and measures](04-design.md#sec:variate-measure)).
 - A **sampled output** resolves its measure's `draw` nodes through `rand`.

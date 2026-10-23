@@ -155,7 +155,7 @@ Composite literal values are expressed via constructor calls (`(complex …)`,
 ### Calls
 
 A **call** in FlatPIR is a built-in operation or a `(%call ...)` form invoking
-a user-defined callable. Literals, references (`%ref`), FlatPIR structural
+a callable value. Literals, references (`%ref`), FlatPIR structural
 wrappers (`%kwarg`, `%field`, `%assign`, `%meta`), and the input-origin tags and
 input lists of `functionof` / `kernelof` are not calls.
 
@@ -190,11 +190,11 @@ independently.
 The **value-set slot** records a sound statically inferred set containing the
 node's possible values, written in the [§03 value-set
 vocabulary](03-value-types.md#sec:valuetypes) (set constants, `interval`, `stdsimplex`,
-`ordered`, `zerosum`, `cartpow`); for a measure-valued node it is the measure's support. The set must be
+`ordered`, `zerosum`, `cartpow`, `cartprod`); for a measure-valued node it is the measure's support. The set must be
 a subset of the type's natural extent (e.g. `reals` for `(%scalar real)`),
 defaulting to that extent when nothing tighter is known. It is ideally tight, but
 the vocabulary is not intersection-closed, so there may be no unique tightest
-set — any sound superset is valid. Non-value nodes — callables, likelihoods, and
+set — any sound superset is valid. Non-value nodes — callables, likelihoods, tuples, and
 module references — have no value set and carry `%unknown` (distinct from
 `%deferred`). A value-set expression's shape parameters (the `n` in
 `stdsimplex(n)` or `cartpow(S, n)`) must agree with the node's structural shape,
@@ -298,7 +298,7 @@ pointwise for kernels.
 ### Expressions
 
 Expressions in FlatPIR come in structurally distinct shapes for built-in
-operations, references, and calls to user-defined callables. Rewriting rules can pattern-match
+operations, references, and calls through callable values. Rewriting rules can pattern-match
 on expression category without name-based dispatch.
 
 **Built-in operations** are bare-headed forms with the operation name as the head symbol:
@@ -354,27 +354,25 @@ for upper (contravariant) and `(%laxis <name>)` for lower (covariant)
 indices: surface `.mu^` maps to `(%uaxis mu)` and `.mu_` to
 `(%laxis mu)`.
 
-**Calls to user-defined callables** use `(%call <callable> <args>...)`, where
-`<callable>` is an expression that must evaluate to a user-defined callable —
-a `(%ref ...)` in the common case, or an inline callable expression such as a
-reification:
+**Calls through callable values** use `(%call <callable> <args>...)`, where
+`<callable>` is any expression that evaluates to a callable, such as a `(%ref ...)`,
+a reification, or a built-in operation that returns a callable:
 
 ```lisp
 (%call (%ref self helper_fn) x y)
 (%call (%ref helpers obs_kernel) row)
 (%call (functionof (%ref self e) %specinputs ((p (%ref self a)))) 2.5)
+(%call (broadcasted add) (%ref self xs) (%ref self ys))
 ```
 
 User bindings always use `(%ref ...)` while built-ins use bare symbols. The surface
 form `base.foo` (explicit built-in reference; see
 [name resolution](04-design.md#sec:binding-names)) also lowers to the bare form
 in FlatPIR, not to `(%ref base ...)`.
-A rewriter pattern on `(%call ?head ?args...)` fires only on a user-defined callable
-while a pattern on `(add ?x ?y)` fires only on the built-in.
+A rewriter pattern on `(%call ?head ?args...)` matches calls through callable values,
+while a pattern on `(add ?x ?y)` matches a direct call to the built-in.
 
-**Positional and keyword call forms.** Built-in operations and user-defined calls may use
-positional arguments or `%kwarg` entries, matching the surface FlatPPL form. Both are
-valid FlatPIR with identical semantics for a given callable. `%kwarg` entries are
+**Keyword argument order.** `%kwarg` entries are
 unordered: `(Normal (%kwarg sigma 1.0) (%kwarg mu 0.0))` is the same call
 as `(Normal (%kwarg mu 0.0) (%kwarg sigma 1.0))`.
 

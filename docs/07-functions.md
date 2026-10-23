@@ -10,7 +10,6 @@ value-level operations in FlatPPL. For measure-level operations, see [measure al
 | [`identity`](#identity) | `x` | returns `x` unchanged | any |
 
 <a id="identity"></a>**`identity(x)`** — the identity function: returns its argument unchanged.
-Equivalent to `fn(_)`.
 
 ### Array and table generation
 
@@ -705,7 +704,7 @@ empty input `lany` is `false` and `lall` is `true`, the identities of `lor` and
 
 | Function | Arguments | Description | Domains |
 |---|---|---|---|
-| [`in`](#in) | `x, S` | `true` if `x ∈ S`, else `false` (operator syntax `x in S`) | scalar matching element type of `S`, set |
+| [`in`](#in) | `x, S` | `true` if `x in S`, else `false` | value matching element type of `S`, set |
 | [`filter`](#filter) | `pred, data, ...` | keep only elements/rows for which `pred` returns `true` | function, array or table, ... |
 | [`selectbins`](#selectbins) | `edges, region, counts` | select whole-bin counts whose intervals intersect `region` | vector, set, vector |
 
@@ -717,7 +716,7 @@ For element or row `i`, it calls `pred(data[i], ...)` with the corresponding
 elements or rows from additional inputs. These bind positionally or by name under the
 [additional argument rule](04-design.md#sec:callback-parameters), before traversal.
 Array and table inputs have length one or the number of elements or rows in
-`data`, and scalars and records are held constant, as for
+`data`, scalars are held constant, and records and tuples are a static error, as for
 [`scan`](04-design.md#sec:scan-inputs). `data` itself is
 not expanded, and empty data produces an empty result.
 
@@ -777,7 +776,7 @@ Data points outside all bins are ignored.
 | Function | Arguments | Description | Domains |
 |---|---|---|---|
 | [`polynomial`](#polynomial) | `coefficients, x` | power-series polynomial $\sum_{i=0}^{n-1} c_{i+1} x^i$ | vector, real or complex |
-| [`bernstein`](#bernstein) | `coefficients, x` | Bernstein basis polynomial of degree $n - 1$ on $[0, 1]$ | vector, `unitinterval` |
+| [`bernstein`](#bernstein) | `coefficients, x` | Bernstein basis polynomial of degree `lengthof(coefficients) - 1` on $[0, 1]$ | vector, `unitinterval` |
 | [`stepwise`](#stepwise) | `edges, values, x` | piecewise-constant step function | vector, vector, real |
 
 <a id="polynomial"></a>**`polynomial(coefficients, x)`** — power-series polynomial evaluated at `x`:
@@ -832,7 +831,7 @@ more_random_data, rstate3 = rand(iid(Exponential(1), 5), rstate2)
 <a id="rnginit"></a>**`rnginit(rngseed)`** — initializes a fresh RNG state from a seed byte vector
 or a seed integer. Returns a value in the set `rngstates`.
 
-  `rngseed` must be a seed vector of bytes (integers in $\{0, \ldots, 255\}$).
+  A byte-vector seed must contain integers in $\{0, \ldots, 255\}$.
   Any non-empty vector is accepted; a seed length of 32 bytes provides sufficient entropy
   for virtually all modern RNG algorithms.
 
