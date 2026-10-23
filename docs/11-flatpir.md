@@ -372,10 +372,7 @@ in FlatPIR, not to `(%ref base ...)`.
 A rewriter pattern on `(%call ?head ?args...)` fires only on a user-defined callable
 while a pattern on `(add ?x ?y)` fires only on the built-in.
 
-**Positional and keyword call forms.** Call forms follow the surface
-[calling conventions](04-design.md#sec:calling-convention). Where both forms are
-permitted, positional arguments and `%kwarg` entries have identical semantics
-for a given callable. `%kwarg` entries are
+**Keyword argument order.** `%kwarg` entries are
 unordered: `(Normal (%kwarg sigma 1.0) (%kwarg mu 0.0))` is the same call
 as `(Normal (%kwarg mu 0.0) (%kwarg sigma 1.0))`.
 
