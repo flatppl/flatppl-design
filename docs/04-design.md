@@ -101,16 +101,15 @@ canonical syntax):
 - **Keyword arguments** (named arguments): `f(a = x, b = y, ...)`. Arguments are bound
   to inputs by name, the order of the arguments is not relevant.
 
-- **Auto-splatting** (of records, table columns and tuples): If a callable is called with
-  a single positional argument that is a record or table, and every field or column name
-  is an input of the callable and every required input is named, that argument is
-  decomposed into keyword arguments (record field names and values or table column names
-  and columns), whatever the number of inputs. Otherwise the record or table is passed
-  whole. If a callable with ordered inputs that does not accept a lone positional
-  argument, having two or more required inputs, is called with a single positional
-  argument that is a tuple, that tuple is decomposed into positional arguments. Tuples
-  with fewer elements than the callable's required inputs, or more than its inputs, are
-  a static error.
+- **Auto-splatting** (of records, table columns and tuples): Callables that do not accept
+  a lone positional argument, having two or more required inputs or keyword-only inputs,
+  support auto-splatting. If such a callable is called with a single positional argument
+  that is a record or table, that argument is decomposed into keyword arguments (record
+  field names and values or table column names and columns). Field or column names that
+  do not match the callable's argument names are a static error. If such a callable has
+  ordered inputs and is called with a single positional argument that is a tuple, that
+  tuple is decomposed into positional arguments. Tuples with fewer elements than the
+  callable's required inputs, or more than its inputs, are a static error.
 
   Auto-splatting is shallow.
 
@@ -118,9 +117,10 @@ canonical syntax):
   `f(table(a = x, b = y, c = z))`, equivalent to `f(a = x, b = y, c = z)`, or as
   `f((x, y, z))`, equivalent to `f(x, y, z)`.
 
-  A function `g(a)` called as `g(record(a = x))` receives `x`, while `g(record(b = x))`
-  and `g((x, y))` pass the record or tuple to `g` whole. The keyword form
-  `g(a = record(a = x))` passes a record whose field names match the inputs whole.
+  A function `g(a)` accepts a lone positional argument, so `g(record(a = x))`,
+  `g(table(a = x))` and `g((x, y))` always pass the record, table or tuple to `g`
+  whole: auto-splatting only takes the interface of `g` into account, not the
+  types of its inputs, and would be ambiguous for such a callable.
 
 - **Positional arguments**: `f(x, y, ...)`. Positional arguments are accepted only if
   the callable has ordered inputs, so that the arguments can be mapped to the inputs in order.

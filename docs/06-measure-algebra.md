@@ -363,8 +363,8 @@ To evaluate a density at many points (e.g. a grid for numerical integration or p
   **Keyword form.** `jointchain(name1 = M, name2 = K1, ...)` names the component variates,
   producing a measure over a space of records. Each name holds its component's variate as
   it is, as in the keyword form of [`joint`](#joint). Each later kernel receives the record
-  of the preceding named variates, so `jointchain(a = M, b = K)` calls `K(record(a = a))`,
-  which is `K(a = a)` by auto-splatting.
+  of the preceding named variates by the ordinary calling convention, so
+  `jointchain(a = M, b = K)` calls `K(record(a = a))`.
 
   Mathematically, we define the joint chain of a measure $\mu(A)$ and a transition kernel $\kappa$ as
 
