@@ -6,8 +6,7 @@
 
   ; --- functions (lambdas / functionof); placeholders bounded by the producers ---
   (functionof ?_ (?| %specinputs %autoinputs) (??+))
-  ; Each local callee must resolve to a functionof binding admitted by this
-  ; profile after alias resolution (§12, binding constraints).
+  ; A local callee must resolve to a functionof binding admitted by this profile.
   (%call
     (%meta ((%function (%inputs ??+)) ?? ??)
       (?| (%ref self ??)

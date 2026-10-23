@@ -92,11 +92,7 @@ deterministic real scalar arithmetic could read:
   ((?| min max) ?_ ?_))
 ```
 
-Inference checks reification input lists and their references. The call pattern
-covers local function references and inline reifications, with closed argument
-values, including keyword values.
-Each local callee must resolve, after alias resolution, to a `functionof` binding
-admitted by the profile.
+A local callee must resolve to a `functionof` binding admitted by the profile.
 
 A value type exists only where the profile admits a producer for it, so excluding the
 producers excludes the type: with no array/complex source (`elementof` over `complexes`
@@ -384,8 +380,8 @@ channel's total per-bin nominal across samples (`staterror` only).
 **Notes.** Modifiers with the same name share a single nuisance parameter; the
 translator must verify compatible auxiliary-measurement types.
 
-For multiple `histosys` modifiers, add each interpolated template's change from
-the nominal, then add the nominal once (see [`sample_yields`](09-standard-modules.md#sample_yields)).
+For composition of `histosys` modifiers, see
+[`sample_yields`](09-standard-modules.md#sample_yields).
 
 `staterror` carries an HS³ `constraint_type` (`Gauss` or `Poisson`). A translator must
 honour the field when it is present; when it is omitted the default follows the source

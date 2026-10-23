@@ -10,7 +10,6 @@ value-level operations in FlatPPL. For measure-level operations, see [measure al
 | [`identity`](#identity) | `x` | returns `x` unchanged | any |
 
 <a id="identity"></a>**`identity(x)`** — the identity function: returns its argument unchanged.
-`fn(_)` has the same value mapping, with input named `arg1` rather than `x`.
 
 ### Array and table generation
 
