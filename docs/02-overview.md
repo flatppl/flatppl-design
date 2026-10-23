@@ -139,7 +139,7 @@ inference-agnostic design.
 FlatPPL has five kinds of first-class objects.
 
 **Abstract values** denote real numbers, integers, booleans, complex numbers,
-fixed-size arrays, and records. They may be deterministic (literal constants,
+fixed-size arrays, records, and tables. They may be deterministic (literal constants,
 results of ordinary functions, data, external inputs) or stochastic (variates introduced by
 `draw(...)`). In generative mode, each abstract value evaluates to a single concrete value;
 for stochastic abstract values, that concrete value is generated randomly once.
@@ -440,7 +440,9 @@ starting_values = record(mu_sig = 1.0, raw_syst = fixed(0.0), n_bkg = 50.0)
 
 #### Analysis: likelihoods and posteriors
 
-Likelihood construction, combination, and posterior construction:
+Likelihood construction, combination, and posterior construction. Here `L`
+marginalizes `raw_syst`, while `L_sub` conditions on it and restricts the
+intensity and data to `R`:
 
 ```flatppl
 L = likelihoodof(kernelof(events), observed_data)

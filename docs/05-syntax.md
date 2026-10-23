@@ -214,15 +214,15 @@ value usable wherever a [`functionof`](04-design.md#sec:functionof) result is.
 
 ```flatppl
 f(x, y) = x^2 * y^2                          # equivalent to f = (x, y) -> x^2 * y^2
-g(x, y, z) = record(p = x + y, q = y * z)    # record/array/tuple body → multi-output
+g(x, y, z) = record(p = x + y, q = y * z)    # one record-valued result
 h(x, y) = [x / y, x * log(y)]
 ```
 
 The construct is purely a surface rewrite: it adds no
 [FlatPIR](11-flatpir.md#intermediate-representation) node and inherits every
 function property — scoping, duplicate-argument rules, phase, doc-comment
-attachment — from the lambda desugaring. There is no tilde form, since a measure
-is not a function (`f(arg1, ...) ~ expr` is not legal).
+attachment — from the lambda desugaring. There is no tilde form: `~` binds a
+variate, not a callable (`f(arg1, ...) ~ expr` is not legal).
 
 ### <a id="axis-names"></a>Axis names and aggregation
 
