@@ -278,11 +278,11 @@ To evaluate a density at many points (e.g. a grid for numerical integration or p
   rj = joint(name1 = M1, name2 = M2)
   ```
 
-  is equivalent to `joint(relabel(M1, ["name1"]), relabel(M2, ["name2"]))`.
-
-  In this keyword form, a record-valued component becomes a nested record under its
-  name — the name adds a level, it does not merge the inner fields (unlike the
-  positional `cat` form above).
+  Each name holds its component's variate as it is, whether scalar, array or record, so
+  `joint(obs = iid(Normal(0, 1), 3))` is a measure over records `record(obs = v)` with a
+  vector `v`. A record-valued component becomes a nested record under its name — the
+  name adds a level, it does not merge the inner fields (unlike the positional `cat`
+  form above).
 
   For kernels, `joint(K1, K2, ...)` results in a kernel that fans a single
   input out to all component kernels, so each of them receives the same input.
@@ -361,8 +361,8 @@ To evaluate a density at many points (e.g. a grid for numerical integration or p
   the output variate is the `cat` of the variates of all the components, as with `joint`.
 
   **Keyword form.** `jointchain(name1 = M, name2 = K1, ...)` names the component variates,
-  producing a measure over a space of records. Its variate is that of
-  `jointchain(relabel(M, ["name1"]), relabel(K1, ["name2"]), ...)`. Each later kernel
+  producing a measure over a space of records. Each name holds its component's variate as
+  it is, as in the keyword form of [`joint`](#joint). Each later kernel
   receives the record of the preceding named variates, bound to its inputs by name for any
   number of inputs, so `jointchain(a = M, b = K)` calls `K(a = a)`. Each input must name a
   preceding variate, and a kernel may leave earlier variates unused: in
