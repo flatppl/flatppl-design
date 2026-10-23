@@ -41,8 +41,6 @@ cases but are not yet specified.
 
 ### Naming convention
 
-Ellipses in the schematic forms below denote omitted terms.
-
 FlatPIR structural keywords are prefixed with `%` (e.g. `%module`, `%bind`, `%ref`,
 `%meta`). FlatPPL built-in names (`Normal`, `add`, `record`, `vector`, `real`,
 `integer`, ...) and user-defined names appear bare. The `%` prefix is invalid in

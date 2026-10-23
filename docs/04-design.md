@@ -42,7 +42,6 @@ and kernels.
 **Public bindings.** Names that do not begin with an underscore are public: they
 form the interface of a FlatPPL module. They must match the regular expression
 `^[A-Za-z][A-Za-z0-9_]*$`.
-See also the [cross-module access rules](#stochastic-boundary).
 
 A binding whose value is a module reference (from `load_module` or `standard_module`,
 see [Module composition](#sec:modules)) is never part of the public interface,

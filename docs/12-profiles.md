@@ -7,8 +7,6 @@ profiles are defined, but the set of profiles is open for extension.
 incomplete drafts and subject to change. They are not part of FlatPPL semantic
 versioning yet.
 
-In schematic forms below, ellipses denote omitted terms and subscripts index names.
-
 ### FlatPPL as an exchange platform
 
 While full FlatPPL implementations are feasible for some languages and package ecosystems
