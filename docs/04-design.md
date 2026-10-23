@@ -153,9 +153,10 @@ of which may or may not be significant. The total number of inputs is never zero
 - `load_module`: One distinguished input plus optional variadic named inputs with
   no significant order.
 - `standard_module`: Two distinguished inputs.
-- `weighted`, `logweighted`: Two distinguished inputs.
+- `weighted`, `logweighted`: Two distinguished inputs, plus variadic inputs.
+- `scan`, `kscan`: Two distinguished inputs, plus one or more variadic inputs.
 - `aggregate`, `metricsum`: Three distinguished inputs.
-- `markovchain`, `kscan`: Three distinguished inputs.
+- `markovchain`: Three distinguished inputs, plus variadic inputs.
 - `ksuperpose`: Two distinguished inputs (the kernel and the weight vector); the
   resulting kernel is applied separately to the parameter family.
 
@@ -166,20 +167,17 @@ Where this specification refers to a distinguished input by a name, as in
 `aggregate(f_reduction, output_axes, expr)`, the name identifies the input in prose
 only. A call binds the input by position, never by keyword argument.
 
-#### <a id="sec:callback-parameters"></a>Explicit callback parameters
+#### <a id="sec:callback-parameters"></a>Additional arguments
 
-The operations below accept an optional final parameter object `p`. When present,
-it is passed whole as the callback's final argument. Without `p`, that argument
-is omitted.
+Some operations supply the leading arguments of a function or kernel.
+Additional arguments bind the function's or kernel's remaining inputs under the
+ordinary calling convention, positionally or by name. An operation passes these
+arguments whole unless its definition specifies elementwise traversal.
 
-| Operation | Callback application |
-|---|---|
-| `weighted(f, M, p)`, `logweighted(f, M, p)`, `pushfwd(f, M, p)` | `f(x, p)` for the whole variate `x` |
-| `filter(pred, data, p)` | `pred(x, p)` for each element or row `x` |
-| `reduce(f, xs, p)` | `f(acc, next, p)` |
-| `scan(f, init, xs, p)` | `f(acc, next, p)` |
-| `markovchain(kernel, init, n, p)` | `kernel(state, p)` |
-| `kscan(kernel, init, xs, p)` | `kernel(state, xs[i], p)` |
+A sole additional record or table passes whole if the remaining inputs accept
+one positional argument. Otherwise, its fields or columns bind the remaining
+inputs by name. No input may be left unbound or bound twice.
+See [additional argument syntax](05-syntax.md#additional-arguments) for the call forms.
 
 ### <a id="sec:variate-measure"></a>Variates and measures
 
@@ -664,6 +662,11 @@ result; for measures it is equivalent to `pushfwd(fn(relabel(_, names)), M)`; fo
 
 If auto-splatting applies, a record returned by `f1` supplies the matching named
 inputs of `f2`. Otherwise, `f2` receives the record whole.
+
+The composed function passes [additional arguments](#sec:callback-parameters)
+unchanged to every step: `fchain(f1, f2, f3)(x, ...)` equals
+`f3(f2(f1(x, ...), ...), ...)`. Each step then receives the previous result whole
+as its first argument.
 `fchain` is the deterministic analogue of
 [`kchain`](06-measure-algebra.md#dependent-composition).
 
@@ -912,31 +915,48 @@ multiple axes are a static error.
 
 ### Reductions
 
-**`reduce(f, xs)`** is a fold over `xs` using the binary associative function
-`f`, called positionally as `f(acc, next)`. For a vector
-`xs = [x1, x2, ..., xn]`, it computes `f(...f(f(x1, x2), x3)..., xn)`.
-For a table, `xs` is traversed row-wise and `f` takes two records (the
-accumulator and the next row). The first element (or row) is used as the
-initial accumulator value, so `xs` must be non-empty and `f` must return a
-value of the same type as the elements (or rows) of `xs`. Since `f` is
-required to be associative, implementations may evaluate in parallel.
-Unlike `broadcast`, `reduce` accepts only a deterministic function `f`,
-not a kernel.
+**`reduce(f, xs)`** combines a non-empty vector or table using the binary
+associative deterministic function `f`. Each call `f(a, b)` combines two
+elements or partial results and returns the same type. For tables, the
+operands are records. Implementations may regroup the applications as a binary
+tree and evaluate independent branches in parallel, preserving element order.
+A singleton input returns its sole element or row.
 
-With [explicit parameters](#sec:callback-parameters), `reduce(f, xs, p)` calls
-`f(acc, next, p)`, which must be associative for each `p`.
+The form `reduce(f, xs, ...)` calls `f(a, b, ...)` under the
+[additional argument rule](#sec:callback-parameters). The additional arguments
+remain unchanged in every call. For each choice of these arguments, the binary
+operation on `a` and `b` must be associative.
 
-**`scan(f, init, xs)`** is a left scan over `xs` using the binary function `f`
-with explicit initial accumulator `init`. `f` is called positionally as
-`f(acc, next)`: the running accumulator (of the type of `init`) and the next
-element of `xs` (or row record, for tables), returning the new accumulator
-value of the same type as `init`. Output entry `i` is
-`f(...f(f(init, x1), x2)..., xi)`, i.e. the accumulator after consuming
-`xs[i]`; the result has the same length (or row count) as `xs` and does not
-include `init` itself. `f` must be a deterministic function, not a kernel.
+**`scan(f, init, ...)`** is a left scan with initial accumulator `init`.
+The function `f` takes the accumulator first, followed by the remaining inputs.
+At step `i`, `f(acc, ...)` receives the corresponding elements or rows of array
+and table inputs, and constant inputs unchanged. It returns the new accumulator,
+of the same type as `init`.
+The result contains the accumulator after every step, excluding `init`, or
+is empty when there are no steps. `f` must be deterministic.
 
-The form `scan(f, init, xs, p)` uses the same
-[explicit parameter rule](#sec:callback-parameters).
+For one sequence `xs`, `scan(f, init, xs)` calls `f(acc, xs[i])` at step `i`.
+Output entry `i` is `f(...f(f(init, x1), x2)..., xi)`.
+
+<a id="sec:scan-inputs"></a>For `scan` and `kscan`, input traversal
+follows [argument binding](#sec:callback-parameters). All arguments after the
+function or kernel and `init` bind the remaining inputs, positionally or by name.
+The running accumulator or state supplies the first input. As in
+[broadcasting](#sec:broadcasting), one-dimensional arrays and tables are
+traversed together by element or row, and scalars and other non-collection
+arguments are held constant at every step. At least one argument must be an
+array or table. Record, tuple and higher-dimensional array arguments are a
+static error. Lengths must agree, except that length-one inputs repeat to match
+the others. An empty input combined with length-one inputs yields zero steps.
+Other unequal lengths are an error. A singleton `[A]` supplies the same array
+`A` at every step.
+
+```flatppl
+step(acc, x, w) = acc + x * w
+running = scan(step, 0, [10, 20], [2, 3])     # [20, 80]
+total = reduce(add, [10, 20] .* [2, 3])      # 80
+constant_weight = scan(step, 0, [10, 20], 2)   # [20, 60]
+```
 
 ### <a id="sec:aggregate"></a>Multi-axis aggregation
 

@@ -705,18 +705,26 @@ empty input `lany` is `false` and `lall` is `true`, the identities of `lor` and
 | Function | Arguments | Description | Domains |
 |---|---|---|---|
 | [`in`](#in) | `x, S` | `true` if `x in S`, else `false` | value matching element type of `S`, set |
-| [`filter`](#filter) | `pred, data`, optional `p` | keep only elements/rows for which `pred` returns `true` | function, array or table, object |
+| [`filter`](#filter) | `pred, data, ...` | keep only elements/rows for which `pred` returns `true` | function, array or table, ... |
 | [`selectbins`](#selectbins) | `edges, region, counts` | select whole-bin counts whose intervals intersect `region` | vector, set, vector |
 
 <a id="in"></a>**`x in S`** — returns `true` if `x` lies in set `S`, else `false`. The type of `x` must match the element type of set `S`.
 
-<a id="filter"></a>**`filter(pred, data)`** — filters an array or table by a boolean predicate, returning
-a shorter array or table containing only elements/rows for which `pred` returns `true`.
-The form `filter(pred, data, p)` uses the
-[explicit callback parameter rule](04-design.md#sec:callback-parameters).
+<a id="filter"></a>**`filter(pred, data, ...)`** — filters an array or table by a boolean predicate,
+retaining elements or rows for which `pred` returns `true`, in their original order.
+For element or row `i`, it calls `pred(data[i], ...)` with the corresponding
+elements or rows from additional inputs. These bind positionally or by name under the
+[additional argument rule](04-design.md#sec:callback-parameters), before traversal.
+Array and table inputs have length one or the number of elements or rows in
+`data`, scalars are held constant, and records and tuples are a static error, as for
+[`scan`](04-design.md#sec:scan-inputs). `data` itself is
+not expanded, and empty data produces an empty result.
 
   ```flatppl
   data_in_range = filter(fn(_ in interval(2.0, 8.0)), data)
+
+  within(x, low, high) = low <= x <= high
+  kept = filter(within, [1, 4, 9], low = [0, 5, 8], high = [10]) # [1, 9]
   ```
 
 <a id="selectbins"></a>**`selectbins(edges, region, counts)`** — selects whole-bin counts for bins whose
