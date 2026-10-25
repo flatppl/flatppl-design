@@ -139,7 +139,7 @@ inference-agnostic design.
 FlatPPL has five kinds of first-class objects.
 
 **Abstract values** denote real numbers, integers, booleans, complex numbers,
-fixed-size arrays, and records. They may be deterministic (literal constants,
+fixed-size arrays, records, and tables. They may be deterministic (literal constants,
 results of ordinary functions, data, external inputs) or stochastic (variates introduced by
 `draw(...)`). In generative mode, each abstract value evaluates to a single concrete value;
 for stochastic abstract values, that concrete value is generated randomly once.
@@ -191,7 +191,7 @@ highlights, not exhaustive — see the linked sections for complete listings.
 | [Likelihoods and posteriors](06-measure-algebra.md#likelihoods-and-posteriors) | `likelihoodof`, `joint_likelihood`, `densityof`, `logdensityof`, `bayesupdate` |
 | [Structural disintegration](06-measure-algebra.md#structural-disintegration) | `disintegrate`, `restrict` |
 | [Broadcasting](04-design.md#sec:broadcasting) | `broadcast`, `broadcasted` |
-| [Reductions and aggregation](04-design.md#sec:aggregate) | `reduce`, `scan`, `aggregate`, `metricsum` |
+| [Folds, scans, and aggregation](04-design.md#reductions) | `reduce`, `scan`, `aggregate`, `metricsum` |
 | [Data access and reshaping](07-functions.md#sec:functions) | `get`, `get0`, `cat`, `record`, `tuple`, `all`, `filter`, `selectbins`, `reverse`, `sort`, `valuemap` |
 | [Array and table generation](07-functions.md#sec:functions) | `array`, `table`, `rowstack`, `colstack`, `partition`, `linspace`, `extlinspace`, `fill`, `zeros`, `ones`, `eye`, `onehot`, `load_data` |
 | [Binning](07-functions.md#sec:functions) | `bincounts` |
@@ -440,7 +440,9 @@ starting_values = record(mu_sig = 1.0, raw_syst = fixed(0.0), n_bkg = 50.0)
 
 #### Analysis: likelihoods and posteriors
 
-Likelihood construction, combination, and posterior construction:
+Likelihood construction, combination, and posterior construction. Here `L`
+marginalizes `raw_syst`, while `L_sub` conditions on it and restricts the
+intensity and data to `R`:
 
 ```flatppl
 L = likelihoodof(kernelof(events), observed_data)

@@ -3,6 +3,9 @@
 This section provides reference documentation for all deterministic functions and
 value-level operations in FlatPPL. For measure-level operations, see [measure algebra and analysis](06-measure-algebra.md#sec:measure-algebra). For distribution constructors, see [built-in distributions](08-distributions.md#sec:distributions).
 
+**NaN inputs.** A NaN propagates through the order operations `max`, `min`, `maximum`,
+`minimum`, `cummax`, `cummin`, `linfnorm`, `median`, and `quantile`.
+
 ### Identities
 
 | Function | Arguments | Description | Domains |
@@ -10,7 +13,6 @@ value-level operations in FlatPPL. For measure-level operations, see [measure al
 | [`identity`](#identity) | `x` | returns `x` unchanged | any |
 
 <a id="identity"></a>**`identity(x)`** — the identity function: returns its argument unchanged.
-Equivalent to `fn(_)`.
 
 ### Array and table generation
 
@@ -478,7 +480,7 @@ be passed as arguments to higher-order functions like `broadcast`, `reduce` and 
 |---|---|---|---|
 | `add` | `a`, `b` | `a + b` | scalars or arrays of same shape (real or complex) |
 | `sub` | `a`, `b` | `a - b` | scalars or arrays of same shape (real or complex) |
-| `mul` | `a`, `b` | `a * b` | scalars, matrix-matrix, matrix-vector, scalar-matrix, scalar-vector, transposed-vector–vector, vector–transposed-vector, transposed-vector–matrix |
+| `mul` | `a`, `b` | `a * b` | scalars, matrix-matrix, matrix-vector, scalar-matrix, matrix-scalar, scalar-vector, vector-scalar, transposed-vector–vector, vector–transposed-vector, transposed-vector–matrix |
 | `divide` | `a`, `b` | `a / b` | scalars, array-scalar, transposed-vector–scalar (real or complex) |
 | `neg` | `x` | `-x` | scalars or arrays (real or complex) |
 | `pow` | `base`, `exponent` | `base ^ exponent` | scalars (real or complex; complex extension via principal branch, see above) |
@@ -638,9 +640,6 @@ $-\infty$, `minimum` is $+\infty$, and `lengthof` is $0$: the identity of each
 reduction. `mean`, `var`, `std`, `median`, and `quantile` have no such identity, and
 engines raise a runtime error on an empty input.
 
-**NaN inputs.** A NaN propagates through the order operations `max`, `min`, `maximum`,
-`minimum`, `cummax`, `cummin`, `linfnorm`, `median`, and `quantile`.
-
 For multi-axis array contraction using these reductions, see
 [multi-axis aggregation](04-design.md#sec:aggregate).
 
@@ -712,7 +711,7 @@ empty input `lany` is `false` and `lall` is `true`, the identities of `lor` and
 
 | Function | Arguments | Description | Domains |
 |---|---|---|---|
-| [`in`](#in) | `x, S` | `true` if `x ∈ S`, else `false` (operator syntax `x in S`) | scalar matching element type of `S`, set |
+| [`in`](#in) | `x, S` | `true` if `x in S`, else `false` | value matching element type of `S`, set |
 | [`filter`](#filter) | `pred, data`, optional `p` | keep only elements/rows for which `pred` returns `true` | function, array or table, object |
 | [`selectbins`](#selectbins) | `edges, region, counts` | select whole-bin counts whose intervals intersect `region` | vector, set, vector |
 
@@ -798,7 +797,7 @@ Data points outside all bins are ignored.
 | Function | Arguments | Description | Domains |
 |---|---|---|---|
 | [`polynomial`](#polynomial) | `coefficients, x` | power-series polynomial $\sum_{i=0}^{n-1} c_{i+1} x^i$ | vector, real or complex |
-| [`bernstein`](#bernstein) | `coefficients, x` | Bernstein basis polynomial of degree $n - 1$ on $[0, 1]$ | vector, `unitinterval` |
+| [`bernstein`](#bernstein) | `coefficients, x` | Bernstein basis polynomial of degree `lengthof(coefficients) - 1` on $[0, 1]$ | vector, `unitinterval` |
 | [`stepwise`](#stepwise) | `edges, values, x` | piecewise-constant step function | vector, vector, real |
 
 <a id="polynomial"></a>**`polynomial(coefficients, x)`** — power-series polynomial evaluated at `x`:
@@ -853,7 +852,7 @@ more_random_data, rstate3 = rand(iid(Exponential(1), 5), rstate2)
 <a id="rnginit"></a>**`rnginit(rngseed)`** — initializes a fresh RNG state from a seed byte vector
 or a seed integer. Returns a value in the set `rngstates`.
 
-  `rngseed` must be a seed vector of bytes (integers in $\{0, \ldots, 255\}$).
+  A byte-vector seed must contain integers in $\{0, \ldots, 255\}$.
   Any non-empty vector is accepted; a seed length of 32 bytes provides sufficient entropy
   for virtually all modern RNG algorithms.
 

@@ -22,7 +22,7 @@
 ; %stochastic phase — the sole stochastic seed, draw, is absent, and randomness
 ; flows through %rngstate values and builtin_sample.
 (&profile
-  ; --- parameters & data (§04): the remaining phase seeds are %parameterized
+  ; --- parameters & data (§04): the remaining phase seeds are %parametric
   ;     (elementof) and %fixed (external / load_data) ---
   ((?| elementof external)
    (?| reals posreals nonnegreals integers nonnegintegers booleans unitinterval
@@ -42,7 +42,14 @@
 
   ; --- reification to a deterministic function (§04). kernelof reifies a
   ;     measure-valued kernel and is not admitted. ---
-  (functionof ?_ ?_*)
+  (functionof ?_ (?| %specinputs %autoinputs) (??+))
+  ; A local callee must resolve to a functionof binding admitted by this profile.
+  (%call
+    (%meta ((%function (%inputs ??+)) ?? ??)
+      (?| (%ref self ??)
+          (functionof ?_ (?| %specinputs %autoinputs) (??+))))
+    ?_*)
+  (%kwarg ?? ?_)
   (fchain ?_*)
 
   ; --- records, field & element access (§07): static indices ---

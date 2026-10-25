@@ -155,7 +155,7 @@ Composite literal values are expressed via constructor calls (`(complex …)`,
 ### Calls
 
 A **call** in FlatPIR is a built-in operation or a `(%call ...)` form invoking
-a user-defined callable. Literals, references (`%ref`), FlatPIR structural
+a callable value. Literals, references (`%ref`), FlatPIR structural
 wrappers (`%kwarg`, `%field`, `%assign`, `%meta`), and the input-origin tags and
 input lists of `functionof` / `kernelof` are not calls.
 
@@ -169,7 +169,7 @@ is self-typing and is normally left bare but may be wrapped in an annotation.
 For example:
 
 ```lisp
-(%meta ((%scalar real) %parameterized reals) (add (%ref self x) (%ref self y)))
+(%meta ((%scalar real) %parametric reals) (add (%ref self x) (%ref self y)))
 ```
 
 For each slot, three states are recognized:
@@ -177,12 +177,12 @@ For each slot, three states are recognized:
 - **`%deferred`** — this slot is not yet inferred. An annotation wrapper whose
   slots are all `%deferred` is equivalent to a bare expression (see below).
 - **Concrete value** — the inferred type, phase, or value set (e.g.
-  `(%scalar real)`, `%parameterized`, `posreals`).
+  `(%scalar real)`, `%parametric`, `posreals`).
 - **`(%failed "<reason>")`** — diagnostic marker indicating inference attempted
   to resolve the slot but could not. A module containing any `%failed` marker is
   ill-formed.
 
-Phase values are `%fixed`, `%parameterized`, or `%stochastic` (see
+Phase values are `%fixed`, `%parametric`, or `%stochastic` (see
 [Phases](04-design.md#phases)). Phase computation is cheaper than type inference
 (an ancestor walk over the binding graph) and the passes may run
 independently.
@@ -190,18 +190,18 @@ independently.
 The **value-set slot** records a sound statically inferred set containing the
 node's possible values, written in the [§03 value-set
 vocabulary](03-value-types.md#sec:valuetypes) (set constants, `interval`, `stdsimplex`,
-`ordered`, `zerosum`, `cartpow`); for a measure-valued node it is the measure's support. The set must be
+`ordered`, `zerosum`, `cartpow`, `cartprod`); for a measure-valued node it is the measure's support. The set must be
 a subset of the type's natural extent (e.g. `reals` for `(%scalar real)`),
 defaulting to that extent when nothing tighter is known. It is ideally tight, but
 the vocabulary is not intersection-closed, so there may be no unique tightest
-set — any sound superset is valid. Non-value nodes — callables, likelihoods, and
+set — any sound superset is valid. Non-value nodes — callables, likelihoods, tuples, and
 module references — have no value set and carry `%unknown` (distinct from
 `%deferred`). A value-set expression's shape parameters (the `n` in
 `stdsimplex(n)` or `cartpow(S, n)`) must agree with the node's structural shape,
 using `%dynamic` for a load- or runtime-fixed dimension as `%array` does.
 Producers include distribution supports (the §08 Domain/Support column),
 `elementof`/`truncate` set arguments, and normalization functions
-(`softmax(v) ∈ stdsimplex(n)`); consumers include the
+(`softmax(v)` lies in `stdsimplex(n)`); consumers include the
 [total-mass rules](#total-mass-classes) and domain-contract checks.
 
 A `%meta` wrapper never nests directly: its `<expr>` is not itself a `(%meta …)`.
@@ -298,7 +298,7 @@ pointwise for kernels.
 ### Expressions
 
 Expressions in FlatPIR come in structurally distinct shapes for built-in
-operations, references, and calls to user-defined callables. Rewriting rules can pattern-match
+operations, references, and calls through callable values. Rewriting rules can pattern-match
 on expression category without name-based dispatch.
 
 **Built-in operations** are bare-headed forms with the operation name as the head symbol:
@@ -354,27 +354,25 @@ for upper (contravariant) and `(%laxis <name>)` for lower (covariant)
 indices: surface `.mu^` maps to `(%uaxis mu)` and `.mu_` to
 `(%laxis mu)`.
 
-**Calls to user-defined callables** use `(%call <callable> <args>...)`, where
-`<callable>` is an expression that must evaluate to a user-defined callable —
-a `(%ref ...)` in the common case, or an inline callable expression such as a
-reification:
+**Calls through callable values** use `(%call <callable> <args>...)`, where
+`<callable>` is any expression that evaluates to a callable, such as a `(%ref ...)`,
+a reification, or a built-in operation that returns a callable:
 
 ```lisp
 (%call (%ref self helper_fn) x y)
 (%call (%ref helpers obs_kernel) row)
 (%call (functionof (%ref self e) %specinputs ((p (%ref self a)))) 2.5)
+(%call (broadcasted add) (%ref self xs) (%ref self ys))
 ```
 
 User bindings always use `(%ref ...)` while built-ins use bare symbols. The surface
 form `base.foo` (explicit built-in reference; see
 [name resolution](04-design.md#sec:binding-names)) also lowers to the bare form
 in FlatPIR, not to `(%ref base ...)`.
-A rewriter pattern on `(%call ?head ?args...)` fires only on a user-defined callable
-while a pattern on `(add ?x ?y)` fires only on the built-in.
+A rewriter pattern on `(%call ?head ?args...)` matches calls through callable values,
+while a pattern on `(add ?x ?y)` matches a direct call to the built-in.
 
-**Positional and keyword call forms.** Built-in operations and user-defined calls may use
-positional arguments or `%kwarg` entries, matching the surface FlatPPL form. Both are
-valid FlatPIR with identical semantics for a given callable. `%kwarg` entries are
+**Keyword argument order.** `%kwarg` entries are
 unordered: `(Normal (%kwarg sigma 1.0) (%kwarg mu 0.0))` is the same call
 as `(Normal (%kwarg mu 0.0) (%kwarg sigma 1.0))`.
 
@@ -469,8 +467,10 @@ For example:
 **<a id="flatpir-normalization"></a>Normalization.** Bare FlatPIR preserves the surface calling convention for round-trip
 fidelity. Optional normalization passes can convert keyword arguments to positional
 where the argument order is known (built-ins, explicitly-ordered user callables) and
-sort remaining keyword arguments into canonical order. Normalized FlatPIR is easier for
-term-rewriting systems to pattern-match and deduplicate.
+sort remaining keyword arguments into canonical order. Auto-splatting is resolved before
+normalization: a splatted record or table becomes keyword arguments and a splatted tuple
+positional arguments, each a projection of the original argument. Normalized FlatPIR is
+easier for term-rewriting systems to pattern-match and deduplicate.
 
 ### Cross-module type inference
 
@@ -583,17 +583,17 @@ shape.
   (%public center spread obs_kernel shifted_value)
 
   (%bind center
-    (%meta ((%scalar real) %parameterized reals) (elementof reals)))
+    (%meta ((%scalar real) %parametric reals) (elementof reals)))
 
   (%bind spread
-    (%meta ((%scalar real) %parameterized posreals) (elementof posreals)))
+    (%meta ((%scalar real) %parametric posreals) (elementof posreals)))
 
   (%bind obs_kernel
     (%meta ((%kernel (%inputs center spread x) (%mass %normalized)) %fixed %unknown)
       (functionof
-        (%meta ((%measure (%domain (%scalar real)) (%mass %normalized)) %parameterized reals)
+        (%meta ((%measure (%domain (%scalar real)) (%mass %normalized)) %parametric reals)
           (Normal
-            (%kwarg mu (%meta ((%scalar real) %parameterized reals)
+            (%kwarg mu (%meta ((%scalar real) %parametric reals)
                          (add (%ref self center) (%ref %local _x_))))
             (%kwarg sigma (%ref self spread))))
         %specinputs
@@ -602,7 +602,7 @@ shape.
          (x (%ref %local _x_))))))
 
   (%bind shifted_value
-    (%meta ((%scalar real) %parameterized reals) (add (%ref self center) 1.0))))
+    (%meta ((%scalar real) %parametric reals) (add (%ref self center) 1.0))))
 ```
 
 `model.flatpir` after type inference:
@@ -616,7 +616,7 @@ shape.
            (load_module "helpers.flatppl" (%assign center (%ref self a)))))
 
   (%bind a
-    (%meta ((%scalar real) %parameterized reals) (elementof reals)))
+    (%meta ((%scalar real) %parametric reals) (elementof reals)))
 
   (%bind b
     (%meta ((%scalar real) %stochastic reals)
@@ -638,9 +638,9 @@ shape.
 ```
 
 Inside `obs_kernel`'s `functionof` body, phase analysis treats the boundary
-nodes (`center`, `spread`) and the placeholder (`_x_`) as `%parameterized`
+nodes (`center`, `spread`) and the placeholder (`_x_`) as `%parametric`
 inputs, so inner
-calls depending on them are themselves `%parameterized`; the function value
+calls depending on them are themselves `%parametric`; the function value
 itself is `%fixed` (the function definition does not change). The `%meta` wrapper
 is optional on inner expressions: a tool may wrap every expression
 (as shown for `obs_kernel`) or only each binding's RHS

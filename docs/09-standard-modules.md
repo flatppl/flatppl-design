@@ -3,7 +3,7 @@
 FlatPPL supports standard modules (see
 [Standard modules](04-design.md#sec:std-modules)) that supplement the functionality
 built into the FlatPPL `base` module. The following standard modules are
-currently defined:
+defined below.
 
 Standard-module members follow the general
 [calling conventions](04-design.md#sec:calling-convention). The names and order of the
@@ -735,7 +735,7 @@ The `splines` standard module provides spline basis and penalty functions.
 Loaded via:
 
 ```flatppl
-sp = standard_module("splines", "0.1")
+spl = standard_module("splines", "0.1")
 ```
 
 #### Functions

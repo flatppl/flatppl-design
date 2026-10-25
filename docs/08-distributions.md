@@ -169,7 +169,7 @@ $$\lambda \, e^{-\lambda x} \quad \text{for } x \geq 0$$
 
 <a id="gamma"></a>**`Gamma(shape, rate)`** — The [gamma distribution](https://en.wikipedia.org/wiki/Gamma_distribution).
 
-Domain/Support: `reals`/`posreals`.
+Domain/Support: `reals`/`nonnegreals`.
 
 Parameters:
 
@@ -460,7 +460,7 @@ The dimension $n$ is the row/column count of `scale`; it must be a fixed-phase p
 
 Density w.r.t. Lebesgue on the space of $n \times n$ positive definite matrices:
 
-$$\frac{|\mathbf{X}|^{(\nu-n-1)/2} \exp\!\left(-\tfrac{1}{2}\operatorname{tr}(\mathbf{V}^{-1}\mathbf{X})\right)}{2^{\nu n/2} |\mathbf{V}|^{\nu/2} \Gamma_n(\nu/2)} \quad \text{for } \mathbf{X} \in \mathbf{S}_{+}^{n}$$
+$$\frac{|\mathbf{X}|^{(\nu-n-1)/2} \exp\!\left(-\tfrac{1}{2}\operatorname{tr}(\mathbf{V}^{-1}\mathbf{X})\right)}{2^{\nu n/2} |\mathbf{V}|^{\nu/2} \Gamma_n(\nu/2)} \quad \text{for } \mathbf{X} \in \mathbf{S}_{++}^{n}$$
 
 where $\mathbf{V}$ is the scale matrix and $\Gamma_n$ is the multivariate gamma function.
 
@@ -581,11 +581,9 @@ Parameters:
 For a closed intensity measure $\mu$ with reference measure $\rho$, let
 $\Lambda = \mathrm{totalmass}(\mu)$ and
 $\lambda(t) = \mathrm{densityof}(\mu, t)$.
-The reference measure on the stratum of arrays or tables with $k$ entries is
-$\rho^{\otimes k}/k!$, the reference measure on unordered $k$-point
-configurations, which counts each configuration once. The count strata have
-counting weight one; the empty stratum has unit reference mass. The density,
-including the probability of the count, is
+The array or table stands in for the set of points, with multiplicities, so the
+density includes no permutation factor such as $k!$. Including the probability
+of the count, it is
 
 $$e^{-\Lambda}\prod_{i=1}^{k}\lambda(t_i).$$
 

@@ -111,7 +111,6 @@ measures, and are not part of the measure algebra. Specifically:
 - `elementof(...)` and `external(...)` may not produce tuples.
 - Measures, kernels, and likelihoods never use tuples as their domain.
 - `==`/`equal` does not compare tuples.
-- Tuples do not [auto-splat](04-design.md#sec:calling-convention) like records and tables do.
 
 **Tuples otherwise flow like other objects.** They may be bound to names, passed
 to callables that accept them, returned from user-defined functions, and decomposed
@@ -199,7 +198,7 @@ to such records via `record(t)`.
 **Indexing.** Tables support both column and row access:
 
 - Column access by field name: `t.colname`, equivalent to `get(t, "colname")`, returns the column
-  with that name as a vector.
+  with that name as a vector or table.
 - Row access by integer index: `t[i]`, equivalent to `get(t, i)`, returns the `i`-th row as a record (`i` starts at 1).
 
 `lengthof(t)` returns the number of table rows.
@@ -222,7 +221,7 @@ returns a record.
 FlatPPL has a limited notion of sets, used to specify input domains, supports, truncation
 regions, and analysis regions. The predefined sets are:
 
-- `reals`<a id="reals"></a> — $\mathbb{R}$, the real numbers ($\pm\infty$ admitted).
+- `reals`<a id="reals"></a> — $\overline{\mathbb{R}}$, the extended real numbers ($\pm\infty$ admitted).
 - `posreals`<a id="posreals"></a> — $(0, +\infty]$, the positive reals including $+\infty$.
 - `nonnegreals`<a id="nonnegreals"></a> — $[0, +\infty]$, the non-negative reals including $+\infty$.
 - `unitinterval`<a id="unitinterval"></a> — $[0, 1]$, the unit interval.

@@ -20,8 +20,9 @@ marginalization, and kernel composition operations are well-defined throughout.
 Reference measures, against which densities are taken, are $\sigma$-finite, so the
 Radon-Nikodym theorem applies whenever a measure is absolutely continuous with respect
 to its reference measure (so densities exist). $\sigma$-finiteness is not a blanket
-property of FlatPPL measures: operations that need it, such as
-[`disintegrate`](#disintegrate) and [`restrict`](#restrict), require it of their input.
+property of FlatPPL measures. [`disintegrate`](#disintegrate), also used to define
+[`restrict`](#restrict), requires a $\sigma$-finite marginal
+on the conditioning coordinates (see [structural disintegration](#structural-disintegration)).
 In the rest of this document, "measure" means "s-finite measure."
 
 A **transition kernel** (or **kernel**) from $X$ to $Y$ is a measurable function
@@ -125,7 +126,7 @@ require non-nullary kernels in all but the first argument
 closed measures (i.e. nullary kernels) as inputs. `densityof(M, x)` and
 `logdensityof(M, x)` evaluate the density of a measure at a point with respect to an implicit reference measure.
 
-To evaluate a density at many points (e.g. a grid for numerical integration or plotting), [broadcast](04-design.md#sec:broadcasting) the operation rather than calling it per point: `broadcast(logdensityof, M, grid)` (equivalently `logdensityof.(M, grid)`) returns one log-density per grid element. The point argument stays scalar.
+To evaluate a density at many points (e.g. a grid for numerical integration or plotting), [broadcast](04-design.md#sec:broadcasting) the operation rather than calling it per point: `broadcast(logdensityof, M, grid)` (equivalently `logdensityof.(M, grid)`) returns one log-density per grid element.
 
 #### Density reweighting
 
@@ -279,11 +280,12 @@ To evaluate a density at many points (e.g. a grid for numerical integration or p
   rj = joint(name1 = M1, name2 = M2)
   ```
 
-  is equivalent to `joint(relabel(M1, ["name1"]), relabel(M2, ["name2"]))`.
-
-  In this keyword form, a record-valued component becomes a nested record under its
-  name — the name adds a level, it does not merge the inner fields (unlike the
-  positional `cat` form above).
+  is equivalent to
+  `joint(pushfwd(fn(record(name1 = _)), M1), pushfwd(fn(record(name2 = _)), M2))`.
+  Each name therefore holds its component's variate whole, whether scalar, array or
+  record, so `joint(obs = iid(Normal(0, 1), 3))` is a measure over records
+  `record(obs = v)` with a vector `v`, and a record-valued component becomes a nested
+  record under its name.
 
   For kernels, `joint(K1, K2, ...)` results in a kernel that fans a single
   input out to all component kernels, so each of them receives the same input.
@@ -363,7 +365,11 @@ To evaluate a density at many points (e.g. a grid for numerical integration or p
 
   **Keyword form.** `jointchain(name1 = M, name2 = K1, ...)` names the component variates,
   producing a measure over a space of records. It is equivalent to
-  `jointchain(relabel(M, ["name1"]), relabel(K1, ["name2"]), ...)`.
+  `jointchain(pushfwd(fn(record(name1 = _)), M), pushfwd(fn(record(name2 = _)), K1), ...)`,
+  so each name holds its component's variate whole, as in the keyword form of
+  [`joint`](#joint), and each later kernel receives the record of the preceding named
+  variates by the ordinary calling convention: `jointchain(a = M, b = K)` calls
+  `K(record(a = a))`.
 
   Mathematically, we define the joint chain of a measure $\mu(A)$ and a transition kernel $\kappa$ as
 
@@ -406,7 +412,7 @@ To evaluate a density at many points (e.g. a grid for numerical integration or p
 - **`markovchain(kernel, init, n)`**<a id="markovchain"></a> — measure over length-`n` trajectories
   of a time-homogeneous Markov chain.
   
-  `kernel` is a Markov kernel `(state) -> measure_over_state`; `init` is a
+  `kernel` is a Markov kernel over the state space, called as `kernel(state)`; `init` is a
   value in the state space; `n` is a positive integer. Step $i$ is
   $\text{traj}_i \sim \kappa(\text{traj}_{i-1})$ with
   $\text{traj}_0 = \text{init}$. The initial value is not part of the
@@ -431,7 +437,7 @@ To evaluate a density at many points (e.g. a grid for numerical integration or p
   with exogenous inputs threaded through each step, also a stochastic
   version of [`scan`](04-design.md#reductions).
   
-  `kernel` is a Markov kernel `(state, x) -> measure_over_state`; step $i$ is
+  `kernel` is a Markov kernel over the state space, called as `kernel(state, x)`; step $i$ is
   $\text{traj}_i \sim \kappa(\text{traj}_{i-1}, \text{xs}_i)$ with
   $\text{traj}_0 = \text{init}$. Trajectories have length `lengthof(xs)`. As
   with `markovchain`, `init` is a value in the state space and not part of the trajectory.
@@ -573,7 +579,7 @@ forward `logvolume` is zero on the source support: point masses are preserved.
 
 Engines must support density evaluation in the following three cases:
 
-1. **Known-bijection registry.** Every conforming engine must recognize a fixed set of built-in bijections by name — `exp`/`log`, `log10`, `log1p`/`expm1`, `logit`/`invlogit`, `probit`/`invprobit`, `atan`, `sinh`/`asinh`, `tanh`, affine maps composed from `add`/`sub`/`neg`/`mul`/`divide` (with positive scaling), `pow` with finite nonzero literal exponent (of which `sqrt` = `pow(_, 1/2)` is a case), and matrix-vector affine maps such as `mu + lower_cholesky(cov) * _` — together with every explicitly `bijection`-annotated user function. For these, density evaluation is analytic using the recorded inverse and forward log-volume. A domain-restricted forward — `log`/`log10` on `posreals`, `sqrt` (and `pow`) on `nonnegreals`, `log1p` on `interval(-1, inf)`, `logit`/`probit` on `interval(0, 1)` — additionally requires the base measure's support to lie within that domain; where it does not, density evaluation is refused rather than yielding a silently sub-probability measure. The registry also contains every [`valuemap`](07-functions.md#valuemap), and it is closed under `fchain` composition and under `inverseof`. The same registry defines the statically known inverses available to [`inverseof`](04-design.md#inverseof), so `pushfwd` density evaluation and `inverseof` share one notion of a known inverse.
+1. **Known-bijection registry.** Every conforming engine must recognize a fixed set of built-in bijections by name — `exp`/`log`, `log10`, `log1p`/`expm1`, `logit`/`invlogit`, `probit`/`invprobit`, `atan`, `sinh`/`asinh`, `tanh`, affine maps composed from `add`/`sub`/`neg`/`mul`/`divide` (with nonzero scaling), `pow` with finite nonzero literal exponent (of which `sqrt` = `pow(_, 1/2)` is a case), and matrix-vector affine maps such as `mu + lower_cholesky(cov) * _` — together with every explicitly `bijection`-annotated user function. For these, density evaluation is analytic using the recorded inverse and forward log-volume. A domain-restricted forward — `log`/`log10` on `posreals`, `sqrt` (and `pow`) on `nonnegreals`, `log1p` on `interval(-1, inf)`, `logit`/`probit` on `interval(0, 1)` — additionally requires the base measure's support to lie within that domain; where it does not, density evaluation is refused rather than yielding a silently sub-probability measure. The registry also contains every [`valuemap`](07-functions.md#valuemap), and it is closed under `fchain` composition and under `inverseof`. The same registry defines the statically known inverses available to [`inverseof`](04-design.md#inverseof), so `pushfwd` density evaluation and `inverseof` share one notion of a known inverse.
 
    `cis` and zero-exponent powers are outside this registry: `cis` is periodic on
    `reals`, and a zero-exponent power is constant wherever it is defined.
@@ -620,6 +626,9 @@ The density of a composed measure is determined by the measure-algebra definitio
 kernel's input parameters. The result is a semantic object, not a plain function — this
 prevents accidental confusion between density and log-density values. Likelihood values
 are extracted explicitly via `densityof(L, theta)` and `logdensityof(L, theta)`.
+The parameter point `theta` is a record with one field per input of `K`, bound to those
+inputs by name for any number of inputs, so a kernel with the single input `mu` is
+evaluated at `record(mu = 1.0)`, not at `1.0`.
 
 Mathematically, `densityof(likelihoodof(K, obs), theta)` corresponds to
 $\mathrm{pdf}(\kappa(\theta), x)$, where $\kappa$ is the kernel and $x$ the observed data.

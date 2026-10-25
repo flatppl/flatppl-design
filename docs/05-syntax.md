@@ -214,15 +214,15 @@ value usable wherever a [`functionof`](04-design.md#sec:functionof) result is.
 
 ```flatppl
 f(x, y) = x^2 * y^2                          # equivalent to f = (x, y) -> x^2 * y^2
-g(x, y, z) = record(p = x + y, q = y * z)    # record/array/tuple body → multi-output
+g(x, y, z) = record(p = x + y, q = y * z)    # one record-valued result
 h(x, y) = [x / y, x * log(y)]
 ```
 
 The construct is purely a surface rewrite: it adds no
 [FlatPIR](11-flatpir.md#intermediate-representation) node and inherits every
 function property — scoping, duplicate-argument rules, phase, doc-comment
-attachment — from the lambda desugaring. There is no tilde form, since a measure
-is not a function (`f(arg1, ...) ~ expr` is not legal).
+attachment — from the lambda desugaring. There is no tilde form: `~` binds a
+variate, not a callable (`f(arg1, ...) ~ expr` is not legal).
 
 ### <a id="axis-names"></a>Axis names and aggregation
 
@@ -347,8 +347,7 @@ ContinuationOp  ::= AddOp | MulOp | CompOp | "^" | ".^"
                     (* Every infix binary operator, the lambda arrow, and the
                        binding operators. Only a TRAILING occurrence continues a
                        line (see "Statement separation"); a line beginning with
-                       an operator starts a new statement, and is a parse error
-                       unless that operator is unary. *)
+                       an operator starts a new statement and is a parse error. *)
 
 (* Calls *)
 Call            ::= "(" CallArgs ","? ")"
@@ -435,13 +434,11 @@ accept this shape; other callables must use `PositionalArgs` or `KeywordArgs`
 only. Among these, `functionof`, `kernelof`, and `load_module` take exactly
 one leading positional argument; only `broadcast` accepts multiple positional arguments
 before the keyword arguments. `functionof` and `kernelof` also accept `PositionalArgs`
-of two or more entries, where every entry after the first is a bare `Name` designating
-a boundary node (see [reification boundaries](04-design.md#sec:functionof)).
+of two or more entries, where every entry after the first is a bare `Name` naming a
+module binding or a placeholder (see [reification boundaries](04-design.md#sec:functionof)).
 
 **Note on reserved words.** The keywords `in`, `true`, `false`, `all`,
-and `only` are recognized before `Name` and cannot be used as bindings.
-The numeric constants `im`, `pi`, and `inf` cannot be bound or used as lambda
-or function-definition argument names; they always retain their predefined meanings. The
+and `only` are recognized before `Name` and cannot be used as bindings. The
 top-level binding names `inputs` and `outputs` are reserved for the
 [determinization signature](13-determinization.md#sec:determinization-signature).
 
@@ -490,9 +487,8 @@ a parenthesised lambda is well-formed only if the parenthesised content
 was a list of two or more bare `Name`s. A bare `Name` immediately
 followed by `->` is a single-argument `Lambda`. At statement level, a `Name`
 followed by `(` begins a `FunctionDefinition` (no other statement form starts
-`Name "("`), disambiguated by checking that the closing `)` is followed by `=`.
-A `.Name` token is
-`FieldAccess` when it follows a `Postfix`-able expression, and `Axis`
+`Name "("`), validated by checking that the closing `)` is followed by `=`.
+A `.Name` token is `FieldAccess` when it follows a `Postfix`-able expression, and `Axis`
 otherwise (at the start of a `Primary`). Inside `[...]`, a `!` token
 followed immediately by `,` or `]` is the `only` axis keyword;
 otherwise it is the unary logical-not operator starting an Expression. In
