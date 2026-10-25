@@ -771,6 +771,11 @@ _tmp2 = elementof(anything)
 g = functionof(f(_tmp1, b, _tmp2), arg1 = _tmp1, arg2 = _tmp2)
 ```
 
+A `fn` body must not read a placeholder of an enclosing reification:
+`functionof(broadcast(fn(_ * _s_), _v_), s = _s_, v = _v_)` is a static error
+under the [placeholder scoping rule](#placeholders-and-holes), because
+`fn(...)` lowers to its own `functionof`.
+
 ### <a id="sec:broadcasting"></a>Broadcasting
 
 `broadcast(f_or_K, name = array, ...)` or
