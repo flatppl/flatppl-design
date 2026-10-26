@@ -153,7 +153,8 @@ of which may or may not be significant. The total number of inputs is never zero
 - `load_module`: One distinguished input plus optional variadic named inputs with
   no significant order.
 - `standard_module`: Two distinguished inputs.
-- `weighted`, `logweighted`: Two distinguished inputs, plus variadic inputs.
+- `weighted`, `logweighted`, `pushfwd`, `filter`, `reduce`: Two distinguished inputs,
+  plus variadic inputs.
 - `scan`, `kscan`: Two distinguished inputs, plus one or more variadic inputs.
 - `aggregate`, `metricsum`: Three distinguished inputs.
 - `markovchain`: Three distinguished inputs, plus variadic inputs.
