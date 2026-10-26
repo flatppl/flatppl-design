@@ -169,14 +169,11 @@ only. A call binds the input by position, never by keyword argument.
 
 #### <a id="sec:callback-parameters"></a>Additional arguments
 
-Some operations supply the leading arguments of a function or kernel.
+Some special operations supply the leading arguments of a function or kernel.
 Additional arguments bind the function's or kernel's remaining inputs under the
 ordinary calling convention, positionally or by name. An operation passes these
 arguments whole unless its definition specifies elementwise traversal.
 
-A sole additional record or table passes whole if the remaining inputs accept
-one positional argument. Otherwise, its fields or columns bind the remaining
-inputs by name. No input may be left unbound or bound twice.
 See [additional argument syntax](05-syntax.md#additional-arguments) for the call forms.
 
 ### <a id="sec:variate-measure"></a>Variates and measures
@@ -665,8 +662,8 @@ inputs of `f2`. Otherwise, `f2` receives the record whole.
 
 The composed function passes [additional arguments](#sec:callback-parameters)
 unchanged to every step: `fchain(f1, f2, f3)(x, ...)` equals
-`f3(f2(f1(x, ...), ...), ...)`. Each step then receives the previous result whole
-as its first argument.
+`f3(f2(f1(x, ...), ...), ...)`. With additional arguments, each step receives `x`
+or the previous result whole as its first argument.
 `fchain` is the deterministic analogue of
 [`kchain`](06-measure-algebra.md#dependent-composition).
 

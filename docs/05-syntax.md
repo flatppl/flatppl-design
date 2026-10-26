@@ -200,7 +200,6 @@ For `step(state, drift, scale) = Normal(state + drift, scale)`, these forms are 
 ```flatppl
 A = markovchain(step, 0, 100, drift, scale)
 B = markovchain(step, 0, 100, drift = drift, scale = scale)
-C = markovchain(step, 0, 100, (drift = drift, scale = scale))
 ```
 
 Sequence inputs can likewise be named:
