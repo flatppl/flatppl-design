@@ -716,7 +716,7 @@ For element or row `i`, it calls `pred(data[i], ...)` with the corresponding
 elements or rows from additional inputs. These bind positionally or by name under the
 [additional argument rule](04-design.md#sec:callback-parameters), before traversal.
 Array and table inputs have length one or the number of elements or rows in
-`data`, scalars are held constant, and records and tuples are a static error, as for
+`data`, and scalars, records and tuples are held constant, as for
 [`scan`](04-design.md#sec:scan-inputs). `data` itself is
 not expanded, and empty data produces an empty result.
 

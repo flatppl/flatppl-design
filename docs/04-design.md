@@ -111,7 +111,9 @@ canonical syntax):
   tuple is decomposed into positional arguments. Tuples with fewer elements than the
   callable's required inputs, or more than its inputs, are a static error.
 
-  Auto-splatting is shallow.
+  Auto-splatting is shallow. It applies only to a call with a single argument in total,
+  so a call with [additional arguments](#sec:callback-parameters) passes its leading
+  record, table or tuple whole.
 
   So a function `f(a, b, c)` can be called as `f(record(a = x, b = y, c = z))` or
   `f(table(a = x, b = y, c = z))`, equivalent to `f(a = x, b = y, c = z)`, or as
@@ -948,10 +950,10 @@ function or kernel and `init` bind the remaining inputs, positionally or by name
 The running accumulator or state supplies the first input. As in
 [broadcasting](#sec:broadcasting), one-dimensional arrays and tables are
 traversed together by element or row, and scalars and other non-collection
-arguments are held constant at every step. At least one argument must be an
-array or table. Record, tuple and higher-dimensional array arguments are a
-static error. Lengths must agree, except that length-one inputs repeat to match
-the others. An empty input combined with length-one inputs yields zero steps.
+arguments are held constant at every step. Records and tuples are also held
+constant. At least one argument must be an array or table. Higher-dimensional
+array arguments are a static error. Lengths must agree, except that length-one
+inputs repeat to match the others. An empty input combined with length-one inputs yields zero steps.
 Other unequal lengths are an error. A singleton `[A]` supplies the same array
 `A` at every step.
 
