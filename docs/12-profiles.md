@@ -139,6 +139,13 @@ are the uncaptured variadic runs). Rewriting then adds four forms:
   (no shared stochastic ancestor), decided from inferred phase and ancestry, not by
   pattern match.
 
+### <a id="sec:flatpdl"></a>FlatPDL
+
+FlatPDL is the deterministic profile for measure elimination, defined in
+[`flatpdl.flatprof`](https://github.com/flatppl/flatppl-design/blob/main/profiles/flatpdl.flatprof);
+the output of [determinization](13-determinization.md#sec:determinization) is meant
+to conform to it.
+
 ### Target system profiles
 
 Other stochastic systems will typically not support the whole semantics and

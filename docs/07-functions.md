@@ -3,6 +3,9 @@
 This section provides reference documentation for all deterministic functions and
 value-level operations in FlatPPL. For measure-level operations, see [measure algebra and analysis](06-measure-algebra.md#sec:measure-algebra). For distribution constructors, see [built-in distributions](08-distributions.md#sec:distributions).
 
+**NaN inputs.** A NaN propagates through the order operations `max`, `min`, `maximum`,
+`minimum`, `cummax`, `cummin`, `linfnorm`, `median`, and `quantile`.
+
 ### Identities
 
 | Function | Arguments | Description | Domains |
@@ -470,7 +473,7 @@ be passed as arguments to higher-order functions like `broadcast`, `reduce` and 
 |---|---|---|---|
 | `add` | `a`, `b` | `a + b` | scalars or arrays of same shape (real or complex) |
 | `sub` | `a`, `b` | `a - b` | scalars or arrays of same shape (real or complex) |
-| `mul` | `a`, `b` | `a * b` | scalars, matrix-matrix, matrix-vector, scalar-matrix, scalar-vector, transposed-vector–vector, vector–transposed-vector, transposed-vector–matrix |
+| `mul` | `a`, `b` | `a * b` | scalars, matrix-matrix, matrix-vector, scalar-matrix, matrix-scalar, scalar-vector, vector-scalar, transposed-vector–vector, vector–transposed-vector, transposed-vector–matrix |
 | `divide` | `a`, `b` | `a / b` | scalars, array-scalar, transposed-vector–scalar (real or complex) |
 | `neg` | `x` | `-x` | scalars or arrays (real or complex) |
 | `pow` | `base`, `exponent` | `base ^ exponent` | scalars (real or complex; complex extension via principal branch, see above) |
@@ -629,9 +632,6 @@ operation.
 $-\infty$, `minimum` is $+\infty$, and `lengthof` is $0$: the identity of each
 reduction. `mean`, `var`, `std`, `median`, and `quantile` have no such identity, and
 engines raise a runtime error on an empty input.
-
-**NaN inputs.** A NaN propagates through the order operations `max`, `min`, `maximum`,
-`minimum`, `cummax`, `cummin`, `linfnorm`, `median`, and `quantile`.
 
 For multi-axis array contraction using these reductions, see
 [multi-axis aggregation](04-design.md#sec:aggregate).

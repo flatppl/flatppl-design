@@ -774,6 +774,11 @@ _tmp2 = elementof(anything)
 g = functionof(f(_tmp1, b, _tmp2), arg1 = _tmp1, arg2 = _tmp2)
 ```
 
+A `fn` body must not read a placeholder of an enclosing reification:
+`functionof(broadcast(fn(_ * _s_), _v_), s = _s_, v = _v_)` is a static error
+under the [placeholder scoping rule](#placeholders-and-holes), because
+`fn(...)` lowers to its own `functionof`.
+
 ### <a id="sec:broadcasting"></a>Broadcasting
 
 `broadcast(f_or_K, name = array, ...)` or
@@ -911,9 +916,10 @@ collects record results row-wise into a table, with the record's fields as colum
 multiple axes are a static error.
 
 **`broadcasted(f)`** returns a callable that is equivalent to applying `broadcast` to
-`f` — that is, `broadcasted(f)(args...)` is equivalent to `broadcast(f, args...)`.
+`f`: `broadcasted(f)(args...)` is equivalent to `broadcast(f, args...)`, its arguments
+being operands of `broadcast` rather than arguments of `f`.
 
-### Reductions
+### <a id="reductions"></a>Folds and scans
 
 **`reduce(f, xs)`** combines a non-empty vector or table using the binary
 associative deterministic function `f`. Each call `f(a, b)` combines two
@@ -1253,7 +1259,7 @@ The phase of this input determines what it can be bound to on the right-hand sid
 Value sets must be compatible in both cases, so the computational structure of the
 loaded module is not modified.
 
-**Stochastic boundary.** Only bindings of `fixed` or `parametric` phase in the
+<a id="stochastic-boundary"></a>**Stochastic boundary.** Only bindings of `fixed` or `parametric` phase in the
 loaded module are accessible from the loading module (`module.name`). Bindings of
 `stochastic` phase — direct draws or values with `draw` ancestors that have not
 been reified via `lawof`/`kernelof` — are invisible to the loading module. This
