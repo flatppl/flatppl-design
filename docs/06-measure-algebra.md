@@ -142,14 +142,14 @@ To evaluate a density at many points (e.g. a grid for numerical integration or p
   whose density w.r.t. Lebesgue on $S$ is proportional to $f$.
 
   The form `weighted(f, M, ...)` calls `f(x, ...)` on the whole variate `x` under the
-  [additional argument rule](04-design.md#sec:callback-parameters),
+  [additional argument rule](04-design.md#sec:special-variadic-arguments),
   giving $\nu(A) = \int_A f(x, \ldots)\,dM(x)$ for non-negative $f(x, \ldots)$.
 
 - **`logweighted(logweight, base)`**<a id="logweighted"></a> — like `weighted`, but the weight
  or weighting function is given in
   log-space: $d\nu = \exp(g) \cdot dM$.
   The form `logweighted(f, M, ...)` calls `f(x, ...)` on the whole variate `x` under the
-  [additional argument rule](04-design.md#sec:callback-parameters),
+  [additional argument rule](04-design.md#sec:special-variadic-arguments),
   with $d\nu(x) = \exp(f(x, \ldots))\,dM(x)$.
 
 - **`bayesupdate(L, prior)`**<a id="bayesupdate"></a> — reweights a prior measure by a likelihood object,
@@ -410,7 +410,7 @@ To evaluate a density at many points (e.g. a grid for numerical integration or p
   variate supplies inputs by name only when auto-splatting applies.
 
   When the first argument is a kernel, applying the chain passes
-  [additional arguments](04-design.md#sec:callback-parameters) unchanged to every
+  [additional arguments](04-design.md#sec:special-variadic-arguments) unchanged to every
   component, as with `fchain`. In `kchain(K1, K2, K3)(x, ...)`, the components are
   called as `K1(x, ...)`, `K2(a, ...)` and `K3([a, b], ...)`. With additional
   arguments, each component receives its fed value whole as its first argument.
@@ -428,7 +428,7 @@ To evaluate a density at many points (e.g. a grid for numerical integration or p
   arrays.
 
   The form `markovchain(kernel, init, n, ...)` calls `kernel(state, ...)` at each step under the
-  [additional argument rule](04-design.md#sec:callback-parameters).
+  [additional argument rule](04-design.md#sec:special-variadic-arguments).
 
   Example — Brownian motion (100 steps of $\Delta t = 0.01$, starting at zero):
 
@@ -492,7 +492,7 @@ To evaluate a density at many points (e.g. a grid for numerical integration or p
   For kernels, `pushfwd` acts on their output measures.
 
   The form `pushfwd(f, M, ...)` calls `f(x, ...)` on the whole variate `x` under the
-  [additional argument rule](04-design.md#sec:callback-parameters).
+  [additional argument rule](04-design.md#sec:special-variadic-arguments).
   For an annotated [bijection](#bijection), its inverse and log-volume
   functions bind the same additional arguments under that rule.
 

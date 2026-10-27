@@ -714,7 +714,7 @@ empty input `lany` is `false` and `lall` is `true`, the identities of `lor` and
 retaining elements or rows for which `pred` returns `true`, in their original order.
 For element or row `i`, it calls `pred(data[i], ...)` with the corresponding
 elements or rows from additional inputs. These bind positionally or by name under the
-[additional argument rule](04-design.md#sec:callback-parameters), before traversal.
+[additional argument rule](04-design.md#sec:special-variadic-arguments), before traversal.
 Array and table inputs have length one or the number of elements or rows in
 `data`, and scalars, records and tuples are held constant, as for
 [`scan`](04-design.md#sec:scan-inputs). `data` itself is

@@ -177,7 +177,7 @@ Their semantics are defined in [language design](04-design.md#sec:design).
 
 ### <a id="additional-arguments"></a>Additional arguments
 
-The following forms accept [additional arguments](04-design.md#sec:callback-parameters).
+The following forms accept [additional arguments](04-design.md#sec:special-variadic-arguments).
 Here `...` denotes zero or more positional or keyword arguments.
 For `scan` and `kscan`, at least one array or table input is required.
 For `filter`, `scan`, and `kscan`, `...` on the right denotes the corresponding

@@ -168,12 +168,14 @@ Where this specification refers to a distinguished input by a name, as in
 `aggregate(f_reduction, output_axes, expr)`, the name identifies the input in prose
 only. A call binds the input by position, never by keyword argument.
 
-#### <a id="sec:callback-parameters"></a>Additional arguments
+#### <a id="sec:special-variadic-arguments"></a>Special variadic arguments
 
-Some special operations supply the leading arguments of a function or kernel.
-Additional arguments bind the function's or kernel's remaining inputs under the
-ordinary calling convention, positionally or by name. An operation passes these
-arguments whole unless its definition specifies elementwise traversal.
+Some special operations do call a given function or kernel with the
+leading argument(s) derived in a special way. Some of these special
+operations also accept additional variadic arguments that can be used
+to supply the function's or kernel's remaining inputs, either directly or
+by iterating over each. Details are specified for each such special
+operation.
 
 See [additional argument syntax](05-syntax.md#additional-arguments) for the call forms.
 
@@ -661,7 +663,7 @@ result; for measures it is equivalent to `pushfwd(fn(relabel(_, names)), M)`; fo
 If auto-splatting applies, a record returned by `f1` supplies the matching named
 inputs of `f2`. Otherwise, `f2` receives the record whole.
 
-The composed function passes [additional arguments](#sec:callback-parameters)
+The composed function passes [additional arguments](#sec:special-variadic-arguments)
 unchanged to every step: `fchain(f1, f2, f3)(x, ...)` equals
 `f3(f2(f1(x, ...), ...), ...)`. With additional arguments, each step receives `x`
 or the previous result whole as its first argument.
@@ -927,7 +929,7 @@ tree and evaluate independent branches in parallel, preserving element order.
 A singleton input returns its sole element or row.
 
 The form `reduce(f, xs, ...)` calls `f(a, b, ...)` under the
-[additional argument rule](#sec:callback-parameters). The additional arguments
+[additional argument rule](#sec:special-variadic-arguments). The additional arguments
 remain unchanged in every call. For each choice of these arguments, the binary
 operation on `a` and `b` must be associative.
 
@@ -943,7 +945,7 @@ For one sequence `xs`, `scan(f, init, xs)` calls `f(acc, xs[i])` at step `i`.
 Output entry `i` is `f(...f(f(init, x1), x2)..., xi)`.
 
 <a id="sec:scan-inputs"></a>For `scan` and `kscan`, input traversal
-follows [argument binding](#sec:callback-parameters). All arguments after the
+follows [argument binding](#sec:special-variadic-arguments). All arguments after the
 function or kernel and `init` bind the remaining inputs, positionally or by name.
 The running accumulator or state supplies the first input. As in
 [broadcasting](#sec:broadcasting), one-dimensional arrays and tables are
