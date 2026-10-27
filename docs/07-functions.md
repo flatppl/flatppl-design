@@ -402,8 +402,8 @@ These functions set-restrict or construct scalar values (see
 
 | Function | Arguments | Description | Domains |
 | --- | --- | --- | --- |
-| `boolean` | `x` | returns `x` when `x in booleans`, otherwise a static error | any scalar numeric |
-| `integer` | `x` | returns `x` when `x in integers`, otherwise a static error | any scalar numeric |
+| `boolean` | `x` | returns the boolean equal to `x` when `x` is 0 or 1, otherwise a static error | any scalar numeric |
+| `integer` | `x` | returns the integer equal to `x` when `x` has an integral value, otherwise a static error | any scalar numeric |
 | `real` | `x` | returns `x` for real `x`, $\mathrm{Re}(x)$ for complex `x` | any scalar numeric |
 | `complex` | `re`, `im` | $\mathrm{re} + i \cdot \mathrm{im}$ | `reals` |
 | `string` | `x` | identity on strings | `string` |
