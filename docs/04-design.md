@@ -945,9 +945,10 @@ is empty when there are no steps. `f` must be deterministic.
 For one sequence `xs`, `scan(f, init, xs)` calls `f(acc, xs[i])` at step `i`.
 Output entry `i` is `f(...f(f(init, x1), x2)..., xi)`.
 
-<a id="sec:scan-inputs"></a>For `scan` and `kscan`, input traversal
-follows [argument binding](#sec:special-variadic-arguments). All arguments after the
-function or kernel and `init` bind the remaining inputs, positionally or by name.
+<a id="sec:scan-inputs"></a>The forms `scan(f, init, arg1, arg2, ...)` and
+`kscan(kernel, init, arg1, arg2, ...)` accept
+[special variadic arguments](#sec:special-variadic-arguments). These arguments bind
+the remaining inputs of the function or kernel, positionally or by name.
 The running accumulator or state supplies the first input. As in
 [broadcasting](#sec:broadcasting), one-dimensional arrays and tables are
 traversed together by element or row, and scalars and other non-collection
