@@ -175,40 +175,6 @@ special operations with their own syntax rules — they are not ordinary functio
 Their semantics are defined in [language design](04-design.md#sec:design).
 `load_module(...)` is documented in [multi-file models](04-design.md#sec:modules).
 
-### <a id="additional-arguments"></a>Additional arguments
-
-The following forms accept [additional arguments](04-design.md#sec:special-variadic-arguments).
-Here `...` denotes zero or more positional or keyword arguments.
-For `scan` and `kscan`, at least one array or table input is required.
-For `filter`, `scan`, and `kscan`, `...` on the right denotes the corresponding
-elements or rows of array and table inputs, including repeated singleton inputs,
-and constant inputs unchanged.
-
-| Operation | Called as |
-|---|---|
-| `weighted(f, M, ...)`, `logweighted(f, M, ...)`, `pushfwd(f, M, ...)` | `f(x, ...)` for the whole variate `x` |
-| `filter(pred, data, ...)` | `pred(data[i], ...)` for each element or row `i` |
-| `reduce(f, xs, ...)` | `f(a, b, ...)` for two elements or partial results |
-| `scan(f, init, ...)` | `f(acc, ...)` |
-| `markovchain(kernel, init, n, ...)` | `kernel(state, ...)` |
-| `kscan(kernel, init, ...)` | `kernel(state, ...)` |
-| `fchain(f1, f2, ...)(x, ...)` | `f1(x, ...)`, then `f(y, ...)` for each later function `f` and previous result `y` |
-| `kchain(K1, K2, ...)(x, ...)`, `jointchain(K1, K2, ...)(x, ...)` | `K1(x, ...)`, then `K(y, ...)` for each later kernel `K` and fed value `y` |
-
-For `step(state, drift, scale) = Normal(state + drift, scale)`, these forms are equivalent:
-
-```flatppl
-A = markovchain(step, 0, 100, drift, scale)
-B = markovchain(step, 0, 100, drift = drift, scale = scale)
-```
-
-Sequence inputs can likewise be named:
-
-```flatppl
-values = scan(f, init, x = xs, y = ys, z = zs)
-trajectories = kscan(kernel, init, x = xs, y = ys, z = zs)
-```
-
 ### <a id="broadcasting-syntax"></a>Broadcasting syntax
 
 FlatPPL provides dot-prefixed shorthand for
@@ -464,7 +430,7 @@ rate = mu_sig * signal_yield +      # trailing operator continues the line
 **Note on `MixedArgs`.** Syntactically, any `Call` may use `MixedArgs` (one or more
 leading positional expressions followed by one or more keyword arguments). Semantically,
 only the special operations `functionof`, `kernelof`, `broadcast`, and `load_module`,
-and the forms with [additional arguments](#additional-arguments), accept this shape;
+and the forms with [special variadic arguments](04-design.md#sec:special-variadic-arguments), accept this shape;
 other callables must use `PositionalArgs` or `KeywordArgs` only. Among these,
 `functionof`, `kernelof`, and `load_module` take exactly one leading positional argument.
 `functionof` and `kernelof` also accept `PositionalArgs` of two or more entries, where every entry after the first is a bare `Name` naming a

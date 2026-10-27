@@ -177,7 +177,36 @@ to supply the function's or kernel's remaining inputs, either directly or
 by iterating over each. Details are specified for each such special
 operation.
 
-See [additional argument syntax](05-syntax.md#additional-arguments) for the call forms.
+In the following forms, `...` denotes zero or more positional or keyword arguments.
+For `scan` and `kscan`, at least one array or table input is required.
+For `filter`, `scan`, and `kscan`, `...` on the right denotes the corresponding
+elements or rows of array and table inputs, including repeated singleton inputs,
+and constant inputs unchanged.
+
+| Operation | Called as |
+|---|---|
+| `weighted(f, M, ...)`, `logweighted(f, M, ...)`, `pushfwd(f, M, ...)` | `f(x, ...)` for the whole variate `x` |
+| `filter(pred, data, ...)` | `pred(data[i], ...)` for each element or row `i` |
+| `reduce(f, xs, ...)` | `f(a, b, ...)` for two elements or partial results |
+| `scan(f, init, ...)` | `f(acc, ...)` |
+| `markovchain(kernel, init, n, ...)` | `kernel(state, ...)` |
+| `kscan(kernel, init, ...)` | `kernel(state, ...)` |
+| `fchain(f1, f2, ...)(x, ...)` | `f1(x, ...)`, then `f(y, ...)` for each later function `f` and previous result `y` |
+| `kchain(K1, K2, ...)(x, ...)`, `jointchain(K1, K2, ...)(x, ...)` | `K1(x, ...)`, then `K(y, ...)` for each later kernel `K` and fed value `y` |
+
+For `step(state, drift, scale) = Normal(state + drift, scale)`, these forms are equivalent:
+
+```flatppl
+A = markovchain(step, 0, 100, drift, scale)
+B = markovchain(step, 0, 100, drift = drift, scale = scale)
+```
+
+Sequence inputs can likewise be named:
+
+```flatppl
+values = scan(f, init, x = xs, y = ys, z = zs)
+trajectories = kscan(kernel, init, x = xs, y = ys, z = zs)
+```
 
 ### <a id="sec:variate-measure"></a>Variates and measures
 
