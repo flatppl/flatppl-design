@@ -924,9 +924,9 @@ being operands of `broadcast` rather than arguments of `f`.
 **`reduce(f, xs)`** combines a non-empty vector or table using the binary
 associative deterministic function `f`. Each call `f(a, b)` combines two
 elements or partial results and returns the same type. For tables, the
-operands are records. Implementations may regroup the applications as a binary
-tree and evaluate independent branches in parallel, preserving element order.
-A singleton input returns its sole element or row.
+operands are records. A singleton input returns its sole element or row. The order of
+reduction is arbitrary and implementation may choose any reduction strategy and
+parallelism.
 
 The form `reduce(f, xs, ...)` calls `f(a, b, ...)` under the
 [additional argument rule](#sec:special-variadic-arguments). The additional arguments
