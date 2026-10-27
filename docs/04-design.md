@@ -928,10 +928,11 @@ operands are records. A singleton input returns its sole element or row. The ord
 reduction is arbitrary and implementation may choose any reduction strategy and
 parallelism.
 
-The form `reduce(f, xs, ...)` calls `f(a, b, ...)` under the
-[additional argument rule](#sec:special-variadic-arguments). The additional arguments
-remain unchanged in every call. For each choice of these arguments, the binary
-operation on `a` and `b` must be associative.
+The form `reduce(f, xs, arg1, arg2, ...)` calls `f(a, b, arg1, arg2, ...)` as the reduction
+operation. It passes the [special variadic arguments](#sec:special-variadic-arguments)
+given to `reduce` through unchanged to every call of `f`. The function `f` must be
+associative with respect to `a` and `b` independent of the values of the additional
+arguments.
 
 **`scan(f, init, ...)`** is a left scan with initial accumulator `init`.
 The function `f` takes the accumulator first, followed by the remaining inputs.
