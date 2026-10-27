@@ -111,9 +111,7 @@ canonical syntax):
   tuple is decomposed into positional arguments. Tuples with fewer elements than the
   callable's required inputs, or more than its inputs, are a static error.
 
-  Auto-splatting is shallow. It applies only to a call with a single argument in total,
-  so a call with [additional arguments](#sec:callback-parameters) passes its leading
-  record, table or tuple whole.
+  Auto-splatting is shallow.
 
   So a function `f(a, b, c)` can be called as `f(record(a = x, b = y, c = z))` or
   `f(table(a = x, b = y, c = z))`, equivalent to `f(a = x, b = y, c = z)`, or as
