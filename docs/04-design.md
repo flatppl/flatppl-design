@@ -178,6 +178,10 @@ by iterating over each. Details are specified for each such special
 operation.
 
 In the following forms, `...` denotes zero or more positional or keyword arguments.
+The operation supplies the function's or kernel's leading input(s); the additional
+arguments bind its remaining inputs, positionally or by name. The right column
+describes this input binding. An ordinary call uses either all positional or all
+keyword arguments (see [`MixedArgs`](05-syntax.md#formal-grammar)).
 For `scan` and `kscan`, at least one array or table input is required.
 For `filter`, `scan`, and `kscan`, `...` on the right denotes the corresponding
 elements or rows of array and table inputs, including repeated singleton inputs,
@@ -185,14 +189,14 @@ and constant inputs unchanged.
 
 | Operation | Called as |
 |---|---|
-| `weighted(f, M, ...)`, `logweighted(f, M, ...)`, `pushfwd(f, M, ...)` | `f(x, ...)` for the whole variate `x` |
-| `filter(pred, data, ...)` | `pred(data[i], ...)` for each element or row `i` |
-| `reduce(f, xs, ...)` | `f(a, b, ...)` for two elements or partial results |
-| `scan(f, init, ...)` | `f(acc, ...)` |
-| `markovchain(kernel, init, n, ...)` | `kernel(state, ...)` |
-| `kscan(kernel, init, ...)` | `kernel(state, ...)` |
-| `fchain(f1, f2, ...)(x, ...)` | `f1(x, ...)`, then `f(y, ...)` for each later function `f` and previous result `y` |
-| `kchain(K1, K2, ...)(x, ...)`, `jointchain(K1, K2, ...)(x, ...)` | `K1(x, ...)`, then `K(y, ...)` for each later kernel `K` and fed value `y` |
+| [`weighted(f, M, ...)`](06-measure-algebra.md#weighted), [`logweighted(f, M, ...)`](06-measure-algebra.md#logweighted), [`pushfwd(f, M, ...)`](06-measure-algebra.md#pushfwd) | `f(x, ...)` for the whole variate `x` |
+| [`filter(pred, data, ...)`](07-functions.md#filter) | `pred(data[i], ...)` for each element or row `i` |
+| [`reduce(f, xs, ...)`](#reductions) | `f(a, b, ...)` for two elements or partial results |
+| [`scan(f, init, ...)`](#reductions) | `f(acc, ...)` |
+| [`markovchain(kernel, init, n, ...)`](06-measure-algebra.md#markovchain) | `kernel(state, ...)` |
+| [`kscan(kernel, init, ...)`](06-measure-algebra.md#kscan) | `kernel(state, ...)` |
+| [`fchain(f1, f2, ...)(x, ...)`](#function-composition-and-annotation) | `f1(x, ...)`, then `f(y, ...)` for each later function `f` and previous result `y` |
+| [`kchain(K1, K2, ...)(x, ...)`](06-measure-algebra.md#kchain), [`jointchain(K1, K2, ...)(x, ...)`](06-measure-algebra.md#jointchain) | `K1(x, ...)`, then `K(y, ...)` for each later kernel `K` and fed value `y` |
 
 For `step(state, drift, scale) = Normal(state + drift, scale)`, these forms are equivalent:
 
@@ -200,6 +204,10 @@ For `step(state, drift, scale) = Normal(state + drift, scale)`, these forms are 
 A = markovchain(step, 0, 100, drift, scale)
 B = markovchain(step, 0, 100, drift = drift, scale = scale)
 ```
+
+At each step, both forms apply `step` with the binding expressed by the fully
+keyword ordinary call `step(state = s, drift = drift, scale = scale)`, where `s`
+is the current state.
 
 Sequence inputs can likewise be named:
 
