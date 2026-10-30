@@ -156,8 +156,8 @@ of which may or may not be significant. The total number of inputs is never zero
 - `weighted`, `logweighted`: Two distinguished inputs.
 - `aggregate`, `metricsum`: Three distinguished inputs.
 - `markovchain`, `kscan`: Three distinguished inputs.
-- `ksuperpose`: Two distinguished inputs (the kernel and the weight vector); the
-  resulting kernel is applied separately to the parameter family.
+- `ksuperpose`: Two distinguished inputs (the kernel and the weights), plus
+  named or unnamed inputs that match the inputs of that kernel, broadcast-fashion.
 
 A distinguished input has no name and so cannot be passed by keyword. The
 [measure combinators](06-measure-algebra.md#sec:measure-algebra) likewise take their
@@ -780,8 +780,10 @@ under the [placeholder scoping rule](#placeholders-and-holes), because
 
 `broadcast(f_or_K, name = array, ...)` or
 `broadcast(f_or_K, array, ...)` maps a function or kernel elementwise over
-arrays (and row-wise over tables; see [tables](03-value-types.md#tables)).
-Keyword arguments bind inputs by name. If the callable has a declared
+arrays and row-wise over tables, each row reaching the callable as a record by the
+ordinary [calling convention](#sec:calling-convention); a table that is the only
+positional operand supplies its columns by name to a callable that does not accept a lone
+positional argument. Keyword arguments bind inputs by name. If the callable has a declared
 positional order, positional binding is also permitted.
 
 *Dot-syntax.* As a concise shorthand for `broadcast`, FlatPPL provides
@@ -901,8 +903,7 @@ iterated over but held constant while collection arguments are iterated over.
 If there are no collection arguments, `broadcast` behaves like a single
 function or kernel call.
 
-*Disallowed inputs:* Records and tuples are not allowed as operands of `broadcast`;
-a table row reaching the callable as a record is unaffected.
+*Disallowed inputs:* Records and tuples are not allowed as operands of `broadcast`.
 
 *Tuple-returning callables:* if `f` returns a tuple, `broadcast(f, ...)` returns a
 tuple of arrays (componentwise), not an array of tuples.

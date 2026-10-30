@@ -198,7 +198,7 @@ To evaluate a density at many points (e.g. a grid for numerical integration or p
 | Construct | Arguments | Description |
 |---|---|---|
 | [`superpose`](#superpose) | `M1, M2, ...` | measure addition $M_1 + M_2 + \cdots$ |
-| [`ksuperpose`](#ksuperpose) | `kernel, weights` | weighted-superposition lift; applied to a parameter family yields $\sum_i w_i\,\kappa(\theta_i)$ |
+| [`ksuperpose`](#ksuperpose) | `kernel, weights, parameters...` | weighted superposition $\sum_i w_i\,\kappa(\theta_i)$ of the kernel, weights and parameters broadcast together |
 
 - **`superpose(M1, M2, ...)`**<a id="superpose"></a> — measure addition:
   $\nu(A) = M_1(A) + M_2(A) + \ldots$ All components must share the same variate
@@ -229,22 +229,19 @@ To evaluate a density at many points (e.g. a grid for numerical integration or p
   `ksuperpose`, or indexed across a `superpose` as
   `weighted(p[1], M1), ..., weighted(p[n], Mn)`, where the index literals are
   exactly `1` through `n`, each written once and all indexing the same node `p`.
+  For `ksuperpose`, a form is recognized only when its broadcast does not expand the
+  weights.
 
-- **`ksuperpose(kernel, weights)`**<a id="ksuperpose"></a> — lifts a kernel to a weighted
-  mixture: applied to a parameter family it yields $\nu = \sum_i w_i\,\kappa(\theta_i)$,
-  one component per weight ($N$ of them, not necessarily statically known), with
-  $\theta_i$ the parameters of component $i$. Each collection argument — passed as to
-  [`broadcast`](04-design.md#sec:broadcasting), or as one table whose columns are the
-  parameters — stacks one value per component along one extra leading axis: a scalar
-  parameter takes a length-$N$ vector, a vector parameter an $N \times d$ matrix, a matrix
-  parameter an $N \times d \times d$ array, and any other axis structure is a static error.
-  A non-collection argument, or a collection whose leading axis has size one, is shared by
-  every component. The weights must be non-negative but need not sum to one.
-  The [normalization rule above](#superpose) applies when every component is a
-  probability measure. For example:
+- **`ksuperpose(kernel, weights, parameters...)`**<a id="ksuperpose"></a> — the weighted
+  sum of the measures a kernel yields at several parameter values, such as a mixture
+  distribution: $\nu = \sum_i w_i\,\kappa(\theta_i)$. The weights and parameters are given
+  as for a [`broadcast`](04-design.md#sec:broadcasting) of the kernel in which `weights`
+  takes part; each element $i$ of the broadcast contributes the component $\kappa(\theta_i)$
+  with weight $w_i$, and the components are added rather than combined into a product. The
+  weights must be non-negative but need not sum to one. For example:
 
   ```flatppl
-  mix = normalize(ksuperpose(Normal, weights)(mu = means, sigma = sigmas))
+  mix = normalize(ksuperpose(Normal, weights, mu = means, sigma = sigmas))
   ```
 
 #### Independent composition
@@ -595,7 +592,7 @@ The density of a composed measure is determined by the measure-algebra definitio
   This sum requires all constituent densities to be expressed w.r.t. the same
   reference measure. Density values taken w.r.t. different references cannot
   be added directly.
-- `ksuperpose` (weighted measure addition over the parameter family): $\log\mathrm{densityof}(\mathrm{ksuperpose}(\kappa,\allowbreak w)(\theta), x) = \mathrm{logsumexp}_{i}\allowbreak\left(\log w_i + \log\mathrm{densityof}(\kappa(\theta_i), x)\right)$, so a zero weight contributes $-\infty$ and drops out. All components come from one kernel and so share one reference measure — the mixture's.
+- `ksuperpose` (weighted measure addition over the components): $\log\mathrm{densityof}(\mathrm{ksuperpose}(\kappa,\allowbreak w,\allowbreak \theta), x) = \mathrm{logsumexp}_{i}\allowbreak\left(\log w_i + \log\mathrm{densityof}(\kappa(\theta_i), x)\right)$, so a zero weight contributes $-\infty$ and drops out. All components come from one kernel and so share one reference measure — the mixture's. For a table `T` with one column per input of a kernel `K` that does not accept a lone positional argument, and positive weights `w`, `logdensityof(ksuperpose(K, w, T), x)` is equivalent to `logsumexp(log.(w) .+ logdensityof.(likelihoodof(K, x), T))`.
 - `normalize` (from $M / Z$): $\log\mathrm{densityof}(\mathrm{normalize}(M), x) = \log\mathrm{densityof}(M, x) - \log Z$, with $Z = \mathrm{totalmass}(M)$ finite and nonzero.
 - `tilt`: $\log\mathrm{densityof}(\mathrm{tilt}(M, B), x) = \log\mathrm{densityof}(M, x) + \log\mathrm{densityof}(B, x) - \log Z$, where $Z = \int \mathrm{densityof}(M, x)\,dB(x)$ is finite and positive.
 - `truncate` (from $\nu(A) = M(A \cap S)$): $\log\mathrm{densityof}(\mathrm{truncate}(M, S), x)$ is $\log\mathrm{densityof}(M, x)$ for $x \in S$ and $-\infty$ otherwise.
