@@ -1273,6 +1273,29 @@ must be relative and, after resolving symbolic links, remain within the canonica
 bundle root. ZIP entries with absolute names or `..` segments are rejected before
 extraction or resolution.
 
+<a id="black-box-modules"></a>**Black-box modules.** A module whose bindings are
+all `external(anything)` can serve as the interface of a black box. The
+application binds each of these bindings to a function, kernel or measure
+implemented outside FlatPPL. The loading module uses them like the bindings of
+any other loaded module: it applies the functions, and uses the kernels and
+measures with `logdensityof`, `densityof`, `likelihoodof`, `rand` and `~`. As
+for any measure, `~` and `rand` require a normalized one. The
+[black-box query profile](12-profiles.md#sec:blackbox) defines the queries that
+reach the box.
+
+```flatppl
+# box.flatppl, the interface
+posterior = external(anything)
+K = external(anything)
+```
+
+```flatppl
+bb = load_module("box.flatppl")
+theta = elementof(cartpow(reals, 2))
+lp = logdensityof(bb.posterior, theta)
+x ~ bb.K(mu = 0.0, sigma = 1.0)
+```
+
 ### FlatPPL version compatibility
 
 A FlatPPL module may declare which versions of FlatPPL it is compatible with
@@ -1359,7 +1382,9 @@ annotations and do not carry user-written surface comments.)
 
 A `load_module(url)` or [`load_data(url)`](07-functions.md#load_data) `source`
 may be an `http`/`https` URL rather than a local path. Only `file`, `http` and
-`https` URL schemes are allowed; any other scheme is a static error.
+`https` URL schemes are allowed; any other scheme is a static error. The
+[black-box protocol](https://github.com/flatppl/flatppl-design/blob/main/protocols/blackbox-v1.md)
+defines further sources, valid only in the queries it carries.
 A `file://` URL denotes a local path and is not cached. FlatPPL is meant to be
 supported by multiple engines and tools in a variety of host languages, and
 the design leaves a lot of freedom to individual FlatPPL implementations. But

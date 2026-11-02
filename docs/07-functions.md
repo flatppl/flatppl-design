@@ -887,6 +887,11 @@ standard uniform reference of matching dimension.
 <a id="builtin_fromnormal"></a>**`builtin_fromnormal(kernel, kernel_input, z)`** — the same
 transport to / from the standard normal reference.
 
+A measure is a nullary kernel ([fundamental measures](06-measure-algebra.md#fundamental-measures))
+and takes no kernel input. For a measure `M`, each function omits `kernel_input`:
+`builtin_logdensityof(M, x)`, `builtin_sample(rngstate, M, n, m, ...)`, and
+`builtin_touniform(M, x)` and the other transports.
+
 The transport functions implement the change of variables to/from the
 uni- or multivariate uniform/normal measure with the same degrees of
 freedom. The uniform and normal references are related elementwise by
