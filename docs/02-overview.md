@@ -203,8 +203,9 @@ highlights, not exhaustive — see the linked sections for complete listings.
 | [Complex arithmetic](07-functions.md#sec:functions) | `complex`, `real`, `imag`, `conj`, `abs2`, `cis` |
 | [Reductions](07-functions.md#sec:functions) | `sum`, `mean`, `var`, `prod`, `maximum`, `minimum`, `lengthof` |
 | [Norms and normalization](07-functions.md#sec:functions) | `l1norm`, `l2norm`, `linfnorm`, `l1unit`, `l2unit`, `logsumexp`, `softmax`, `logsoftmax` |
-| [Distributions](08-distributions.md#sec:distributions) | `Normal`, `Poisson`, `PoissonProcess`, `BinnedPoissonProcess`, `Exponential`, `Dirichlet`, ... |
+| [Distributions](08-distributions.md#sec:distributions) | `Normal`, `Poisson`, `Exponential`, `Dirichlet`, ... |
 | [Fundamental measures](06-measure-algebra.md#sec:measure-algebra) | `Lebesgue`, `Counting`, `Dirac` |
+| [Poisson processes](06-measure-algebra.md#poisson-processes) | `PoissonProcess`, `BinnedPoissonProcess` |
 | [Random value generation](07-functions.md#sec:random) | `rand`, `rngstate`, `rnginit` |
 | [Module operations](04-design.md#sec:modules) | `load_module`, `standard_module`, `flatppl_compat` |
 | [Constants](03-value-types.md#sec:valuetypes) | `true`, `false`, `inf`, `pi`, `im` |

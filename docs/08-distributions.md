@@ -25,6 +25,11 @@ statement w.r.t. `Lebesgue(support = S)` follows by restriction.
 
 **Note.** Probability distributions with user-defined densities may be constructed compositionally via `normalize(weighted(f, Lebesgue(S)))` — see [measure algebra](06-measure-algebra.md#sec:measure-algebra) for details.
 
+**Note.** The Poisson processes [`PoissonProcess`](06-measure-algebra.md#poissonprocess) and
+[`BinnedPoissonProcess`](06-measure-algebra.md#binnedpoissonprocess) return distributions but
+take an intensity measure as input. They are specified with the
+[measure algebra](06-measure-algebra.md#poisson-processes).
+
 
 ### Univariate continuous distributions
 
@@ -560,57 +565,3 @@ The category count $k$ is the length of `p`; it must be a fixed-phase positive i
 Density w.r.t. `iid(Counting(integers), k)`:
 
 $$\frac{n!}{\prod_i x_i!} \prod_i p_i^{x_i} \quad \text{for } x_i \geq 0,\; \sum_i x_i = n$$
-
-### Composite distributions
-
-| Distribution | Parameters | Domain | Support |
-|---|---|---|---|
-| [`PoissonProcess`](#poissonprocess) | `intensity` | arrays/tables | arrays/tables |
-| [`BinnedPoissonProcess`](#binnedpoissonprocess) | `bins`, `intensity` | integer arrays | integer arrays |
-
-<a id="poissonprocess"></a>**`PoissonProcess(intensity)`** — The (inhomogeneous) [Poisson point process](https://en.wikipedia.org/wiki/Poisson_point_process), parameterized by an intensity measure. Variates are arrays (scalar points) or tables (record-valued points). The order of entries in the resulting array or table carries no semantic meaning (permutation-invariant).
-
-Domain/Support: arrays/tables.
-
-Parameters:
-
-- `intensity`: finite-mass measure or kernel over scalar or record-valued points.
-
-For a closed intensity measure $\mu$ with reference measure $\rho$, let
-$\Lambda = \mathrm{totalmass}(\mu)$ and
-$\lambda(t) = \mathrm{densityof}(\mu, t)$.
-The array or table stands in for the set of points, with multiplicities, so the
-density includes no permutation factor such as $k!$. Including the probability
-of the count, it is
-
-$$e^{-\Lambda}\prod_{i=1}^{k}\lambda(t_i).$$
-
-The empty product is one. For a kernel-valued intensity, this formula applies
-to each closed output measure.
-
-Given a normalized distribution `shape` and an expected count `n`, the intensity is
-constructed via `weighted(n, shape)`. Conversely, an intensity with positive finite mass decomposes as
-`totalmass(intensity)` (expected count) and `normalize(intensity)` (shape distribution).
-A zero intensity produces no events and has no normalized shape distribution.
-
-For binned models, see [`BinnedPoissonProcess`](#binnedpoissonprocess).
-
-**Note.** In particle physics, a likelihood based on a Poisson process is often called an extended likelihood.
-
-<a id="binnedpoissonprocess"></a>**`BinnedPoissonProcess(bins, intensity)`** — Binned Poisson process: the pushforward of a `PoissonProcess` through `bincounts`. Variates are integer count arrays (one count per bin).
-
-Domain/Support: integer arrays / integer arrays.
-
-Parameters:
-
-- `bins`: bin edges (vector) or record of bin edge vectors (multi-dimensional binning). Same format as for `bincounts`.
-- `intensity`: finite-mass measure or kernel over the underlying event space (scalar or record-valued), not the binned count space. See [`PoissonProcess`](#poissonprocess).
-
-At fixed bin values, `BinnedPoissonProcess(bins, intensity)` is equivalent to
-`pushfwd(fn(bincounts(bins, _)), PoissonProcess(intensity))` for scalar events.
-For record-valued events with fields matching the bin coordinates, use
-`pushfwd(fn(bincounts(bins, record(_))), PoissonProcess(intensity))`:
-`record` converts the event table to the record of equally-sized coordinate arrays
-required by `bincounts`.
-
-For natively binned models where expected counts per bin are computed directly, `broadcast(Poisson, expected_counts)` is the more natural form (see [`Poisson`](#poisson)).
