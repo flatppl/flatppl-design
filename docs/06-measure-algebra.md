@@ -364,7 +364,7 @@ belong to the measure algebra because they take a measure as input.
   `record` converts the event table to the record of equally-sized coordinate arrays
   required by `bincounts`.
 
-  For pairwise disjoint bins, as for increasing edges, the counts are independent:
+  The bins are pairwise disjoint, so the counts are independent:
   `BinnedPoissonProcess(bins, intensity)` is equivalent to `broadcast(Poisson, m)`,
   where `m[k]` is the mass $m_k = \mu(B_k)$ of the intensity $\mu$ on bin $B_k$. The
   bins are those of `bincounts`: for edges $x_1, \ldots, x_{n+1}$,
