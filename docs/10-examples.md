@@ -36,7 +36,7 @@ rate = superpose(
     weighted(mu_sig * efficiency, signal_template),
     bkg_template
 )
-events ~ PoissonProcess(intensity = rate)
+events ~ PoissonProcess(rate)
 ```
 
 **Data and likelihood.** We define observed data and construct the likelihood. Since the
@@ -75,7 +75,7 @@ range-restricted likelihood for a sideband fit is also straightforward:
 sideband = interval(0.0, 3.0)
 sideband_data = filter(fn(_ in sideband), [3.1, 5.7, 2.4, 8.9, 4.2])
 sideband_model = functionof(
-    PoissonProcess(intensity = truncate(rate, sideband)),
+    PoissonProcess(truncate(rate, sideband)),
     mu_sig, raw_eff_syst)
 L_obs_sideband = likelihoodof(sideband_model, sideband_data)
 L_sideband = joint_likelihood(L_obs_sideband, L_constr)

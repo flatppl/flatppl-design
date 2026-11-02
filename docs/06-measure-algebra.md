@@ -206,7 +206,7 @@ To evaluate a density at many points (e.g. a grid for numerical integration or p
 
   ```flatppl
   intensity = superpose(weighted(amplitude, signal_shape), bkg_shape)
-  events ~ PoissonProcess(intensity = intensity)
+  events ~ PoissonProcess(intensity)
   ```
 
   To build a normalized mixture distribution, use
@@ -319,10 +319,7 @@ To evaluate a density at many points (e.g. a grid for numerical integration or p
 | [`BinnedPoissonProcess`](#binnedpoissonprocess) | `bins`, `intensity` | bin counts of `PoissonProcess(intensity)` |
 
 These operations map an intensity measure to a probability distribution. They
-belong to the measure algebra because they take a measure as input. Like
-[distributions](08-distributions.md#sec:distributions), they follow the general
-[calling conventions](04-design.md#sec:calling-convention), with the parameter
-names and order given below.
+belong to the measure algebra because they take a measure as input.
 
 - **`PoissonProcess(intensity)`**<a id="poissonprocess"></a> — the (inhomogeneous)
   [Poisson point process](https://en.wikipedia.org/wiki/Poisson_point_process) with
@@ -730,7 +727,7 @@ obs_events = [1.2, 3.4, 5.1, -1.5, 2.8]
 
 R = interval(-3.0, 3.0)
 obs_R = filter(fn(_ in R), obs_events)
-model_R = PoissonProcess(intensity = truncate(intensity, R))
+model_R = PoissonProcess(truncate(intensity, R))
 L_R = likelihoodof(functionof(model_R), obs_R)
 ```
 
