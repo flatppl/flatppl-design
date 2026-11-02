@@ -177,11 +177,16 @@ to supply the function's or kernel's remaining inputs, either directly or
 by iterating over each. Details are specified for each such special
 operation.
 
-In the following forms, `...` denotes zero or more positional or keyword arguments.
-The operation supplies the function's or kernel's leading input(s); the additional
-arguments bind its remaining inputs, positionally or by name. The right column
-describes this input binding. An ordinary call uses either all positional or all
-keyword arguments (see [`MixedArgs`](05-syntax.md#formal-grammar)).
+In the following forms, `...` denotes zero or more additional arguments, positional
+or named. The operation supplies the leading input(s) of the function or kernel in
+order. Positional additional arguments bind the following inputs in order. Named
+additional arguments bind inputs by name. This is the binding that `broadcast` and
+`ksuperpose` use for mixed arguments (see [`MixedArgs`](05-syntax.md#formal-grammar)).
+It belongs to the special operation: an ordinary call still uses either all positional
+or all keyword arguments. With additional arguments, auto-splatting does not apply:
+each argument binds one input whole.
+A named additional argument must not name a leading input, no input may be bound
+twice, and every required input must be bound. The right column shows the resulting call.
 For `scan` and `kscan`, at least one array or table input is required.
 For `filter`, `scan`, and `kscan`, `...` on the right denotes the corresponding
 elements or rows of array and table inputs, including repeated singleton inputs,
@@ -204,10 +209,6 @@ For `step(state, drift, scale) = Normal(state + drift, scale)`, these forms are 
 A = markovchain(step, 0, 100, drift, scale)
 B = markovchain(step, 0, 100, drift = drift, scale = scale)
 ```
-
-At each step, both forms apply `step` with the binding expressed by the fully
-keyword ordinary call `step(state = s, drift = drift, scale = scale)`, where `s`
-is the current state.
 
 Sequence inputs can likewise be named:
 
