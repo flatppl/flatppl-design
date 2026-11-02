@@ -21,7 +21,7 @@ const { spawnSync } = require("node:child_process");
 const { readManifest, verifyThemeBundle } = require("./theme-bundle.js");
 
 const REPOSITORY = "https://github.com/flatppl/flatppl-theme";
-const DEFAULT_REF = "v0.1.8";
+const DEFAULT_REF = "v0.1.9";
 const DOWNLOAD_ATTEMPTS = 4;
 const DOWNLOAD_TIMEOUT_MS = 30_000;
 const RETRY_DELAY_MS = 2000;
