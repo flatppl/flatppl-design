@@ -109,7 +109,7 @@ intensity = superpose(
 )
 
 # Unbinned model: Poisson process over scalar mass values
-events ~ PoissonProcess(intensity = intensity)
+events ~ PoissonProcess(intensity)
 
 % Likelihood as a function of the expected event counts.
 L = likelihoodof(kernelof(events), observed_data)
@@ -187,7 +187,7 @@ highlights, not exhaustive — see the linked sections for complete listings.
 |---|---|
 | [Special operations](04-design.md#sec:design) | `draw`, `lawof`, `functionof`, `kernelof`, `fn`, `fchain`, `bijection`, `fixed`, `elementof`, `external`, `valueset`, `vector` |
 | [Interface adaptation](04-design.md#sec:design) | `relabel` |
-| [Measure combinators](06-measure-algebra.md#sec:measure-algebra) | `weighted`, `logweighted`, `normalize`, `tilt`, `totalmass`, `superpose`, `joint`, `jointchain`, `kchain`, `markovchain`, `kscan`, `iid`, `truncate`, `pushfwd`, `locscale` |
+| [Measure combinators](06-measure-algebra.md#sec:measure-algebra) | `weighted`, `logweighted`, `normalize`, `tilt`, `totalmass`, `superpose`, `joint`, `jointchain`, `kchain`, `markovchain`, `kscan`, `iid`, `truncate`, `pushfwd`, `locscale`, `PoissonProcess`, `BinnedPoissonProcess` |
 | [Likelihoods and posteriors](06-measure-algebra.md#likelihoods-and-posteriors) | `likelihoodof`, `joint_likelihood`, `densityof`, `logdensityof`, `bayesupdate` |
 | [Structural disintegration](06-measure-algebra.md#structural-disintegration) | `disintegrate`, `restrict` |
 | [Broadcasting](04-design.md#sec:broadcasting) | `broadcast`, `broadcasted` |
@@ -203,7 +203,7 @@ highlights, not exhaustive — see the linked sections for complete listings.
 | [Complex arithmetic](07-functions.md#sec:functions) | `complex`, `real`, `imag`, `conj`, `abs2`, `cis` |
 | [Reductions](07-functions.md#sec:functions) | `sum`, `mean`, `var`, `prod`, `maximum`, `minimum`, `lengthof` |
 | [Norms and normalization](07-functions.md#sec:functions) | `l1norm`, `l2norm`, `linfnorm`, `l1unit`, `l2unit`, `logsumexp`, `softmax`, `logsoftmax` |
-| [Distributions](08-distributions.md#sec:distributions) | `Normal`, `Poisson`, `PoissonProcess`, `BinnedPoissonProcess`, `Exponential`, `Dirichlet`, ... |
+| [Distributions](08-distributions.md#sec:distributions) | `Normal`, `Poisson`, `Exponential`, `Dirichlet`, ... |
 | [Fundamental measures](06-measure-algebra.md#sec:measure-algebra) | `Lebesgue`, `Counting`, `Dirac` |
 | [Random value generation](07-functions.md#sec:random) | `rand`, `rngstate`, `rnginit` |
 | [Module operations](04-design.md#sec:modules) | `load_module`, `standard_module`, `flatppl_compat` |
@@ -412,7 +412,7 @@ counts = bincounts(edges, event_data)
 
 # Binned observation model via pushforward
 binned_model = pushfwd(fn(bincounts(edges, _)),
-    PoissonProcess(intensity = M_intensity))
+    PoissonProcess(M_intensity))
 
 # Interpolation for systematic variations (particle-physics standard module)
 hepphys = standard_module("particle-physics", "0.1")
@@ -448,7 +448,7 @@ intensity and data to `R`:
 L = likelihoodof(kernelof(events), observed_data)
 R = interval(2.0, 8.0)
 model_R = functionof(
-    PoissonProcess(intensity = truncate(intensity, R)),
+    PoissonProcess(truncate(intensity, R)),
     n_sig, n_bkg, raw_syst)
 L_sub = likelihoodof(model_R, filter(fn(_ in R), observed_data))
 L_total = joint_likelihood(L1, L2)

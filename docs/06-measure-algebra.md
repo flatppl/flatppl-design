@@ -206,7 +206,7 @@ To evaluate a density at many points (e.g. a grid for numerical integration or p
 
   ```flatppl
   intensity = superpose(weighted(amplitude, signal_shape), bkg_shape)
-  events ~ PoissonProcess(intensity = intensity)
+  events ~ PoissonProcess(intensity)
   ```
 
   To build a normalized mixture distribution, use
@@ -310,6 +310,44 @@ To evaluate a density at many points (e.g. a grid for numerical integration or p
   ```flatppl
   obs ~ iid(Normal(mu = a, sigma = b), 100)
   ```
+
+#### Poisson processes
+
+| Construct | Arguments | Description |
+|---|---|---|
+| [`PoissonProcess`](#poissonprocess) | `intensity` | Poisson point process with intensity measure `intensity` |
+| [`BinnedPoissonProcess`](#binnedpoissonprocess) | `bins`, `intensity` | bin counts of `PoissonProcess(intensity)` |
+
+- **`PoissonProcess(intensity)`**<a id="poissonprocess"></a> — the (inhomogeneous)
+  [Poisson point process](https://en.wikipedia.org/wiki/Poisson_point_process) with
+  intensity `intensity`, a finite-mass measure or kernel over scalar or record-valued
+  points. Variates are arrays (scalar points) or tables (record-valued points), and
+  their order carries no meaning.
+
+  For a closed intensity $\mu$ with reference measure $\rho$, total mass
+  $\Lambda = \mathrm{totalmass}(\mu)$ and density
+  $\lambda(t) = \mathrm{densityof}(\mu, t)$, the density of $k$ points
+  $t_1, \ldots, t_k$ is
+
+  $$e^{-\Lambda}\prod_{i=1}^{k}\lambda(t_i).$$
+
+  The variate stands for the set of points, with multiplicities, so there is no $k!$ factor. For a kernel
+  intensity, this holds for each closed output measure. A sample draws
+  `k ~ Poisson(totalmass(intensity))`, then `k` IID points from
+  `normalize(intensity)`.
+
+- **`BinnedPoissonProcess(bins, intensity)`**<a id="binnedpoissonprocess"></a> — the
+  bin counts of `PoissonProcess(intensity)`. `bins` has the format of
+  [`bincounts`](07-functions.md#bincounts), and `intensity` is a finite-mass measure or
+  kernel over the event space. Variates are integer count arrays. At fixed `bins`, it
+  is equivalent to `pushfwd(fn(bincounts(bins, _)), PoissonProcess(intensity))`, or,
+  for record-valued events with fields matching the bin coordinates, to
+  `pushfwd(fn(bincounts(bins, record(_))), PoissonProcess(intensity))`.
+
+  The bins are pairwise disjoint, so `BinnedPoissonProcess(bins, intensity)` is
+  equivalent to `broadcast(Poisson, m)`. Here `m` has the shape of the count array,
+  and `m[k]` is the mass of the intensity on the `k`-th bin of `bincounts`. For a
+  record of edge vectors, a bin is the product of one bin per field.
 
 #### Dependent composition
 
@@ -596,6 +634,7 @@ The density of a composed measure is determined by the measure-algebra definitio
 - `normalize` (from $M / Z$): $\log\mathrm{densityof}(\mathrm{normalize}(M), x) = \log\mathrm{densityof}(M, x) - \log Z$, with $Z = \mathrm{totalmass}(M)$ finite and nonzero.
 - `tilt`: $\log\mathrm{densityof}(\mathrm{tilt}(M, B), x) = \log\mathrm{densityof}(M, x) + \log\mathrm{densityof}(B, x) - \log Z$, where $Z = \int \mathrm{densityof}(M, x)\,dB(x)$ is finite and positive.
 - `truncate` (from $\nu(A) = M(A \cap S)$): $\log\mathrm{densityof}(\mathrm{truncate}(M, S), x)$ is $\log\mathrm{densityof}(M, x)$ for $x \in S$ and $-\infty$ otherwise.
+- `PoissonProcess` and `BinnedPoissonProcess` (from their [definitions](#poisson-processes)): $\log\mathrm{densityof}(\mathrm{PoissonProcess}(\mu), t) = -\mathrm{totalmass}(\mu) + \sum_{i} \log\mathrm{densityof}(\mu, t_i)$, and `BinnedPoissonProcess` reduces to `broadcast(Poisson, m)` with the bin masses `m`.
 - `joint` and `iid` (independent products): $\log\mathrm{densityof}(\mathrm{joint}(M_1,\allowbreak M_2), [x_1, x_2]) = \log\mathrm{densityof}(M_1, x_1) + \log\mathrm{densityof}(M_2, x_2)$, and $\log\mathrm{densityof}(\mathrm{iid}(M, n), x) = \sum_i \log\mathrm{densityof}(M, x_i)$.
 - `jointchain` (the product of the constituent conditional densities): $\log\mathrm{densityof}(\mathrm{jointchain}(M,\allowbreak K), [a, b]) = \log\mathrm{densityof}(M, a) + \log\mathrm{densityof}(K(a), b)$.
 - `markovchain` and `kscan` (the product of the step conditional densities, the initial value contributing no factor): $\log\mathrm{densityof}(\mathrm{markovchain}(\kappa,\allowbreak \text{init}, n), \text{traj}) = \sum_{i=1}^{n} \log\mathrm{densityof}(\kappa(\text{traj}_{i-1}), \text{traj}_i)$ with $\text{traj}_0 = \text{init}$, and likewise for $\mathrm{kscan}(\kappa, \text{init}, \text{xs})$ over $i = 1, \dots, \mathrm{lengthof}(\text{xs})$ with the step kernel $\kappa(\text{traj}_{i-1}, \text{xs}_i)$.
@@ -656,7 +695,7 @@ obs_events = [1.2, 3.4, 5.1, -1.5, 2.8]
 
 R = interval(-3.0, 3.0)
 obs_R = filter(fn(_ in R), obs_events)
-model_R = PoissonProcess(intensity = truncate(intensity, R))
+model_R = PoissonProcess(truncate(intensity, R))
 L_R = likelihoodof(functionof(model_R), obs_R)
 ```
 

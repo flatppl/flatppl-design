@@ -758,7 +758,7 @@ Data points outside all bins are ignored.
   ) # → array of size 4 x 3
   ```
 
-  **Bin intervals.** Given $n+1$ edges $x_1, x_2, \ldots, x_{n+1}$, bins are
+  **Bin intervals.** Each edge vector must be strictly increasing. Given $n+1$ edges $x_1, x_2, \ldots, x_{n+1}$, bins are
   left-closed and right-open $[x_i, x_{i+1})$ for $i \in \{1, \ldots, n-1\}$, except
   for the last bin which is also closed on the right $[x_n, x_{n+1}]$. This ensures
   that a value exactly at the upper boundary falls into the last bin.
