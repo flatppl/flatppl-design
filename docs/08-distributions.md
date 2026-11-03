@@ -25,10 +25,8 @@ statement w.r.t. `Lebesgue(support = S)` follows by restriction.
 
 **Note.** Probability distributions with user-defined densities may be constructed compositionally via `normalize(weighted(f, Lebesgue(S)))` — see [measure algebra](06-measure-algebra.md#sec:measure-algebra) for details.
 
-**Note.** The Poisson processes [`PoissonProcess`](06-measure-algebra.md#poissonprocess) and
-[`BinnedPoissonProcess`](06-measure-algebra.md#binnedpoissonprocess) return distributions but
-take an intensity measure as input. They are specified with the
-[measure algebra](06-measure-algebra.md#poisson-processes).
+**Note.** The [Poisson processes](06-measure-algebra.md#poisson-processes) `PoissonProcess` and
+`BinnedPoissonProcess` return distributions and are specified in the measure algebra.
 
 
 ### Univariate continuous distributions

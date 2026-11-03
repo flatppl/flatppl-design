@@ -318,68 +318,36 @@ To evaluate a density at many points (e.g. a grid for numerical integration or p
 | [`PoissonProcess`](#poissonprocess) | `intensity` | Poisson point process with intensity measure `intensity` |
 | [`BinnedPoissonProcess`](#binnedpoissonprocess) | `bins`, `intensity` | bin counts of `PoissonProcess(intensity)` |
 
-These operations map an intensity measure to a probability distribution. They
-belong to the measure algebra because they take a measure as input.
-
 - **`PoissonProcess(intensity)`**<a id="poissonprocess"></a> — the (inhomogeneous)
   [Poisson point process](https://en.wikipedia.org/wiki/Poisson_point_process) with
   intensity `intensity`, a finite-mass measure or kernel over scalar or record-valued
-  points. Variates are arrays (scalar points) or tables (record-valued points). The
-  order of entries in the resulting array or table carries no semantic meaning
-  (permutation-invariant).
+  points. Variates are arrays (scalar points) or tables (record-valued points), and
+  their order carries no meaning.
 
-  For a closed intensity measure $\mu$ with reference measure $\rho$, let
-  $\Lambda = \mathrm{totalmass}(\mu)$ and
-  $\lambda(t) = \mathrm{densityof}(\mu, t)$.
-  The array or table stands in for the set of points, with multiplicities, so the
-  density includes no permutation factor such as $k!$. Including the probability
-  of the count, it is
+  For a closed intensity $\mu$ with reference measure $\rho$, total mass
+  $\Lambda = \mathrm{totalmass}(\mu)$ and density
+  $\lambda(t) = \mathrm{densityof}(\mu, t)$, the density of $k$ points
+  $t_1, \ldots, t_k$ is
 
   $$e^{-\Lambda}\prod_{i=1}^{k}\lambda(t_i).$$
 
-  The empty product is one. For a kernel-valued intensity, this formula applies
-  to each closed output measure.
-
-  A sample draws the count `k ~ Poisson(totalmass(intensity))` and then `k` IID
-  points from `normalize(intensity)`.
-
-  Given a normalized distribution `shape` and an expected count `n`, the intensity is
-  constructed via `weighted(n, shape)`. Conversely, an intensity with positive finite mass decomposes as
-  `totalmass(intensity)` (expected count) and `normalize(intensity)` (shape distribution).
-  A zero intensity produces no events and has no normalized shape distribution.
-
-  **Note.** In particle physics, a likelihood based on a Poisson process is often called an extended likelihood.
+  The variate stands for the set of points, with multiplicities, so there is no $k!$ factor. For a kernel
+  intensity, this holds for each closed output measure. A sample draws
+  `k ~ Poisson(totalmass(intensity))`, then `k` IID points from
+  `normalize(intensity)`.
 
 - **`BinnedPoissonProcess(bins, intensity)`**<a id="binnedpoissonprocess"></a> — the
-  pushforward of a `PoissonProcess` through [`bincounts`](07-functions.md#bincounts).
-  `bins` holds bin edges (vector) or a record of bin edge vectors (multi-dimensional
-  binning), in the same format as for `bincounts`. `intensity` is a finite-mass
-  measure or kernel over the underlying event space (scalar or record-valued), not
-  the binned count space. Variates are integer count arrays (one count per bin).
+  bin counts of `PoissonProcess(intensity)`. `bins` has the format of
+  [`bincounts`](07-functions.md#bincounts), and `intensity` is a finite-mass measure or
+  kernel over the event space. Variates are integer count arrays. At fixed `bins`, it
+  is equivalent to `pushfwd(fn(bincounts(bins, _)), PoissonProcess(intensity))`, or,
+  for record-valued events with fields matching the bin coordinates, to
+  `pushfwd(fn(bincounts(bins, record(_))), PoissonProcess(intensity))`.
 
-  At fixed bin values, `BinnedPoissonProcess(bins, intensity)` is equivalent to
-  `pushfwd(fn(bincounts(bins, _)), PoissonProcess(intensity))` for scalar events.
-  For record-valued events with fields matching the bin coordinates, use
-  `pushfwd(fn(bincounts(bins, record(_))), PoissonProcess(intensity))`:
-  `record` converts the event table to the record of equally-sized coordinate arrays
-  required by `bincounts`.
-
-  The bins are pairwise disjoint, so the counts are independent:
-  `BinnedPoissonProcess(bins, intensity)` is equivalent to `broadcast(Poisson, m)`,
-  where `m[k]` is the mass $m_k = \mu(B_k)$ of the intensity $\mu$ on bin $B_k$. The
-  bins are those of `bincounts`: for edges $x_1, \ldots, x_{n+1}$,
-  $B_k = [x_k, x_{k+1})$ for $k < n$ and $B_n = [x_n, x_{n+1}]$. For a record of
-  edge vectors, each bin is the Cartesian product of one bin per field, and `m`
-  has the shape of the count array.
-
-  Density w.r.t. `iid(Counting(integers), size)`, where `size` is the shape of the
-  count array:
-
-  $$\prod_{k} \frac{m_k^{x_k}}{x_k!} e^{-m_k} \quad \text{for } x_k \geq 0$$
-
-  For natively binned models where expected counts per bin are computed directly,
-  `broadcast(Poisson, expected_counts)` is the more natural form (see
-  [`Poisson`](08-distributions.md#poisson)).
+  The bins are pairwise disjoint, so `BinnedPoissonProcess(bins, intensity)` is
+  equivalent to `broadcast(Poisson, m)`. Here `m` has the shape of the count array,
+  and `m[k]` is the mass of the intensity on the `k`-th bin of `bincounts`. For a
+  record of edge vectors, a bin is the product of one bin per field.
 
 #### Dependent composition
 
@@ -666,7 +634,7 @@ The density of a composed measure is determined by the measure-algebra definitio
 - `normalize` (from $M / Z$): $\log\mathrm{densityof}(\mathrm{normalize}(M), x) = \log\mathrm{densityof}(M, x) - \log Z$, with $Z = \mathrm{totalmass}(M)$ finite and nonzero.
 - `tilt`: $\log\mathrm{densityof}(\mathrm{tilt}(M, B), x) = \log\mathrm{densityof}(M, x) + \log\mathrm{densityof}(B, x) - \log Z$, where $Z = \int \mathrm{densityof}(M, x)\,dB(x)$ is finite and positive.
 - `truncate` (from $\nu(A) = M(A \cap S)$): $\log\mathrm{densityof}(\mathrm{truncate}(M, S), x)$ is $\log\mathrm{densityof}(M, x)$ for $x \in S$ and $-\infty$ otherwise.
-- `PoissonProcess` and `BinnedPoissonProcess` (from their [definitions](#poisson-processes)): $\log\mathrm{densityof}(\mathrm{PoissonProcess}(\mu), t) = -\mathrm{totalmass}(\mu) + \sum_{i} \log\mathrm{densityof}(\mu, t_i)$, and `BinnedPoissonProcess(bins, intensity)` reduces to `broadcast(Poisson, m)` with the bin masses `m`.
+- `PoissonProcess` and `BinnedPoissonProcess` (from their [definitions](#poisson-processes)): $\log\mathrm{densityof}(\mathrm{PoissonProcess}(\mu), t) = -\mathrm{totalmass}(\mu) + \sum_{i} \log\mathrm{densityof}(\mu, t_i)$, and `BinnedPoissonProcess` reduces to `broadcast(Poisson, m)` with the bin masses `m`.
 - `joint` and `iid` (independent products): $\log\mathrm{densityof}(\mathrm{joint}(M_1,\allowbreak M_2), [x_1, x_2]) = \log\mathrm{densityof}(M_1, x_1) + \log\mathrm{densityof}(M_2, x_2)$, and $\log\mathrm{densityof}(\mathrm{iid}(M, n), x) = \sum_i \log\mathrm{densityof}(M, x_i)$.
 - `jointchain` (the product of the constituent conditional densities): $\log\mathrm{densityof}(\mathrm{jointchain}(M,\allowbreak K), [a, b]) = \log\mathrm{densityof}(M, a) + \log\mathrm{densityof}(K(a), b)$.
 - `markovchain` and `kscan` (the product of the step conditional densities, the initial value contributing no factor): $\log\mathrm{densityof}(\mathrm{markovchain}(\kappa,\allowbreak \text{init}, n), \text{traj}) = \sum_{i=1}^{n} \log\mathrm{densityof}(\kappa(\text{traj}_{i-1}), \text{traj}_i)$ with $\text{traj}_0 = \text{init}$, and likewise for $\mathrm{kscan}(\kappa, \text{init}, \text{xs})$ over $i = 1, \dots, \mathrm{lengthof}(\text{xs})$ with the step kernel $\kappa(\text{traj}_{i-1}, \text{xs}_i)$.
