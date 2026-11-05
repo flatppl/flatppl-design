@@ -31,10 +31,13 @@
 
   ; --- the six measure-kernel evaluation primitives (§07 sec:measure-eval-prims):
   ;     the only probabilistic content of the profile. The kernel argument is a
-  ;     bare built-in constructor (matched by ?_), not a composed measure. ---
-  (builtin_logdensityof ?_ ?_ ?_)
-  (builtin_sample ?_*)                   ; (rngstate, kernel, kernel_input, n, m, …)
-  ((?| builtin_touniform builtin_fromuniform builtin_tonormal builtin_fromnormal) ?_ ?_ ?_)
+  ;     bare built-in constructor or a black-box member (matched by ?_), not a
+  ;     composed measure. A measure (a nullary kernel) takes no kernel_input. ---
+  ((?| builtin_logdensityof builtin_touniform builtin_fromuniform
+       builtin_tonormal builtin_fromnormal) ?_ ?_)
+  ((?| builtin_logdensityof builtin_touniform builtin_fromuniform
+       builtin_tonormal builtin_fromnormal) ?_ ?_ ?_)
+  (builtin_sample ?_*)                   ; (rngstate, kernel, [kernel_input,] n, m, …)
 
   ; --- explicit RNG (§07): the seed; threading is via the rngstate returned by
   ;     builtin_sample. rand samples a measure and is not admitted. ---

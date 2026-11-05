@@ -1,0 +1,42 @@
+; FlatPPL/blackbox — the black-box query profile: the queries that reach a black
+; box, a module of external(anything) members that the application binds (§04
+; black-box-modules). A query applies one member, or one measure-kernel
+; evaluation primitive (§07 sec:measure-eval-prims) to one member, and may batch
+; it with broadcast. Its arguments are literals, load_data values and RNG
+; states. Determinization (§13) reduces logdensityof, densityof, likelihoodof,
+; rand, ~ and the measure algebra around a member to these terms, so a box needs
+; no measure algebra.
+;
+; Not admitted: measure algebra, computation on data, user functions, and
+; queries over several boxes.
+;
+; Module-level constraints are not productions (§12 sec:profile-specs). The
+; black-box protocol states them: one load_module binding of the box, one
+; `result` binding, and the load_data sources.
+(&profile
+  ; --- the box and its data (§04, §07) ---
+  (load_module ?_)
+  (load_data ?_ ??)
+
+  ; --- literals (§07): scalars are base cases ---
+  (vector ?_*)
+  (record (%field ?_ ?_)*)
+
+  ; --- RNG states (§07), one per row for a batched sample ---
+  ((?| rnginit rngstate) ?_)
+  (broadcast (?| rnginit rngstate) ?_)
+
+  ; --- a member: application, or a primitive. A measure member (a nullary
+  ;     kernel, §06) takes no kernel_input. ---
+  (%call (%ref ?? ??) ?_*)
+  (%kwarg ?? ?_)
+  ((?| builtin_logdensityof builtin_touniform builtin_fromuniform
+       builtin_tonormal builtin_fromnormal) ?_ ?_)
+  ((?| builtin_logdensityof builtin_touniform builtin_fromuniform
+       builtin_tonormal builtin_fromnormal) ?_ ?_ ?_)
+  (builtin_sample ?_*)                   ; (rngstate, member, [kernel_input,] n, m, …)
+
+  ; --- batching (§04) ---
+  (broadcast (?| (%ref ?? ??) builtin_logdensityof builtin_sample
+                 builtin_touniform builtin_fromuniform builtin_tonormal
+                 builtin_fromnormal) ?_*))

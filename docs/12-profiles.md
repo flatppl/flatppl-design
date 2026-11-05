@@ -146,6 +146,28 @@ FlatPDL is the deterministic profile for measure elimination, defined in
 the output of [determinization](13-determinization.md#sec:determinization) is meant
 to conform to it.
 
+### <a id="sec:blackbox"></a>Black-box query profile
+
+The black-box query profile, defined in
+[`blackbox.flatprof`](https://github.com/flatppl/flatppl-design/blob/main/profiles/blackbox.flatprof),
+covers the queries that reach a black box ([black-box modules](04-design.md#black-box-modules)).
+A query applies one member, or one
+[measure kernel evaluation primitive](07-functions.md#sec:measure-eval-prims) to
+one member, and may batch it with `broadcast`. Its arguments are literals,
+`load_data` values and RNG states.
+[Determinization](13-determinization.md#sec:determinization) reduces
+`logdensityof`, `densityof`, `likelihoodof`, `rand`, `~` and the measure algebra
+around a member to these queries, or
+[refuses](13-determinization.md#refused-constructs) them, so a box needs no
+measure algebra. For example,
+`logdensityof(bb.posterior, theta)` becomes
+`builtin_logdensityof(bb.posterior, theta)`, because a measure member takes no
+kernel input.
+
+The [black-box protocol](https://github.com/flatppl/flatppl-design/blob/main/protocols/blackbox-v1.md)
+binds the profile to HTTP and Apache Arrow. It is versioned separately from
+FlatPPL.
+
 ### Target system profiles
 
 Other stochastic systems will typically not support the whole semantics and
