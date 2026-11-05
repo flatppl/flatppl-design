@@ -669,6 +669,7 @@ sp = standard_module("special-functions", "0.1")
 |---|---|---|---|
 | [`erf`](#erf) | `x` | Error function | reals |
 | [`erfc`](#erfc) | `x` | Complementary error function | reals |
+| [`erfcx`](#erfcx) | `x` | Scaled complementary error function | reals |
 | [`bessel_j`](#bessel_j) | `v`, `z` | Bessel function of the first kind $J_v(z)$ | reals, reals |
 | [`bessel_y`](#bessel_y) | `v`, `z` | Bessel function of the second kind $Y_v(z)$ | reals, posreals |
 | [`bessel_i`](#bessel_i) | `v`, `z` | Modified Bessel function of the first kind $I_v(z)$ | reals, reals |
@@ -682,6 +683,8 @@ sp = standard_module("special-functions", "0.1")
 <a id="erf"></a>**`erf(x)`** — computes the error function $\operatorname{erf}(x) = \frac{2}{\sqrt{\pi}} \int_0^x e^{-t^2} dt$.
 
 <a id="erfc"></a>**`erfc(x)`** — computes the complementary error function $\operatorname{erfc}(x) = 1 - \operatorname{erf}(x)$.
+
+<a id="erfcx"></a>**`erfcx(x)`** — computes the scaled complementary error function $\operatorname{erfcx}(x) = e^{x^2} \operatorname{erfc}(x)$.
 
 <a id="bessel_j"></a>**`bessel_j(v, z)`** — computes the Bessel function of the first kind of real order `v` and real argument `z`.
 
