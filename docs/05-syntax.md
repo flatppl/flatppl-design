@@ -23,9 +23,9 @@ line breaks.
 
 `#` starts a line comment; `###` alone on a line opens a block comment
 closed by a matching `###` alone on a line. Both forms are discarded by
-the parser. A line comment runs to the end of its line, and a `;` inside
-it is comment text. Block fences may have leading horizontal
-whitespace (so embedded FlatPPL inside an indented host block is fine).
+the parser. Line comments run to the end of the line. Block fences may
+have leading horizontal whitespace (so embedded FlatPPL inside an
+indented host block is fine).
 
 ```flatppl
 x = 3.14  # Inline comment.
@@ -45,8 +45,7 @@ but attach to bindings and survive into [FlatPIR](11-flatpir.md#intermediate-rep
 [Code documentation](04-design.md#sec:documentation); this section covers the
 surface lexical forms only.
 
-- **Single-line:** `%[<markup>]? <content>` runs to the end of its line,
-  as a line comment does.
+- **Single-line:** `%[<markup>]? <content>` runs to the end of the line.
 - **Block:** `%%%[<markup>]?` alone on a line opens; a matching
   `%%%` alone on a line closes. Content is verbatim, line by line.
   Fence lines may have leading horizontal whitespace, which is ignored;
