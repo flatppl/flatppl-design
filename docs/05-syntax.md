@@ -23,8 +23,8 @@ line breaks.
 
 `#` starts a line comment; `###` alone on a line opens a block comment
 closed by a matching `###` alone on a line. Both forms are discarded by
-the parser. Line comments are terminated by the next newline or `;`,
-whichever comes first. Block fences may have leading horizontal
+the parser. A line comment runs to the end of its line, and a `;` inside
+it is comment text. Block fences may have leading horizontal
 whitespace (so embedded FlatPPL inside an indented host block is fine).
 
 ```flatppl
@@ -45,8 +45,8 @@ but attach to bindings and survive into [FlatPIR](11-flatpir.md#intermediate-rep
 [Code documentation](04-design.md#sec:documentation); this section covers the
 surface lexical forms only.
 
-- **Single-line:** `%[<markup>]? <content>` runs to end of line or
-  to the next `;`, whichever comes first.
+- **Single-line:** `%[<markup>]? <content>` runs to the end of its line,
+  as a line comment does.
 - **Block:** `%%%[<markup>]?` alone on a line opens; a matching
   `%%%` alone on a line closes. Content is verbatim, line by line.
   Fence lines may have leading horizontal whitespace, which is ignored;
@@ -385,13 +385,13 @@ Newline         ::= LF | CR | CRLF
 StmtSep         ::= Newline | ";"
 
 (* Plain comments — discarded by the parser *)
-LineComment     ::= "#" { any character except newline or ";" }
+LineComment     ::= "#" { any character except newline }
 BlockComment    ::= HWS* "###" HWS* Newline
                     { any line whose trimmed content is not "###" }
                     HWS* "###" HWS* Newline
 
 (* Doc-comments — attached to bindings; see "Documentation" *)
-DocLine         ::= "%" MarkupTag? { any character except newline or ";" }
+DocLine         ::= "%" MarkupTag? { any character except newline }
 DocBlock        ::= HWS* "%%%" MarkupTag? HWS* Newline
                     DocBlockLine*
                     HWS* "%%%" HWS* Newline

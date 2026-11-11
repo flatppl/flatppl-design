@@ -1324,8 +1324,8 @@ of two positions:
 
 - *Leading*: before a FlatPPL binding (only whitespace, newlines and
 `;` statement separators between).
-- *Trailing*: a single-line `% ...` after a binding's right-hand side,
-  before the next newline or `;` statement separator. Block `%%%` forms
+- *Trailing*: a single-line `% ...` after a binding's right-hand side on
+  the same line, with no `;` statement separator between. Block `%%%` forms
   must not be in trailing position.
 
 Each binding may carry at most one doc-comment (leading or trailing, not
