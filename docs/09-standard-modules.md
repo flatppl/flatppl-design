@@ -261,6 +261,8 @@ $$\frac{\lambda^x e^{-\lambda}}{\Gamma(x+1)} \quad \text{for } x \geq 0$$
 | Function | Arguments | Description | Domains |
 |---|---|---|---|
 | [`resonance_breitwigner`](#resonancebreitwigner) | `sigma`, `m`, `width`, `ma`, `mb`, `l`, `d` | Breit-Wigner amplitude for a two-body decay | `posreals`, `posreals`, `posreals`, `nonnegreals`, `nonnegreals`, `nonnegintegers`, `posreals` |
+| [`resonance_multichannel_breitwigner`](#resonancemultichannelbreitwigner) | `sigma`, `m`, `gsq`, `mas`, `mbs`, `ls`, `ds` | Breit-Wigner amplitude with several two-body channels | `posreals`, `posreals`, `cartpow(reals, n)`, `cartpow(nonnegreals, n)`, `cartpow(nonnegreals, n)`, `cartpow(nonnegintegers, n)`, `cartpow(nonnegreals, n)` |
+| [`resonance_bugg_breitwigner`](#resonancebuggbreitwigner) | `sigma`, `m`, `width`, `sa`, `gamma` | Breit-Wigner amplitude with an Adler zero | `posreals`, `posreals`, `posreals`, `reals`, `reals` |
 
 <a id="resonancebreitwigner"></a>**`resonance_breitwigner(sigma, m, width, ma, mb, l, d)`** — complex-valued
 mass-dependent-width relativistic Breit-Wigner amplitude for a resonance
@@ -289,6 +291,47 @@ Note that when $\ell = 0, m_a = m_b = 0$, we have
 
 $$\mathrm{BW}(\sigma) \;=\; \frac{1}{m^2 - \sigma - i\, m\, \Gamma}.$$
 
+<a id="resonancemultichannelbreitwigner"></a>**`resonance_multichannel_breitwigner(sigma, m, gsq, mas, mbs, ls, ds)`** —
+complex-valued Breit-Wigner amplitude for a resonance that decays to $n \geq 1$ two-body
+channels, the `MultichannelBreitWigner` lineshape of the
+[amplitude-serialization format](17-references.md#ampserialization).
+
+Arguments:
+
+- `sigma = elementof(posreals)`: invariant mass squared $\sigma$.
+- `m = elementof(posreals)`: pole mass.
+- `gsq = elementof(cartpow(reals, n))`: coupling squared $g_c^2$ of each channel.
+- `mas = elementof(cartpow(nonnegreals, n))`, `mbs = elementof(cartpow(nonnegreals, n))`: daughter masses $m_{a,c}$, $m_{b,c}$ of each channel.
+- `ls = elementof(cartpow(nonnegintegers, n))`: orbital angular momentum $\ell_c$ of each channel (with $\ell_c \leq 7$).
+- `ds = elementof(cartpow(nonnegreals, n))`: Blatt-Weisskopf radius $d_c$ of each channel.
+
+Definition:
+
+$$\mathrm{BW}(\sigma) = \frac{1}{m^2 - \sigma - i \sum_{c=1}^{n} g_c^2\, \rho_c(\sigma)\, \frac{z_c^{\ell_c}}{\chi_{\ell_c}(z_c)}}, \qquad z_c = d_c^2\, \frac{\lambda(\sigma, m_{a,c}^2, m_{b,c}^2)}{4\sigma},$$
+
+where $\rho_c$ is the [two-body phase-space factor](#twobody_phasespace) of channel $c$,
+$\chi_\ell$ the [barrier polynomial](#blatt_weisskopf), and $\lambda$ the
+[Källén function](#kallen). Above threshold, $z_c^{\ell_c}/\chi_{\ell_c}(z_c) = F_{\ell_c}(p_c)^2$,
+with $p_c$ the breakup momentum; between the pseudothreshold $|m_{a,c} - m_{b,c}|$ and threshold $z_c$ is negative. With two
+$\ell = 0$ channels this is the form of [Flatté (1976)](17-references.md#flatte1976).
+One channel with $g^2 = m^2 \Gamma / (2 p_0 F_\ell(p_0)^2)$ gives
+[`resonance_breitwigner`](#resonancebreitwigner).
+
+<a id="resonancebuggbreitwigner"></a>**`resonance_bugg_breitwigner(sigma, m, width, sa, gamma)`** — complex-valued
+Breit-Wigner amplitude whose width has an Adler zero at $s_A$ and an exponential form factor,
+the simplified form of [Bugg (2006)](17-references.md#bugg2006) used by
+[Aaij et al. (2023)](17-references.md#aaij2023):
+
+$$\mathrm{BW}(\sigma) = \frac{1}{m^2 - \sigma - i m \Gamma(\sigma)}, \qquad \Gamma(\sigma) = \frac{\sigma - s_A}{m^2 - s_A}\, \Gamma\, e^{-\gamma \sigma}.$$
+
+Arguments:
+
+- `sigma = elementof(posreals)`: invariant mass squared $\sigma$.
+- `m = elementof(posreals)`: pole mass.
+- `width = elementof(posreals)`: width $\Gamma$.
+- `sa = elementof(reals)`: Adler zero $s_A$, with $s_A \neq m^2$; for $K\pi$, $s_A = m_K^2 - m_\pi^2/2$.
+- `gamma = elementof(reals)`: form-factor slope $\gamma$.
+
 #### Kinematics functions
 
 These functions provide the two-body decay kinematics underlying the mass-dependent
@@ -299,7 +342,8 @@ width of [`resonance_breitwigner`](#resonancebreitwigner), following Section 50
 |---|---|---|---|
 | [`kallen`](#kallen) | `x`, `y`, `z` | Källén (triangle) function $\lambda(x, y, z)$ | `reals`, `reals`, `reals` |
 | [`breakup_momentum`](#breakup_momentum) | `m`, `ma`, `mb` | Two-body breakup momentum | `posreals`, `nonnegreals`, `nonnegreals` |
-| [`blatt_weisskopf`](#blatt_weisskopf) | `l`, `p`, `d` | Blatt-Weisskopf barrier factor $F_\ell$ | `nonnegintegers`, `nonnegreals`, `posreals` |
+| [`twobody_phasespace`](#twobody_phasespace) | `sigma`, `ma`, `mb` | Complex two-body phase-space factor $\rho$ | `posreals`, `nonnegreals`, `nonnegreals` |
+| [`blatt_weisskopf`](#blatt_weisskopf) | `l`, `p`, `d` | Blatt-Weisskopf barrier factor $F_\ell$ | `nonnegintegers`, `nonnegreals`, `nonnegreals` |
 
 <a id="kallen"></a>**`kallen(x, y, z)`** — the [Källén (triangle) function](https://en.wikipedia.org/wiki/K%C3%A4ll%C3%A9n_function),
 
@@ -319,7 +363,26 @@ Arguments:
 - `ma = elementof(nonnegreals)`, `mb = elementof(nonnegreals)`: daughter masses.
 
 Above threshold ($m \geq m_a + m_b$) the result is real and non-negative.
+Below threshold the momentum has no real value: evaluating `breakup_momentum` there is an
+error, as for `sqrt` of a negative real. [`twobody_phasespace`](#twobody_phasespace)
+continues it below threshold.
 In [`resonance_breitwigner`](#resonancebreitwigner) it is evaluated at $m = \sqrt{\sigma}$.
+
+<a id="twobody_phasespace"></a>**`twobody_phasespace(sigma, ma, mb)`** — the complex
+two-body phase-space factor
+
+$$\rho(\sigma) = \frac{2\,p}{\sqrt{\sigma}}, \qquad p = \frac{\sqrt{(\sqrt{\sigma} - (m_a + m_b))(\sqrt{\sigma} + (m_a + m_b))}\,\sqrt{(\sqrt{\sigma} - (m_a - m_b))(\sqrt{\sigma} + (m_a - m_b))}}{2\sqrt{\sigma}},$$
+
+where each square root of a negative real $x$ is $i\sqrt{-x}$, its value approached from
+the upper half-plane. Above threshold ($\sqrt{\sigma} \geq m_a + m_b$) $\rho$ is real and
+non-negative and $p$ is the [breakup momentum](#breakup_momentum); between the
+pseudothreshold $|m_a - m_b|$ and threshold $\rho$ is imaginary with positive imaginary
+part; below the pseudothreshold it is real and non-positive.
+
+Arguments:
+
+- `sigma = elementof(posreals)`: invariant mass squared $\sigma$.
+- `ma = elementof(nonnegreals)`, `mb = elementof(nonnegreals)`: daughter masses.
 
 <a id="blatt_weisskopf"></a>**`blatt_weisskopf(l, p, d)`** — the Blatt-Weisskopf
 centrifugal-barrier factor $F_\ell$ for orbital angular momentum $\ell$, breakup momentum
@@ -351,7 +414,7 @@ Arguments:
 
 - `l = elementof(nonnegintegers)`: orbital angular momentum $\ell$ (with $\ell \leq 7$).
 - `p = elementof(nonnegreals)`: breakup momentum (see [`breakup_momentum`](#breakup_momentum)).
-- `d = elementof(posreals)`: barrier radius.
+- `d = elementof(nonnegreals)`: barrier radius. For $d = 0$, $F_0 = 1$ and $F_\ell = 0$ for $\ell \geq 1$.
 
 In [`resonance_breitwigner`](#resonancebreitwigner), $F_\ell$ enters the mass-dependent
 width through the ratio $F_\ell(p(\sigma)) / F_\ell(p_0)$.
@@ -370,6 +433,8 @@ $d$-function takes the **cosine** of the polar angle, $\cos\beta$, as its argume
 | [`wignerD`](#wignerD) | `j`, `m1`, `m2`, `alpha`, `cosbeta`, `gamma` | Wigner $D$-function $D^{j}_{m_1 m_2}(\alpha, \beta, \gamma)$ | `integers`, `integers`, `integers`, `reals`, `interval(-1, 1)`, `reals` |
 | [`wignerd_doublearg`](#wignerd_doublearg) | `two_j`, `two_m1`, `two_m2`, `cosbeta` | small $d$-function, doubled momenta (half-integer spin) | `integers`, `integers`, `integers`, `interval(-1, 1)` |
 | [`wignerD_doublearg`](#wignerD_doublearg) | `two_j`, `two_m1`, `two_m2`, `alpha`, `cosbeta`, `gamma` | $D$-function, doubled momenta (half-integer spin) | `integers`, `integers`, `integers`, `reals`, `interval(-1, 1)`, `reals` |
+| [`wignerd_matrix`](#wignerd_matrix) | `j`, `cosbeta` | matrix of small $d$-functions $d^{j}(\beta)$ | `nonnegintegers`, `interval(-1, 1)` |
+| [`wignerd_matrix_doublearg`](#wignerd_matrix_doublearg) | `two_j`, `cosbeta` | matrix of small $d$-functions, doubled momentum (half-integer spin) | `nonnegintegers`, `interval(-1, 1)` |
 
 <a id="wignerd"></a>**`wignerd(j, m1, m2, cosbeta)`** — the real-valued small Wigner
 $d$-function, i.e. the matrix element of a rotation by $\beta$ about the $y$-axis:
@@ -392,6 +457,130 @@ when $2j$, $2m_1$, $2m_2$ are even.
 the $D$-function for half-integer angular momenta with doubled-integer momenta:
 
 $$D = e^{-i(m_1 \alpha + m_2 \gamma)}\, d^{j}_{m_1 m_2}(\beta) = \mathrm{cis}\!\left(-\tfrac{2m_1\,\alpha + 2m_2\,\gamma}{2}\right) \cdot \texttt{wignerd\_doublearg}(2j, 2m_1, 2m_2, \cos\beta).$$
+
+<a id="wignerd_matrix"></a>**`wignerd_matrix(j, cosbeta)`** — the real $(2j+1) \times (2j+1)$
+matrix of small $d$-functions. Its element $[a, b]$ is $d^{j}_{m_a m_b}(\beta)$ with
+$m_a = j - (a - 1)$ and $m_b = j - (b - 1)$: rows and columns run from $m = j$ down to $m = -j$.
+
+<a id="wignerd_matrix_doublearg"></a>**`wignerd_matrix_doublearg(two_j, cosbeta)`** — the same matrix
+for possibly half-integer $j$, passed as the doubled value $2j$. Equals `wignerd_matrix(j, cosbeta)`
+when $2j$ is even.
+
+#### Angular-momentum coupling functions
+
+The Clebsch-Gordan coefficients use the Condon-Shortley phase convention of the Clebsch-Gordan
+tables of [Navas et al. (2024)](17-references.md#navas2024).
+
+| Function | Arguments | Description | Domains |
+|---|---|---|---|
+| [`clebschgordan`](#clebschgordan) | `j1`, `m1`, `j2`, `m2`, `j`, `m` | Clebsch-Gordan coefficient $\langle j_1 m_1, j_2 m_2 \,\vert\, j m \rangle$ | `nonnegintegers`, `integers`, `nonnegintegers`, `integers`, `nonnegintegers`, `integers` |
+| [`clebschgordan_doublearg`](#clebschgordan_doublearg) | `two_j1`, `two_m1`, `two_j2`, `two_m2`, `two_j`, `two_m` | Clebsch-Gordan coefficient, doubled momenta (half-integer spin) | `nonnegintegers`, `integers`, `nonnegintegers`, `integers`, `nonnegintegers`, `integers` |
+| [`ls_coupling`](#ls_coupling) | `two_j`, `two_j1`, `two_j2`, `two_l`, `two_s`, `two_lambda1`, `two_lambda2` | helicity coupling of an $LS$ amplitude, doubled momenta | `nonnegintegers`, `nonnegintegers`, `nonnegintegers`, `nonnegintegers`, `nonnegintegers`, `integers`, `integers` |
+
+<a id="clebschgordan"></a>**`clebschgordan(j1, m1, j2, m2, j, m)`** — the real Clebsch-Gordan
+coefficient $\langle j_1 m_1, j_2 m_2 \,|\, j\, m \rangle$ for coupling angular momenta $j_1$ and
+$j_2$ to $j$. It is zero unless $m_1 + m_2 = m$, $|m_1| \leq j_1$, $|m_2| \leq j_2$,
+$|m| \leq j$ and $|j_1 - j_2| \leq j \leq j_1 + j_2$.
+
+<a id="clebschgordan_doublearg"></a>**`clebschgordan_doublearg(two_j1, two_m1, two_j2, two_m2, two_j, two_m)`** —
+the same coefficient for possibly half-integer momenta, passed as doubled values. It is also
+zero unless each $2j$ and its $2m$ have equal parity and $2j_1 + 2j_2 + 2j$ is even.
+
+<a id="ls_coupling"></a>**`ls_coupling(two_j, two_j1, two_j2, two_l, two_s, two_lambda1, two_lambda2)`** —
+the helicity coupling of the amplitude with orbital angular momentum $L$ and total spin $S$
+for a two-body decay $J \to j_1\, j_2$ with helicities $\lambda_1$, $\lambda_2$
+([Jacob & Wick (1959)](17-references.md#jacob1959); Eq. (9) of
+[Mikhasenko et al. (2020)](17-references.md#mikhasenko2020)). All momenta are doubled:
+
+$$H = \sqrt{\frac{2L+1}{2J+1}}\; \langle j_1\, \lambda_1, j_2\, {-\lambda_2} \,|\, S\, \lambda_1 - \lambda_2 \rangle\, \langle L\, 0, S\, \lambda_1 - \lambda_2 \,|\, J\, \lambda_1 - \lambda_2 \rangle.$$
+
+#### Four-vector functions
+
+A four-vector is a length-four array `[E, px, py, pz]`, with the metric
+$\operatorname{diag}(1, -1, -1, -1)$ and right-handed spatial axes, in one energy unit with
+$c = 1$. A rest frame is that of a four-vector $P$ with $P^2 > 0$ and $E > 0$. Rotations are
+active: $R_z(\alpha)$ turns $x$ toward $y$, and $R_y(\beta)$ turns $z$ toward $x$.
+
+| Function | Arguments | Description | Domains |
+|---|---|---|---|
+| [`mass_squared`](#mass_squared) | `p` | invariant mass squared $p^2$ | `cartpow(reals, 4)` |
+| [`boost_to_rest`](#boost_to_rest) | `p`, `P` | `p` in the rest frame of `P` | `cartpow(reals, 4)`, `cartpow(reals, 4)` |
+| [`boost_from_rest`](#boost_from_rest) | `p`, `P` | `p` from the rest frame of `P` | `cartpow(reals, 4)`, `cartpow(reals, 4)` |
+| [`helicity_frame`](#helicity_frame) | `p`, `P`, `child` | `p` in the helicity frame of `P` | `cartpow(reals, 4)`, `cartpow(reals, 4)`, `integers` |
+| [`helicity_angles`](#helicity_angles) | `p`, `P`, `child` | polar angles of `p` in the helicity frame of `P` | `cartpow(reals, 4)`, `cartpow(reals, 4)`, `integers` |
+
+<a id="mass_squared"></a>**`mass_squared(p)`** — $p^2 = E^2 - p_x^2 - p_y^2 - p_z^2$.
+
+<a id="boost_to_rest"></a>**`boost_to_rest(p, P)`** — `p` after the Lorentz boost without
+rotation that takes $P$ to $(M, 0, 0, 0)$, $M = \sqrt{P^2}$. With
+$\boldsymbol{\beta} = \mathbf{P}/E_P$ and $\gamma = E_P/M$,
+
+$$E' = \gamma\,(E - \boldsymbol{\beta}\cdot\mathbf{p}), \qquad \mathbf{p}' = \mathbf{p} + \left(\frac{(\gamma - 1)\,\boldsymbol{\beta}\cdot\mathbf{p}}{\beta^2} - \gamma E\right)\boldsymbol{\beta},$$
+
+and $p' = p$ for $\boldsymbol{\beta} = 0$.
+
+<a id="boost_from_rest"></a>**`boost_from_rest(p, P)`** — the inverse of
+[`boost_to_rest`](#boost_to_rest): `p`, given in the rest frame of $P$, after the boost that takes
+$(M, 0, 0, 0)$ to $P$. It is the formula above with $\boldsymbol{\beta}$ replaced by $-\boldsymbol{\beta}$.
+
+<a id="helicity_frame"></a>**`helicity_frame(p, P, child)`** — `p` in the helicity frame of a
+particle with four-momentum $P$, both given in the helicity frame (or rest frame) of its parent.
+With $(\theta, \phi)$ the polar angles of $\mathbf{P}$ for `child = 1`, or of $-\mathbf{P}$ for
+`child = 2` ($\theta = \phi = 0$ for $\mathbf{P} = 0$), `p` is rotated by $R_y(-\theta) R_z(-\phi)$; for `child = 2` it is then rotated by
+$R_y(-\pi)$; finally it is boosted along $z$ to the rest frame of the particle. `child = 2` is
+the Jacob-Wick convention for the second particle of a two-body decay, whose helicity state is
+obtained from the first particle's by a rotation by $\pi$ about $y$
+([Jacob & Wick (1959)](17-references.md#jacob1959); Eq. (B.3.7) of
+[Richman (1984)](17-references.md#richman1984)). In either case the particle's direction of
+flight is the $+z$ axis of its helicity frame. `child` is 1 or 2.
+
+<a id="helicity_angles"></a>**`helicity_angles(p, P, child)`** — `record(costheta = …, phi = …)`,
+the polar angles of `p` in the [helicity frame](#helicity_frame) of $P$: with
+$p' = $ `helicity_frame(p, P, child)`, $\cos\theta = p'_z / |\mathbf{p}'|$ and
+$\phi = \operatorname{atan2}(p'_y, p'_x) \in (-\pi, \pi]$ (see [`atan2`](07-functions.md#sec:functions)).
+
+#### Dalitz-plot decomposition
+
+These functions give the angles of the Dalitz-plot decomposition of a three-body decay
+$0 \to 1\, 2\, 3$ ([Mikhasenko et al. (2020)](17-references.md#mikhasenko2020)) from the
+invariants $\sigma_1 = (p_2 + p_3)^2$, $\sigma_2 = (p_3 + p_1)^2$, $\sigma_3 = (p_1 + p_2)^2$.
+Chain $k$ is the decay through the isobar $(ij)$, with $(i, j, k)$ cyclic: $(23)1$, $(31)2$,
+$(12)3$. `sigmas` is $[\sigma_1, \sigma_2, \sigma_3]$, `m0` the parent mass, and `ms` the
+masses $[m_1, m_2, m_3]$.
+
+| Function | Arguments | Description | Domains |
+|---|---|---|---|
+| [`dalitz_cos_theta`](#dalitz_cos_theta) | `k`, `sigmas`, `m0`, `ms` | $\cos\theta_{ij}$, helicity angle of chain $k$ | `integers`, `cartpow(posreals, 3)`, `posreals`, `cartpow(nonnegreals, 3)` |
+| [`dalitz_cos_zeta`](#dalitz_cos_zeta) | `i`, `k`, `l`, `sigmas`, `m0`, `ms` | $\cos\zeta^{i}_{k(l)}$, Wigner angle of particle $i$ between chains $k$ and $l$ | `integers`, `integers`, `integers`, `cartpow(posreals, 3)`, `posreals`, `cartpow(nonnegreals, 3)` |
+
+The invariants lie in the Dalitz-plot region, with
+$\sigma_1 + \sigma_2 + \sigma_3 = m_0^2 + m_1^2 + m_2^2 + m_3^2$; there the values lie in $[-1, 1]$.
+Where a factor $\lambda^{1/2}$ in a denominator below vanishes, a breakup momentum is zero and
+the angle is undefined; both functions return 1 there.
+
+<a id="dalitz_cos_theta"></a>**`dalitz_cos_theta(k, sigmas, m0, ms)`** — for chain $k \in \{1, 2, 3\}$,
+the cosine of the angle between $\mathbf{p}_i$ and $-\mathbf{p}_k$ in the rest frame of the
+isobar $(ij)$ (Eq. (20) of the reference, with indices permuted cyclically):
+
+$$\cos\theta_{ij} = \frac{2\sigma_k(\sigma_j - m_k^2 - m_i^2) - (\sigma_k + m_i^2 - m_j^2)(m_0^2 - \sigma_k - m_k^2)}{\lambda^{1/2}(m_0^2, m_k^2, \sigma_k)\,\lambda^{1/2}(\sigma_k, m_i^2, m_j^2)}.$$
+
+<a id="dalitz_cos_zeta"></a>**`dalitz_cos_zeta(i, k, l, sigmas, m0, ms)`** — for particle
+$i \in \{1, 2, 3\}$ and chains $k, l \in \{1, 2, 3\}$, the cosine of the angle in the rest frame
+of particle $i$ between the momenta of the systems that particle $i$ comes from in chains $k$
+and $l$: the parent when $i$ is the chain's spectator, the chain's isobar otherwise. For $i = 0$
+it is the cosine of the angle between $\mathbf{p}_k$ and $\mathbf{p}_l$ in the parent rest frame,
+$\cos\hat{\theta}_{k(l)}$ of the reference. It is 1 for $k = l$. Otherwise, with $n$ the index
+other than $k$ and $l$ (Eqs. (22), (26) and (29) of the reference, with indices permuted):
+
+- $i = 0$:
+  $$\frac{(m_0^2 + m_k^2 - \sigma_k)(m_0^2 + m_l^2 - \sigma_l) - 2m_0^2(\sigma_n - m_k^2 - m_l^2)}{\lambda^{1/2}(m_0^2, m_k^2, \sigma_k)\,\lambda^{1/2}(m_0^2, m_l^2, \sigma_l)};$$
+- $i = k$, and likewise $i = l$ with $k$ and $l$ exchanged:
+  $$\frac{2m_i^2(\sigma_n - m_0^2 - m_n^2) + (m_0^2 + m_i^2 - \sigma_i)(\sigma_l - m_i^2 - m_n^2)}{\lambda^{1/2}(m_0^2, m_i^2, \sigma_i)\,\lambda^{1/2}(\sigma_l, m_i^2, m_n^2)};$$
+- $i \notin \{k, l\}$:
+  $$\frac{2m_i^2(m_k^2 + m_l^2 - \sigma_i) + (\sigma_k - m_i^2 - m_l^2)(\sigma_l - m_i^2 - m_k^2)}{\lambda^{1/2}(\sigma_k, m_i^2, m_l^2)\,\lambda^{1/2}(\sigma_l, m_i^2, m_k^2)}.$$
+
+For a massless particle $i$ these give 1. The value is symmetric in $k$ and $l$; the orientation
+of the rotation, $\zeta^{i}_{k(l)} = -\zeta^{i}_{l(k)}$, follows Eqs. (25)–(28) of the reference.
 
 ### Module `pyhf-helpers`
 

@@ -969,6 +969,8 @@ appear in `output_axes`, yielding an array of the shape declared by
   name in `output_axes` must occur at least once in `expr`; any further
   axis names occurring in `expr` are reduced over with `f_reduction`. All
   array dimensions indexed with the same axis name must have the same length.
+  `expr` may be real or complex; a complex `expr` takes a reduction defined on
+  complex arrays (`sum`, `prod`, `mean`).
 
 Examples:
 
@@ -1071,7 +1073,7 @@ input; `var` and `std` are undefined over a single element, and `lany` and
 
 **`metricsum(metric, output_axes, expr)`** is a metric-aware variant of
 sum-`aggregate` for tensor expressions with upper (contravariant)
-and lower (covariant) indices.
+and lower (covariant) indices. `metric` and `expr` may be real or complex.
 
 **Variance-marked axis names** are required inside `metricsum`:
 `.<name>^` denotes an upper-index and `.<name>_` denotes a lower-index axis
