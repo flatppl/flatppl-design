@@ -46,6 +46,7 @@ FlatPPL `base`, not exact constructor names. This table may well be incomplete:
 | `Exponential` | `Exponential` | `Exponential` | `Exponential` |
 | `Gamma` | `Gamma` | `Gamma` | `Gamma` |
 | `Weibull` | `Weibull` | `Weibull` | `Weibull` |
+| `Rayleigh` | — | — | `Rayleigh` |
 | `InverseGamma` | `InverseGamma` | `InverseGamma` | `InverseGamma` |
 | `Beta` | `Beta` | `Beta` | `Beta` |
 | `Bernoulli` | `Bernoulli` | `Bernoulli` | `Bernoulli` |

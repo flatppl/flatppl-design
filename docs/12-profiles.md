@@ -544,6 +544,7 @@ exhaustive.
 | `Gamma` | `gamma` | `shape` → `alpha`, `rate` → `beta` |
 | `ChiSquared` | `chi_square` | `k` → `nu`; equivalently `Gamma(shape = k/2, rate = 0.5)` |
 | `Weibull` | `weibull` | `shape` → `alpha`, `scale` → `sigma` |
+| `Rayleigh` | `rayleigh` | `scale` → `sigma` |
 | `InverseGamma` | `inv_gamma` | `shape` → `alpha`, `scale` → `beta` |
 | `Beta` | `beta` | `alpha` → `alpha`, `beta` → `beta` |
 | `Bernoulli` | `bernoulli` | `p` → `theta` |
