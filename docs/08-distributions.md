@@ -43,6 +43,7 @@ statement w.r.t. `Lebesgue(support = S)` follows by restriction.
 | [`Exponential`](#exponential) | `rate` | `reals` | `nonnegreals` |
 | [`Gamma`](#gamma) | `shape`, `rate` | `reals` | `nonnegreals` |
 | [`Weibull`](#weibull) | `shape`, `scale` | `reals` | `nonnegreals` |
+| [`Rayleigh`](#rayleigh) | `scale` | `reals` | `nonnegreals` |
 | [`Pareto`](#pareto) | `shape`, `scale` | `reals` | `interval(scale, inf)` |
 | [`InverseGamma`](#inversegamma) | `shape`, `scale` | `reals` | `posreals` |
 | [`Beta`](#beta) | `alpha`, `beta` | `reals` | `unitinterval` |
@@ -195,6 +196,18 @@ Parameters:
 Density w.r.t. `Lebesgue(reals)`:
 
 $$\frac{k}{\lambda}\left(\frac{x}{\lambda}\right)^{k-1} e^{-(x/\lambda)^k} \quad \text{for } x \geq 0$$
+
+<a id="rayleigh"></a>**`Rayleigh(scale)`** — The [Rayleigh distribution](https://en.wikipedia.org/wiki/Rayleigh_distribution). `Rayleigh(scale)` is equivalent to `Weibull(2, scale * sqrt(2))`.
+
+Domain/Support: `reals`/`nonnegreals`.
+
+Parameters:
+
+- `scale = elementof(posreals)`: scale parameter $\sigma$.
+
+Density w.r.t. `Lebesgue(reals)`:
+
+$$\frac{x}{\sigma^2}\, e^{-x^2/(2\sigma^2)} \quad \text{for } x \geq 0$$
 
 <a id="pareto"></a>**`Pareto(shape, scale)`** — The [Pareto distribution](https://en.wikipedia.org/wiki/Pareto_distribution).
 
