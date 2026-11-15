@@ -525,7 +525,7 @@ storage layout.
 
 ### Module `regression`
 
-The `regression` module contains probability measures for common generalized linear models, with efficient and stable log densities.
+The `regression` module contains probability measures for common regression models, with efficient and stable log densities.
 
 Loaded via:
 
@@ -535,7 +535,11 @@ reg = standard_module("regression", "0.1")
 
 Each constructor takes an $N \times k$ design matrix `x`, with one observation per row. It returns a probability measure on a length-$N$ response vector. Responses are conditionally independent given the parameters. All parameters other than `x` are shared across rows.
 
+The design matrix, intercepts, coefficients, cutpoints, and all scale, shape, precision, and overdispersion parameters must be finite.
+
 For example, `y ~ reg.NormalGLM(x, alpha, beta, sigma)` draws a response vector using the usual `~` notation.
+
+The equivalent expressions below define the probability laws. Implementations specialize scoring to avoid constructing per-row measures and preserve accuracy in link scale.
 
 #### Distributions
 
@@ -546,6 +550,11 @@ For example, `y ~ reg.NormalGLM(x, alpha, beta, sigma)` draws a response vector 
 | [`CategoricalLogitGLM`](#categoricallogitglm) | `x`, `alpha`, `beta` | `cartpow(integers, N)` | `cartpow(interval(1, n), N)` |
 | [`NormalGLM`](#normalglm) | `x`, `alpha`, `beta`, `sigma` | `cartpow(reals, N)` | `cartpow(reals, N)` |
 | [`PoissonLogGLM`](#poissonlogglm) | `x`, `alpha`, `beta` | `cartpow(integers, N)` | `cartpow(nonnegintegers, N)` |
+| [`NegativeBinomial2LogGLM`](#negativebinomial2logglm) | `x`, `alpha`, `beta`, `psi` | `cartpow(integers, N)` | `cartpow(nonnegintegers, N)` |
+| [`StudentTGLM`](#studenttglm) | `x`, `nu`, `alpha`, `beta`, `sigma` | `cartpow(reals, N)` | `cartpow(reals, N)` |
+| [`GammaLogGLM`](#gammalogglm) | `x`, `alpha`, `beta`, `shape` | `cartpow(reals, N)` | `cartpow(nonnegreals, N)` |
+| [`OrderedLogitGLM`](#orderedlogitglm) | `x`, `beta`, `cutpoints` | `cartpow(integers, N)` | `cartpow(interval(1, n), N)` |
+| [`BetaLogitGLM`](#betalogitglm) | `x`, `alpha`, `beta`, `precision` | `cartpow(reals, N)` | `cartpow(unitinterval, N)` |
 
 <a id="bernoullilogitglm"></a>**`BernoulliLogitGLM(x, alpha, beta)`** — A generalized linear model in $k$ parameters with a Bernoulli distribution and a logistic link (logistic regression).
 
@@ -608,6 +617,77 @@ Parameters:
 - `beta = elementof(cartpow(reals, k))`: $k$ dimensional vector of regression coefficients $\boldsymbol{\beta}$ in link scale.
 
 `PoissonLogGLM(x, alpha, beta)` is mathematically equivalent to `Poisson.(exp.(alpha .+ x * beta))`.
+
+<a id="negativebinomial2logglm"></a>**`NegativeBinomial2LogGLM(x, alpha, beta, psi)`** — Negative binomial regression with a log link for the mean.
+
+Domain/Support: `cartpow(integers, N)`/`cartpow(nonnegintegers, N)`.
+
+Parameters:
+
+- `x = elementof(cartpow(reals, [N, k]))`: $N \times k$ design matrix.
+- `alpha = elementof(reals)`: intercept in log scale.
+- `beta = elementof(cartpow(reals, k))`: regression coefficients in log scale.
+- `psi = elementof(posreals)`: overdispersion parameter of `NegativeBinomial2`.
+
+`NegativeBinomial2LogGLM(x, alpha, beta, psi)` is mathematically equivalent to `NegativeBinomial2.(exp.(alpha .+ x * beta), psi)`.
+
+<a id="studenttglm"></a>**`StudentTGLM(x, nu, alpha, beta, sigma)`** — Linear regression with Student's t residuals.
+
+Domain/Support: `cartpow(reals, N)`/`cartpow(reals, N)`.
+
+Parameters:
+
+- `x = elementof(cartpow(reals, [N, k]))`: $N \times k$ design matrix.
+- `nu = elementof(posreals)`: degrees of freedom.
+- `alpha = elementof(reals)`: intercept.
+- `beta = elementof(cartpow(reals, k))`: regression coefficients.
+- `sigma = elementof(posreals)`: residual scale.
+
+`StudentTGLM(x, nu, alpha, beta, sigma)` is mathematically equivalent to `locscale.(StudentT(nu), alpha .+ x * beta, sigma)`.
+
+<a id="gammalogglm"></a>**`GammaLogGLM(x, alpha, beta, shape)`** — Gamma regression with a log link for the mean.
+
+Domain/Support: `cartpow(reals, N)`/`cartpow(nonnegreals, N)`.
+
+Parameters:
+
+- `x = elementof(cartpow(reals, [N, k]))`: $N \times k$ design matrix.
+- `alpha = elementof(reals)`: intercept in log scale.
+- `beta = elementof(cartpow(reals, k))`: regression coefficients in log scale.
+- `shape = elementof(posreals)`: Gamma shape parameter.
+
+`GammaLogGLM(x, alpha, beta, shape)` is mathematically equivalent to `Gamma.(shape, shape .* exp.(.-(alpha .+ x * beta)))`.
+At zero, each row density takes its right-hand limit.
+
+<a id="orderedlogitglm"></a>**`OrderedLogitGLM(x, beta, cutpoints)`** — Ordered logistic regression for $n$ categories.
+
+Domain/Support: `cartpow(integers, N)`/`cartpow(interval(1, n), N)`.
+
+Parameters:
+
+- `x = elementof(cartpow(reals, [N, k]))`: $N \times k$ design matrix.
+- `beta = elementof(cartpow(reals, k))`: regression coefficients in logit scale.
+- `cutpoints = elementof(ordered(n - 1))`: strictly increasing finite cutpoints, with $n \geq 2$.
+
+For row $i$, let $\eta_i = \sum_{j=1}^k x_{ij}\beta_j$. The responses are independent categorical variates with probabilities
+
+$$\Pr(y_i = c) = \operatorname{invlogit}(t_c - \eta_i) - \operatorname{invlogit}(t_{c-1} - \eta_i), \quad c = 1, \ldots, n,$$
+
+where $t_0=-\infty$, $t_n=+\infty$, and $t_c$ is `cutpoints[c]` otherwise.
+
+<a id="betalogitglm"></a>**`BetaLogitGLM(x, alpha, beta, precision)`** — Beta regression with a logit link for the mean.
+
+Domain/Support: `cartpow(reals, N)`/`cartpow(unitinterval, N)`.
+
+Parameters:
+
+- `x = elementof(cartpow(reals, [N, k]))`: $N \times k$ design matrix.
+- `alpha = elementof(reals)`: intercept in logit scale.
+- `beta = elementof(cartpow(reals, k))`: regression coefficients in logit scale.
+- `precision = elementof(posreals)`: sum of the two Beta shape parameters.
+
+For `eta = alpha .+ x * beta`, `BetaLogitGLM(x, alpha, beta, precision)` is mathematically equivalent to `Beta.(precision .* invlogit.(eta), precision .* invlogit.(.-eta))`.
+At zero and one, each row density takes the limit from within $(0, 1)$.
 
 ### Module `ext-linear-algebra`
 
