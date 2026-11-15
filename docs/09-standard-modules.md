@@ -525,7 +525,7 @@ storage layout.
 
 ### Module `regression`
 
-The `regression` module contains efficient and stable implementations of log densities for common generalized linear models.
+The `regression` module contains probability measures for common generalized linear models, with efficient and stable log densities.
 
 Loaded via:
 
@@ -533,77 +533,81 @@ Loaded via:
 reg = standard_module("regression", "0.1")
 ```
 
+Each constructor takes an $N \times k$ design matrix `x`, with one observation per row. It returns a probability measure on a length-$N$ response vector. Responses are conditionally independent given the parameters. All parameters other than `x` are shared across rows.
+
+For example, `y ~ reg.NormalGLM(x, alpha, beta, sigma)` draws a response vector using the usual `~` notation.
+
 #### Distributions
 
 | Distribution | Parameters | Domain | Support |
 |---|---|---|---|
-| [`BernoulliLogitGLM`](#bernoullilogitglm) | `x`, `alpha`, `beta` | `integers` | `booleans` |
-| [`BinomialLogitGLM`](#binomiallogitglm) | `x`, `n`, `alpha`, `beta` | `integers` | `interval(0, n)` |
-| [`CategoricalLogitGLM`](#categoricallogitglm) | `x`, `alpha`, `beta` | `integers` | `interval(1, n)` |
-| [`NormalGLM`](#normalglm) | `x`, `alpha`, `beta`, `sigma` | `reals` | `reals` |
-| [`PoissonLogGLM`](#poissonlogglm) | `x`, `alpha`, `beta` | `integers` | `nonnegintegers` |
+| [`BernoulliLogitGLM`](#bernoullilogitglm) | `x`, `alpha`, `beta` | `cartpow(integers, N)` | `cartpow(booleans, N)` |
+| [`BinomialLogitGLM`](#binomiallogitglm) | `x`, `n`, `alpha`, `beta` | `cartpow(integers, N)` | `cartpow(interval(0, n), N)` |
+| [`CategoricalLogitGLM`](#categoricallogitglm) | `x`, `alpha`, `beta` | `cartpow(integers, N)` | `cartpow(interval(1, n), N)` |
+| [`NormalGLM`](#normalglm) | `x`, `alpha`, `beta`, `sigma` | `cartpow(reals, N)` | `cartpow(reals, N)` |
+| [`PoissonLogGLM`](#poissonlogglm) | `x`, `alpha`, `beta` | `cartpow(integers, N)` | `cartpow(nonnegintegers, N)` |
 
-<a id="bernoullilogitglm"></a>**`BernoulliLogitGLM(x, alpha, beta)`** — An efficient implementation of the log density for a generalized linear model in $k$ parameters with a Bernoulli distribution and a logistic link (logistic regression).
+<a id="bernoullilogitglm"></a>**`BernoulliLogitGLM(x, alpha, beta)`** — A generalized linear model in $k$ parameters with a Bernoulli distribution and a logistic link (logistic regression).
 
-Domain/Support: `integers`/`booleans`.
+Domain/Support: `cartpow(integers, N)`/`cartpow(booleans, N)`.
 
 Parameters:
 
-- `x = elementof(cartpow(reals, k))`: $k$ dimensional data vector $\mathbf{x}$.
+- `x = elementof(cartpow(reals, [N, k]))`: $N \times k$ design matrix.
 - `alpha = elementof(reals)`: intercept parameter in link scale.
 - `beta = elementof(cartpow(reals, k))`: $k$ dimensional vector of regression coefficients $\boldsymbol{\beta}$ in link scale.
 
-`BernoulliLogitGLM(x, alpha, beta)` is mathematically equivalent to `Bernoulli(invlogit(alpha + transpose(x) * beta))` but is more efficient.
+`BernoulliLogitGLM(x, alpha, beta)` is mathematically equivalent to `Bernoulli.(invlogit.(alpha .+ x * beta))`.
 
-<a id="binomiallogitglm"></a>**`BinomialLogitGLM(x, n, alpha, beta)`** — An efficient implementation of the log density for a generalized linear model in $k$ parameters with a Binomial distribution and a logistic link (logistic regression).
+<a id="binomiallogitglm"></a>**`BinomialLogitGLM(x, n, alpha, beta)`** — A generalized linear model in $k$ parameters with a Binomial distribution and a logistic link (logistic regression).
 
-Domain/Support: `integers`/`interval(0, n)`.
+Domain/Support: `cartpow(integers, N)`/`cartpow(interval(0, n), N)`.
 
 Parameters:
 
-- `x = elementof(cartpow(reals, k))`: $k$ dimensional data vector $\mathbf{x}$.
+- `x = elementof(cartpow(reals, [N, k]))`: $N \times k$ design matrix.
 - `n = elementof(posintegers)`: number of Bernoulli trials conducted. **Note.** If $n=1$ always, then `BernoulliLogitGLM` should be used instead.
 - `alpha = elementof(reals)`: intercept parameter in link scale.
 - `beta = elementof(cartpow(reals, k))`: $k$ dimensional vector of regression coefficients $\boldsymbol{\beta}$ in link scale.
 
-`BinomialLogitGLM(x, n, alpha, beta)` is mathematically equivalent to `Binomial(n, invlogit(alpha + transpose(x) * beta))` but is more efficient.
+`BinomialLogitGLM(x, n, alpha, beta)` is mathematically equivalent to `Binomial.(n, invlogit.(alpha .+ x * beta))`.
 
-<a id="categoricallogitglm"></a>**`CategoricalLogitGLM(x, alpha, beta)`** — An efficient implementation of the log density for an $n$-class logistic (softmax) generalized linear model.
+<a id="categoricallogitglm"></a>**`CategoricalLogitGLM(x, alpha, beta)`** — An $n$-class logistic (softmax) generalized linear model.
 
-Domain/Support: `integers`/`interval(1, n)`.
+Domain/Support: `cartpow(integers, N)`/`cartpow(interval(1, n), N)`.
 
 Parameters:
 
-- `x = elementof(cartpow(reals, k))`: $k$ dimensional data vector $\mathbf{x}$.
+- `x = elementof(cartpow(reals, [N, k]))`: $N \times k$ design matrix.
 - `alpha = elementof(cartpow(reals, n))`: intercept $n$ vector (one intercept per class), where $n$ is the number of classes (so $n = $ `lengthof(alpha)`).
 - `beta = elementof(cartpow(reals, [k, n]))`: $k \times n$ matrix of regression coefficients (columns correspond to classes).
 
-`CategoricalLogitGLM(x, alpha, beta)` is mathematically equivalent to `Categorical(softmax(alpha + transpose(beta) * x))`, but is computed in a numerically stable manner.
+`CategoricalLogitGLM(x, alpha, beta)` is the independent product, in row order, of `Categorical(softmax(alpha + transpose(beta) * x[i, :]))` for $i = 1, \ldots, N$. It is computed in a numerically stable manner.
 
-<a id="normalglm"></a>**`NormalGLM(x, alpha, beta, sigma)`** — An efficient implementation of the log density for a generalized linear model in $k$ parameters with a Gaussian distribution and an identity link (linear regression).
+<a id="normalglm"></a>**`NormalGLM(x, alpha, beta, sigma)`** — A generalized linear model in $k$ parameters with a Gaussian distribution and an identity link (linear regression).
 
-Domain/Support: `reals`/`reals`.
+Domain/Support: `cartpow(reals, N)`/`cartpow(reals, N)`.
 
 Parameters:
 
-- `x = elementof(cartpow(reals, k))`: $k$ dimensional data vector $\mathbf{x}$.
+- `x = elementof(cartpow(reals, [N, k]))`: $N \times k$ design matrix.
 - `alpha = elementof(reals)`: intercept parameter in link scale.
 - `beta = elementof(cartpow(reals, k))`: $k$ dimensional vector of regression coefficients $\boldsymbol{\beta}$ in link scale.
 - `sigma = elementof(posreals)`: residual standard deviation.
 
-`NormalGLM(x, alpha, beta, sigma)` is mathematically equivalent to `Normal(alpha + transpose(x) * beta, sigma)` but is more efficient.
+`NormalGLM(x, alpha, beta, sigma)` is mathematically equivalent to `Normal.(alpha .+ x * beta, sigma)`.
 
-<a id="poissonlogglm"></a>**`PoissonLogGLM(x, alpha, beta)`** — An efficient implementation of the log density for a generalized linear model in $k$ parameters with a Poisson distribution and a log link (Poisson regression).
+<a id="poissonlogglm"></a>**`PoissonLogGLM(x, alpha, beta)`** — A generalized linear model in $k$ parameters with a Poisson distribution and a log link (Poisson regression).
 
-Domain/Support: `integers`/`nonnegintegers`.
+Domain/Support: `cartpow(integers, N)`/`cartpow(nonnegintegers, N)`.
 
 Parameters:
 
-- `x = elementof(cartpow(reals, k))`: $k$ dimensional data vector $\mathbf{x}$.
+- `x = elementof(cartpow(reals, [N, k]))`: $N \times k$ design matrix.
 - `alpha = elementof(reals)`: intercept parameter in link scale.
 - `beta = elementof(cartpow(reals, k))`: $k$ dimensional vector of regression coefficients $\boldsymbol{\beta}$ in link scale.
 
-`PoissonLogGLM(x, alpha, beta)` is mathematically equivalent to `Poisson(exp(alpha + transpose(x) * beta))` but is more efficient.
+`PoissonLogGLM(x, alpha, beta)` is mathematically equivalent to `Poisson.(exp.(alpha .+ x * beta))`.
 
 ### Module `ext-linear-algebra`
 
