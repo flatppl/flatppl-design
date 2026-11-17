@@ -713,8 +713,15 @@ Functions yielding multiple decomposition products return them as explicitly-nam
 | [`eigmin`](#eigmin) | `A` | Return minimal eigenvalue of $\mathbf{A}$ | square matrices |
 | [`matexp`](#matexp) | `A` | Matrix exponential $e^{\mathbf{A}}$ | square matrices |
 | [`kron`](#kron) | `A`, `B` | Kronecker tensor product $\mathbf{A} \otimes \mathbf{B}$ | matrices |
-| [`lstsq`](#lstsq) | `A`, `b` | Least squares solution for $\mathbf{x}$ in $\mathbf{A}\mathbf{x} = \mathbf{b}$ | matrices, vectors |
-| [`rank`](#rank) | `A` | Compute the numerical rank of the matrix `A`| matrices |
+| [`solve_triangular`](#solve-triangular) | `A`, `b`, `lower`, `unit_diagonal` | Triangular solve | square matrices, vectors or matrices, booleans, booleans |
+| [`lu_solve`](#lu-solve) | `factors`, `b` | Solve using an LU factorization | record of matrices, vector or matrix |
+| [`cholesky_solve`](#cholesky-solve) | `L`, `b` | Solve using a lower Cholesky factor | square matrix, vector or matrix |
+| [`eigh`](#eigh) | `A` | Hermitian eigenvalues and eigenvectors | square matrices |
+| [`eigvalsh`](#eigvalsh) | `A` | Hermitian eigenvalues | square matrices |
+| [`pinv`](#pinv) | `A`, `rtol`, `atol` | Truncated singular-value pseudoinverse | matrices, reals, nonnegreals |
+| [`cond`](#cond) | `A` | Spectral condition number | matrices |
+| [`lstsq`](#lstsq) | `A`, `b`, `rtol`, `atol` | Minimum-norm least squares after singular-value truncation | matrices, vectors or matrices, reals, nonnegreals |
+| [`rank`](#rank) | `A`, `rtol`, `atol` | Numerical matrix rank | matrices, reals, nonnegreals |
 
 <a id="lu"></a>**`lu(A)`** — computes the LU decomposition of a square matrix `A`.
 Returns `record(P = P_mat, L = L_mat, U = U_mat)` such that $\mathbf{P} \mathbf{A} = \mathbf{L} \mathbf{U}$, where `P_mat` is a permutation matrix, `L_mat` is lower triangular with unit diagonal, and `U_mat` is upper triangular.
@@ -733,9 +740,87 @@ Returns `record(values = val_vec, vectors = vec_mat)` where `val_vec` is a vecto
 
 <a id="kron"></a>**`kron(A, B)`** — computes the Kronecker tensor product $\mathbf{A} \otimes \mathbf{B} = \begin{bmatrix} A_{1,1} \mathbf{B} & \cdots & A_{1,n} \mathbf{B}\\ \vdots & \ddots & \vdots \\ A_{m,1} \mathbf{B} & \cdots & A_{m,n} \mathbf{B}\end{bmatrix}$ of the $m \times n$ matrix `A` and the $p \times q$ matrix `B`, returning a $pm \times qn$ matrix.
 
-<a id="lstsq"></a>**`lstsq(A, b)`** - computes the least squares solution of the equation $\mathbf{A}\mathbf{x} = \mathbf{b}$ for an $n \times k$ matrix $\mathbf{A}$ and an $n$-vector $\mathbf{b}$.
+<a id="solve-triangular"></a>**`solve_triangular(A, b, lower = true, unit_diagonal = false)`** —
+solves $\mathbf{T}\mathbf{x}=\mathbf{b}$ for a real or complex square matrix.
+The fixed boolean `lower` selects the lower or upper triangle of `A`.
+The fixed boolean `unit_diagonal` replaces its diagonal by ones when true.
+Unused entries, including the stored diagonal in that case, do not participate.
+The used entries and `b` must be finite, and $\mathbf{T}$ must be nonsingular.
+A singular factor is an error.
 
-<a id="rank"></a>**`rank(A)`** - computes the numerical rank of the matrix `A`. 
+For all three factor solves, `b` is a real or complex vector or matrix with the same row count
+as the factor. The result has the same shape as `b`, including zero columns.
+Matrix right-hand sides are solved columnwise.
+
+<a id="lu-solve"></a>**`lu_solve(factors, b)`** — solves using
+`factors = record(P = P_mat, L = L_mat, U = U_mat)` with the convention of
+[`lu`](#lu): $\mathbf{P}\mathbf{A}=\mathbf{L}\mathbf{U}$.
+The three factors have the same square shape, `P_mat` is a permutation matrix,
+and the stored diagonal of `L_mat` consists of ones.
+The result satisfies $\mathbf{L}\mathbf{U}\mathbf{x}=\mathbf{P}\mathbf{b}$.
+Only the lower triangle of `L_mat` and upper triangle of `U_mat` participate.
+Their used entries and `b` must be finite, and `U_mat` must be nonsingular.
+A singular factor is an error.
+
+<a id="cholesky-solve"></a>**`cholesky_solve(L, b)`** — solves
+$\mathbf{L}\mathbf{L}^{\dagger}\mathbf{x}=\mathbf{b}$ using a real or complex
+lower Cholesky factor. Only the lower triangle participates.
+Its entries and `b` must be finite, and its diagonal must be real and strictly positive.
+
+<a id="eigh"></a>**`eigh(A)`** — computes the eigendecomposition of a finite
+real symmetric or complex Hermitian $n\times n$ matrix.
+Returns `record(values = val_vec, vectors = vec_mat)` with ascending real
+eigenvalues and corresponding orthonormal eigenvectors as columns.
+Both triangles participate. With $\epsilon$ the gap between one and the next
+larger number in the implementation's floating-point representation, the input must satisfy
+
+$$c(\mathbf{A}-\mathbf{A}^{\dagger})\leq 64n\epsilon\,c(\mathbf{A}),$$
+
+where $c$ is the maximum absolute real or imaginary component over all entries.
+An accepted input denotes $\mathbf{H}=(\mathbf{A}+\mathbf{A}^{\dagger})/2$,
+and $\mathbf{H}=\mathbf{V}\operatorname{diag}(\boldsymbol{\lambda})\mathbf{V}^{\dagger}$.
+For a simple eigenvalue, the first coordinate of maximal magnitude in its
+eigenvector has positive real value, fixing its phase.
+Repeated eigenspaces admit any orthonormal basis.
+For a $0\times0$ input, the result contains an empty vector and a $0\times0$ matrix.
+
+<a id="eigvalsh"></a>**`eigvalsh(A)`** — returns only the ascending real
+eigenvalue vector, with the same input interpretation as [`eigh`](#eigh).
+
+<a id="singular-value-cutoff"></a>The functions `pinv`, `lstsq`, and `rank`
+share a singular-value cutoff. For an $m\times n$ matrix with singular values
+$s_i$, retain precisely those satisfying
+
+$$s_i>\max(\mathrm{atol},\mathrm{rtol}\,s_{\max}).$$
+
+Both tolerances are finite and non-negative, except that the default
+`rtol = -1` selects $\max(m,n)\epsilon$. The default is `atol = 0`.
+Here $\epsilon$ has the meaning given for [`eigh`](#eigh), without prescribing
+a floating-point width. The matrix entries must be finite and real or complex.
+For an empty singular spectrum, no values are retained.
+
+<a id="pinv"></a>**`pinv(A, rtol = -1, atol = 0)`** — returns
+$\mathbf{V}\operatorname{diag}(s_i^+)\mathbf{U}^{\dagger}$, where $s_i^+=1/s_i$
+for [retained singular values](#singular-value-cutoff) and zero otherwise.
+This is the Moore–Penrose pseudoinverse of the matrix after the discarded
+singular values have been replaced by zero.
+The result has shape $n\times m$, including when either extent is zero.
+
+<a id="cond"></a>**`cond(A)`** — returns the spectral condition number
+$s_{\max}/s_{\min}$ of a finite real or complex matrix, using all computed
+singular values without a cutoff. A zero smallest singular value gives
+$+\infty$, including for an all-zero matrix. An empty singular spectrum is an error.
+
+<a id="lstsq"></a>**`lstsq(A, b, rtol = -1, atol = 0)`** — returns
+`pinv(A, rtol, atol) * b` for an $m\times n$ matrix `A` and a finite
+real or complex vector or matrix `b` with $m$ rows.
+This is the minimum-norm least squares solution after singular-value truncation,
+using the Euclidean norm for a vector and solving matrix columns independently.
+The result has $n$ rows and preserves the vector or matrix form of `b`.
+An empty singular spectrum gives a zero result of that shape.
+
+<a id="rank"></a>**`rank(A, rtol = -1, atol = 0)`** — returns the number
+of retained singular values, or zero for an empty singular spectrum.
 
 ### Module `special-functions`
 
@@ -760,8 +845,21 @@ sp = standard_module("special-functions", "0.1")
 | [`bessel_k`](#bessel_k) | `v`, `z` | Modified Bessel function of the second kind $K_v(z)$ | reals, posreals |
 | [`digamma`](#digamma) | `x` | Digamma function $\psi(x)$ | reals |
 | [`polygamma`](#polygamma) | `n`, `x` | Polygamma function $\psi^{(n)}(x)$ | non-negative integers, reals |
-| [`gammainc`](#gammainc) | `a`, `x` | Regularized incomplete gamma function | posreals, posreals |
-| [`betainc`](#betainc) | `a`, `b`, `x` | Regularized incomplete beta function | posreals, posreals, unitinterval |
+| [`gammainc`](#gammainc) | `a`, `x` | Regularized lower incomplete gamma function | finite posreals, nonnegreals |
+| [`gammaincc`](#gammaincc) | `a`, `x` | Regularized upper incomplete gamma function | finite posreals, nonnegreals |
+| [`log_gammainc`](#log-gammainc) | `a`, `x` | Log regularized lower incomplete gamma function | finite posreals, nonnegreals |
+| [`log_gammaincc`](#log-gammaincc) | `a`, `x` | Log regularized upper incomplete gamma function | finite posreals, nonnegreals |
+| [`betainc`](#betainc) | `a`, `b`, `x` | Regularized incomplete beta function | finite posreals, finite posreals, unitinterval |
+| [`betaincc`](#betaincc) | `a`, `b`, `x` | Complementary regularized incomplete beta function | finite posreals, finite posreals, unitinterval |
+| [`log_betainc`](#log-betainc) | `a`, `b`, `x` | Log regularized incomplete beta function | finite posreals, finite posreals, unitinterval |
+| [`log_betaincc`](#log-betaincc) | `a`, `b`, `x` | Log complementary regularized incomplete beta function | finite posreals, finite posreals, unitinterval |
+| [`beta`](#beta-function) | `a`, `b` | Beta function | finite posreals, finite posreals |
+| [`logbeta`](#logbeta) | `a`, `b` | Log beta function | finite posreals, finite posreals |
+| [`bessel_i_scaled`](#bessel-i-scaled) | `v`, `z` | Exponentially scaled modified Bessel function $I_v$ | finite reals, finite reals |
+| [`bessel_k_scaled`](#bessel-k-scaled) | `v`, `z` | Exponentially scaled modified Bessel function $K_v$ | finite reals, finite nonnegreals |
+| [`log_bessel_i`](#log-bessel-i) | `v`, `z` | Log modified Bessel function $I_v$ | finite nonnegreals, finite nonnegreals |
+| [`log_bessel_k`](#log-bessel-k) | `v`, `z` | Log modified Bessel function $K_v$ | finite reals, finite nonnegreals |
+| [`log_ndtr`](#log-ndtr) | `x` | Log standard normal cumulative probability | reals |
 | [`airy`](#airy) | `x` | Airy function $\operatorname{Ai}(x)$ | reals |
 
 <a id="erf"></a>**`erf(x)`** — computes the error function $\operatorname{erf}(x) = \frac{2}{\sqrt{\pi}} \int_0^x e^{-t^2} dt$.
@@ -784,7 +882,73 @@ sp = standard_module("special-functions", "0.1")
 
 <a id="gammainc"></a>**`gammainc(a, x)`** — computes the regularized lower incomplete gamma function $P(a, x) = \frac{1}{\Gamma(a)} \int_0^x t^{a-1} e^{-t} dt$.
 
+<a id="gammaincc"></a>**`gammaincc(a, x)`** — computes the
+[regularized upper incomplete gamma function](https://dlmf.nist.gov/8.2)
+
+$$Q(a,x)=\frac{1}{\Gamma(a)}\int_x^{\infty}t^{a-1}e^{-t}\,dt=1-P(a,x).$$
+
+The gamma functions in this group require finite $a>0$ and $0\leq x\leq+\infty$.
+Their endpoint values are $P(a,0)=0$, $Q(a,0)=1$, $P(a,+\infty)=1$, and $Q(a,+\infty)=0$.
+
+<a id="log-gammainc"></a>**`log_gammainc(a, x)`** — returns $\ln P(a,x)$,
+with the same domain as `gammainc`.
+
+<a id="log-gammaincc"></a>**`log_gammaincc(a, x)`** — returns $\ln Q(a,x)$,
+with the same domain as `gammaincc`.
+
 <a id="betainc"></a>**`betainc(a, b, x)`** — computes the regularized incomplete beta function $I_x(a, b) = \frac{B(x; a, b)}{B(a, b)}$.
+
+<a id="betaincc"></a>**`betaincc(a, b, x)`** — computes the
+[complementary regularized incomplete beta function](https://dlmf.nist.gov/8.17)
+
+$$\frac{1}{B(a,b)}\int_x^1t^{a-1}(1-t)^{b-1}\,dt=1-I_x(a,b)=I_{1-x}(b,a).$$
+
+The incomplete beta functions in this group require finite $a,b>0$ and $x\in[0,1]$.
+At $x=0$, `betainc` is zero and `betaincc` is one.
+At $x=1$, their values are one and zero, respectively.
+
+<a id="log-betainc"></a>**`log_betainc(a, b, x)`** — returns $\ln I_x(a,b)$,
+with the same domain as `betainc`.
+
+<a id="log-betaincc"></a>**`log_betaincc(a, b, x)`** — returns
+$\ln(1-I_x(a,b))$, with the same domain as `betaincc`.
+
+<a id="beta-function"></a>**`beta(a, b)`** — returns the beta function
+
+$$B(a,b)=\int_0^1t^{a-1}(1-t)^{b-1}\,dt
+=\frac{\Gamma(a)\Gamma(b)}{\Gamma(a+b)}$$
+
+for finite $a,b>0$.
+
+<a id="logbeta"></a>**`logbeta(a, b)`** — returns $\ln B(a,b)$ for finite $a,b>0$.
+
+<a id="bessel-i-scaled"></a>**`bessel_i_scaled(v, z)`** — returns
+$e^{-|z|}I_v(z)$ for finite real `v` and `z`.
+For $z=-r<0$, the branch is $I_v(-r)=e^{i\pi v}I_v(r)$, which can be complex.
+At zero, the value is the limit from positive arguments.
+
+<a id="bessel-k-scaled"></a>**`bessel_k_scaled(v, z)`** — returns
+$e^zK_v(z)$ for finite real `v` and finite $z\geq0$, with value $+\infty$ at zero.
+
+<a id="log-bessel-i"></a>**`log_bessel_i(v, z)`** — returns the real value
+$\ln I_v(z)$ for finite $v,z\geq0$.
+At zero argument, the result is zero for $v=0$ and $-\infty$ for $v>0$.
+
+<a id="log-bessel-k"></a>**`log_bessel_k(v, z)`** — returns
+$\ln K_v(z)$ for finite real `v` and finite $z\geq0$, with value $+\infty$ at zero.
+
+<a id="log-ndtr"></a>**`log_ndtr(x)`** — returns $\ln\Phi(x)$, where
+
+$$\Phi(x)=\frac{1}{\sqrt{2\pi}}\int_{-\infty}^xe^{-t^2/2}\,dt.$$
+
+The values at $-\infty$ and $+\infty$ are $-\infty$ and zero, respectively.
+
+These logarithms use the extended value $\ln0=-\infty$.
+The log and scaled functions preserve representable transformed results when
+the corresponding untransformed value underflows or overflows.
+Complementary functions preserve small representable tails even when the
+corresponding lower probability rounds to one.
+The displayed identities define mathematical results, not evaluation algorithms.
 
 <a id="airy"></a>**`airy(x)`** — computes the Airy function $\operatorname{Ai}(x)$, which is a solution to the differential equation $y'' - x y = 0$.
 
@@ -817,7 +981,7 @@ poly = standard_module("polynomials", "0.1")
 
 ### Module `splines`
 
-The `splines` standard module provides spline basis and penalty functions.
+The `splines` standard module provides interpolation, spline basis, and penalty functions.
 
 Loaded via:
 
@@ -831,6 +995,13 @@ spl = standard_module("splines", "0.1")
 |---|---|---|---|
 | [`thinplate_basis`](#thinplate-basis) | `x`, `centers` | One-dimensional thin-plate spline basis | real, nonempty real vector |
 | [`thinplate_penalty`](#thinplate-penalty) | `centers` | Thin-plate roughness matrix | nonempty real vector |
+| [`interp_linear`](#interp-linear) | `x`, `knots`, `values`, `extrapolation` | Piecewise linear interpolation | real, real vectors, string |
+| [`interp_cubic`](#interp-cubic) | `x`, `knots`, `values`, `extrapolation` | Natural cubic interpolation | real, real vectors, string |
+| [`interp_pchip`](#interp-pchip) | `x`, `knots`, `values`, `extrapolation` | Shape-preserving cubic Hermite interpolation | real, real vectors, string |
+| [`bspline_basis`](#bspline-basis) | `x`, `knots`, `degree` | B-spline basis vector | real, real vector, non-negative integer |
+| [`bspline_derivative`](#bspline-derivative) | `x`, `knots`, `degree`, `order` | Piecewise B-spline derivatives | real, real vector, non-negative integers |
+| [`bspline_integral`](#bspline-integral) | `a`, `b`, `knots`, `degree` | B-spline integral vector | reals, real vector, non-negative integer |
+| [`bspline_penalty`](#bspline-penalty) | `knots`, `degree`, `order` | Integrated derivative-product matrix | real vector, non-negative integers |
 
 <a id="thinplate-basis"></a>**`thinplate_basis(x, centers)`** — returns
 $[K(x,c_1),\ldots,K(x,c_n),1,x]$, where $K(u,v)=|u-v|^3/12$ and
@@ -844,6 +1015,91 @@ $a_1,\ldots,a_n,b_0,b_1$ satisfying $\sum_i a_i=\sum_i a_i c_i=0$, its quadratic
 form equals the integral over the reals of the squared second derivative
 of the corresponding spline. The raw matrix need not be positive
 semidefinite outside this constrained subspace.
+
+<a id="interp-linear"></a>**`interp_linear(x, knots, values, extrapolation = "constant")`** —
+interpolates linearly between consecutive pairs $(t_i,y_i)$ from `knots` and `values`:
+
+$$f(x)=y_i+\frac{x-t_i}{t_{i+1}-t_i}(y_{i+1}-y_i),\qquad t_i\leq x\leq t_{i+1}.$$
+
+All three interpolation functions require finite real `x` and finite real
+vectors `knots` and `values` of equal length $N\geq2$, with strictly increasing knots.
+The fixed string `extrapolation` selects the behavior outside $[t_1,t_N]$:
+
+- `"constant"` returns the nearest endpoint value.
+- `"linear"` extends the interpolant using its first derivative at that endpoint.
+- `"error"` makes an exterior argument an error.
+
+Other policy strings are errors. At an interior knot, the interval on its right
+is selected. At the final knot, the interval on its left is selected.
+The numerical arguments need not be fixed.
+
+<a id="interp-cubic"></a>**`interp_cubic(x, knots, values, extrapolation = "constant")`** —
+evaluates the natural cubic interpolant through $(t_i,y_i)$.
+It is piecewise cubic and $C^2$ on $[t_1,t_N]$, with $f''(t_1)=f''(t_N)=0$.
+For two knots it is linear. It uses the interpolation domains and extrapolation
+policies above.
+
+<a id="interp-pchip"></a>**`interp_pchip(x, knots, values, extrapolation = "constant")`** —
+evaluates the $C^1$ piecewise cubic Hermite interpolant with
+[PCHIP slopes](https://docs.scipy.org/doc/scipy/reference/generated/scipy.interpolate.PchipInterpolator.html).
+It uses the interpolation domains and extrapolation policies above.
+For $h_i=t_{i+1}-t_i$ and $d_i=(y_{i+1}-y_i)/h_i$, the interior slope $m_i$ is
+zero if $d_{i-1}d_i\leq0$. Otherwise,
+
+$$m_i=\frac{w_1+w_2}{w_1/d_{i-1}+w_2/d_i},\qquad
+w_1=2h_i+h_{i-1},\quad w_2=h_i+2h_{i-1}.$$
+
+For each endpoint, let $(h,d)$ denote its nearest interval and $(h',d')$ the next.
+Start with $\widehat m=((2h+h')d-hd')/(h+h')$.
+Set the slope to zero if $\operatorname{sign}(\widehat m)\ne\operatorname{sign}(d)$.
+Otherwise, if $\operatorname{sign}(d)\ne\operatorname{sign}(d')$ and
+$|\widehat m|>3|d|$, set it to $3d$. In all other cases use $\widehat m$.
+With two knots, both slopes equal $d_1$.
+On each interval the cubic matches the two values and their assigned slopes.
+The continuity statement concerns the interpolation interval, irrespective of the extrapolation policy.
+
+<a id="bspline-basis"></a>**`bspline_basis(x, knots, degree)`** — returns
+the $n$ B-spline basis values $[B_{1,p}(x),\ldots,B_{n,p}(x)]$ of degree $p$.
+Here `knots` is the full knot vector $t_1\leq\cdots\leq t_K$, with finite real
+entries, $K\geq2(p+1)$, and $n=K-p-1$.
+The degree is a fixed non-negative integer. No knot has multiplicity greater than $p+1$.
+The active interval $[t_{p+1},t_{n+1}]$ must have positive length, and `x` must be finite real.
+The [Cox–de Boor recurrence](https://docs.scipy.org/doc/scipy/reference/generated/scipy.interpolate.BSpline.html) defines the basis:
+
+$$B_{i,0}(x)=\begin{cases}1,&t_i\leq x<t_{i+1},\\0,&\text{otherwise},\end{cases}$$
+
+$$B_{i,p}(x)=\frac{x-t_i}{t_{i+p}-t_i}B_{i,p-1}(x)
++\frac{t_{i+p+1}-x}{t_{i+p+1}-t_{i+1}}B_{i+1,p-1}(x).$$
+
+A term with zero denominator contributes zero.
+Returned basis functions are restricted to the active interval and are zero outside it.
+At an interior knot they take their right limit, and at the right endpoint their left limit.
+Knot entries need not be fixed. These knot and endpoint conventions also apply
+to the following three functions.
+
+<a id="bspline-derivative"></a>**`bspline_derivative(x, knots, degree, order = 1)`** —
+returns the piecewise derivatives $[B_{1,p}^{(r)}(x),\ldots,B_{n,p}^{(r)}(x)]$,
+where `order` is a fixed non-negative integer $r$.
+The derivatives use the same one-sided knot conventions as the basis.
+For $r>p$, the result is zero. These are ordinary derivatives on each polynomial
+piece, not distributional derivatives at discontinuities.
+
+<a id="bspline-integral"></a>**`bspline_integral(a, b, knots, degree)`** —
+returns the vector with entries $\int_a^b B_{i,p}(x)\,dx$ for finite real bounds.
+The basis vanishes outside the active interval, so integration clips to that interval.
+Reversed bounds reverse the sign, and equal bounds give zero.
+
+<a id="bspline-penalty"></a>**`bspline_penalty(knots, degree, order = 2)`** —
+returns the real symmetric positive semidefinite $n\times n$ matrix
+
+$$P_{ij}=\int_{t_{p+1}}^{t_{n+1}}B_{i,p}^{(r)}(x)B_{j,p}^{(r)}(x)\,dx.$$
+
+The fixed non-negative integer `order` must satisfy $r\leq p$.
+Every knot strictly inside the active interval must have multiplicity at most
+$p-r+1$, ensuring square-integrable weak derivatives on that interval.
+For $r=0$ this is the basis mass matrix.
+For coefficients $c_i$, its quadratic form is
+$\int_{t_{p+1}}^{t_{n+1}}(\sum_i c_iB_{i,p}^{(r)}(x))^2\,dx$.
 
 ### Module `distances`
 
