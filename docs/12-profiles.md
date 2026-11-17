@@ -521,6 +521,9 @@ with no distribution statement. The profile includes:
 | `logweighted(lw, M)` | `target += lw` |
 | `lawof(record(...))` | implicit in block structure |
 
+A `~` statement adds the log-density up to a term that does not depend on the parameters,
+and `target += D_lpdf(x | ...)` adds it in full. Both forms give the same posterior.
+
 **What does not map.** Stan has no first-class support for:
 
 - Multiple likelihood / posterior objects: a Stan model expresses a single joint
