@@ -505,14 +505,19 @@ block structure does not expose directly.
 
 #### FlatPPL → Stan
 
-FlatPPL models that express a joint distribution over parameters and observations
-(without separate likelihood objects) map to Stan. The profile includes:
+A FlatPPL posterior `bayesupdate(L, prior)` or likelihood `likelihoodof(K, obs)` maps to
+one Stan program. The observed values become data. Each prior field, or each kernel input
+when there is no prior, becomes a parameter. A `Lebesgue` prior factor gives a parameter
+with no distribution statement. The profile includes:
 
 | FlatPPL construct | Stan equivalent |
 |---|---|
 | `draw(D(...))` | `x ~ D(...)` (generative fragment) |
 | `elementof(S)` | parameter declaration with constraints |
-| Deterministic computation | transformed parameters / model block |
+| Literal values, `load_data(...)` | `data` block |
+| Deterministic computation | `transformed data` (fixed values); `transformed parameters` or `model` block (parameter-dependent values) |
+| `normalize(truncate(D(...), interval(a, b)))` | `x ~ D(...) T[a, b]` |
+| `logdensityof(D(...), x)` | `D_lpdf` (`D_lpmf` for a discrete law) |
 | `logweighted(lw, M)` | `target += lw` |
 | `lawof(record(...))` | implicit in block structure |
 
@@ -522,7 +527,8 @@ FlatPPL models that express a joint distribution over parameters and observation
   log-density — either a likelihood (no priors on parameters) or a posterior (with
   priors), but only one per file.
 - Measure algebra.
-- Explicit density evaluation (`densityof`, `logdensityof`).
+- Discrete parameters: a discrete latent variable must be summed out explicitly.
+- Integrals over continuous latent variables, such as the intermediate variate of `kchain`.
 - `PoissonProcess` / `BinnedPoissonProcess` as first-class constructs.
 
 #### Stan distribution mapping
@@ -545,6 +551,7 @@ exhaustive.
 | `ChiSquared` | `chi_square` | `k` → `nu`; equivalently `Gamma(shape = k/2, rate = 0.5)` |
 | `Weibull` | `weibull` | `shape` → `alpha`, `scale` → `sigma` |
 | `Rayleigh` | `rayleigh` | `scale` → `sigma` |
+| `Pareto` | `pareto` | `shape` → `alpha`, `scale` → `y_min` (Stan order: `y_min`, `alpha`) |
 | `InverseGamma` | `inv_gamma` | `shape` → `alpha`, `scale` → `beta` |
 | `Beta` | `beta` | `alpha` → `alpha`, `beta` → `beta` |
 | `Bernoulli` | `bernoulli` | `p` → `theta` |
@@ -552,14 +559,15 @@ exhaustive.
 | `Binomial` | `binomial` | `n` → `N`, `p` → `theta` |
 | `Poisson` | `poisson` | `rate` → `lambda` |
 | `NegativeBinomial` | `neg_binomial` | `alpha` → `alpha`, `beta` → `beta` |
-| `Geometric` | `neg_binomial` | special case `alpha = 1`, `beta = p/(1 - p)` (both on support {0,1,2,…}; not Stan's native trials-based `geometric`) |
+| `NegativeBinomial2` | `neg_binomial_2` | `mu` → `mu`, `psi` → `phi` |
+| `Geometric` | `neg_binomial` | special case `alpha = 1`, `beta = p/(1 - p)`; Stan has no geometric distribution |
 | `MvNormal` | `multi_normal` | `mu` → `mu`, `cov` → `Sigma` |
 | `Wishart` | `wishart` | `nu` → `nu`, `scale` → `Sigma` |
 | `InverseWishart` | `inv_wishart` | `nu` → `nu`, `scale` → `Sigma` |
 | `LKJ` | `lkj_corr` | `eta` → `eta`; correlation-matrix form (vs. Cholesky-factor `LKJCholesky`) |
 | `LKJCholesky` | `lkj_corr_cholesky` | `eta` → `eta` |
 | `Dirichlet` | `dirichlet` | `alpha` → `alpha` |
-| `Multinomial` | `multinomial` | `n` → `N`, `p` → `theta` |
+| `Multinomial` | `multinomial` | `p` → `theta`; `n` is implicit as the sum of the counts |
 
 **No direct Stan equivalent.** `GeneralizedNormal` has no built-in Stan distribution; express
 it via explicit `target +=` log-density contributions. `PoissonProcess` and
@@ -575,13 +583,14 @@ binned model maps to one `poisson` contribution per bin.
 | `atan2` | `atan2` | |
 | `sinh`, `cosh`, `tanh`, `asinh`, `acosh`, `atanh` | same names | |
 | `log1p`, `expm1` | `log1p`, `expm1` | |
-| `floor`, `ceil`, `round` | same names | |
+| `floor`, `ceil` | same names | |
+| `round` | — | no direct counterpart: Stan `round` rounds halves away from zero, FlatPPL `round` rounds halves to even |
 | `min`, `max` (binary) | `fmin`, `fmax` | scalar pairwise min/max |
 | `pow` | `^` operator | |
 | `gamma`, `loggamma` | `tgamma`, `lgamma` | |
 | `logit`, `invlogit` | `logit`, `inv_logit` | |
 | `probit`, `invprobit` | `inv_Phi`, `Phi` | standard-normal quantile / CDF |
-| `add`, `sub`, `mul`, `divide`, `neg` | `+`, `-`, `*`, `/`, unary `-` | |
+| `add`, `sub`, `mul`, `divide`, `neg` | `+`, `-`, `*`, `/`, unary `-` | Stan `/` of two `int` operands is an integer quotient |
 | `lt`, `le`, `gt`, `ge`, `equal`, `unequal` | `<`, `<=`, `>`, `>=`, `==`, `!=` | |
 | `ifelse` | ternary `? :` | |
 | `sum`, `prod`, `mean` | `sum`, `prod`, `mean` | |
@@ -589,7 +598,8 @@ binned model maps to one `poisson` contribution per bin.
 | `maximum`, `minimum` | `max`, `min` | array reductions |
 | `cumsum` | `cumulative_sum` | Stan has no `cumprod` equivalent |
 | `logsumexp`, `softmax` | `log_sum_exp`, `softmax` | |
-| `transpose`, `adjoint` | `'` (postfix transpose) | Stan transpose is real-only |
+| `transpose` | `'` (postfix transpose) | |
+| `adjoint` | `conj(A')` | Stan `'` does not conjugate |
 | `det`, `inv`, `trace` | `determinant`, `inverse`, `trace` | |
 | `logabsdet` | `log_determinant` | |
 | `lower_cholesky` | `cholesky_decompose` | |
@@ -599,7 +609,7 @@ binned model maps to one `poisson` contribution per bin.
 | `linsolve` | `\` (left division) | |
 | `eye` | `identity_matrix` | |
 | `zeros`, `ones`, `fill` | `rep_vector` / `rep_matrix` | with `0`, `1`, or the fill value |
-| `linspace` | `linspaced_vector` | |
+| `linspace` | `linspaced_vector` | `n` comes first; the bounds must be data |
 | `broadcast` | vectorized operations | Stan auto-vectorizes for standard distributions; general `broadcast` may require explicit loops |
 
 ### Future profiles
