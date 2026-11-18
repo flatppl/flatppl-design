@@ -517,19 +517,27 @@ with no distribution statement. The profile includes:
 | Literal values, `load_data(...)` | `data` block |
 | Deterministic computation | `transformed data` (fixed values); `transformed parameters` or `model` block (parameter-dependent values) |
 | `normalize(truncate(D(...), interval(a, b)))` | `x ~ D(...) T[a, b]` |
+| `normalize(truncate(iid(D(...), K), ordered(K)))` | `ordered[K]` declaration, `x ~ D(...)` |
 | `logdensityof(D(...), x)` | `D_lpdf` (`D_lpmf` for a discrete law) |
+| `superpose(weighted(w, M1), weighted(1 - w, M2))` | `target += log_mix(w, lp1, lp2)` |
+| `ksuperpose(kernel, p, ...)`, `p` in `stdsimplex(n)` | `target += log_mix(p, lps)` |
+| `superpose(weighted(w1, M1), weighted(w2, M2), ...)` | `target += log_sum_exp([log(w1) + lp1, log(w2) + lp2, ...])` |
 | `logweighted(lw, M)` | `target += lw` |
 | `lawof(record(...))` | implicit in block structure |
 
 A `~` statement adds the log-density up to a term that does not depend on the parameters,
 and `target += D_lpdf(x | ...)` adds it in full. Both forms give the same posterior.
 
+In the mixture rows, `lp1`, `lp2`, ... and `lps` are the log-densities of the components at
+the variate. The two `log_mix` rows are the provably normalized forms of
+[`superpose`](06-measure-algebra.md#superpose).
+
 **What does not map.** Stan has no first-class support for:
 
 - Multiple likelihood / posterior objects: a Stan model expresses a single joint
   log-density — either a likelihood (no priors on parameters) or a posterior (with
   priors), but only one per file.
-- Measure algebra.
+- Measure algebra beyond the forms in the table above.
 - Discrete parameters: a discrete latent variable must be summed out explicitly.
 - Integrals over continuous latent variables, such as the intermediate variate of `kchain`.
 - `PoissonProcess` / `BinnedPoissonProcess` as first-class constructs.
