@@ -629,7 +629,11 @@ The density of a composed measure is determined by the measure-algebra definitio
 - `superpose` (measure addition): $\log\mathrm{densityof}(\mathrm{superpose}(M_1,\allowbreak \dots, M_k), x) = \mathrm{logsumexp}_k\, \log\mathrm{densityof}(M_k, x)$.
   This sum requires all constituent densities to be expressed w.r.t. the same
   reference measure. Density values taken w.r.t. different references cannot
-  be added directly.
+  be added directly. Atoms `Dirac(value = c)`, for `c` in a finite set $C$, added
+  to measures absolutely continuous w.r.t. `Lebesgue` share the reference
+  $\sum_{c \in C} \delta_c + \mathrm{Lebesgue}$. W.r.t. it, the atom at $c$ has
+  density $1$ at $x = c$ and $0$ elsewhere, and a measure with Lebesgue density
+  $m$ has density $m(x)$ for $x \notin C$ and $0$ on $C$.
 - `ksuperpose` (weighted measure addition over the components): $\log\mathrm{densityof}(\mathrm{ksuperpose}(\kappa,\allowbreak w,\allowbreak \theta), x) = \mathrm{logsumexp}_{i}\allowbreak\left(\log w_i + \log\mathrm{densityof}(\kappa(\theta_i), x)\right)$, so a zero weight contributes $-\infty$ and drops out. All components come from one kernel and so share one reference measure — the mixture's. For a table `T` with one column per input of a kernel `K` that does not accept a lone positional argument, and positive weights `w`, `logdensityof(ksuperpose(K, w, T), x)` is equivalent to `logsumexp(log.(w) .+ logdensityof.(likelihoodof(K, x), T))`.
 - `normalize` (from $M / Z$): $\log\mathrm{densityof}(\mathrm{normalize}(M), x) = \log\mathrm{densityof}(M, x) - \log Z$, with $Z = \mathrm{totalmass}(M)$ finite and nonzero.
 - `tilt`: $\log\mathrm{densityof}(\mathrm{tilt}(M, B), x) = \log\mathrm{densityof}(M, x) + \log\mathrm{densityof}(B, x) - \log Z$, where $Z = \int \mathrm{densityof}(M, x)\,dB(x)$ is finite and positive.
