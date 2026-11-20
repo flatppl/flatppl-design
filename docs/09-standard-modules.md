@@ -966,24 +966,17 @@ poly = standard_module("polynomials", "0.1")
 
 ### Module `splines`
 
-Use [linear](#interp-linear), [natural cubic](#interp-cubic), or [PCHIP](#interp-pchip)
-interpolation to pass through known values. To fit coefficients, use a
-[B-spline](#bspline-basis) or [thin-plate basis](#thinplate-basis).
+The `splines` standard module provides interpolants for known values and
+spline bases for fitting curves.
+
+Loaded via:
 
 ```flatppl
 spl = standard_module("splines", "0.1")
 ```
 
-#### Interpolating known values
-
-| Function | Curve between knots |
-|---|---|
-| <a id="interp-linear"></a>`interp_linear(x, knots, values, extrapolation = "constant")` | Straight lines |
-| <a id="interp-cubic"></a>`interp_cubic(x, knots, values, extrapolation = "constant")` | Natural cubic, $C^2$ with zero second derivatives at the endpoints |
-| <a id="interp-pchip"></a>`interp_pchip(x, knots, values, extrapolation = "constant")` | Shape-preserving $C^1$ cubic Hermite spline with PCHIP slopes |
-
-All three require finite real `x` and finite real vectors `knots` and `values` of equal
-length $N\geq2$. Knots must increase strictly. Numerical arguments may vary.
+The interpolants require finite real `x` and finite real vectors `knots` and
+`values` of equal length $N\geq2$. Knots must increase strictly. Numerical arguments may vary.
 At a knot, use the right interval, or the left interval at the final knot.
 Both cubic methods reduce to a line for two knots.
 
@@ -991,13 +984,66 @@ Outside the knot range, the fixed string `extrapolation` selects the nearest
 endpoint value (`"constant"`), continuation at the endpoint slope (`"linear"`),
 or an error (`"error"`). Other strings are errors.
 
-For [PCHIP](https://docs.scipy.org/doc/scipy/reference/generated/scipy.interpolate.PchipInterpolator.html),
-write $h_i=t_{i+1}-t_i$ and $d_i=(y_{i+1}-y_i)/h_i$. The interior slope is zero
+#### Linear interpolation
+
+##### Functions
+
+| Function | Arguments | Description | Domains |
+|---|---|---|---|
+| [`interp_linear`](#interp-linear) | `x`, `knots`, `values`, `extrapolation` | Piecewise linear interpolation | real, real vectors, string |
+
+<a id="interp-linear"></a>**`interp_linear(x, knots, values, extrapolation = "constant")`** —
+joins successive knot values with straight lines.
+
+##### Example usage
+
+The calibration curve extends past its last knot at the slope of the last segment.
+
+```flatppl
+calibrate(x) = spl.interp_linear(x, [0, 10, 20], [0, 12, 18], "linear")
+reading = calibrate.([5, 15, 25])  # [6, 15, 21]
+```
+
+#### Natural cubic interpolation
+
+##### Functions
+
+| Function | Arguments | Description | Domains |
+|---|---|---|---|
+| [`interp_cubic`](#interp-cubic) | `x`, `knots`, `values`, `extrapolation` | Natural cubic interpolation | real, real vectors, string |
+
+<a id="interp-cubic"></a>**`interp_cubic(x, knots, values, extrapolation = "constant")`** —
+fits a $C^2$ piecewise cubic through the knot values, with zero second derivatives
+at the endpoints of the knot range.
+
+##### Example usage
+
+The cubic interpolant estimates a smooth signal between three measurements.
+
+```flatppl
+signal(x) = spl.interp_cubic(x, [0, 1, 2], [0, 1, 0])
+estimate = signal.([0.5, 1., 1.5])  # [0.6875, 1, 0.6875]
+```
+
+#### PCHIP interpolation
+
+##### Functions
+
+| Function | Arguments | Description | Domains |
+|---|---|---|---|
+| [`interp_pchip`](#interp-pchip) | `x`, `knots`, `values`, `extrapolation` | Shape-preserving cubic Hermite interpolation | real, real vectors, string |
+
+<a id="interp-pchip"></a>**`interp_pchip(x, knots, values, extrapolation = "constant")`** —
+fits a [PCHIP](https://docs.scipy.org/doc/scipy/reference/generated/scipy.interpolate.PchipInterpolator.html)
+$C^1$ cubic Hermite spline through the knot values on the knot range.
+Write $h_i=t_{i+1}-t_i$ and $d_i=(y_{i+1}-y_i)/h_i$. The interior slope is zero
 when $d_{i-1}d_i\leq0$. Otherwise it is the weighted harmonic mean of $d_{i-1}$
 and $d_i$, with weights $2h_i+h_{i-1}$ and $h_i+2h_{i-1}$, respectively.
 At either endpoint, use $m=((2h+h')d-hd')/(h+h')$, where $(h,d)$ and $(h',d')$
 describe the nearest and next intervals. Use zero if $m$ and $d$ differ in sign.
 Otherwise use $3d$ if $d$ and $d'$ differ in sign and $|m|>3|d|$.
+
+##### Example usage
 
 For a calibration curve that levels off, PCHIP preserves the plateau.
 
@@ -1006,9 +1052,18 @@ calibrate(x) = spl.interp_pchip(x, [0, 1, 2], [0, 1, 1])
 reading = calibrate.([0.5, 1.5, 3])  # [0.6875, 1, 1]
 ```
 
-#### Fitting a curve with B-splines
+#### B-splines
 
-<a id="bspline-basis"></a>**`bspline_basis(x, knots, degree)`** returns $n=K-p-1$
+##### Functions
+
+| Function | Arguments | Description | Domains |
+|---|---|---|---|
+| [`bspline_basis`](#bspline-basis) | `x`, `knots`, `degree` | B-spline basis vector | real, real vector, non-negative integer |
+| [`bspline_derivative`](#bspline-derivative) | `x`, `knots`, `degree`, `order` | Piecewise B-spline derivatives | real, real vector, non-negative integers |
+| [`bspline_integral`](#bspline-integral) | `a`, `b`, `knots`, `degree` | B-spline integral vector | reals, real vector, non-negative integer |
+| [`bspline_penalty`](#bspline-penalty) | `knots`, `degree`, `order` | Integrated derivative-product matrix | real vector, non-negative integers |
+
+<a id="bspline-basis"></a>**`bspline_basis(x, knots, degree)`** — returns $n=K-p-1$
 basis values for $K\geq2(p+1)$ finite, nondecreasing knots and fixed degree
 $p\geq0$ (integer). Knot multiplicity is at most $p+1$. Knots may vary.
 The active interval $[t_{p+1},t_{n+1}]$ must have positive length, and `x` must be finite real.
@@ -1021,20 +1076,26 @@ $$B_{i,p}(x)=\frac{x-t_i}{t_{i+p}-t_i}B_{i,p-1}(x)
 Zero-denominator terms are zero. The basis is zero outside the active interval.
 At interior knots take right limits, and at the right endpoint take the left limit.
 
-| Function | Result |
-|---|---|
-| <a id="bspline-derivative"></a>`bspline_derivative(x, knots, degree, order = 1)` | Vector of piecewise derivatives of order $r$ with the same knot limits. Zero if $r>p$. |
-| <a id="bspline-integral"></a>`bspline_integral(a, b, knots, degree)` | Vector of integrals over finite real bounds, clipped to the active interval. Reversing the bounds negates the result. Equal bounds give zero. |
-| <a id="bspline-penalty"></a>`bspline_penalty(knots, degree, order = 2)` | Symmetric positive semidefinite $n\times n$ matrix $P_{ij}=\int_{t_{p+1}}^{t_{n+1}} B_{i,p}^{(r)}B_{j,p}^{(r)}\,dx$. For $r=0$, this is the basis mass matrix. |
+<a id="bspline-derivative"></a>**`bspline_derivative(x, knots, degree, order = 1)`** —
+returns piecewise derivatives of order $r$ with the same knot limits, or zeros
+if $r>p$.
 
-Both orders are fixed non-negative integers. The penalty also requires $r\leq p$
-and interior multiplicity at most $p-r+1$ for square-integrable weak derivatives.
+<a id="bspline-integral"></a>**`bspline_integral(a, b, knots, degree)`** —
+integrates each basis function over finite real bounds, clipped to the active
+interval. Reversing the bounds negates the result. Equal bounds give zero.
 
-The knot vector below repeats both endpoints three times and has one interior knot.
-Use `curve.(x_data)` as a regression mean and fit the four entries of `coef`.
-Weight [basis derivatives](#bspline-derivative) and [integrals](#bspline-integral)
-by the same coefficients. The [penalty](#bspline-penalty) $c^\mathsf{T}Pc$ here
-integrates the squared second derivative.
+<a id="bspline-penalty"></a>**`bspline_penalty(knots, degree, order = 2)`** —
+returns the symmetric positive semidefinite $n\times n$ matrix
+$P_{ij}=\int_{t_{p+1}}^{t_{n+1}} B_{i,p}^{(r)}B_{j,p}^{(r)}\,dx$.
+For $r=0$, this is the basis mass matrix. Both orders are fixed non-negative
+integers. The penalty also requires $r\leq p$ and interior multiplicity at most
+$p-r+1$ for square-integrable weak derivatives.
+
+##### Example usage
+
+The repeated endpoints and one interior knot give four quadratic basis functions.
+To fit a regression mean, estimate the four entries of `coef` from data.
+The same coefficients give the slope, area, and integral of the squared second derivative.
 
 ```flatppl
 knots = [0, 0, 0, 1, 2, 2, 2]
@@ -1046,20 +1107,29 @@ area = sum(coef .* spl.bspline_integral(0, 2, knots, 2))  # 1
 roughness = sum(coef .* (spl.bspline_penalty(knots, 2) * coef))  # 2
 ```
 
-#### Thin-plate curves with a linear term
+#### Thin-plate splines
 
-<a id="thinplate-basis"></a>**`thinplate_basis(x, centers)`** returns
+##### Functions
+
+| Function | Arguments | Description | Domains |
+|---|---|---|---|
+| [`thinplate_basis`](#thinplate-basis) | `x`, `centers` | One-dimensional thin-plate spline basis | real, nonempty real vector |
+| [`thinplate_penalty`](#thinplate-penalty) | `centers` | Thin-plate roughness matrix | nonempty real vector |
+
+<a id="thinplate-basis"></a>**`thinplate_basis(x, centers)`** — returns
 $[K(x,c_1),\ldots,K(x,c_n),1,x]$ for real `x` and a nonempty real vector of
 centers, with $K(u,v)=|u-v|^3/12$.
 
-<a id="thinplate-penalty"></a>**`thinplate_penalty(centers)`** returns the symmetric
+<a id="thinplate-penalty"></a>**`thinplate_penalty(centers)`** — returns the symmetric
 $(n+2)\times(n+2)$ matrix with leading block $K(c_i,c_j)$ and zeros elsewhere.
 For radial weights $a_i$ with $\sum_i a_i=\sum_i a_i c_i=0$, the quadratic form
 integrates the squared second derivative over the reals. The matrix can be
 indefinite outside that subspace.
 
-The radial weights below satisfy both constraints. The intercept and slope
-contribute nothing to the [penalty](#thinplate-penalty).
+##### Example usage
+
+The first three coefficients are radial weights that satisfy both constraints.
+The last two give the intercept and slope and contribute nothing to the penalty.
 
 ```flatppl
 centers = [0, 1, 2]
