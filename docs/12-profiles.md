@@ -139,6 +139,16 @@ are the uncaptured variadic runs). Rewriting then adds four forms:
   (no shared stochastic ancestor), decided from inferred phase and ancestry, not by
   pattern match.
 
+#### <a id="sec:derivative-rules"></a>Derivative rules
+
+A [derivative request](11-flatpir.md#sec:derivative-requests) is a term on which a rewrite may act.
+A rule preserves the complete primal result, the selected local derivative, its domain, and its input and output layouts.
+A zero-valued seed at one point supplies no proof that an active operation is differentiable there.
+
+A JVP rule acts on input tangents. Its transpose is a VJP rule when the rule gives a linear map of the seed and each operation has a valid transpose under the stated pairing.
+For example, field projection transposes to insertion of the cotangent at that field. Contributions to the same input coordinate add.
+An opaque derivative may remain as a seeded request in either mode. A provider's JVP capability alone supplies no VJP rule.
+
 ### <a id="sec:flatpdl"></a>FlatPDL
 
 FlatPDL is the deterministic profile for measure elimination, defined in

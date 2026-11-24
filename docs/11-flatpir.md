@@ -159,6 +159,30 @@ a callable value. Literals, references (`%ref`), FlatPIR structural
 wrappers (`%kwarg`, `%field`, `%assign`, `%meta`), and the input-origin tags and
 input lists of `functionof` / `kernelof` are not calls.
 
+#### <a id="sec:derivative-requests"></a>Derivative requests
+
+The [derivative products](07-functions.md#sec:derivative-products) use the built-in heads `jvp`, `vjp`, `tangent` and `cotangent`.
+The callable, primal arguments, seed and any selection are structural operands. Lowering preserves the argument bundle supplied to the request, including its original field order.
+For example, `vjp(f, x, 1.0, (of = (true, false)))` lowers to
+
+```lisp
+(vjp (%ref self f) (%ref self x) 1.0
+     (record (%field of (tuple true false))))
+```
+
+A derivative product type is `(%tangent <layout>)` or `(%cotangent <layout>)`.
+The layout follows the operand's product structure. It retains `%tuple` positions, `%record` fields, and `%table` columns and row count, using their existing type forms recursively.
+A selected real leaf has its real scalar or array type, including axes and extents. A discrete or unselected leaf is `%inactive` within the layout.
+For example, `(%cotangent (%tuple (%scalar real) %inactive))` describes the cotangent of a real/string pair with its real coordinate selected.
+The layout can be inferred from the primal or typed callable signature and the fixed selection after removing `%meta` annotations.
+
+A numeric interface visits active leaves depth-first in primal order. It binds one numeric argument or result per leaf and preserves that leaf's array shape.
+The interface retains the inferred layout for reconstructing a product, including one with no active leaves.
+Two tuple positions remain separate coordinates even when their primal expressions refer to the same node.
+
+For an opaque callable, a provider supplies the instantiated signature used for inference in place of a body.
+A residual request preserves the resolved callable reference and its fixed context. It can appear in a query containing other bindings and derivative requests.
+
 ### <a id="flatpir-meta-annotations"></a>Annotations
 
 Any expression may be wrapped in a `(%meta (<type> <phase> <valueset>) <expr>)`
