@@ -603,8 +603,11 @@ $$\log \mathrm{densityof}(\mathrm{pushfwd}(f, M), y) = \log \mathrm{densityof}(M
 
 equivalently $\mathrm{densityof}(\mathrm{pushfwd}(f, M), y) = \mathrm{densityof}(M, f^{-1}(y)) \cdot \exp\!\left(-\mathrm{logvolume}(f^{-1}(y))\right)$. The forward log-volume is evaluated at the preimage $f^{-1}(y)$ and **subtracted** (e.g. for `exp_bijection`, `logvolume = identity`, giving the log-normal density $\log \mathrm{densityof}(M, \log y) - \log y$).
 
-For an injective map between spaces with counting reference measures, the
-forward `logvolume` is zero on the source support: point masses are preserved.
+For an injective map of a measure with a counting reference measure, the
+reference measure of the pushforward is the counting measure on the image of
+the source support, and the forward `logvolume` is zero: point masses are
+preserved. For example, `pushfwd(exp, Poisson(rate = 3))` has mass
+$\mathrm{Pois}(k;\,3)$ at $e^k$.
 
 Engines must support density evaluation in the following three cases:
 
