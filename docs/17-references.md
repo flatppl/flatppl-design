@@ -24,6 +24,9 @@ Giry, M. (1982). A categorical approach to probability theory. In *Categorical A
 <a id="graphppl"></a>
 GraphPPL.jl. <https://github.com/reactivebayes/GraphPPL.jl>
 
+<a id="griewank2008"></a>
+Griewank, A., Walther, A. (2008). *Evaluating Derivatives: Principles and Techniques of Algorithmic Differentiation*, 2nd ed. SIAM. <https://doi.org/10.1137/1.9780898717761>
+
 <a id="hs3"></a>
 HS³ — HEP Statistics Serialization Standard. <https://hep-statistics-serialization-standard.github.io/> · GitHub: <https://github.com/hep-statistics-serialization-standard>
 

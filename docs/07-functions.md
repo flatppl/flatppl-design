@@ -529,6 +529,93 @@ Because `checked` threads the value through to downstream use, the
 check is topologically tied to that use and cannot be eliminated by term-rewriting
 passes — ensuring the invariant is always validated.
 
+### <a id="sec:derivative-products"></a>Automatic differentiation
+
+Forward-mode automatic differentiation computes Jacobian–vector products (JVPs). Reverse mode computes vector–Jacobian products (VJPs).
+Both apply the chain rule to a computation. [Griewank and Walther (2008)](17-references.md#griewank2008)
+
+| Function | Arguments | Result |
+|---|---|---|
+| [`jvp`](#jvp) | `f, args, seed[, select]` | Primal result and output tangent |
+| [`vjp`](#vjp) | `f, args, seed[, select]` | Primal result and input cotangent |
+| [`tangent`](#tangent) | `at` or `at, path, seed` | Zero tangent or a tangent supported on one path |
+| [`cotangent`](#cotangent) | `at` or `at, path, seed` | Zero cotangent or a cotangent supported on one path |
+
+<a id="jvp"></a>**`jvp(f, args, seed[, select])`** evaluates the deterministic callable `f` at `args` and applies its derivative to an input tangent.
+<a id="vjp"></a>**`vjp(f, args, seed[, select])`** evaluates the same callable and applies the transpose of its derivative to an output cotangent.
+Both return a pair whose first component is the complete primal result. A scalar-output gradient uses `vjp(f, args, 1.0)`.
+The listed inputs are ordered and named. Calls accept either positional arguments or keyword arguments.
+Differentiation is opt-in. A compiler expands a requested product after determinization and before graph optimization. The primal and derivative are available together to later passes.
+
+The primal call is `f(args)` under the [ordinary calling conventions](04-design.md#sec:calling-convention), including shallow auto-splatting.
+A callable that accepts a lone positional argument receives a tuple, record or table whole. A unary adapter expresses a special operation with mixed arguments, for example `g(z) = broadcast(h, a = z.u, b = z.v)` for `h(a, b) = a * b`.
+
+#### Coordinates and selection
+
+A real scalar contributes one coordinate. A real array contributes all its entries, with the same axes and shape.
+Products preserve tuple positions, record field names and order, and table column names, row count and row order.
+Fixed strings in [tuples](03-value-types.md#sec:tuples), integers and booleans carry primal data and have no real tangent coordinate. A discrete value may still determine a real result.
+
+The optional `select` record has fields `wrt` and `of` for input and output coordinates, respectively. Each defaults to all eligible real coordinates.
+A selection is fixed when the query is reified. `wrt` addresses the supplied `args` before argument binding. `of` addresses the complete result of `f(args)`.
+`true` selects eligible real descendants and `false` excludes a subtree. Either mask selects no coordinates at a discrete leaf.
+A tuple mask supplies one mask per position. A record mask names record fields or table columns. Omitted names are excluded. The primal determines field order.
+Unknown names, mismatched tuple arity and descent through an array are errors. A scalar component of an array can be exposed by ordinary indexing in an adapter.
+
+Let $y=f(x)$, with $x=$ `args`. Let $E_I$ insert the selected input coordinates, holding the others fixed, and let $P_O$ project the selected output coordinates.
+At a point where this restricted map is differentiable, write $J$ for the derivative of $h\mapsto P_O f(x+E_I h)$ at $h=0$.
+Here addition denotes coordinate displacement. The derivative components returned by `jvp` and `vjp` are $Jv$ and $J^\mathsf{T}w$.
+The pairing sums products of corresponding real entries. A VJP returns a shaped zero for a selected input with no dependence in the selected output.
+
+Selected numeric coordinates must be finite at the evaluation point and retain their leaf shapes locally. Selected input displacements must remain in the domain on a neighborhood of zero.
+When a simplex or another constraint precludes those displacements, the caller supplies an explicit parameterization. Output components may be dependent.
+For $x=T(u)$, differentiating $u\mapsto f(T(u))$ gives the derivative in $u$ coordinates. Open restrictions such as positivity admit signed tangents in their interior.
+A numeric zero in a seed leaves the selected map and its differentiability requirements unchanged. The contract specifies the classical first derivative where it exists.
+For `f(x) = (x^2, g(x))`, `vjp(f, x, 1.0, (of = (true, false)))` requires the primal `g(x)` and returns the input cotangent `2.0*x`. It needs no derivative of `g`.
+
+#### Structured seeds and results
+
+<a id="tangent"></a>**`tangent(at)`** and <a id="cotangent"></a>**`cotangent(at)`** construct the zero of the corresponding derivative space.
+The primal `at` supplies its structure and extents. The numeric zero of a leaf has its full shape, as in `0.0` or `zeros(size)`.
+An implementation may retain a structural zero until a leaf is consumed.
+
+**`tangent(at, path, seed)`** and **`cotangent(at, path, seed)`** insert `seed` at `path` and supply zero on the other real coordinates.
+The path ends at a real scalar or array leaf. A step is a 1-based tuple index or a field or column name string. A longer path is a tuple of steps.
+Construction checks the path, extents and axis orientation against `at`. A discrete or unknown leaf is an error.
+`jvp` consumes a tangent in the `wrt` layout of `args`. `vjp` consumes a cotangent in the `of` layout of `f(args)`.
+The request checks seed orientation and layout. An injected leaf outside that selection is an error. An implicit structural zero can specialize to the selected layout.
+A matching numeric seed may stand alone for one selected leaf. A matching ordinary product is also accepted for a complete all-real selection.
+
+Structured tangents and cotangents are derivative objects. They support projection, addition within the same derivative space, and multiplication by a real scalar.
+A product projection uses its original position or name. Projecting an active leaf returns its ordinary numeric value. Access to a discrete or excluded slot is an error.
+At a scalar or array root, the derivative result has its ordinary numeric form when selected. Structured products retain their identity even when one leaf is selected.
+With empty `wrt`, the JVP gives shaped output zeros and the VJP gives an empty input cotangent. With empty `of`, the JVP gives an empty output tangent and the VJP gives shaped input zeros.
+An empty derivative object contributes no tensors to a numeric interface. The primal still occupies the first position of the result pair.
+A complete numeric product can be emitted using ordinary FlatPPL constructors. A mixed product can be reconstructed from its schema and its selected numeric leaves.
+
+```flatppl
+energy(p) = p[1] * p[1]
+p = (3.0, "calibration")
+value, slope = jvp(energy, p, tangent(p, 1, 2.0))
+value2, bar = vjp(energy, p, 0.5)
+weight_bar = bar[1]
+```
+
+Here `value` and `value2` are `9.0`, `slope` is `12.0`, and `weight_bar` is `3.0`. The string retains position 2 in `p` and contributes no derivative coordinate.
+
+#### Reified requests
+
+A derivative request is a deterministic graph expression. A query can bind the callable reference, primal arguments, seed and fixed selection explicitly.
+For any fixed callable `f`, `pull(x, w) = vjp(f, x, w)` exposes a reusable seeded query.
+Varying boundary quantities are explicit inputs. A [reified callable](04-design.md#sec:functionof) closes over fixed ancestors.
+
+An opaque call has a resolved callable and an inferred or provider-declared signature. An unbound name supplies neither.
+The provider declares the argument binding, result type, phase, instantiated dimensions and support for the selected derivative product.
+Both sides use the same instantiated implementation, fixed captures or load-time substitutions, primal arguments and coordinate schema. Forward mode passes boundary input tangents. Reverse mode sums contributions to each boundary output before passing its cotangent.
+The caller adds the returned input cotangents to contributions from other uses of those inputs. A provider unable to supply the requested derivative reports an unsupported operation.
+A fully lowered local query uses ordinary FlatPPL. A delegated query may retain an explicit [derivative request](11-flatpir.md#sec:derivative-requests).
+[Derivative rules](12-profiles.md#sec:derivative-rules) govern local expansion and transposition.
+
 ### Linear algebra
 
 | Function | Arguments | Description | Domains |
