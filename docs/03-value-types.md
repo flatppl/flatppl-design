@@ -106,6 +106,11 @@ measures, and are not part of the measure algebra. Specifically:
 to callables that accept them, returned from user-defined functions, and decomposed
 or projected.
 
+A tuple may carry a fixed string literal as a metadata component, as in
+`(3.0, "calibration")`. Projection recovers that string for use in a textual
+parameter. Its position contributes no coordinate to a
+[derivative product](07-functions.md#sec:derivative-products).
+
 ### Records
 
 Records comprise ordered named fields, written as `record(name1=val1, name2=val2, ...)`. Field

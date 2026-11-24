@@ -554,7 +554,7 @@ A callable that accepts a lone positional argument receives a tuple, record or t
 
 A real scalar contributes one coordinate. A real array contributes all its entries, with the same axes and shape.
 Products preserve tuple positions, record field names and order, and table column names, row count and row order.
-Strings, integers and booleans carry primal data and have no real tangent coordinate. A discrete value may still determine a real result.
+Fixed strings in [tuples](03-value-types.md#sec:tuples), integers and booleans carry primal data and have no real tangent coordinate. A discrete value may still determine a real result.
 
 The optional `select` record has fields `wrt` and `of` for input and output coordinates, respectively. Each defaults to all eligible real coordinates.
 A selection is fixed when the query is reified. `wrt` addresses the supplied `args` before argument binding. `of` addresses the complete result of `f(args)`.
